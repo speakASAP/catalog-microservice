@@ -1,0 +1,47 @@
+services:
+  catalog:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: catalog-microservice-blue
+    ports:
+      - "${PORT:-3200}:${PORT:-3200}"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - SERVICE_NAME=${SERVICE_NAME:-catalog-microservice}
+      - PORT=${PORT:-3200}
+      - DB_HOST=${DB_HOST:-db-server-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME:-catalog_db}
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_HOST=${REDIS_HOST:-db-server-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
+      - LOGGING_SERVICE_URL=${LOGGING_SERVICE_URL}
+      - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - nginx-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:${PORT:-3200}/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  nginx-network:
+    external: true
+    name: nginx-network
+
