@@ -33,5 +33,5 @@ COPY --from=builder /app/node_modules ./node_modules
 EXPOSE ${PORT:-3372}
 
 # Start application
-CMD ["node", "dist/src/main.js"]
+CMD ["node", "dist/main.js"]
 
