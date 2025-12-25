@@ -19,6 +19,7 @@ The Catalog Microservice provides centralized product management for all sales c
 | Service | Subdomain | Port |
 |---------|-----------|------|
 | catalog-microservice | catalog.statex.cz | 3200 |
+| catalog-frontend | catalog.statex.cz | 3201 (Blue), 3203 (Green) |
 
 ## API Endpoints
 
@@ -70,6 +71,39 @@ Base URL: `https://catalog.statex.cz/api` (or `http://localhost:3200/api` in dev
 
 - `GET /health` - Health check
 
+## Frontend Admin Interface
+
+The catalog-microservice includes a web-based admin interface for managing products, categories, and attributes.
+
+### Access
+
+- **Production**: `https://catalog.statex.cz/admin`
+- **Development**: `http://localhost:3201/admin`
+
+### Features
+
+- **Product Management**: Create, edit, delete products with full details (SKU, title, description, brand, EAN, dimensions)
+- **Category Management**: Hierarchical category tree with create, edit, delete functionality
+- **Attribute Management**: Define product attributes (text, number, select, multiselect types)
+- **Authentication**: Integrated with shared auth-microservice (requires admin privileges)
+
+### Frontend Technology
+
+- **Framework**: Next.js 16 (React 19)
+- **Styling**: Tailwind CSS 4
+- **TypeScript**: Full type safety
+- **Authentication**: Uses shared auth-microservice
+
+### Frontend Development
+
+```bash
+cd services/frontend
+npm install
+npm run dev
+```
+
+The frontend will be available at `http://localhost:3000` (or configured port).
+
 ## Setup
 
 ### Prerequisites
@@ -108,15 +142,18 @@ npm run start:dev
 ### Docker Deployment
 
 ```bash
-# Build and run
+# Build and run (includes API and Frontend)
 docker compose -f docker-compose.blue.yml up -d
 
 # View logs
 docker logs -f catalog-microservice-blue
+docker logs -f catalog-frontend-blue
 
 # Stop
 docker compose -f docker-compose.blue.yml down
 ```
+
+**Note**: The docker-compose files include both the API service (`catalog`) and the frontend service (`frontend`). Both services are deployed together for blue/green deployments.
 
 ## Database Schema
 
@@ -153,8 +190,8 @@ const { data: product } = await response.json();
 ## Related Services
 
 - `warehouse-microservice` (3201) - Stock management
-- `supplier-microservice` (3202) - Supplier API integration
-- `order-microservice` (3203) - Order processing
+- `suppliers-microservice` (3202) - Supplier API integration
+- `orders-microservice` (3203) - Order processing
 - `allegro-service` (34xx) - Allegro sales channel
 - `flipflop-service` (35xx) - FlipFlop website
 
