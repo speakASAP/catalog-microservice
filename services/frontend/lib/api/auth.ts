@@ -10,6 +10,7 @@ export interface User {
   firstName?: string;
   lastName?: string;
   isAdmin?: boolean;
+  roles?: string[];
 }
 
 export interface LoginCredentials {
@@ -30,11 +31,13 @@ export interface AuthResponse {
 }
 
 // Get auth service URL from environment
-const getAuthServiceUrl = () => {
+const getAuthServiceUrl = (): string => {
   if (typeof window === 'undefined') {
-    return process.env.AUTH_SERVICE_URL || 'http://auth-microservice:3370';
+    // Server-side: use internal Docker network URL
+    return (process.env?.AUTH_SERVICE_URL as string | undefined) || 'http://auth-microservice:3370';
   }
-  return process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || 'https://auth.statex.cz';
+  // Client-side: use external URL
+  return (process.env?.NEXT_PUBLIC_AUTH_SERVICE_URL as string | undefined) || 'https://auth.statex.cz';
 };
 
 const AUTH_SERVICE_URL = getAuthServiceUrl();
