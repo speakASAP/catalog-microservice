@@ -5,13 +5,13 @@
  * Protects admin routes - redirects non-admin users
  */
 
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from './LoadingSpinner';
 
 interface AdminGuardProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export default function AdminGuard({ children }: AdminGuardProps) {
@@ -24,7 +24,8 @@ export default function AdminGuard({ children }: AdminGuardProps) {
         router.push('/login');
         return;
       }
-      if (!user?.isAdmin) {
+      const isAdmin = user?.isAdmin || (user?.roles && user.roles.includes('admin'));
+      if (!isAdmin) {
         router.push('/');
         return;
       }
@@ -39,7 +40,8 @@ export default function AdminGuard({ children }: AdminGuardProps) {
     );
   }
 
-  if (!isAuthenticated || !user?.isAdmin) {
+  const isAdmin = user?.isAdmin || (user?.roles && user.roles.includes('admin'));
+  if (!isAuthenticated || !isAdmin) {
     return null;
   }
 
