@@ -30,22 +30,22 @@ export interface AuthResponse {
   token: string;
 }
 
-// Get auth service URL from environment
-const getAuthServiceUrl = (): string => {
+// Get API base URL - use catalog API which proxies to auth-microservice
+const getApiBaseUrl = (): string => {
   if (typeof window === 'undefined') {
     // Server-side: use internal Docker network URL
-    return (process.env?.AUTH_SERVICE_URL as string | undefined) || 'http://auth-microservice:3370';
+    return process.env.API_URL || 'http://catalog-microservice:3200/api';
   }
   // Client-side: use external URL
-  return (process.env?.NEXT_PUBLIC_AUTH_SERVICE_URL as string | undefined) || 'https://auth.statex.cz';
+  return process.env.NEXT_PUBLIC_API_URL || 'https://catalog.statex.cz/api';
 };
 
-const AUTH_SERVICE_URL = getAuthServiceUrl();
+const API_BASE_URL = getApiBaseUrl();
 
 export const authApi = {
   async login(credentials: LoginCredentials) {
     try {
-      const response = await fetch(`${AUTH_SERVICE_URL}/api/auth/login`, {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials),
@@ -92,7 +92,7 @@ export const authApi = {
   },
 
   async register(data: RegisterData) {
-    const response = await fetch(`${AUTH_SERVICE_URL}/api/auth/register`, {
+    const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -110,34 +110,18 @@ export const authApi = {
   },
 
   async getProfile() {
-    // auth-microservice /api/auth/profile returns { user: {...} } directly
-    const token = apiClient.getToken();
-    if (!token) {
-      return { success: false, error: 'No token available' };
+    // Use catalog API which proxies to auth-microservice
+    const response = await apiClient.get<{ user: User }>(`${API_BASE_URL}/auth/profile`);
+    if (response.success && response.data) {
+      return { success: true, data: response.data.user };
     }
-
-    const response = await fetch(`${AUTH_SERVICE_URL}/api/auth/profile`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      return { success: false, error: 'Failed to get profile' };
-    }
-
-    const data = await response.json();
-    if (data.user) {
-      return { success: true, data: data.user };
-    }
-
-    return { success: false, error: 'Invalid profile response' };
+    return response;
   },
 
   async updateProfile(data: Partial<User>) {
-    return apiClient.put<User>(`${AUTH_SERVICE_URL}/api/users/profile`, data);
+    // Note: Update profile endpoint not yet implemented in proxy
+    // For now, return error or implement if needed
+    return { success: false, error: 'Update profile not yet implemented' };
   },
 
   logout() {
