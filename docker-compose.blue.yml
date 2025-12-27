@@ -31,6 +31,7 @@ services:
       resources:
         limits:
           memory: 256M
+          cpus: '0.5'
         reservations:
           memory: 128M
     healthcheck:
@@ -61,6 +62,13 @@ services:
       - NEXT_PUBLIC_AUTH_SERVICE_URL=${NEXT_PUBLIC_AUTH_SERVICE_URL:-https://auth.statex.cz}
     networks:
       - nginx-network
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+          cpus: '0.5'
+        reservations:
+          memory: 50M
     restart: unless-stopped
     depends_on:
       - catalog
