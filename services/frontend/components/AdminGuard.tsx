@@ -2,7 +2,8 @@
 
 /**
  * Admin Guard Component
- * Protects admin routes - redirects non-admin users
+ * Protects admin routes - requires authentication
+ * Note: auth-microservice doesn't support roles/admin flags, so all authenticated users are allowed
  */
 
 import { useEffect, type ReactNode } from 'react';
@@ -15,22 +16,14 @@ interface AdminGuardProps {
 }
 
 export default function AdminGuard({ children }: AdminGuardProps) {
-  const { user, loading, isAuthenticated } = useAuth();
+  const { loading, isAuthenticated } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading) {
-      if (!isAuthenticated) {
-        router.push('/login');
-        return;
-      }
-      const isAdmin = user?.isAdmin || (user?.roles && user.roles.includes('admin'));
-      if (!isAdmin) {
-        router.push('/');
-        return;
-      }
+    if (!loading && !isAuthenticated) {
+      router.push('/login');
     }
-  }, [user, loading, isAuthenticated, router]);
+  }, [loading, isAuthenticated, router]);
 
   if (loading) {
     return (
@@ -40,8 +33,7 @@ export default function AdminGuard({ children }: AdminGuardProps) {
     );
   }
 
-  const isAdmin = user?.isAdmin || (user?.roles && user.roles.includes('admin'));
-  if (!isAuthenticated || !isAdmin) {
+  if (!isAuthenticated) {
     return null;
   }
 

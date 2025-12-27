@@ -52,12 +52,13 @@ export const authApi = {
 
     const data = await response.json();
 
-    if (response.ok && data.success && data.data) {
-      apiClient.setToken(data.data.token);
-      return { success: true, data: data.data };
+    // auth-microservice returns { user, accessToken, refreshToken } directly
+    if (response.ok && data.user && data.accessToken) {
+      apiClient.setToken(data.accessToken);
+      return { success: true, data: { user: data.user, token: data.accessToken } };
     }
 
-    return { success: false, error: data.error };
+    return { success: false, error: data.message || data.error || 'Login failed' };
   },
 
   async register(data: RegisterData) {
@@ -69,16 +70,40 @@ export const authApi = {
 
     const result = await response.json();
 
-    if (response.ok && result.success && result.data) {
-      apiClient.setToken(result.data.token);
-      return { success: true, data: result.data };
+    // auth-microservice returns { user, accessToken, refreshToken } directly
+    if (response.ok && result.user && result.accessToken) {
+      apiClient.setToken(result.accessToken);
+      return { success: true, data: { user: result.user, token: result.accessToken } };
     }
 
-    return { success: false, error: result.error };
+    return { success: false, error: result.message || result.error || 'Registration failed' };
   },
 
   async getProfile() {
-    return apiClient.get<User>(`${AUTH_SERVICE_URL}/api/users/profile`);
+    // auth-microservice /api/auth/profile returns { user: {...} } directly
+    const token = apiClient.getToken();
+    if (!token) {
+      return { success: false, error: 'No token available' };
+    }
+
+    const response = await fetch(`${AUTH_SERVICE_URL}/api/auth/profile`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      return { success: false, error: 'Failed to get profile' };
+    }
+
+    const data = await response.json();
+    if (data.user) {
+      return { success: true, data: data.user };
+    }
+
+    return { success: false, error: 'Invalid profile response' };
   },
 
   async updateProfile(data: Partial<User>) {
