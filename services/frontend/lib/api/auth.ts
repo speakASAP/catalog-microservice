@@ -113,11 +113,30 @@ export const authApi = {
 
   async getProfile() {
     // Use catalog API which proxies to auth-microservice
-    const response = await apiClient.get<{ user: User }>(`${API_BASE_URL}/api/auth/profile`);
-    if (response.success && response.data) {
-      return { success: true, data: response.data.user };
+    // The proxy returns { user: {...} } directly from auth-microservice
+    const token = apiClient.getToken();
+    if (!token) {
+      return { success: false, error: 'No token available' };
     }
-    return response;
+
+    const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      return { success: false, error: 'Failed to get profile' };
+    }
+
+    const data = await response.json();
+    if (data.user) {
+      return { success: true, data: data.user };
+    }
+
+    return { success: false, error: 'Invalid profile response' };
   },
 
   async updateProfile(data: Partial<User>) {
