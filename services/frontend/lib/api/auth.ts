@@ -36,8 +36,10 @@ const getApiBaseUrl = (): string => {
     // Server-side: use internal Docker network URL
     return process.env.API_URL || 'http://catalog-microservice:3200/api';
   }
-  // Client-side: use external URL
-  return process.env.NEXT_PUBLIC_API_URL || 'https://catalog.statex.cz/api';
+  // Client-side: use external URL (already includes /api)
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://catalog.statex.cz/api';
+  // Remove /api if present since we'll add it in the path
+  return baseUrl.replace(/\/api$/, '');
 };
 
 const API_BASE_URL = getApiBaseUrl();
@@ -45,7 +47,7 @@ const API_BASE_URL = getApiBaseUrl();
 export const authApi = {
   async login(credentials: LoginCredentials) {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials),
@@ -92,7 +94,7 @@ export const authApi = {
   },
 
   async register(data: RegisterData) {
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -111,7 +113,7 @@ export const authApi = {
 
   async getProfile() {
     // Use catalog API which proxies to auth-microservice
-    const response = await apiClient.get<{ user: User }>(`${API_BASE_URL}/auth/profile`);
+    const response = await apiClient.get<{ user: User }>(`${API_BASE_URL}/api/auth/profile`);
     if (response.success && response.data) {
       return { success: true, data: response.data.user };
     }
