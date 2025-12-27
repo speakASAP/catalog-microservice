@@ -22,7 +22,7 @@ export class AuthService {
     this.logger.log('Proxying login request to auth-microservice', 'AuthService');
     try {
       const response = await firstValueFrom(
-        this.httpService.post(`${this.authServiceUrl}/api/auth/login`, credentials),
+        this.httpService.post(`${this.authServiceUrl}/auth/login`, credentials),
       );
       return response.data;
     } catch (error: any) {
@@ -44,7 +44,7 @@ export class AuthService {
     this.logger.log('Proxying register request to auth-microservice', 'AuthService');
     try {
       const response = await firstValueFrom(
-        this.httpService.post(`${this.authServiceUrl}/api/auth/register`, data),
+        this.httpService.post(`${this.authServiceUrl}/auth/register`, data),
       );
       return response.data;
     } catch (error: any) {
@@ -61,7 +61,7 @@ export class AuthService {
     this.logger.log('Proxying getProfile request to auth-microservice', 'AuthService');
     try {
       const response = await firstValueFrom(
-        this.httpService.get(`${this.authServiceUrl}/api/auth/profile`, {
+        this.httpService.get(`${this.authServiceUrl}/auth/profile`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
