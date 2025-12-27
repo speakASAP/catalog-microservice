@@ -8,6 +8,7 @@ import { MediaModule } from './media/media.module';
 import { PricingModule } from './pricing/pricing.module';
 import { HealthModule } from './health/health.module';
 import { LoggerModule } from './logger/logger.module';
+import { AuthModule } from './auth/auth.module';
 
 /**
  * Main application module for Catalog Microservice
@@ -37,6 +38,7 @@ import { LoggerModule } from './logger/logger.module';
     // Feature modules
     LoggerModule,
     HealthModule,
+    AuthModule,
     ProductsModule,
     CategoriesModule,
     AttributesModule,
