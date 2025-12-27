@@ -44,21 +44,51 @@ const AUTH_SERVICE_URL = getAuthServiceUrl();
 
 export const authApi = {
   async login(credentials: LoginCredentials) {
-    const response = await fetch(`${AUTH_SERVICE_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(credentials),
-    });
+    try {
+      const response = await fetch(`${AUTH_SERVICE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+      });
 
-    const data = await response.json();
+      // Handle network errors (including SSL certificate errors)
+      if (!response.ok && response.status === 0) {
+        return { 
+          success: false, 
+          error: 'Network error: Unable to connect to authentication service. Please check your connection or contact support.' 
+        };
+      }
 
-    // auth-microservice returns { user, accessToken, refreshToken } directly
-    if (response.ok && data.user && data.accessToken) {
-      apiClient.setToken(data.accessToken);
-      return { success: true, data: { user: data.user, token: data.accessToken } };
+      const data = await response.json();
+
+      // auth-microservice returns { user, accessToken, refreshToken } directly
+      if (response.ok && data.user && data.accessToken) {
+        apiClient.setToken(data.accessToken);
+        return { success: true, data: { user: data.user, token: data.accessToken } };
+      }
+
+      // Handle auth-microservice error responses
+      if (data.statusCode === 401 || data.message) {
+        return { success: false, error: data.message || 'Invalid credentials' };
+      }
+
+      return { success: false, error: data.message || data.error || 'Login failed' };
+    } catch (error: any) {
+      // Handle fetch errors (network, SSL, etc.)
+      if (error.message?.includes('CERT') || error.message?.includes('certificate')) {
+        return { 
+          success: false, 
+          error: 'SSL certificate error. Please contact support to fix the authentication service certificate.' 
+        };
+      }
+      if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
+        return { 
+          success: false, 
+          error: 'Network error: Unable to connect to authentication service.' 
+        };
+      }
+      return { success: false, error: error.message || 'An unexpected error occurred during login' };
     }
-
-    return { success: false, error: data.message || data.error || 'Login failed' };
   },
 
   async register(data: RegisterData) {
