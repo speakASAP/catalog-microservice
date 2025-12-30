@@ -41,6 +41,25 @@ services:
       retries: 3
       start_period: 60s
 
+  api-gateway:
+    image: nginx:alpine
+    container_name: catalog-microservice-api-gateway-green
+    ports:
+      - "${API_GATEWAY_PORT_GREEN:-3205}:80"
+    volumes:
+      - ./nginx-api-gateway.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - nginx-network
+    restart: unless-stopped
+    depends_on:
+      - catalog
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
   frontend:
     build:
       context: ./services/frontend

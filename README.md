@@ -121,19 +121,19 @@ git clone git@github.com:speakASAP/catalog-microservice.git
 cd catalog-microservice
 ```
 
-2. Copy `.env.example` to `.env` and configure:
+1. Copy `.env.example` to `.env` and configure:
 
 ```bash
 cp .env.example .env
 ```
 
-3. Install dependencies:
+1. Install dependencies:
 
 ```bash
 npm install
 ```
 
-4. Run in development:
+1. Run in development:
 
 ```bash
 npm run start:dev
@@ -194,4 +194,3 @@ const { data: product } = await response.json();
 - `orders-microservice` (3203) - Order processing
 - `allegro-service` (34xx) - Allegro sales channel
 - `flipflop-service` (35xx) - FlipFlop website
-
