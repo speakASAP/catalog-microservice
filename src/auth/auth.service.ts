@@ -22,7 +22,16 @@ export class AuthService {
     this.logger.log('Proxying login request to auth-microservice', 'AuthService');
     try {
       const response = await firstValueFrom(
-        this.httpService.post(`${this.authServiceUrl}/auth/login`, credentials),
+        this.httpService.post(
+          `${this.authServiceUrl}/auth/login`,
+          credentials,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            timeout: 10000,
+          },
+        ),
       );
       return response.data;
     } catch (error: any) {
@@ -44,7 +53,16 @@ export class AuthService {
     this.logger.log('Proxying register request to auth-microservice', 'AuthService');
     try {
       const response = await firstValueFrom(
-        this.httpService.post(`${this.authServiceUrl}/auth/register`, data),
+        this.httpService.post(
+          `${this.authServiceUrl}/auth/register`,
+          data,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            timeout: 10000,
+          },
+        ),
       );
       return response.data;
     } catch (error: any) {
