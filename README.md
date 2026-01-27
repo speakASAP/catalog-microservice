@@ -17,7 +17,7 @@ The Catalog Microservice provides centralized product management for all sales c
 **Port Range**: 32xx (Central e-commerce microservices)
 
 | Service | Subdomain | Port |
-|---------|-----------|------|
+| ------- | --------- | ---- |
 | catalog-microservice | catalog.statex.cz | 3200 |
 | catalog-frontend | catalog.statex.cz | 3201 (Blue), 3203 (Green) |
 
