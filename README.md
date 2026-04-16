@@ -18,12 +18,12 @@ The Catalog Microservice provides centralized product management for all sales c
 
 | Service | Subdomain | Port |
 | ------- | --------- | ---- |
-| catalog-microservice | catalog.statex.cz | 3200 |
-| catalog-frontend | catalog.statex.cz | 3201 (Blue), 3203 (Green) |
+| catalog-microservice | catalog.alfares.cz | 3200 |
+| catalog-frontend | catalog.alfares.cz | 3201 (Blue), 3203 (Green) |
 
 ## API Endpoints
 
-Base URL: `https://catalog.statex.cz/api` (or `http://localhost:3200/api` in dev)
+Base URL: `https://catalog.alfares.cz/api` (or `http://localhost:3200/api` in dev)
 
 ### Products
 
@@ -77,7 +77,7 @@ The catalog-microservice includes a web-based admin interface for managing produ
 
 ### Access
 
-- **Production**: `https://catalog.statex.cz/admin`
+- **Production**: `https://catalog.alfares.cz/admin`
 - **Development**: `http://localhost:3201/admin`
 
 ### Features
@@ -175,7 +175,7 @@ Other services connect to catalog-microservice via REST API:
 
 ```typescript
 // Example: Get product from allegro-service
-const response = await fetch('https://catalog.statex.cz/api/products/sku/ABC123');
+const response = await fetch('https://catalog.alfares.cz/api/products/sku/ABC123');
 const { data: product } = await response.json();
 ```
 

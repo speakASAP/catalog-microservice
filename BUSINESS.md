@@ -19,4 +19,4 @@ flipflop-service, allegro-service, aukro-service, bazos-service, heureka-service
 ## SLA
 
 - Port: 3200 (<http://catalog-microservice:3200>)
-- Production: <https://catalog.statex.cz>
+- Production: <https://catalog.alfares.cz>

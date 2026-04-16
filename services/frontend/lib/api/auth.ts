@@ -37,7 +37,7 @@ const getApiBaseUrl = (): string => {
     return process.env.API_URL || 'http://catalog-microservice:3200/api';
   }
   // Client-side: use external URL (already includes /api)
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://catalog.statex.cz/api';
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://catalog.alfares.cz/api';
   // Remove /api if present since we'll add it in the path
   return baseUrl.replace(/\/api$/, '');
 };

@@ -98,7 +98,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 </span>
               </Link>
               <p className="text-sm text-blue-100 mt-1">
-                catalog.statex.cz
+                catalog.alfares.cz
               </p>
             </div>
 

@@ -1,5 +1,5 @@
 /**
- * API Client for catalog.statex.cz
+ * API Client for catalog.alfares.cz
  */
 
 // For SSR (server-side), use internal Docker network URL
@@ -10,7 +10,7 @@ const getApiBaseUrl = () => {
     return process.env.API_URL || 'http://catalog-microservice:3200/api';
   }
   // On client-side, use external URL
-  return process.env.NEXT_PUBLIC_API_URL || 'https://catalog.statex.cz/api';
+  return process.env.NEXT_PUBLIC_API_URL || 'https://catalog.alfares.cz/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();
