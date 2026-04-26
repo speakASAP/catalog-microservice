@@ -28,8 +28,8 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Global prefix for API routes
-  app.setGlobalPrefix('api');
+  // Global prefix for API routes (exclude health/ready endpoints)
+  app.setGlobalPrefix('api', { exclude: ['health', 'ready'] });
 
   const port = process.env.PORT || 3200;
   await app.listen(port);
