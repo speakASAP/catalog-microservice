@@ -1,8 +1,6 @@
 # catalog-microservice
 
-Ecosystem defaults: [`../CLAUDE.md`](../CLAUDE.md) · [`../shared/docs/PROJECT_AGENT_DOCS_STANDARD.md`](../shared/docs/PROJECT_AGENT_DOCS_STANDARD.md)
-
-Read order: `BUSINESS.md` → `SYSTEM.md` → `AGENTS.md` → `TASKS.md` → `STATE.json`
+→ Ecosystem: [../shared/CLAUDE.md](../shared/CLAUDE.md) | Reading order: `BUSINESS.md` → `SYSTEM.md` → `AGENTS.md` → `TASKS.md` → `STATE.json`
 
 ---
 
@@ -15,12 +13,7 @@ Read order: `BUSINESS.md` → `SYSTEM.md` → `AGENTS.md` → `TASKS.md` → `ST
 - Pricing mass updates (>10 products) require human review
 - Media stored in MinIO/CDN — never inline in DB
 
-### Quick ops
-```bash
-curl http://catalog-microservice:3200/health
-kubectl logs -n statex-apps deployment/catalog-microservice -f
-./scripts/deploy.sh
-```
+**Ops**: `curl http://catalog-microservice:3200/health` · `kubectl logs -n statex-apps deployment/catalog-microservice -f` · `./scripts/deploy.sh`
 
 ### Secrets
 All secrets in Vault at `secret/prod/catalog-microservice` — synced via ESO. See [`../shared/docs/VAULT.md`](../shared/docs/VAULT.md).
