@@ -32,11 +32,17 @@ spec:
                 name: catalog-microservice-config
             - secretRef:
                 name: catalog-microservice-secret
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 3200
+            failureThreshold: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
           livenessProbe:
             httpGet:
               path: /health
               port: 3200
-            initialDelaySeconds: 15
             periodSeconds: 30
             failureThreshold: 3
             timeoutSeconds: 5
