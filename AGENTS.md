@@ -1,6 +1,6 @@
 # Agents: catalog-microservice
 
-N/A — data service. AI agents use this via MCP postgres queries.
+N/A — data service. AI agents use application APIs or the approved `postgres` MCP server for Kubernetes-only database discovery/access.
 
 ## Active Agents
 <!-- Coordinator-maintained -->
