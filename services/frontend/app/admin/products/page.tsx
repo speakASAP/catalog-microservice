@@ -28,12 +28,18 @@ export default function AdminProductsPage() {
       });
       if (response.success && response.data) {
         const data = response.data as PaginatedResponse<Product>;
-        if (data.items) {
+        if (Array.isArray(response.data)) {
+          setProducts(response.data);
+          setTotalPages(response.pagination?.pages || 1);
+          setTotal(response.pagination?.total ?? response.data.length);
+        } else if (data.items) {
           setProducts(data.items);
-          setTotalPages(data.pagination?.pages || 1);
-          setTotal(data.pagination?.total || 0);
+          setTotalPages(response.pagination?.pages || data.pagination?.pages || 1);
+          setTotal(response.pagination?.total ?? data.pagination?.total ?? data.items.length);
         } else {
-          setProducts(Array.isArray(data) ? data : []);
+          setProducts([]);
+          setTotalPages(1);
+          setTotal(0);
         }
       }
     } catch (error) {
@@ -245,4 +251,3 @@ export default function AdminProductsPage() {
     </div>
   );
 }
-

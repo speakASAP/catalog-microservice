@@ -18,6 +18,12 @@ const API_BASE_URL = getApiBaseUrl();
 export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
+  pagination?: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
   error?: {
     code: string;
     message: string;

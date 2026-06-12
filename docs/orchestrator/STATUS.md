@@ -38,3 +38,6 @@ Additional owner-selected work:
 - Verified uploaded MinIO object URL returned `HTTP 200` with `content-type: image/png`.
 - Removed the smoke-test MinIO object after verification; object delete returned `204`.
 - Verified deployed frontend bundle contains the media drop zone, folder picker, and `/media/upload` client call.
+- Fixed admin product counts to read the deployed `/api/products` envelope where `data` contains the product array and `pagination` is a sibling field.
+- Deployed frontend after `services/frontend npm run build` passed.
+- Browser verification: `/admin/products` shows `Manage products (6 total)` and `/admin` shows the Products dashboard card as `6`; no browser console warnings/errors were reported.

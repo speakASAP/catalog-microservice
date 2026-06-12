@@ -25,7 +25,11 @@ export default function AdminDashboardPage() {
         ]);
 
         setStats({
-          products: productsRes.success && productsRes.data?.pagination ? productsRes.data.pagination.total : 0,
+          products: productsRes.success
+            ? productsRes.pagination?.total
+              ?? (Array.isArray(productsRes.data) ? productsRes.data.length : productsRes.data?.pagination?.total)
+              ?? 0
+            : 0,
           categories: categoriesRes.success && categoriesRes.data ? categoriesRes.data.length : 0,
           attributes: attributesRes.success && attributesRes.data ? attributesRes.data.length : 0,
           loading: false,
@@ -88,4 +92,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-

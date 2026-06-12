@@ -49,7 +49,7 @@ export const productsApi = {
     if (query?.isActive !== undefined) params.append('isActive', query.isActive.toString());
 
     const queryString = params.toString();
-    return apiClient.get<PaginatedResponse<Product>>(`/products${queryString ? `?${queryString}` : ''}`);
+    return apiClient.get<Product[] | PaginatedResponse<Product>>(`/products${queryString ? `?${queryString}` : ''}`);
   },
 
   async getProduct(id: string) {
@@ -80,4 +80,3 @@ export const productsApi = {
     return apiClient.delete(`/products/${id}/hard`);
   },
 };
-
