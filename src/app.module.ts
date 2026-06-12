@@ -9,6 +9,7 @@ import { PricingModule } from './pricing/pricing.module';
 import { HealthModule } from './health/health.module';
 import { LoggerModule } from './logger/logger.module';
 import { AuthModule } from './auth/auth.module';
+import { ChannelReadinessModule } from './channel-readiness/channel-readiness.module';
 
 /**
  * Main application module for Catalog Microservice
@@ -44,6 +45,7 @@ import { AuthModule } from './auth/auth.module';
     AttributesModule,
     MediaModule,
     PricingModule,
+    ChannelReadinessModule,
   ],
 })
 export class AppModule {}

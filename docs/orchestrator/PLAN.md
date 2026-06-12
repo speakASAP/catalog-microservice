@@ -6,7 +6,7 @@ Work one goal chunk at a time. Prefer a complete, verifiable chunk over starting
 
 ## Active Goal
 
-Goal 4 - Channel Readiness Model planning.
+Goal 4 - Channel Readiness Model source implementation complete; production deployment not requested.
 
 ### Goal 1 Closure Evidence
 
@@ -50,4 +50,4 @@ Verification:
 
 ## Next Goal Selection
 
-Goal 3 is complete. Start Goal 4 planning and pre-coding gate according to `implementation-goals/GOAL-04-channel-readiness-model.md`.
+Goal 4 source implementation is complete. Wait for explicit owner approval before production deployment or runtime smoke.

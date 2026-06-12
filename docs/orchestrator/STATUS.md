@@ -168,3 +168,19 @@ Current focus:
 Next unfinished step:
 
 - Create Goal 4 execution plan and run the pre-coding gate before channel readiness source changes.
+
+Goal 4 source implementation evidence:
+
+- Created `implementation-goals/GOAL-04-execution-plan.md` and reran the Goal 4 pre-coding gate after Goal 3 closure was documented remotely.
+- Added a read-only channel readiness module and endpoint at `GET /api/products/:id/channel-readiness`.
+- Added typed readiness response entries with channel, status, missing fields, issues, next action, and authority.
+- Added FlipFlop readiness rules for active lifecycle, active product state, title, description, category, media, and deterministic current price while preserving FlipFlop storefront/checkout authority.
+- Added Bazos draft-readiness rules that require catalog fields but defer compliance, identity, queueing, and publish decisions to Bazos.
+- Did not call Bazos, enqueue publishing, implement FlipFlop checkout, move stock ownership, or add mutations.
+- Existing `sellOnBazos` remains a documented boundary risk for separate Goal 7 or owner-approved follow-up; Goal 4 did not expand it.
+- Validation passed: `npm test` 3 suites/10 tests, `npm run build`, and `git diff --check`.
+- Production deployment was not requested and was not run.
+
+Next unfinished step:
+
+- Commit and push Goal 4 source/docs changes, then request explicit owner approval before any production deployment or runtime smoke.
