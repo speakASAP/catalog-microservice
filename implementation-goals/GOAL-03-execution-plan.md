@@ -2,7 +2,7 @@
 
 ```yaml
 id: EP-CATALOG-03
-status: draft
+status: implemented
 source_goal: implementation-goals/GOAL-03-pricing-integrity.md
 owner: orchestrator
 created: 2026-06-12
@@ -16,7 +16,7 @@ Remote implementation repository: `alfares:/home/ssf/Documents/Github/catalog-mi
 
 Branch target: `feature/catalog-goal-03-pricing-integrity`.
 
-Lifecycle state: planning complete; pre-coding gate required before pricing source edits.
+Lifecycle state: source implementation complete; production deployment not requested.
 
 ## Upstream Traceability
 
@@ -169,8 +169,8 @@ Implement Goal 3 in the remote `catalog-microservice` repository only. Preserve 
 
 ## Completion Checklist
 
-- [ ] Implementation complete
-- [ ] Tests complete
-- [ ] Validation evidence collected
-- [ ] Documentation updated
-- [ ] Deviations documented
+- [x] Implementation complete
+- [x] Tests complete
+- [x] Validation evidence collected
+- [x] Documentation updated
+- [x] Deviations documented

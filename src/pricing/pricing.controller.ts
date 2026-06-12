@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, ParseUUIDPipe, UseGuards, Req } from '@nestjs/common';
-import { PricingService } from './pricing.service';
+import { Body, Controller, Delete, Get, Headers, Param, ParseUUIDPipe, Post, Put, Req, UseGuards } from '@nestjs/common';
+import { PricingService, PricingWriteInput } from './pricing.service';
 import { ProductPricing } from './product-pricing.entity';
 import { LoggerService } from '../logger/logger.service';
 import { CatalogAuthGuard } from '../auth/catalog-auth.guard';
@@ -29,7 +29,7 @@ export class PricingController {
   @Post()
   @UseGuards(CatalogAuthGuard)
   async create(
-    @Body() data: Partial<ProductPricing>,
+    @Body() data: PricingWriteInput,
     @Req() request: CatalogAuthenticatedRequest,
   ) {
     this.logger.log('POST /api/pricing', 'PricingController');
@@ -38,9 +38,30 @@ export class PricingController {
       action: 'upsert',
       resourceType: 'pricing',
       resourceId: pricing.id,
-      metadata: { productId: pricing.productId, currency: pricing.currency },
+      metadata: this.pricingAuditMetadata(pricing, 1, false),
     });
     return { success: true, data: pricing };
+  }
+
+  @Post('bulk')
+  @UseGuards(CatalogAuthGuard)
+  async bulkCreate(
+    @Body() entries: PricingWriteInput[],
+    @Headers('x-human-review') humanReviewMarker: string | undefined,
+    @Req() request: CatalogAuthenticatedRequest,
+  ) {
+    this.logger.log('POST /api/pricing/bulk', 'PricingController');
+    const result = await this.pricingService.bulkUpsert(entries, humanReviewMarker);
+    this.logger.auditCatalogWrite(request, {
+      action: 'bulk_upsert',
+      resourceType: 'pricing',
+      metadata: {
+        productCount: new Set(result.prices.map((price) => price.productId)).size,
+        rowCount: result.count,
+        humanReviewExplicit: humanReviewMarker === 'explicit',
+      },
+    });
+    return { success: true, data: result };
   }
 
   @Put(':id')
@@ -56,7 +77,7 @@ export class PricingController {
       action: 'update',
       resourceType: 'pricing',
       resourceId: id,
-      metadata: { productId: pricing.productId, currency: pricing.currency },
+      metadata: this.pricingAuditMetadata(pricing, 1, false),
     });
     return { success: true, data: pricing };
   }
@@ -73,7 +94,19 @@ export class PricingController {
       action: 'delete',
       resourceType: 'pricing',
       resourceId: id,
+      metadata: { rowCount: 1, humanReviewExplicit: false },
     });
     return { success: true };
+  }
+
+  private pricingAuditMetadata(pricing: ProductPricing, rowCount: number, humanReviewExplicit: boolean) {
+    return {
+      productId: pricing.productId,
+      currency: pricing.currency,
+      priceType: pricing.priceType,
+      rowCount,
+      productCount: 1,
+      humanReviewExplicit,
+    };
   }
 }

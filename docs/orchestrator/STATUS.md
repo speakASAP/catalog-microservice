@@ -2,7 +2,7 @@
 
 ## 2026-06-12
 
-Current focus: Goal 3 - Pricing Integrity planning.
+Current focus: Goal 3 - Pricing Integrity source implementation complete.
 
 Evidence gathered:
 
@@ -134,3 +134,18 @@ Goal 3 planning evidence:
 Next unfinished step:
 
 - Implement Goal 3 pricing integrity source changes, then run `npm test`, `npm run build`, and `git diff --check`.
+
+Goal 3 source implementation evidence:
+
+- Updated current-price selection to evaluate active rows whose validity window contains the request time and choose deterministically by sale priority, newest valid start date, newest update timestamp, then newest creation timestamp.
+- Added service-level pricing write validation for required product ID, three-letter uppercase currency, positive base/cost/sale amounts, sale price not exceeding base price, lowercase price type tokens, finite margin values, and valid date windows.
+- Added `POST /api/pricing/bulk` behind `CatalogAuthGuard`; more than 10 pricing rows require `x-human-review: explicit`.
+- Preserved existing pricing read envelopes as `{ success: true, data: ... }`.
+- Kept pricing mutations protected by `CatalogAuthGuard` and expanded non-sensitive audit metadata with price type, currency, row count, product count, and human-review marker status.
+- Added focused Jest coverage in `src/pricing/pricing.service.spec.ts` for deterministic current price priority, invalid pricing rejection, validity window rejection, and mass-change human-review guard.
+- Validation passed: `npm test` returned 2 suites/6 tests passed; `npm run build` passed; `git diff --check` passed.
+- Production deployment was not requested and was not run.
+
+Next unfinished step:
+
+- Wait for explicit owner approval before any production deployment of Goal 3.
