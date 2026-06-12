@@ -6,7 +6,7 @@ Work one goal chunk at a time. Prefer a complete, verifiable chunk over starting
 
 ## Active Goal
 
-Goal 3 - Pricing Integrity planning.
+Goal 4 - Channel Readiness Model planning.
 
 ### Goal 1 Closure Evidence
 
@@ -26,6 +26,15 @@ Goal 3 - Pricing Integrity planning.
 - Runtime in-pod smoke returned health `200`, preserved the `GET /api/products` envelope, created and updated synthetic lifecycle products, verified readiness lifecycle/checks/issues, verified quality audit `missingEan` and duplicate summary shapes, and removed all synthetic products through the hard-delete approval gate.
 - Synthetic JWT was generated inside the pod from runtime secret and was not printed. A post-cleanup database check found zero `CODEX-GOAL2-%` products.
 
+
+### Goal 3 Closure Evidence
+
+- Commit `d222e11` contains Goal 3 pricing integrity source/docs.
+- Branch `feature/catalog-goal-03-pricing-integrity` was pushed to `origin`.
+- `./scripts/deploy.sh` deployed image `localhost:5000/catalog-microservice:d222e11` on 2026-06-12.
+- Production health check returned `healthy`.
+- Runtime in-pod smoke verified invalid pricing rejection, deterministic sale current-price selection, mass pricing guard rejection without human review, mass pricing acceptance with `x-human-review: explicit`, audit-log metadata, and synthetic cleanup.
+
 ### Goal 2 Planning Chunk
 
 Deliverables:
@@ -41,4 +50,4 @@ Verification:
 
 ## Next Goal Selection
 
-Goal 3 planning and pre-coding gate are complete. Implement pricing integrity source changes according to `implementation-goals/GOAL-03-execution-plan.md`.
+Goal 3 is complete. Start Goal 4 planning and pre-coding gate according to `implementation-goals/GOAL-04-channel-readiness-model.md`.

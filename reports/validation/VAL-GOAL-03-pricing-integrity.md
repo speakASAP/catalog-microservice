@@ -52,8 +52,28 @@ Passed. Validation used synthetic IDs and amounts only. No JWTs, secrets, produc
 
 ## Deployment
 
-Not run. Production deployment requires explicit owner approval.
+Completed after explicit owner approval.
+
+- Branch `feature/catalog-goal-03-pricing-integrity` was pushed to `origin` at commit `d222e11`.
+- `./scripts/deploy.sh` built and pushed image `localhost:5000/catalog-microservice:d222e11` plus `latest`.
+- Kubernetes rollout completed successfully for `deployment/catalog-microservice` in namespace `statex-apps`.
+- Deploy health check returned `200` with `status: healthy`, service `catalog-microservice`, version `1.0.0`, environment `production`.
+
+## Runtime Evidence
+
+In-pod smoke used a synthetic product and synthetic pricing rows only. JWT was generated inside the pod from the runtime secret and was not printed.
+
+- Health returned `200`.
+- Synthetic product create returned `201`.
+- Invalid pricing with zero base price/lowercase currency returned `400`.
+- Regular pricing create returned `201`.
+- Sale pricing create returned `201`.
+- Current-price endpoint selected `priceType: sale`.
+- Bulk pricing without `x-human-review: explicit` for 11 rows returned `400`.
+- Bulk pricing with `x-human-review: explicit` for 11 rows returned `201`.
+- Synthetic product hard cleanup returned `204`; cascade removed synthetic pricing rows.
+- Pod logs emitted `catalog.write` audit events for pricing upsert and bulk upsert, including non-sensitive metadata with `rowCount: 11` and `humanReviewExplicit: true`.
 
 ## Next Action
 
-Wait for explicit owner approval before any production deployment of Goal 3.
+Goal 3 is closed. Start Goal 4 Channel Readiness Model planning/pre-coding gate.

@@ -16,10 +16,10 @@ CATALOG ORCHESTRATOR: implement goal number 1
 
 ## Current Status
 
-- Active goal: Goal 3 - Pricing Integrity source implementation complete; production deployment not requested.
-- Active chunk: Goal 3 source validation complete; production deployment pending explicit owner approval.
-- Current wave: Wave 2 - Product Model Completeness.
-- Completed chunks: Goal 1.1 Intent Preservation Docs, Goal 1.2 Protected Mutation Endpoints, Goal 1.3 Hard Delete Approval Gate, Goal 1.4 Write Audit Context, Goal 1.5 Unauthorized And Authorized Write Verification, Goal 1 production deployment and runtime audit-log proof, Goal 2 lifecycle migration, deployment, and runtime API verification.
+- Active goal: Goal 4 - Channel Readiness Model planning.
+- Active chunk: Goal 4 execution plan and pre-coding gate.
+- Current wave: Wave 3 - Channel Readiness + Warehouse Contract.
+- Completed chunks: Goal 1.1 Intent Preservation Docs, Goal 1.2 Protected Mutation Endpoints, Goal 1.3 Hard Delete Approval Gate, Goal 1.4 Write Audit Context, Goal 1.5 Unauthorized And Authorized Write Verification, Goal 1 production deployment and runtime audit-log proof, Goal 2 lifecycle migration, deployment, and runtime API verification, Goal 3 pricing integrity deployment and runtime API verification.
 - Running goals: none.
 - Blocked goals: none.
 - Worker threads: none.
@@ -38,8 +38,8 @@ CATALOG ORCHESTRATOR: implement goal number 1
 |---|---|---|---|---|---|
 | 01 | `implementation-goals/GOAL-01-contract-auth-boundary.md` | done | `feature/catalog-goal-01-contract-auth-boundary` | none | Complete sequentially because it protects shared mutation behavior. |
 | 02 | `implementation-goals/GOAL-02-product-model-completeness.md` | done | `feature/catalog-goal-02-product-model-completeness` | 01 | Sequential by default. |
-| 03 | `implementation-goals/GOAL-03-pricing-integrity.md` | active | `feature/catalog-goal-03-pricing-integrity` | 01 | May run after Goal 01; avoid touching Goal 02 product lifecycle files in parallel. |
-| 04 | `implementation-goals/GOAL-04-channel-readiness-model.md` | pending | `feature/catalog-goal-04-channel-readiness-model` | 02, 03 | Depends on product quality and pricing rules. |
+| 03 | `implementation-goals/GOAL-03-pricing-integrity.md` | done | `feature/catalog-goal-03-pricing-integrity` | 01 | May run after Goal 01; avoid touching Goal 02 product lifecycle files in parallel. |
+| 04 | `implementation-goals/GOAL-04-channel-readiness-model.md` | active | `feature/catalog-goal-04-channel-readiness-model` | 02, 03 | Depends on product quality and pricing rules. |
 | 05 | `implementation-goals/GOAL-05-catalog-warehouse-contract.md` | pending | `feature/catalog-goal-05-catalog-warehouse-contract` | 02 | Keep stock ownership in warehouse. |
 | 06 | `implementation-goals/GOAL-06-flipflop-catalog-projection.md` | pending | `feature/catalog-goal-06-flipflop-catalog-projection` | 02, 03, 05 | Contract work only unless owner asks for FlipFlop changes. |
 | 07 | `implementation-goals/GOAL-07-bazos-draft-integration-contract.md` | pending | `feature/catalog-goal-07-bazos-draft-integration-contract` | 04 | Bazos remains publishing and compliance authority. |
@@ -96,6 +96,7 @@ Do not paste full logs into this file. Compress each result into a short impleme
 Newest entries first.
 
 ```text
+2026-06-12: Goal 3 runtime closure completed on `feature/catalog-goal-03-pricing-integrity` at commit `d222e11`. Branch was pushed to origin, `./scripts/deploy.sh` deployed image `localhost:5000/catalog-microservice:d222e11`, rollout and health check passed, and in-pod runtime smoke verified health 200, synthetic product create 201, invalid pricing 400, regular/sale pricing 201, current-price sale priority, bulk guard 400 without human review, bulk success 201 with `x-human-review: explicit`, audit metadata for pricing writes, and synthetic cleanup 204. Synthetic JWT was generated inside the pod and not printed. Goal 3 is complete; next action is Goal 4 planning/pre-coding gate.
 2026-06-12: Goal 3 pricing integrity source implementation completed on `feature/catalog-goal-03-pricing-integrity`. Added deterministic current-price selection, service-level validation for pricing writes, guarded bulk pricing upsert requiring `x-human-review: explicit` for more than 10 rows, non-sensitive pricing audit metadata, and focused Jest coverage. Validation passed: `npm test` 2 suites/6 tests, `npm run build`, and `git diff --check`. Production deployment was not requested.
 2026-06-12: Goal 3 pricing integrity planning completed on `feature/catalog-goal-03-pricing-integrity`. Created `implementation-goals/GOAL-03-execution-plan.md` and `reports/validation/GOAL-03-pre-coding-gate.md`. Scope covers deterministic current-price selection, pricing validation, mass-change human-review guard, and non-sensitive pricing audit evidence. Pre-coding gate passed; source implementation is next.
 2026-06-12: Catalog JWT token env mapping checked against RunLayer token-env wiring. Live `catalog-microservice-secret` already exposes `JWT_TOKEN`; repository wiring and env examples were aligned without printing token values. Catalog auth remains based on `JWT_SECRET`/`AUTH_JWT_SECRET`, with `JWT_TOKEN` documented for smoke/orchestration tooling. Validation: Kubernetes ExternalSecret dry-run passed and `git diff --check` passed.
@@ -130,10 +131,10 @@ Next command:
 
 ## Next Action
 
-Wait for explicit owner approval before any production deployment of Goal 3 source changes:
+Start Goal 4 planning and pre-coding gate:
 
 ```text
-CATALOG ORCHESTRATOR: request owner approval for Goal 3 production deployment
+CATALOG ORCHESTRATOR: implement goal number 4
 ```
 
 Source documents:
@@ -141,5 +142,5 @@ Source documents:
 ```text
 docs/orchestrator/GOALS.md
 docs/orchestrator/PLAN.md
-implementation-goals/GOAL-03-pricing-integrity.md
+implementation-goals/GOAL-04-channel-readiness-model.md
 ```

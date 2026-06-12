@@ -1,6 +1,6 @@
 # Goal 03 - Pricing Integrity
 
-Status: active - source implementation complete; deployment not requested
+Status: done
 
 ## Intent
 

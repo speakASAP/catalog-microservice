@@ -2,7 +2,7 @@
 
 ## 2026-06-12
 
-Current focus: Goal 3 - Pricing Integrity source implementation complete.
+Current focus: Goal 4 - Channel Readiness Model planning.
 
 Evidence gathered:
 
@@ -148,4 +148,23 @@ Goal 3 source implementation evidence:
 
 Next unfinished step:
 
-- Wait for explicit owner approval before any production deployment of Goal 3.
+- Goal 3 deployment approved, completed, and runtime-smoked. Start Goal 4 planning/pre-coding gate.
+
+
+Goal 3 closure evidence:
+
+- Branch `feature/catalog-goal-03-pricing-integrity` was pushed to `origin` at commit `d222e11`.
+- Validation before deployment passed: `npm test` 2 suites/6 tests, `npm run build`, and `git diff --check`.
+- `./scripts/deploy.sh` completed successfully after owner approval; image `localhost:5000/catalog-microservice:d222e11` and `latest` were pushed.
+- Kubernetes rollout for `deployment/catalog-microservice` in namespace `statex-apps` completed and deploy health check returned healthy.
+- Runtime in-pod smoke returned health `200`, synthetic product create `201`, invalid pricing rejection `400`, regular pricing create `201`, sale pricing create `201`, current-price selection `sale`, bulk without human review `400`, bulk with `x-human-review: explicit` `201`, and synthetic cleanup hard delete `204`.
+- Active pod logs emitted structured `catalog.write` events for pricing upsert and bulk upsert with synthetic actor `codex-goal3-runtime-smoke`, route/method/source metadata, price metadata, `rowCount: 11`, and `humanReviewExplicit: true`.
+- Synthetic JWT was generated inside the pod from runtime secret and was not printed.
+
+Current focus:
+
+- Goal 4 - Channel Readiness Model planning.
+
+Next unfinished step:
+
+- Create Goal 4 execution plan and run the pre-coding gate before channel readiness source changes.
