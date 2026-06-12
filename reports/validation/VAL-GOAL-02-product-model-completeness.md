@@ -1,13 +1,13 @@
 # VAL-GOAL-02: Product Model Completeness
 
-Status: source-validated-runtime-pending
+Status: passed-runtime-validated
 Validated artifact: implementation-goals/GOAL-02-product-model-completeness.md
 Branch: feature/catalog-goal-02-product-model-completeness
 Date: 2026-06-12
 
 ## Validation Scope
 
-Validated source-level lifecycle/readiness implementation, focused Jest coverage, build output, whitespace, and migration-script presence. Runtime API validation is pending because the additive products.lifecycle schema migration has not been applied to production.
+Validated source-level lifecycle/readiness implementation, focused Jest coverage, build output, whitespace, migration application, production deployment, and runtime API behavior with synthetic data.
 
 ## Evidence
 
@@ -44,7 +44,7 @@ Passed. Tests use synthetic IDs and SKUs only. No auth tokens, runtime secrets, 
 
 ## Failed Criteria
 
-Runtime API verification is not yet run because production requires applying scripts/migrations/20260612_goal02_product_lifecycle.sql before deploying code that selects products.lifecycle.
+None. Runtime API verification passed after migration and deployment.
 
 ## Deviations
 
@@ -52,4 +52,17 @@ A minimal Jest config was added because the repository previously had no backend
 
 ## Recommendation
 
-Proceed to explicit owner approval for production schema migration and deployment, then run direct API verification for lifecycle/readiness endpoints with synthetic products.
+Goal 2 is complete. Proceed to Goal 3 pricing integrity planning and pre-coding gate.
+
+
+## Runtime Evidence
+
+- Production schema inspection used `psql` from the Kubernetes Postgres environment and confirmed `products."isActive"` exists before applying the migration.
+- Applied `scripts/migrations/20260612_goal02_product_lifecycle.sql` with `ON_ERROR_STOP=1`.
+- Verified `products.lifecycle`, `products_lifecycle_check`, and `idx_products_lifecycle` after migration.
+- Deployed commit `fcb1919` with `./scripts/deploy.sh`; rollout and in-pod health check passed.
+- In-pod runtime smoke returned health `200` and confirmed existing `GET /api/products` envelope still has `success`, `data` array, and `pagination`.
+- Runtime smoke created three synthetic products, updated lifecycle to `needs_review`, verified `GET /api/products/:id/readiness` contains lifecycle/checks/issues, missing EAN/current price diagnostics, placeholder media diagnostics, and duplicate EAN diagnostics.
+- Runtime smoke verified `GET /api/products/audits/quality` returns `missingEan`, `duplicateSkus`, and `duplicateEans` summary arrays and found the synthetic missing-EAN and duplicate-EAN cases.
+- Cleanup proved hard delete is blocked without `x-owner-approval: explicit`, then deleted only the three synthetic products with the explicit approval header. A post-cleanup database check found zero `CODEX-GOAL2-%` products.
+- Synthetic JWT was generated inside the deployed pod from runtime secret and was not printed.

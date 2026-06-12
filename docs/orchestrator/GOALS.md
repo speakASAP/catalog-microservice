@@ -26,7 +26,7 @@ Acceptance criteria:
 
 ## Goal 2 - Catalog Product Model Completeness
 
-Status: active
+Status: done
 
 Intent: Catalog records must describe goods well enough for online sale and future channels.
 
@@ -45,7 +45,7 @@ Acceptance criteria:
 
 ## Goal 3 - Pricing Integrity
 
-Status: pending
+Status: active
 
 Intent: Catalog pricing must be reliable and safe to consume.
 

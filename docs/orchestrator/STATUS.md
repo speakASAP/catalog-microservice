@@ -2,7 +2,7 @@
 
 ## 2026-06-12
 
-Current focus: Goal 1 - Catalog Contract And Auth Boundary.
+Current focus: Goal 3 - Pricing Integrity planning.
 
 Evidence gathered:
 
@@ -103,4 +103,23 @@ Goal 2 source implementation evidence:
 
 Next unfinished step:
 
-- Approve and apply the Goal 2 lifecycle migration, deploy the Goal 2 branch, and run direct API verification with synthetic products.
+- Goal 2 complete. Create Goal 3 execution plan and run the pre-coding gate before pricing integrity source changes.
+
+Goal 2 closure evidence:
+
+- Production schema check used `psql` from the Kubernetes Postgres environment before migration and confirmed `products."isActive"` exists.
+- Applied `scripts/migrations/20260612_goal02_product_lifecycle.sql` with `ON_ERROR_STOP=1`; verified `products.lifecycle`, `products_lifecycle_check`, and `idx_products_lifecycle`.
+- Commit `fcb1919` deployed with `./scripts/deploy.sh`; preflight, image build, push, manifest apply, rollout, and health check passed.
+- Runtime in-pod smoke returned health `200` and confirmed the existing `GET /api/products` envelope remains `success` plus `data` array plus `pagination`.
+- Runtime smoke created and updated synthetic lifecycle products, verified readiness lifecycle/checks/issues, missing EAN/current price diagnostics, placeholder media diagnostics, and duplicate EAN diagnostics.
+- Runtime smoke verified `GET /api/products/audits/quality` returns `missingEan`, `duplicateSkus`, and `duplicateEans` summaries.
+- Cleanup proved hard delete is blocked without explicit owner approval, then deleted only the synthetic products with `x-owner-approval: explicit`; post-cleanup database check found zero `CODEX-GOAL2-%` products.
+- Synthetic JWT was generated inside the deployed pod from runtime secret and was not printed.
+
+Current focus:
+
+- Goal 3 - Pricing Integrity planning.
+
+Next unfinished step:
+
+- Create Goal 3 execution plan and run the pre-coding gate before pricing integrity source changes.

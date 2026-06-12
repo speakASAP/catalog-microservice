@@ -1,6 +1,6 @@
 # Goal 02 - Catalog Product Model Completeness
 
-Status: active - source validated, runtime pending
+Status: done - runtime validated and deployed
 
 ## Intent
 
