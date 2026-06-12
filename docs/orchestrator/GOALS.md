@@ -4,7 +4,7 @@ Status values: `pending`, `active`, `done`, `blocked`.
 
 ## Goal 1 - Catalog Contract And Auth Boundary
 
-Status: active
+Status: done
 
 Intent: Catalog must be safe as the central product truth service.
 
@@ -13,8 +13,8 @@ Chunks:
 - [x] 1.1 Add catalog-local intent preservation docs and master prompt.
 - [x] 1.2 Protect mutation endpoints with JWT/RBAC or internal service identity.
 - [x] 1.3 Gate hard delete behind explicit owner approval and superadmin role.
-- [ ] 1.4 Add audit-grade actor/source logging for writes.
-- [ ] 1.5 Add tests or direct API verification for unauthorized and authorized writes.
+- [x] 1.4 Add audit-grade actor/source logging for writes.
+- [x] 1.5 Add tests or direct API verification for unauthorized and authorized writes.
 
 Acceptance criteria:
 
@@ -26,7 +26,7 @@ Acceptance criteria:
 
 ## Goal 2 - Catalog Product Model Completeness
 
-Status: pending
+Status: active
 
 Intent: Catalog records must describe goods well enough for online sale and future channels.
 

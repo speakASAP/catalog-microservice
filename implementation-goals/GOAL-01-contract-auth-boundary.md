@@ -1,6 +1,6 @@
 # Goal 01 - Catalog Contract And Auth Boundary
 
-Status: active
+Status: done
 
 ## Intent
 

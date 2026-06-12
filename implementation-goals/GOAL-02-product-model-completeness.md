@@ -1,6 +1,6 @@
 # Goal 02 - Catalog Product Model Completeness
 
-Status: ready
+Status: active
 
 ## Intent
 

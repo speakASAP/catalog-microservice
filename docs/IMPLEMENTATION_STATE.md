@@ -16,10 +16,10 @@ CATALOG ORCHESTRATOR: implement goal number 1
 
 ## Current Status
 
-- Active goal: Goal 1 - Catalog Contract And Auth Boundary.
-- Active chunk: Goal 1 closure - commit and deployment decision.
-- Current wave: Wave 1 - Contract And Auth Boundary.
-- Completed chunks: 1.1 Intent Preservation Docs, 1.2 Protected Mutation Endpoints, 1.3 Hard Delete Approval Gate, 1.4 Write Audit Context, 1.5 Unauthorized And Authorized Write Verification.
+- Active goal: Goal 2 - Catalog Product Model Completeness.
+- Active chunk: Goal 2 planning and pre-coding gate.
+- Current wave: Wave 2 - Product Model Completeness.
+- Completed chunks: Goal 1.1 Intent Preservation Docs, Goal 1.2 Protected Mutation Endpoints, Goal 1.3 Hard Delete Approval Gate, Goal 1.4 Write Audit Context, Goal 1.5 Unauthorized And Authorized Write Verification, Goal 1 production deployment and runtime audit-log proof.
 - Running goals: none.
 - Blocked goals: none.
 - Worker threads: none.
@@ -36,8 +36,8 @@ CATALOG ORCHESTRATOR: implement goal number 1
 
 | Goal | File | Status | Branch | Depends On | Parallel Notes |
 |---|---|---|---|---|---|
-| 01 | `implementation-goals/GOAL-01-contract-auth-boundary.md` | active | `feature/catalog-goal-01-contract-auth-boundary` | none | Complete sequentially because it protects shared mutation behavior. |
-| 02 | `implementation-goals/GOAL-02-product-model-completeness.md` | ready | `feature/catalog-goal-02-product-model-completeness` | 01 | Sequential by default. |
+| 01 | `implementation-goals/GOAL-01-contract-auth-boundary.md` | done | `feature/catalog-goal-01-contract-auth-boundary` | none | Complete sequentially because it protects shared mutation behavior. |
+| 02 | `implementation-goals/GOAL-02-product-model-completeness.md` | active | `feature/catalog-goal-02-product-model-completeness` | 01 | Sequential by default. |
 | 03 | `implementation-goals/GOAL-03-pricing-integrity.md` | ready | `feature/catalog-goal-03-pricing-integrity` | 01 | May run after Goal 01; avoid touching Goal 02 product lifecycle files in parallel. |
 | 04 | `implementation-goals/GOAL-04-channel-readiness-model.md` | pending | `feature/catalog-goal-04-channel-readiness-model` | 02, 03 | Depends on product quality and pricing rules. |
 | 05 | `implementation-goals/GOAL-05-catalog-warehouse-contract.md` | pending | `feature/catalog-goal-05-catalog-warehouse-contract` | 02 | Keep stock ownership in warehouse. |
@@ -96,6 +96,7 @@ Do not paste full logs into this file. Compress each result into a short impleme
 Newest entries first.
 
 ```text
+2026-06-12: Goal 1 closure completed. Commit `2611124` was deployed with `./scripts/deploy.sh`; rollout and production health check passed. Runtime in-pod smoke returned health 200, anonymous category POST 401, authorized synthetic JWT category POST 201, and authorized cleanup DELETE 200. Active pod logs emitted structured `catalog.write` entries for category create/delete with actor `codex-goal1-runtime-smoke`, role `catalog:write`, request id `codex-goal1-audit-smoke`, method/route/source metadata, and resource type/id. Synthetic JWT was generated inside the pod from runtime secret and was not printed.
 2026-06-12: Goal 1.5 direct API verification passed on the deployed Catalog pod. `npm run build` passed in the remote repository. A direct app boot on the remote host was blocked because `db-server-postgres` is Kubernetes-only DNS from outside the cluster, so verification ran in `deployment/catalog-microservice` in namespace `statex-apps` using Node fetch. Results: health OK; anonymous `POST /api/categories` returned `401` with `Missing or invalid Authorization header`; synthetic JWT-authorized `POST /api/categories` returned `201`; cleanup `DELETE /api/categories/:id` returned `200`. The JWT was generated inside the pod from `JWT_SECRET` and was not printed. The deployed pod did not emit structured `catalog.write` entries, so runtime audit-log proof should be rerun after deploying the Goal 1.4 source changes.
 2026-06-12: Added Goalkeeper-style implementation orchestration structure for catalog: master orchestrator, implementation state, project invariants, operational gates, agent orchestration, branch workflow, implementation-goals roadmap, templates, and next-goal helper. This is documentation/process work only; runtime code was not changed.
 2026-06-12: Goal 1.4 completed. Added structured `catalog.write` audit logs for authenticated product, category, attribute, media, and pricing mutations. Audit entries include action, resource type/id, actor type/sub/email/source/roles from `CatalogAuthGuard`, route, method, request/correlation id, source IP, user agent, and non-sensitive resource metadata. `npm run build` passed. `git diff --check` passed. `npm test` is blocked by the existing Jest configuration/state: no tests are present and Jest reports a `catalog-frontend` haste module naming collision between `services/frontend/package.json` and `services/frontend/.next/standalone/services/frontend/package.json`.
@@ -124,7 +125,7 @@ Next command:
 
 ## Next Action
 
-Commit the Goal 1 source/docs changes in the remote repository, then deploy only with owner approval and rerun runtime audit-log verification:
+Create the Goal 2 execution plan, run the pre-coding gate, then implement product lifecycle/readiness diagnostics:
 
 ```text
 CATALOG ORCHESTRATOR: continue implementation
@@ -135,5 +136,5 @@ Source documents:
 ```text
 docs/orchestrator/GOALS.md
 docs/orchestrator/PLAN.md
-implementation-goals/GOAL-01-contract-auth-boundary.md
+implementation-goals/GOAL-02-product-model-completeness.md
 ```

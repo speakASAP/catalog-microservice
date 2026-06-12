@@ -6,64 +6,29 @@ Work one goal chunk at a time. Prefer a complete, verifiable chunk over starting
 
 ## Active Goal
 
-Goal 1 - Catalog Contract And Auth Boundary.
+Goal 2 - Catalog Product Model Completeness.
 
-### Chunk 1.1 - Intent Preservation Docs
+### Goal 1 Closure Evidence
 
-Deliverables:
+- Commit `2611124` contains Goal 1 auth boundary and audit logging source/docs.
+- `./scripts/deploy.sh` deployed image `localhost:5000/catalog-microservice:2611124` on 2026-06-12.
+- Production health check returned `healthy`.
+- In-pod runtime smoke returned health `200`, anonymous category `POST` `401`, authorized category `POST` `201`, authorized cleanup `DELETE` `200`.
+- Active pod logs emitted structured `catalog.write` entries for category create/delete with synthetic actor and request id.
 
-- `MASTER_PROMPT.md`
-- `INTENT.md`
-- `GOALS.md`
-- `PLAN.md`
-- `STATUS.md`
-- `PROMPTS.md`
-- `AGENTS.md` reference to these files
-
-Verification:
-
-- Files exist in `docs/orchestrator/`.
-- `AGENTS.md` tells future agents to follow the orchestrator pack.
-
-### Chunk 1.2 - Protected Mutation Endpoints
+### Goal 2 Planning Chunk
 
 Deliverables:
 
-- Catalog auth guard.
-- Role metadata/decorator.
-- Protected POST/PUT/DELETE endpoints in products, categories, attributes, media, and pricing.
+- Execution plan for product lifecycle/readiness diagnostics.
+- Source inspection of product entity, DTO/service/controller, media model, and existing response contracts.
+- Pre-coding gate evidence before model/API changes.
 
 Verification:
 
-- `npm run build`
-- Unauthorized mutation returns `401` after deployment or direct app test.
-
-### Chunk 1.3 - Hard Delete Approval Gate
-
-Deliverables:
-
-- Hard delete requires `global:superadmin`.
-- Hard delete requires explicit owner approval header/body marker.
-- Missing approval returns `403`.
-
-Verification:
-
-- `npm run build`
-- Direct controller/API verification after deployment.
-
-### Chunk 1.4 - Write Audit Context
-
-Deliverables:
-
-- Write logs include actor/source metadata.
-- Mutation services can later persist audit events.
-
-Verification:
-
-- Build passes.
-- Status note describes current log evidence and remaining persistence gap.
+- Goal 2 plan names applicable invariants and validation commands.
+- Public product read compatibility is preserved by design before coding.
 
 ## Next Goal Selection
 
-When Goal 1 is complete, continue to Goal 2 unless the owner explicitly chooses another goal.
-
+Goal 2 is active. Continue with lifecycle fields, readiness diagnostics, placeholder media detection, and EAN/SKU audits unless the owner explicitly selects another goal.

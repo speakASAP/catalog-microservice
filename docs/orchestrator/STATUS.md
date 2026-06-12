@@ -71,3 +71,20 @@ Additional owner-selected work:
 - Fixed admin product counts to read the deployed `/api/products` envelope where `data` contains the product array and `pagination` is a sibling field.
 - Deployed frontend after `services/frontend npm run build` passed.
 - Browser verification: `/admin/products` shows `Manage products (6 total)` and `/admin` shows the Products dashboard card as `6`; no browser console warnings/errors were reported.
+
+Goal 1 closure evidence:
+
+- Commit `2611124` is deployed to production through `./scripts/deploy.sh`.
+- Deployment phases completed successfully: preflight, image build, push, manifest apply, rollout, and health check.
+- Production health returned `healthy` for `catalog-microservice` version `1.0.0`.
+- Runtime smoke in `deployment/catalog-microservice` returned health `200`, anonymous `POST /api/categories` `401`, authorized synthetic JWT `POST /api/categories` `201`, and authorized cleanup `DELETE /api/categories/:id` `200`.
+- Active pod `catalog-microservice-649d9b9f89-x9t4z` emitted structured `catalog.write` logs for category create and delete with synthetic actor `codex-goal1-runtime-smoke`, role `catalog:write`, request id `codex-goal1-audit-smoke`, route, method, source IP, user agent, resource type/id, and non-sensitive metadata.
+- Synthetic JWT was generated inside the pod from runtime secret and was not printed.
+
+Current focus:
+
+- Goal 2 - Catalog Product Model Completeness.
+
+Next unfinished step:
+
+- Create Goal 2 execution plan and run pre-coding gate before product model changes.
