@@ -26,9 +26,39 @@ Implementation evidence:
 - Fixed product route ordering so `GET /api/products/sku/:sku` is declared before `GET /api/products/:id`.
 - Remote `npm run build` passed after these changes.
 
-Next unfinished chunk:
+Completed next chunk:
 
-- Goal 1.4: add audit-grade actor/source logging for writes.
+- Goal 1.4: added audit-grade actor/source logging for writes.
+
+Goal 1.4 implementation evidence:
+
+- Exported catalog actor/request types from `CatalogAuthGuard` for consistent request audit context.
+- Added structured `catalog.write` audit logging through `LoggerService.auditCatalogWrite`.
+- Product, category, attribute, media, and pricing mutation endpoints now log actor/source, roles, method, route, request/correlation id, source IP, user agent, action, resource type/id, and non-sensitive resource metadata after successful writes.
+- Audit logging avoids request bodies and uploaded file content.
+- Remote `npm run build` passed.
+- Remote `git diff --check` passed.
+- Remote `npm test` did not pass because the repo currently has no tests and Jest reports a `catalog-frontend` haste module naming collision between `services/frontend/package.json` and `services/frontend/.next/standalone/services/frontend/package.json`.
+
+Completed final chunk:
+
+- Goal 1.5: direct API verification for unauthorized and authorized writes passed.
+
+Goal 1.5 validation evidence:
+
+- Remote `npm run build` passed.
+- Direct app boot outside Kubernetes was blocked by cluster-only database DNS for `db-server-postgres`.
+- In-pod direct API smoke ran through `kubectl -n statex-apps exec deployment/catalog-microservice -- node -e <direct API smoke>`.
+- Health check returned OK.
+- Anonymous `POST /api/categories` returned `401` with `Missing or invalid Authorization header`.
+- Synthetic JWT-authorized `POST /api/categories` returned `201`.
+- Authorized cleanup `DELETE /api/categories/:id` returned `200`.
+- The synthetic JWT was generated inside the pod from `JWT_SECRET`; no token or secret was printed.
+- The deployed pod logged category create/delete controller activity but did not show structured `catalog.write` entries, so audit-log runtime proof should be rerun after deploying the Goal 1.4 source changes.
+
+Next unfinished step:
+
+- Commit the Goal 1 source/docs changes in the remote repository, then deploy only with owner approval and rerun runtime audit-log verification.
 
 Additional owner-selected work:
 

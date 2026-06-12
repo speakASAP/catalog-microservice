@@ -8,11 +8,13 @@ import {
   Param,
   ParseUUIDPipe,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { Category } from './category.entity';
 import { LoggerService } from '../logger/logger.service';
 import { CatalogAuthGuard } from '../auth/catalog-auth.guard';
+import type { CatalogAuthenticatedRequest } from '../auth/catalog-auth.guard';
 
 @Controller('categories')
 export class CategoriesController {
@@ -60,9 +62,18 @@ export class CategoriesController {
    */
   @Post()
   @UseGuards(CatalogAuthGuard)
-  async create(@Body() data: Partial<Category>) {
+  async create(
+    @Body() data: Partial<Category>,
+    @Req() request: CatalogAuthenticatedRequest,
+  ) {
     this.logger.log('POST /api/categories', 'CategoriesController');
     const category = await this.categoriesService.create(data);
+    this.logger.auditCatalogWrite(request, {
+      action: 'create',
+      resourceType: 'category',
+      resourceId: category.id,
+      metadata: { name: category.name },
+    });
     return { success: true, data: category };
   }
 
@@ -75,9 +86,16 @@ export class CategoriesController {
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() data: Partial<Category>,
+    @Req() request: CatalogAuthenticatedRequest,
   ) {
     this.logger.log(`PUT /api/categories/${id}`, 'CategoriesController');
     const category = await this.categoriesService.update(id, data);
+    this.logger.auditCatalogWrite(request, {
+      action: 'update',
+      resourceType: 'category',
+      resourceId: id,
+      metadata: { name: category.name },
+    });
     return { success: true, data: category };
   }
 
@@ -87,10 +105,17 @@ export class CategoriesController {
    */
   @Delete(':id')
   @UseGuards(CatalogAuthGuard)
-  async remove(@Param('id', ParseUUIDPipe) id: string) {
+  async remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() request: CatalogAuthenticatedRequest,
+  ) {
     this.logger.log(`DELETE /api/categories/${id}`, 'CategoriesController');
     await this.categoriesService.remove(id);
+    this.logger.auditCatalogWrite(request, {
+      action: 'delete',
+      resourceType: 'category',
+      resourceId: id,
+    });
     return { success: true };
   }
 }
-

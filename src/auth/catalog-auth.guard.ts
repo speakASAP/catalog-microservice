@@ -18,12 +18,16 @@ type JwtPayload = {
   [key: string]: unknown;
 };
 
-type CatalogActor = {
+export type CatalogActor = {
   type: 'jwt' | 'service';
   sub: string;
   email?: string;
   roles: string[];
   source?: string;
+};
+
+export type CatalogAuthenticatedRequest = Request & {
+  catalogActor?: CatalogActor;
 };
 
 @Injectable()
@@ -39,7 +43,7 @@ export class CatalogAuthGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest<Request & { catalogActor?: CatalogActor }>();
+    const request = context.switchToHttp().getRequest<CatalogAuthenticatedRequest>();
     const requiredRoles =
       this.reflector.getAllAndOverride<string[]>(CATALOG_ROLES_KEY, [
         context.getHandler(),

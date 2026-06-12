@@ -7,6 +7,7 @@ import {
   ParseUUIDPipe,
   Post,
   Put,
+  Req,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -16,6 +17,7 @@ import { MediaService } from './media.service';
 import { Media } from './media.entity';
 import { LoggerService } from '../logger/logger.service';
 import { CatalogAuthGuard } from '../auth/catalog-auth.guard';
+import type { CatalogAuthenticatedRequest } from '../auth/catalog-auth.guard';
 
 @Controller('media')
 export class MediaController {
@@ -33,9 +35,18 @@ export class MediaController {
 
   @Post()
   @UseGuards(CatalogAuthGuard)
-  async create(@Body() data: Partial<Media>) {
+  async create(
+    @Body() data: Partial<Media>,
+    @Req() request: CatalogAuthenticatedRequest,
+  ) {
     this.logger.log('POST /api/media', 'MediaController');
     const media = await this.mediaService.create(data);
+    this.logger.auditCatalogWrite(request, {
+      action: 'create',
+      resourceType: 'media',
+      resourceId: media.id,
+      metadata: { productId: media.productId },
+    });
     return { success: true, data: media };
   }
 
@@ -50,6 +61,7 @@ export class MediaController {
       position?: string;
       isPrimary?: string;
     },
+    @Req() request: CatalogAuthenticatedRequest,
   ) {
     this.logger.log(`POST /api/media/upload product=${body.productId}`, 'MediaController');
     const media = await this.mediaService.upload({
@@ -59,30 +71,63 @@ export class MediaController {
       position: body.position ? Number(body.position) : undefined,
       isPrimary: body.isPrimary === 'true',
     });
+    this.logger.auditCatalogWrite(request, {
+      action: 'upload',
+      resourceType: 'media',
+      resourceId: media.id,
+      metadata: { productId: media.productId },
+    });
     return { success: true, data: media };
   }
 
   @Put(':id')
   @UseGuards(CatalogAuthGuard)
-  async update(@Param('id', ParseUUIDPipe) id: string, @Body() data: Partial<Media>) {
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() data: Partial<Media>,
+    @Req() request: CatalogAuthenticatedRequest,
+  ) {
     this.logger.log(`PUT /api/media/${id}`, 'MediaController');
     const media = await this.mediaService.update(id, data);
+    this.logger.auditCatalogWrite(request, {
+      action: 'update',
+      resourceType: 'media',
+      resourceId: id,
+      metadata: { productId: media.productId },
+    });
     return { success: true, data: media };
   }
 
   @Put(':id/primary')
   @UseGuards(CatalogAuthGuard)
-  async setPrimary(@Param('id', ParseUUIDPipe) id: string) {
+  async setPrimary(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() request: CatalogAuthenticatedRequest,
+  ) {
     this.logger.log(`PUT /api/media/${id}/primary`, 'MediaController');
     const media = await this.mediaService.setPrimary(id);
+    this.logger.auditCatalogWrite(request, {
+      action: 'set_primary',
+      resourceType: 'media',
+      resourceId: id,
+      metadata: { productId: media.productId },
+    });
     return { success: true, data: media };
   }
 
   @Delete(':id')
   @UseGuards(CatalogAuthGuard)
-  async remove(@Param('id', ParseUUIDPipe) id: string) {
+  async remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() request: CatalogAuthenticatedRequest,
+  ) {
     this.logger.log(`DELETE /api/media/${id}`, 'MediaController');
     await this.mediaService.remove(id);
+    this.logger.auditCatalogWrite(request, {
+      action: 'delete',
+      resourceType: 'media',
+      resourceId: id,
+    });
     return { success: true };
   }
 }

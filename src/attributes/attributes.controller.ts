@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Put, Body, Param, ParseUUIDPipe, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, ParseUUIDPipe, UseGuards, Req } from '@nestjs/common';
 import { AttributesService } from './attributes.service';
 import { Attribute } from './attribute.entity';
 import { LoggerService } from '../logger/logger.service';
 import { CatalogAuthGuard } from '../auth/catalog-auth.guard';
+import type { CatalogAuthenticatedRequest } from '../auth/catalog-auth.guard';
 
 @Controller('attributes')
 export class AttributesController {
@@ -27,18 +28,36 @@ export class AttributesController {
 
   @Post()
   @UseGuards(CatalogAuthGuard)
-  async create(@Body() data: Partial<Attribute>) {
+  async create(
+    @Body() data: Partial<Attribute>,
+    @Req() request: CatalogAuthenticatedRequest,
+  ) {
     this.logger.log('POST /api/attributes', 'AttributesController');
     const attribute = await this.attributesService.create(data);
+    this.logger.auditCatalogWrite(request, {
+      action: 'create',
+      resourceType: 'attribute',
+      resourceId: attribute.id,
+      metadata: { name: attribute.name },
+    });
     return { success: true, data: attribute };
   }
 
   @Put(':id')
   @UseGuards(CatalogAuthGuard)
-  async update(@Param('id', ParseUUIDPipe) id: string, @Body() data: Partial<Attribute>) {
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() data: Partial<Attribute>,
+    @Req() request: CatalogAuthenticatedRequest,
+  ) {
     this.logger.log(`PUT /api/attributes/${id}`, 'AttributesController');
     const attribute = await this.attributesService.update(id, data);
+    this.logger.auditCatalogWrite(request, {
+      action: 'update',
+      resourceType: 'attribute',
+      resourceId: id,
+      metadata: { name: attribute.name },
+    });
     return { success: true, data: attribute };
   }
 }
-
