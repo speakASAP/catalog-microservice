@@ -90,6 +90,29 @@ export class ProductsController {
   }
 
 
+  /**
+   * Get product identifier and quality audit summary
+   * GET /api/products/audits/quality
+   */
+  @Get("audits/quality")
+  async qualityAudit() {
+    this.logger.log("GET /api/products/audits/quality", "ProductsController");
+    const audit = await this.productsService.getQualityAudit();
+    return { success: true, data: audit };
+  }
+
+  /**
+   * Get readiness diagnostics for a product
+   * GET /api/products/:id/readiness
+   */
+  @Get(":id/readiness")
+  async readiness(@Param("id", ParseUUIDPipe) id: string) {
+    this.logger.log("GET /api/products/" + id + "/readiness", "ProductsController");
+    const readiness = await this.productsService.getReadiness(id);
+    return { success: true, data: readiness };
+  }
+
+
   @Post(":id/sell-on-bazos")
   @UseGuards(CatalogAuthGuard)
   async sellOnBazos(

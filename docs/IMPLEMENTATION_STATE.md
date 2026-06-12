@@ -17,7 +17,7 @@ CATALOG ORCHESTRATOR: implement goal number 1
 ## Current Status
 
 - Active goal: Goal 2 - Catalog Product Model Completeness.
-- Active chunk: Goal 2 planning and pre-coding gate.
+- Active chunk: Goal 2 runtime schema migration and deployment decision.
 - Current wave: Wave 2 - Product Model Completeness.
 - Completed chunks: Goal 1.1 Intent Preservation Docs, Goal 1.2 Protected Mutation Endpoints, Goal 1.3 Hard Delete Approval Gate, Goal 1.4 Write Audit Context, Goal 1.5 Unauthorized And Authorized Write Verification, Goal 1 production deployment and runtime audit-log proof.
 - Running goals: none.
@@ -96,6 +96,7 @@ Do not paste full logs into this file. Compress each result into a short impleme
 Newest entries first.
 
 ```text
+2026-06-12: Goal 2 source implementation completed on feature/catalog-goal-02-product-model-completeness. Added lifecycle field/DTO/query support, readiness endpoint, quality audit endpoint, diagnostics for missing EAN/media/description/category/current price/placeholder media/duplicate identifiers/lifecycle blockers, additive lifecycle SQL migration, focused Jest tests, and Jest backend config. Validation passed: npm test 1 suite/2 tests, npm run build, and git diff --check. Runtime API verification is pending explicit approval to apply scripts/migrations/20260612_goal02_product_lifecycle.sql and deploy.
 2026-06-12: Goal 1 closure completed. Commit `2611124` was deployed with `./scripts/deploy.sh`; rollout and production health check passed. Runtime in-pod smoke returned health 200, anonymous category POST 401, authorized synthetic JWT category POST 201, and authorized cleanup DELETE 200. Active pod logs emitted structured `catalog.write` entries for category create/delete with actor `codex-goal1-runtime-smoke`, role `catalog:write`, request id `codex-goal1-audit-smoke`, method/route/source metadata, and resource type/id. Synthetic JWT was generated inside the pod from runtime secret and was not printed.
 2026-06-12: Goal 1.5 direct API verification passed on the deployed Catalog pod. `npm run build` passed in the remote repository. A direct app boot on the remote host was blocked because `db-server-postgres` is Kubernetes-only DNS from outside the cluster, so verification ran in `deployment/catalog-microservice` in namespace `statex-apps` using Node fetch. Results: health OK; anonymous `POST /api/categories` returned `401` with `Missing or invalid Authorization header`; synthetic JWT-authorized `POST /api/categories` returned `201`; cleanup `DELETE /api/categories/:id` returned `200`. The JWT was generated inside the pod from `JWT_SECRET` and was not printed. The deployed pod did not emit structured `catalog.write` entries, so runtime audit-log proof should be rerun after deploying the Goal 1.4 source changes.
 2026-06-12: Added Goalkeeper-style implementation orchestration structure for catalog: master orchestrator, implementation state, project invariants, operational gates, agent orchestration, branch workflow, implementation-goals roadmap, templates, and next-goal helper. This is documentation/process work only; runtime code was not changed.
@@ -125,7 +126,7 @@ Next command:
 
 ## Next Action
 
-Create the Goal 2 execution plan, run the pre-coding gate, then implement product lifecycle/readiness diagnostics:
+Approve and apply the Goal 2 lifecycle migration, deploy the Goal 2 branch, then run runtime API verification:
 
 ```text
 CATALOG ORCHESTRATOR: continue implementation

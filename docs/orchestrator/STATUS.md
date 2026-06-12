@@ -88,3 +88,19 @@ Current focus:
 Next unfinished step:
 
 - Create Goal 2 execution plan and run pre-coding gate before product model changes.
+
+Goal 2 source implementation evidence:
+
+- Added additive product lifecycle model for draft, active, archived, and needs_review while preserving isActive compatibility.
+- Added product readiness diagnostics through GET /api/products/:id/readiness.
+- Added quality audit endpoint GET /api/products/audits/quality for missing EAN and duplicate SKU/EAN summaries.
+- Added diagnostics for missing EAN, duplicate identifiers, missing description/category/media/current price, placeholder media, inactive state, and lifecycle blockers.
+- Added additive migration script scripts/migrations/20260612_goal02_product_lifecycle.sql; production runtime validation is pending until this migration is approved and applied before deployment.
+- Added focused Jest coverage for lifecycle defaults and incomplete-product readiness diagnostics.
+- npm test passed: 1 suite, 2 tests.
+- npm run build passed.
+- git diff --check passed.
+
+Next unfinished step:
+
+- Approve and apply the Goal 2 lifecycle migration, deploy the Goal 2 branch, and run direct API verification with synthetic products.

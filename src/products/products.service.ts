@@ -1,10 +1,44 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, ILike } from 'typeorm';
-import { Product } from './product.entity';
+import { Product, ProductLifecycle } from "./product.entity";
 import { LoggerService } from '../logger/logger.service';
 import { CreateProductDto, UpdateProductDto, ProductQueryDto } from './dto';
-import axios from 'axios';
+import axios from "axios";
+
+type ProductQualitySeverity = "blocking" | "warning";
+
+export type ProductQualityIssue = {
+  code: string;
+  message: string;
+  severity: ProductQualitySeverity;
+  field?: string;
+};
+
+export type ProductReadiness = {
+  productId: string;
+  sku: string;
+  lifecycle: ProductLifecycle;
+  sellable: boolean;
+  publishable: boolean;
+  issues: ProductQualityIssue[];
+  checks: {
+    hasEan: boolean;
+    hasMedia: boolean;
+    hasPlaceholderMedia: boolean;
+    hasCurrentPrice: boolean;
+    hasCategory: boolean;
+    hasDescription: boolean;
+    duplicateSku: boolean;
+    duplicateEan: boolean;
+  };
+};
+
+export type ProductIdentifierAudit = {
+  missingEan: Array<{ id: string; sku: string; title: string }>;
+  duplicateSkus: Array<{ sku: string; count: number }>;
+  duplicateEans: Array<{ ean: string; count: number }>;
+};
 
 @Injectable()
 export class ProductsService {
@@ -20,7 +54,7 @@ export class ProductsService {
   async create(createProductDto: CreateProductDto): Promise<Product> {
     this.logger.log(`Creating product with SKU: ${createProductDto.sku}`, 'ProductsService');
 
-    const product = this.productRepository.create(createProductDto);
+    const product = this.productRepository.create(this.withLifecycleDefaults(createProductDto));
     const saved = await this.productRepository.save(product);
 
     this.logger.log(`Product created: ${saved.id}`, 'ProductsService');
@@ -31,7 +65,7 @@ export class ProductsService {
    * Find all products with pagination and filters
    */
   async findAll(query: ProductQueryDto): Promise<{ items: Product[]; total: number; page: number; limit: number }> {
-    const { page = 1, limit = 20, search, isActive, categoryId } = query;
+    const { page = 1, limit = 20, search, isActive, lifecycle, categoryId } = query;
     const skip = (page - 1) * limit;
 
     this.logger.log(`Finding products: page=${page}, limit=${limit}, search=${search}`, 'ProductsService');
@@ -54,6 +88,10 @@ export class ProductsService {
 
     if (isActive !== undefined) {
       queryBuilder.andWhere('product.isActive = :isActive', { isActive });
+    }
+
+    if (lifecycle) {
+      queryBuilder.andWhere("product.lifecycle = :lifecycle", { lifecycle });
     }
 
     // Filter by category
@@ -117,12 +155,174 @@ export class ProductsService {
     this.logger.log(`Updating product: ${id}`, 'ProductsService');
 
     const product = await this.findOne(id);
-    Object.assign(product, updateProductDto);
+    Object.assign(product, this.withLifecycleDefaults(updateProductDto, product));
 
     const updated = await this.productRepository.save(product);
     this.logger.log(`Product updated: ${id}`, 'ProductsService');
 
     return updated;
+  }
+
+
+  async getReadiness(id: string): Promise<ProductReadiness> {
+    const product = await this.findOne(id);
+    const duplicateSummary = await this.getDuplicateSummaryForProduct(product);
+    return this.buildReadiness(product, duplicateSummary);
+  }
+
+  async getQualityAudit(): Promise<ProductIdentifierAudit> {
+    const missingEanRows = await this.productRepository
+      .createQueryBuilder("product")
+      .select(["product.id", "product.sku", "product.title"])
+      .where("product.ean IS NULL OR length(btrim(product.ean)) = 0")
+      .orderBy("product.createdAt", "DESC")
+      .getMany();
+
+    const duplicateSkus = await this.productRepository
+      .createQueryBuilder("product")
+      .select("product.sku", "sku")
+      .addSelect("COUNT(*)", "count")
+      .where("product.sku IS NOT NULL AND length(btrim(product.sku)) > 0")
+      .groupBy("product.sku")
+      .having("COUNT(*) > 1")
+      .getRawMany<{ sku: string; count: string }>();
+
+    const duplicateEans = await this.productRepository
+      .createQueryBuilder("product")
+      .select("product.ean", "ean")
+      .addSelect("COUNT(*)", "count")
+      .where("product.ean IS NOT NULL AND length(btrim(product.ean)) > 0")
+      .groupBy("product.ean")
+      .having("COUNT(*) > 1")
+      .getRawMany<{ ean: string; count: string }>();
+
+    return {
+      missingEan: missingEanRows.map((product) => ({
+        id: product.id,
+        sku: product.sku,
+        title: product.title,
+      })),
+      duplicateSkus: duplicateSkus.map((row) => ({ sku: row.sku, count: Number(row.count) })),
+      duplicateEans: duplicateEans.map((row) => ({ ean: row.ean, count: Number(row.count) })),
+    };
+  }
+
+  private withLifecycleDefaults<T extends Partial<Product>>(data: T, current?: Product): T {
+    const next = { ...data };
+
+    if (!next.lifecycle) {
+      if (next.isActive === false) {
+        next.lifecycle = "archived";
+      } else if (next.isActive === true && current?.lifecycle === "archived") {
+        next.lifecycle = "active";
+      } else if (!current) {
+        next.lifecycle = "active";
+      }
+    }
+
+    if (next.lifecycle === "archived") {
+      next.isActive = false;
+    } else if (next.lifecycle === "active" && next.isActive === undefined) {
+      next.isActive = true;
+    }
+
+    return next;
+  }
+
+  private resolveLifecycle(product: Product): ProductLifecycle {
+    if (product.lifecycle) {
+      return product.lifecycle;
+    }
+    return product.isActive === false ? "archived" : "active";
+  }
+
+  private buildReadiness(
+    product: Product,
+    duplicateSummary: { duplicateSku: boolean; duplicateEan: boolean },
+  ): ProductReadiness {
+    const lifecycle = this.resolveLifecycle(product);
+    const hasEan = Boolean(product.ean?.trim());
+    const hasMedia = Boolean(product.media?.length);
+    const hasPlaceholderMedia = Boolean(product.media?.some((media) => this.isPlaceholderMedia(media)));
+    const hasCurrentPrice = Boolean(
+      product.pricing?.some((price) => price.isActive && Number(price.salePrice ?? price.basePrice) > 0),
+    );
+    const hasCategory = Boolean(product.categories?.length);
+    const hasDescription = Boolean(product.description?.trim());
+    const issues: ProductQualityIssue[] = [];
+
+    if (lifecycle === "archived") {
+      issues.push({ code: "archived_product", field: "lifecycle", severity: "blocking", message: "Archived products are not sellable or publishable." });
+    }
+    if (lifecycle === "draft") {
+      issues.push({ code: "draft_product", field: "lifecycle", severity: "blocking", message: "Draft products need review before publication." });
+    }
+    if (lifecycle === "needs_review") {
+      issues.push({ code: "needs_review", field: "lifecycle", severity: "warning", message: "Product is flagged for catalog review." });
+    }
+    if (!product.isActive) {
+      issues.push({ code: "inactive_product", field: "isActive", severity: "blocking", message: "Inactive products are not sellable." });
+    }
+    if (!hasEan) {
+      issues.push({ code: "missing_ean", field: "ean", severity: "warning", message: "EAN is missing." });
+    }
+    if (duplicateSummary.duplicateEan) {
+      issues.push({ code: "duplicate_ean", field: "ean", severity: "blocking", message: "EAN is shared by multiple products." });
+    }
+    if (duplicateSummary.duplicateSku) {
+      issues.push({ code: "duplicate_sku", field: "sku", severity: "blocking", message: "SKU is shared by multiple products." });
+    }
+    if (!hasDescription) {
+      issues.push({ code: "missing_description", field: "description", severity: "warning", message: "Description is missing." });
+    }
+    if (!hasCategory) {
+      issues.push({ code: "missing_category", field: "categories", severity: "warning", message: "Product has no category." });
+    }
+    if (!hasMedia) {
+      issues.push({ code: "missing_media", field: "media", severity: "warning", message: "Product has no media." });
+    }
+    if (hasPlaceholderMedia) {
+      issues.push({ code: "placeholder_media", field: "media", severity: "warning", message: "Product media appears to use a placeholder reference." });
+    }
+    if (!hasCurrentPrice) {
+      issues.push({ code: "missing_current_price", field: "pricing", severity: "blocking", message: "Product has no active positive price." });
+    }
+
+    const hasBlockingIssue = issues.some((issue) => issue.severity === "blocking");
+    return {
+      productId: product.id,
+      sku: product.sku,
+      lifecycle,
+      sellable: !hasBlockingIssue,
+      publishable: !hasBlockingIssue && lifecycle === "active",
+      issues,
+      checks: {
+        hasEan,
+        hasMedia,
+        hasPlaceholderMedia,
+        hasCurrentPrice,
+        hasCategory,
+        hasDescription,
+        duplicateSku: duplicateSummary.duplicateSku,
+        duplicateEan: duplicateSummary.duplicateEan,
+      },
+    };
+  }
+
+  private isPlaceholderMedia(media: { url?: string; title?: string; altText?: string }): boolean {
+    const value = [media.url, media.title, media.altText].filter(Boolean).join(" ").toLowerCase();
+    return ["placeholder", "no-image", "missing-image", "image-coming-soon"].some((marker) => value.includes(marker));
+  }
+
+  private async getDuplicateSummaryForProduct(product: Product): Promise<{ duplicateSku: boolean; duplicateEan: boolean }> {
+    const duplicateSku = product.sku
+      ? await this.productRepository.count({ where: { sku: product.sku } }) > 1
+      : false;
+    const duplicateEan = product.ean?.trim()
+      ? await this.productRepository.count({ where: { ean: product.ean } }) > 1
+      : false;
+
+    return { duplicateSku, duplicateEan };
   }
 
 
@@ -320,6 +520,7 @@ export class ProductsService {
 
     const product = await this.findOne(id);
     product.isActive = false;
+    product.lifecycle = "archived";
     await this.productRepository.save(product);
 
     this.logger.log(`Product deactivated: ${id}`, 'ProductsService');

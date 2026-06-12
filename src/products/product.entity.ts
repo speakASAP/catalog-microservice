@@ -13,6 +13,8 @@ import { Media } from '../media/media.entity';
 import { ProductPricing } from '../pricing/product-pricing.entity';
 import { Category } from '../categories/category.entity';
 
+export type ProductLifecycle = "draft" | "active" | "archived" | "needs_review";
+
 /**
  * Product Entity - Single source of truth for all product data
  * All sales channels reference this central catalog
@@ -52,6 +54,9 @@ export class Product {
 
   @Column({ default: true })
   isActive: boolean;
+
+  @Column({ name: "lifecycle", length: 30, default: "active" })
+  lifecycle: ProductLifecycle;
 
   @Column({ type: 'jsonb', nullable: true })
   seoData: {
