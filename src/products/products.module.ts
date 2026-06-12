@@ -4,6 +4,7 @@ import { Product } from './product.entity';
 import { ProductsService } from './products.service';
 import { ProductsController } from './products.controller';
 import { LoggerModule } from '../logger/logger.module';
+import { CatalogAuthGuard } from '../auth/catalog-auth.guard';
 
 @Module({
   imports: [
@@ -11,7 +12,7 @@ import { LoggerModule } from '../logger/logger.module';
     LoggerModule,
   ],
   controllers: [ProductsController],
-  providers: [ProductsService],
+  providers: [ProductsService, CatalogAuthGuard],
   exports: [ProductsService],
 })
 export class ProductsModule {}

@@ -68,6 +68,10 @@ export const productsApi = {
     return apiClient.put<Product>(`/products/${id}`, data);
   },
 
+  async sellOnBazos(id: string, data: { accountId: string; identityId?: string; category?: string; location?: string }) {
+    return apiClient.post(`/products/${id}/sell-on-bazos`, data);
+  },
+
   async deleteProduct(id: string) {
     return apiClient.delete(`/products/${id}`);
   },

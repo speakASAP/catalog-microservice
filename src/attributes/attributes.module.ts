@@ -5,6 +5,7 @@ import { ProductAttribute } from './product-attribute.entity';
 import { AttributesService } from './attributes.service';
 import { AttributesController } from './attributes.controller';
 import { LoggerModule } from '../logger/logger.module';
+import { CatalogAuthGuard } from '../auth/catalog-auth.guard';
 
 @Module({
   imports: [
@@ -12,7 +13,7 @@ import { LoggerModule } from '../logger/logger.module';
     LoggerModule,
   ],
   controllers: [AttributesController],
-  providers: [AttributesService],
+  providers: [AttributesService, CatalogAuthGuard],
   exports: [AttributesService],
 })
 export class AttributesModule {}

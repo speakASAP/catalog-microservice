@@ -7,10 +7,12 @@ import {
   Body,
   Param,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { Category } from './category.entity';
 import { LoggerService } from '../logger/logger.service';
+import { CatalogAuthGuard } from '../auth/catalog-auth.guard';
 
 @Controller('categories')
 export class CategoriesController {
@@ -57,6 +59,7 @@ export class CategoriesController {
    * POST /api/categories
    */
   @Post()
+  @UseGuards(CatalogAuthGuard)
   async create(@Body() data: Partial<Category>) {
     this.logger.log('POST /api/categories', 'CategoriesController');
     const category = await this.categoriesService.create(data);
@@ -68,6 +71,7 @@ export class CategoriesController {
    * PUT /api/categories/:id
    */
   @Put(':id')
+  @UseGuards(CatalogAuthGuard)
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() data: Partial<Category>,
@@ -82,6 +86,7 @@ export class CategoriesController {
    * DELETE /api/categories/:id
    */
   @Delete(':id')
+  @UseGuards(CatalogAuthGuard)
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     this.logger.log(`DELETE /api/categories/${id}`, 'CategoriesController');
     await this.categoriesService.remove(id);

@@ -4,6 +4,7 @@ import { Category } from './category.entity';
 import { CategoriesService } from './categories.service';
 import { CategoriesController } from './categories.controller';
 import { LoggerModule } from '../logger/logger.module';
+import { CatalogAuthGuard } from '../auth/catalog-auth.guard';
 
 @Module({
   imports: [
@@ -11,7 +12,7 @@ import { LoggerModule } from '../logger/logger.module';
     LoggerModule,
   ],
   controllers: [CategoriesController],
-  providers: [CategoriesService],
+  providers: [CategoriesService, CatalogAuthGuard],
   exports: [CategoriesService],
 })
 export class CategoriesModule {}

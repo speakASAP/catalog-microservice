@@ -20,3 +20,4 @@ data:
   LOG_LEVEL: "info"
   LOGGING_SERVICE_URL: "http://logging-microservice.statex-apps.svc.cluster.local:3367"
   AUTH_SERVICE_URL: "http://auth-microservice.statex-apps.svc.cluster.local:3370"
+  BAZOS_SERVICE_URL: "http://bazos-service.statex-apps.svc.cluster.local:3000"

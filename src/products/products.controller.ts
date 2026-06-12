@@ -10,10 +10,15 @@ import {
   HttpCode,
   HttpStatus,
   ParseUUIDPipe,
+  UseGuards,
+  Headers,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto, UpdateProductDto, ProductQueryDto } from './dto';
 import { LoggerService } from '../logger/logger.service';
+import { CatalogAuthGuard } from '../auth/catalog-auth.guard';
+import { RequireCatalogRoles } from '../auth/catalog-auth.decorator';
 
 /**
  * Products Controller - API endpoints for product management
@@ -31,6 +36,7 @@ export class ProductsController {
    * POST /api/products
    */
   @Post()
+  @UseGuards(CatalogAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createProductDto: CreateProductDto) {
     this.logger.log('POST /api/products', 'ProductsController');
@@ -59,17 +65,6 @@ export class ProductsController {
   }
 
   /**
-   * Get a single product by ID
-   * GET /api/products/:id
-   */
-  @Get(':id')
-  async findOne(@Param('id', ParseUUIDPipe) id: string) {
-    this.logger.log(`GET /api/products/${id}`, 'ProductsController');
-    const product = await this.productsService.findOne(id);
-    return { success: true, data: product };
-  }
-
-  /**
    * Get a product by SKU
    * GET /api/products/sku/:sku
    */
@@ -83,11 +78,36 @@ export class ProductsController {
     return { success: true, data: product };
   }
 
+
+  @Post(":id/sell-on-bazos")
+  @UseGuards(CatalogAuthGuard)
+  async sellOnBazos(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() data: any,
+    @Headers("authorization") authorization?: string,
+  ) {
+    this.logger.log(`POST /api/products/${id}/sell-on-bazos`, "ProductsController");
+    const result = await this.productsService.sellOnBazos(id, data, authorization);
+    return { success: result.success !== false, data: result };
+  }
+
+  /**
+   * Get a single product by ID
+   * GET /api/products/:id
+   */
+  @Get(':id')
+  async findOne(@Param('id', ParseUUIDPipe) id: string) {
+    this.logger.log(`GET /api/products/${id}`, 'ProductsController');
+    const product = await this.productsService.findOne(id);
+    return { success: true, data: product };
+  }
+
   /**
    * Update a product
    * PUT /api/products/:id
    */
   @Put(':id')
+  @UseGuards(CatalogAuthGuard)
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateProductDto: UpdateProductDto,
@@ -102,6 +122,7 @@ export class ProductsController {
    * DELETE /api/products/:id
    */
   @Delete(':id')
+  @UseGuards(CatalogAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     this.logger.log(`DELETE /api/products/${id}`, 'ProductsController');
@@ -113,10 +134,18 @@ export class ProductsController {
    * DELETE /api/products/:id/hard
    */
   @Delete(':id/hard')
+  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('global:superadmin')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async hardRemove(@Param('id', ParseUUIDPipe) id: string) {
-    this.logger.log(`DELETE /api/products/${id}/hard`, 'ProductsController');
+  async hardRemove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Headers('x-owner-approval') ownerApproval: string,
+  ) {
+    if (ownerApproval !== 'explicit') {
+      throw new ForbiddenException('Hard delete requires x-owner-approval: explicit');
+    }
+
+    this.logger.warn(`DELETE /api/products/${id}/hard with explicit owner approval`, 'ProductsController');
     await this.productsService.hardRemove(id);
   }
 }
-

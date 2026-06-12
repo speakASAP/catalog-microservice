@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Put, Body, Param, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, ParseUUIDPipe, UseGuards } from '@nestjs/common';
 import { AttributesService } from './attributes.service';
 import { Attribute } from './attribute.entity';
 import { LoggerService } from '../logger/logger.service';
+import { CatalogAuthGuard } from '../auth/catalog-auth.guard';
 
 @Controller('attributes')
 export class AttributesController {
@@ -25,6 +26,7 @@ export class AttributesController {
   }
 
   @Post()
+  @UseGuards(CatalogAuthGuard)
   async create(@Body() data: Partial<Attribute>) {
     this.logger.log('POST /api/attributes', 'AttributesController');
     const attribute = await this.attributesService.create(data);
@@ -32,6 +34,7 @@ export class AttributesController {
   }
 
   @Put(':id')
+  @UseGuards(CatalogAuthGuard)
   async update(@Param('id', ParseUUIDPipe) id: string, @Body() data: Partial<Attribute>) {
     this.logger.log(`PUT /api/attributes/${id}`, 'AttributesController');
     const attribute = await this.attributesService.update(id, data);

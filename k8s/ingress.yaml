@@ -18,10 +18,31 @@ spec:
     - host: catalog.alfares.cz
       http:
         paths:
-          - path: /
+          - path: /api
             pathType: Prefix
             backend:
               service:
                 name: catalog-microservice
                 port:
                   number: 3200
+          - path: /health
+            pathType: Prefix
+            backend:
+              service:
+                name: catalog-microservice
+                port:
+                  number: 3200
+          - path: /ready
+            pathType: Prefix
+            backend:
+              service:
+                name: catalog-microservice
+                port:
+                  number: 3200
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: catalog-frontend
+                port:
+                  number: 3000

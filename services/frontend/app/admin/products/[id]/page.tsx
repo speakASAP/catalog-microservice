@@ -6,6 +6,7 @@ import { productsApi, Product } from '@/lib/api/products';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import MediaManagement from '@/components/MediaManagement';
 import PricingManagement from '@/components/PricingManagement';
+import BazosPublishPanel from '@/components/BazosPublishPanel';
 
 export default function EditProductPage() {
   const router = useRouter();
@@ -295,6 +296,8 @@ export default function EditProductPage() {
 
         {/* Pricing Management */}
         <PricingManagement productId={productId} />
+
+        <BazosPublishPanel productId={productId} />
 
         <div className="flex gap-4 pt-6 border-t border-gray-200">
           <button

@@ -4,6 +4,7 @@ import { Repository, FindOptionsWhere, ILike } from 'typeorm';
 import { Product } from './product.entity';
 import { LoggerService } from '../logger/logger.service';
 import { CreateProductDto, UpdateProductDto, ProductQueryDto } from './dto';
+import axios from 'axios';
 
 @Injectable()
 export class ProductsService {
@@ -122,6 +123,76 @@ export class ProductsService {
     this.logger.log(`Product updated: ${id}`, 'ProductsService');
 
     return updated;
+  }
+
+
+  async sellOnBazos(id: string, data: any = {}, authorization?: string) {
+    const product = await this.findOne(id);
+
+    if (!product.isActive) {
+      return {
+        success: false,
+        blocked: true,
+        reason: 'inactive_product',
+        message: 'Only active catalog products can be sent to Bazos.',
+      };
+    }
+
+    if (!data.accountId) {
+      return {
+        success: false,
+        blocked: true,
+        reason: 'account_required',
+        message: 'Bazos accountId is required so the offer can be bound to a compliant seller identity.',
+      };
+    }
+
+    const activePrice = product.pricing?.find((price: any) => price.isActive) || product.pricing?.[0];
+    if (!activePrice?.basePrice) {
+      return {
+        success: false,
+        blocked: true,
+        reason: 'price_required',
+        message: 'A current catalog price is required before publishing to Bazos.',
+      };
+    }
+
+    const bazosBaseUrl = process.env.BAZOS_SERVICE_URL || 'http://bazos-service:3000';
+    const headers = authorization ? { Authorization: authorization } : undefined;
+    const offerPayload = {
+      accountId: data.accountId,
+      identityId: data.identityId,
+      productId: product.id,
+      title: data.title || product.title,
+      description: data.description || product.description,
+      price: Number(activePrice.basePrice),
+      category: data.category || product.categories?.[0]?.name,
+      location: data.location,
+      stockQuantity: data.stockQuantity ?? 1,
+      isActive: true,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    };
+
+    const offerResponse = await axios.post(`${bazosBaseUrl}/offers`, offerPayload, { headers });
+    const offer = offerResponse.data?.data || offerResponse.data;
+    const offerId = offer?.id;
+
+    if (!offerId) {
+      throw new Error('Bazos service did not return an offer id.');
+    }
+
+    const queueResponse = await axios.post(
+      `${bazosBaseUrl}/offers/${offerId}/enqueue-publish`,
+      { identityId: data.identityId },
+      { headers },
+    );
+
+    return {
+      success: true,
+      productId: product.id,
+      bazosOffer: offer,
+      queue: queueResponse.data,
+    };
   }
 
   /**

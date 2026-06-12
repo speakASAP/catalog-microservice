@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, ParseUUIDPipe, UseGuards } from '@nestjs/common';
 import { MediaService } from './media.service';
 import { Media } from './media.entity';
 import { LoggerService } from '../logger/logger.service';
+import { CatalogAuthGuard } from '../auth/catalog-auth.guard';
 
 @Controller('media')
 export class MediaController {
@@ -18,6 +19,7 @@ export class MediaController {
   }
 
   @Post()
+  @UseGuards(CatalogAuthGuard)
   async create(@Body() data: Partial<Media>) {
     this.logger.log('POST /api/media', 'MediaController');
     const media = await this.mediaService.create(data);
@@ -25,6 +27,7 @@ export class MediaController {
   }
 
   @Put(':id')
+  @UseGuards(CatalogAuthGuard)
   async update(@Param('id', ParseUUIDPipe) id: string, @Body() data: Partial<Media>) {
     this.logger.log(`PUT /api/media/${id}`, 'MediaController');
     const media = await this.mediaService.update(id, data);
@@ -32,6 +35,7 @@ export class MediaController {
   }
 
   @Put(':id/primary')
+  @UseGuards(CatalogAuthGuard)
   async setPrimary(@Param('id', ParseUUIDPipe) id: string) {
     this.logger.log(`PUT /api/media/${id}/primary`, 'MediaController');
     const media = await this.mediaService.setPrimary(id);
@@ -39,6 +43,7 @@ export class MediaController {
   }
 
   @Delete(':id')
+  @UseGuards(CatalogAuthGuard)
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     this.logger.log(`DELETE /api/media/${id}`, 'MediaController');
     await this.mediaService.remove(id);
