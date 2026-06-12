@@ -68,7 +68,7 @@ export const productsApi = {
     return apiClient.put<Product>(`/products/${id}`, data);
   },
 
-  async sellOnBazos(id: string, data: { accountId: string; identityId?: string; category?: string; location?: string }) {
+  async sellOnBazos(id: string, data: { phoneNumber: string; displayName: string; category: string; location: string }) {
     return apiClient.post(`/products/${id}/sell-on-bazos`, data);
   },
 

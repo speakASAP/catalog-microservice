@@ -57,8 +57,9 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`;
+    const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...(options.headers as Record<string, string> || {}),
     };
 
@@ -101,6 +102,13 @@ class ApiClient {
     });
   }
 
+  async postForm<T>(endpoint: string, formData: FormData): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      method: 'POST',
+      body: formData,
+    });
+  }
+
   async put<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
       method: 'PUT',
@@ -114,4 +122,3 @@ class ApiClient {
 }
 
 export const apiClient = new ApiClient();
-

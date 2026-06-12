@@ -1,4 +1,17 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, ParseUUIDPipe, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Put,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { MediaService } from './media.service';
 import { Media } from './media.entity';
 import { LoggerService } from '../logger/logger.service';
@@ -26,6 +39,29 @@ export class MediaController {
     return { success: true, data: media };
   }
 
+  @Post('upload')
+  @UseGuards(CatalogAuthGuard)
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 25 * 1024 * 1024 } }))
+  async upload(
+    @UploadedFile() file: any,
+    @Body() body: {
+      productId?: string;
+      altText?: string;
+      position?: string;
+      isPrimary?: string;
+    },
+  ) {
+    this.logger.log(`POST /api/media/upload product=${body.productId}`, 'MediaController');
+    const media = await this.mediaService.upload({
+      productId: body.productId || '',
+      file,
+      altText: body.altText,
+      position: body.position ? Number(body.position) : undefined,
+      isPrimary: body.isPrimary === 'true',
+    });
+    return { success: true, data: media };
+  }
+
   @Put(':id')
   @UseGuards(CatalogAuthGuard)
   async update(@Param('id', ParseUUIDPipe) id: string, @Body() data: Partial<Media>) {
@@ -50,4 +86,3 @@ export class MediaController {
     return { success: true };
   }
 }
-

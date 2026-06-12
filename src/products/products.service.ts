@@ -138,15 +138,6 @@ export class ProductsService {
       };
     }
 
-    if (!data.accountId) {
-      return {
-        success: false,
-        blocked: true,
-        reason: 'account_required',
-        message: 'Bazos accountId is required so the offer can be bound to a compliant seller identity.',
-      };
-    }
-
     const activePrice = product.pricing?.find((price: any) => price.isActive) || product.pricing?.[0];
     if (!activePrice?.basePrice) {
       return {
@@ -157,17 +148,130 @@ export class ProductsService {
       };
     }
 
+    if (!authorization) {
+      return {
+        success: false,
+        blocked: true,
+        reason: 'auth_required',
+        message: 'Please log in before starting Bazos publishing.',
+      };
+    }
+
     const bazosBaseUrl = process.env.BAZOS_SERVICE_URL || 'http://bazos-service:3000';
-    const headers = authorization ? { Authorization: authorization } : undefined;
+    const headers = { Authorization: authorization };
+    const phoneNumber = String(data.phoneNumber || '').trim();
+    const displayName = String(data.displayName || data.sellerName || '').trim();
+    const location = String(data.location || '').trim();
+    const category = String(data.category || product.categories?.[0]?.name || '').trim();
+
+    if (!phoneNumber) {
+      return {
+        success: false,
+        blocked: true,
+        reason: 'phone_required',
+        message: 'Enter the phone number you want to use on Bazos.',
+      };
+    }
+
+    if (!displayName) {
+      return {
+        success: false,
+        blocked: true,
+        reason: 'seller_name_required',
+        message: 'Enter the seller name shown with the Bazos ad.',
+      };
+    }
+
+    if (!location) {
+      return {
+        success: false,
+        blocked: true,
+        reason: 'location_required',
+        message: 'Choose the location for the Bazos advertisement.',
+      };
+    }
+
+    if (!category) {
+      return {
+        success: false,
+        blocked: true,
+        reason: 'category_required',
+        message: 'Choose a Bazos category for the advertisement.',
+      };
+    }
+
+    const normalizedPhone = phoneNumber.replace(/\s+/g, '');
+    const safePhone = normalizedPhone.replace(/[^0-9+]/g, '').replace(/^\+/, 'plus');
+    const accountEmail = `${safePhone || 'seller'}@bazos.local`;
+    let account: any;
+
+    const accountsResponse = await axios.get(`${bazosBaseUrl}/accounts`, { headers });
+    const accounts = accountsResponse.data?.data || accountsResponse.data || [];
+    account = Array.isArray(accounts)
+      ? accounts.find((item: any) => item.email === accountEmail || item.name === displayName)
+      : undefined;
+
+    if (!account) {
+      const accountResponse = await axios.post(
+        `${bazosBaseUrl}/accounts`,
+        {
+          name: displayName,
+          email: accountEmail,
+          isActive: true,
+        },
+        { headers },
+      );
+      account = accountResponse.data?.data || accountResponse.data;
+    }
+
+    const identitiesResponse = await axios.get(`${bazosBaseUrl}/identities?accountId=${account.id}`, { headers });
+    const identities = identitiesResponse.data?.data || identitiesResponse.data || [];
+    let identity = Array.isArray(identities)
+      ? identities.find((item: any) => item.phoneNumber === phoneNumber || item.phoneNumber === normalizedPhone)
+      : undefined;
+
+    if (!identity) {
+      const identityResponse = await axios.post(
+        `${bazosBaseUrl}/identities`,
+        {
+          accountId: account.id,
+          phoneNumber,
+          displayName,
+          contactName: displayName,
+          contactPhone: phoneNumber,
+          defaultLocation: location,
+          sessionState: 'missing',
+          status: 'draft',
+          reviewState: 'clear',
+        },
+        { headers },
+      );
+      identity = identityResponse.data?.data || identityResponse.data;
+    }
+
+    let verificationSession: any = null;
+    if (identity.sessionState !== 'ready' || identity.status !== 'verified') {
+      const verificationResponse = await axios.post(
+        `${bazosBaseUrl}/verification-sessions`,
+        {
+          identityId: identity.id,
+          operatorUserId: data.operatorUserId,
+          notes: 'Started from catalog Sell on Bazos guided flow',
+        },
+        { headers },
+      );
+      verificationSession = verificationResponse.data?.data || verificationResponse.data;
+    }
+
     const offerPayload = {
-      accountId: data.accountId,
-      identityId: data.identityId,
+      accountId: account.id,
+      identityId: identity.id,
       productId: product.id,
       title: data.title || product.title,
       description: data.description || product.description,
       price: Number(activePrice.basePrice),
-      category: data.category || product.categories?.[0]?.name,
-      location: data.location,
+      category,
+      location,
       stockQuantity: data.stockQuantity ?? 1,
       isActive: true,
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
@@ -183,15 +287,28 @@ export class ProductsService {
 
     const queueResponse = await axios.post(
       `${bazosBaseUrl}/offers/${offerId}/enqueue-publish`,
-      { identityId: data.identityId },
+      { identityId: identity.id },
       { headers },
     );
 
     return {
       success: true,
       productId: product.id,
+      account,
+      identity,
+      verificationSession,
       bazosOffer: offer,
       queue: queueResponse.data,
+      nextStep: verificationSession
+        ? {
+            type: 'human_verification_required',
+            message: 'Open the Bazos verification page and complete phone/SMS/CAPTCHA/bank checks manually. After verification, mark the identity verified in Bazos service before final publishing.',
+            verificationUrl: verificationSession.verificationUrl,
+          }
+        : {
+            type: 'queued',
+            message: 'The verified identity was accepted and the offer is queued for compliant publishing.',
+          },
     };
   }
 

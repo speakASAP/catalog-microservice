@@ -99,3 +99,14 @@ local_settings.py
 
 # Claude Code local settings (may contain tokens)
 .claude/settings.local.json
+
+# Frontend generated output
+.next/
+out/
+.turbo/
+.vercel/
+
+# Test and coverage output
+coverage/
+.nyc_output/
+

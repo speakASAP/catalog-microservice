@@ -29,3 +29,12 @@ Implementation evidence:
 Next unfinished chunk:
 
 - Goal 1.4: add audit-grade actor/source logging for writes.
+
+Additional owner-selected work:
+
+- Added authenticated product media upload support for the admin product detail page.
+- Deployed catalog API and frontend after `npm run build` passed in both root and `services/frontend`.
+- Runtime smoke: `POST /api/media/upload` returned `201` for product `aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3`; cleanup `DELETE /api/media/:id` returned `200`.
+- Verified uploaded MinIO object URL returned `HTTP 200` with `content-type: image/png`.
+- Removed the smoke-test MinIO object after verification; object delete returned `204`.
+- Verified deployed frontend bundle contains the media drop zone, folder picker, and `/media/upload` client call.
