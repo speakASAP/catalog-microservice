@@ -41,4 +41,4 @@ Verification:
 
 ## Next Goal Selection
 
-Goal 3 is active for planning. Create the Goal 3 execution plan and run the pre-coding gate before pricing integrity source changes.
+Goal 3 planning and pre-coding gate are complete. Implement pricing integrity source changes according to `implementation-goals/GOAL-03-execution-plan.md`.

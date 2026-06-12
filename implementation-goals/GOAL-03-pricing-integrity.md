@@ -1,6 +1,6 @@
 # Goal 03 - Pricing Integrity
 
-Status: ready
+Status: active - planning complete
 
 ## Intent
 

@@ -122,4 +122,15 @@ Current focus:
 
 Next unfinished step:
 
-- Create Goal 3 execution plan and run the pre-coding gate before pricing integrity source changes.
+- Implement Goal 3 pricing integrity source changes according to `implementation-goals/GOAL-03-execution-plan.md`.
+
+Goal 3 planning evidence:
+
+- Created `implementation-goals/GOAL-03-execution-plan.md`.
+- Created `reports/validation/GOAL-03-pre-coding-gate.md`.
+- Pre-coding scope covers deterministic current-price selection, pricing validation, mass-change human-review guard, and non-sensitive audit metadata.
+- Source implementation has not started.
+
+Next unfinished step:
+
+- Implement Goal 3 pricing integrity source changes, then run `npm test`, `npm run build`, and `git diff --check`.

@@ -17,7 +17,7 @@ CATALOG ORCHESTRATOR: implement goal number 1
 ## Current Status
 
 - Active goal: Goal 3 - Pricing Integrity planning.
-- Active chunk: Goal 3 execution plan and pre-coding gate.
+- Active chunk: Goal 3 source implementation pending after planning/pre-coding gate.
 - Current wave: Wave 2 - Product Model Completeness.
 - Completed chunks: Goal 1.1 Intent Preservation Docs, Goal 1.2 Protected Mutation Endpoints, Goal 1.3 Hard Delete Approval Gate, Goal 1.4 Write Audit Context, Goal 1.5 Unauthorized And Authorized Write Verification, Goal 1 production deployment and runtime audit-log proof, Goal 2 lifecycle migration, deployment, and runtime API verification.
 - Running goals: none.
@@ -96,6 +96,7 @@ Do not paste full logs into this file. Compress each result into a short impleme
 Newest entries first.
 
 ```text
+2026-06-12: Goal 3 pricing integrity planning completed on `feature/catalog-goal-03-pricing-integrity`. Created `implementation-goals/GOAL-03-execution-plan.md` and `reports/validation/GOAL-03-pre-coding-gate.md`. Scope covers deterministic current-price selection, pricing validation, mass-change human-review guard, and non-sensitive pricing audit evidence. Pre-coding gate passed; source implementation is next.
 2026-06-12: Catalog JWT token env mapping checked against RunLayer token-env wiring. Live `catalog-microservice-secret` already exposes `JWT_TOKEN`; repository wiring and env examples were aligned without printing token values. Catalog auth remains based on `JWT_SECRET`/`AUTH_JWT_SECRET`, with `JWT_TOKEN` documented for smoke/orchestration tooling. Validation: Kubernetes ExternalSecret dry-run passed and `git diff --check` passed.
 2026-06-12: Goal 2 runtime closure completed on feature/catalog-goal-02-product-model-completeness at commit `fcb1919`. Production schema was inspected with `psql`; `products."isActive"` matched the migration expectation. Applied `scripts/migrations/20260612_goal02_product_lifecycle.sql` and verified `products.lifecycle`, `products_lifecycle_check`, and `idx_products_lifecycle`. Deployed with `./scripts/deploy.sh`; rollout and health check passed. Runtime in-pod API smoke passed: health 200, existing `GET /api/products` envelope unchanged, synthetic lifecycle create/update worked, readiness returned lifecycle/checks/issues, quality audit returned missingEan/duplicate summaries, hard-delete approval gate was preserved, and post-cleanup database check found zero `CODEX-GOAL2-%` products. Synthetic JWT was generated inside the pod and not printed. Goal 2 is complete; next action is Goal 3 pricing integrity planning.
 2026-06-12: Goal 2 source implementation completed on feature/catalog-goal-02-product-model-completeness. Added lifecycle field/DTO/query support, readiness endpoint, quality audit endpoint, diagnostics for missing EAN/media/description/category/current price/placeholder media/duplicate identifiers/lifecycle blockers, additive lifecycle SQL migration, focused Jest tests, and Jest backend config. Validation passed: npm test 1 suite/2 tests, npm run build, and git diff --check. Runtime API verification is pending explicit approval to apply scripts/migrations/20260612_goal02_product_lifecycle.sql and deploy.
@@ -128,7 +129,7 @@ Next command:
 
 ## Next Action
 
-Create the Goal 3 pricing integrity execution plan and run the pre-coding gate:
+Implement Goal 3 pricing integrity source changes according to the execution plan:
 
 ```text
 CATALOG ORCHESTRATOR: continue implementation
