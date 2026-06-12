@@ -75,6 +75,7 @@ deploy_timing_phase_end "Apply Kubernetes manifests"
 
 deploy_timing_phase_start "Set deployment image"
 kubectl set image "deployment/${SERVICE_NAME}" app="$IMAGE_LATEST" -n "$NAMESPACE"
+kubectl rollout restart deployment/${SERVICE_NAME} -n "$NAMESPACE"
 deploy_timing_phase_end "Set deployment image"
 
 deploy_timing_phase_start "Wait for rollout"
@@ -84,7 +85,7 @@ deploy_timing_phase_end "Wait for rollout"
 deploy_timing_phase_start "Health check"
 POD=$(kubectl get pod -n "$NAMESPACE" -l app=${SERVICE_NAME} -o jsonpath='{.items[0].metadata.name}')
 [ -n "$POD" ] || { echo -e "${RED}No pod found${NC}"; exit 1; }
-kubectl exec -n "$NAMESPACE" "$POD" -- wget -qO- "http://localhost:3202/health" || exit 1
+kubectl exec -n "$NAMESPACE" "$POD" -- node -e "fetch('http://localhost:3200/health').then(async r=>{console.log(await r.text()); if(!r.ok) process.exit(1)}).catch(e=>{console.error(e);process.exit(1)})" || exit 1
 deploy_timing_phase_end "Health check"
 
 deploy_timing_finish_success "catalog-microservice"
