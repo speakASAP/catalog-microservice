@@ -58,3 +58,12 @@ Not run. Production deployment and any authorized runtime smoke require explicit
 ## Remaining Follow-Up
 
 Source commit 028a404 is recorded. Deploy only after owner approval, then run a bounded runtime smoke that does not print tokens or production-sensitive data.
+
+
+## Deployment Evidence
+
+- Commit `c989883` deployed with `./scripts/deploy.sh`.
+- Deployment rollout completed and deploy health check returned `healthy`.
+- Production `GET /health` returned `200`.
+- Anonymous `POST /api/products/projections/flipflop/batch` returned `401` with `Missing or invalid Authorization header`.
+- No service tokens, runtime secrets, production product lists, or Warehouse-sensitive data were printed or stored.

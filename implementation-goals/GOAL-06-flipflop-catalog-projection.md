@@ -1,6 +1,6 @@
 # Goal 06 - FlipFlop Catalog Projection
 
-Status: source implemented validation passed
+Status: done
 
 ## Intent
 
@@ -69,3 +69,12 @@ Add contract docs and smoke evidence for catalog response fields consumed by Fli
 - `npm run build` passed.
 - `git diff --check` passed.
 - Created `reports/validation/VAL-GOAL-06-flipflop-catalog-projection.md`.
+
+
+## Deployment Evidence
+
+- Commit `c989883` deployed with `./scripts/deploy.sh`.
+- Deployment rollout and health check passed.
+- Production `GET /health` returned `200`.
+- Anonymous `POST /api/products/projections/flipflop/batch` returned `401`, proving the projection endpoint is deployed and protected.
+- Authorized runtime projection smoke was not run because it requires approved runtime credentials and product IDs.
