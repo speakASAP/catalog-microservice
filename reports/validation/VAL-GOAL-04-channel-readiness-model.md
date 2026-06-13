@@ -2,12 +2,12 @@
 
 ```yaml
 id: VAL-CATALOG-04-CHANNEL-READINESS-MODEL
-status: passed
+status: passed-deployed
 source_goal: implementation-goals/GOAL-04-channel-readiness-model.md
 repository_root: /home/ssf/Documents/Github/catalog-microservice
 branch: feature/catalog-goal-04-channel-readiness-model
 created: 2026-06-12
-last_updated: 2026-06-12
+last_updated: 2026-06-13
 ```
 
 ## Scope Validated
@@ -70,8 +70,28 @@ Passed. Tests and reports use synthetic product IDs, SKUs, prices, categories, a
 
 ## Deployment
 
-Not run. Production deployment requires explicit owner approval.
+Run after explicit owner approval. Production deployment and runtime smoke passed.
+
+## Runtime Deployment Evidence
+
+- Owner approval received on 2026-06-13.
+- `./scripts/deploy.sh` completed successfully from `feature/catalog-goal-04-channel-readiness-model` at `5f0e087`.
+- Image `localhost:5000/catalog-microservice:5f0e087` was built and pushed.
+- Kubernetes rollout completed for `deployment/catalog-microservice` in namespace `statex-apps`.
+- Deployment health check returned `healthy`.
+
+## Runtime Smoke Evidence
+
+- In-pod synthetic product create returned `201`.
+- `GET /api/products/:id/channel-readiness` returned `200`.
+- Response included two channel entries.
+- FlipFlop readiness returned `ready: false` for the incomplete synthetic product and missing fields `description`, `categories`, `media`, and `pricing`.
+- Bazos draft readiness returned `authority: "bazos"` and included `bazos_policy_deferred`.
+- Smoke verified no `canPublish` or `publishPermission` fields.
+- Synthetic hard-delete cleanup returned `204`.
+- Post-cleanup search for `CODEX-GOAL4` returned total `0`.
+- Synthetic JWT was generated inside the pod and was not printed.
 
 ## Recommendation
 
-Commit and push Goal 4 source/docs changes. Request owner approval before any production deployment or runtime smoke.
+Goal 4 is deployed and runtime-smoked. Continue with Goal 5 planning and pre-coding gate.

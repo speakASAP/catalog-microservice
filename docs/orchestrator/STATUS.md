@@ -203,3 +203,22 @@ Goal 4 source implementation evidence:
 Next unfinished step:
 
 - Commit and push Goal 4 source/docs changes, then request explicit owner approval before any production deployment or runtime smoke.
+
+Goal 4 closure evidence:
+
+- Owner approved Goal 4 production deployment on 2026-06-13.
+- Branch `feature/catalog-goal-04-channel-readiness-model` was pushed to `origin` at `5f0e087`; Goal 4 source commit is `75d0700`.
+- `./scripts/deploy.sh` completed successfully; image `localhost:5000/catalog-microservice:5f0e087` and `latest` were pushed.
+- Kubernetes rollout for `deployment/catalog-microservice` in namespace `statex-apps` completed and deploy health check returned healthy.
+- Runtime in-pod smoke returned synthetic product create `201`, channel readiness `200`, `channelCount: 2`, FlipFlop `ready: false`, missing fields `description`, `categories`, `media`, and `pricing`, Bazos `authority: "bazos"`, and Bazos policy-deferred issue present.
+- Runtime smoke verified no Bazos publish-permission fields and deleted the synthetic product through hard delete with explicit owner approval.
+- Post-cleanup public read check for `CODEX-GOAL4` returned total `0`.
+- Synthetic JWT was generated inside the deployed pod from runtime secret and was not printed.
+
+Current focus:
+
+- Goal 5 - Catalog/Warehouse Contract planning.
+
+Next unfinished step:
+
+- Create Goal 5 execution plan and run the pre-coding gate before catalog/warehouse contract source changes.

@@ -64,7 +64,7 @@ Acceptance criteria:
 
 ## Goal 4 - Channel Readiness Model
 
-Status: active
+Status: done
 
 Intent: Catalog should say whether a product is ready for FlipFlop, Bazos drafts, and future channels without taking over those services.
 
