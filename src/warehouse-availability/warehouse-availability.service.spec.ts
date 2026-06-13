@@ -162,6 +162,103 @@ describe('WarehouseAvailabilityService', () => {
       .rejects.toThrow(ServiceUnavailableException);
   });
 
+  it('does not attach stale Warehouse logistics when route totals differ from availability totals', async () => {
+    const productsService = {
+      findIdentitiesByIds: jest.fn(async () => [{ id: 'product-1', sku: 'SKU-001' }]),
+    };
+    const service = new WarehouseAvailabilityService(productsService as any, logger as any);
+    jest.spyOn(service as any, 'fetchWarehouseAvailability').mockResolvedValue([
+      {
+        productId: 'product-1',
+        totalQuantity: 4,
+        totalReserved: 1,
+        totalAvailable: 3,
+        warehouses: [{ warehouseId: 'warehouse-1', warehouseCode: 'OWN', warehouseName: 'Own', warehouseType: 'own', supplierId: null, quantity: 4, reserved: 1, available: 3 }],
+      },
+    ]);
+    jest.spyOn(service as any, 'fetchWarehouseLogistics').mockResolvedValue([
+      {
+        productId: 'product-1',
+        generatedAt: '2026-06-13T00:00:00.000Z',
+        preferredRoute: 'local_fulfillment',
+        totals: { totalQuantity: 99, totalReserved: 0, totalAvailable: 99, routeCount: 1, ownAvailable: 99, supplierAvailable: 0, dropshipAvailable: 0 },
+        options: [{ productId: 'product-1', warehouseId: 'warehouse-1', warehouseCode: 'OWN', warehouseName: 'Own', warehouseType: 'own', originType: 'own', supplierId: null, priority: 10, quantity: 99, reserved: 0, available: 99, routeType: 'local_fulfillment', routeLabel: 'Local', canReserveFromWarehouse: true, requiresSupplierCoordination: false, legs: [{ sequence: 1, from: 'OWN', to: 'customer', responsibility: 'warehouse' }] }],
+      },
+    ]);
+
+    const availability = await service.getBatchAvailability({ productIds: ['product-1'] });
+    const coverage = await service.getBatchCoverage({ productIds: ['product-1'] });
+
+    expect(availability.items[0]).toMatchObject({
+      productId: 'product-1',
+      totalAvailable: 3,
+      logistics: null,
+    });
+    expect(coverage.items[0]).toMatchObject({
+      coverageStatus: 'missing_route',
+      sellableWithWarehouse: false,
+      blockingReasons: ['warehouse_logistics_route_missing'],
+    });
+    expect(logger.warn).toHaveBeenCalledWith(
+      'Ignoring stale Warehouse logistics plan for product product-1; totals do not match availability',
+      'WarehouseAvailabilityService',
+    );
+  });
+
+  it('ignores duplicate and unrequested Warehouse logistics plans before joining to Catalog goods', async () => {
+    const productsService = {
+      findIdentitiesByIds: jest.fn(async () => [{ id: 'product-1', sku: 'SKU-001' }]),
+    };
+    const service = new WarehouseAvailabilityService(productsService as any, logger as any);
+    jest.spyOn(service as any, 'fetchWarehouseAvailability').mockResolvedValue([
+      {
+        productId: 'product-1',
+        totalQuantity: 4,
+        totalReserved: 1,
+        totalAvailable: 3,
+        warehouses: [{ warehouseId: 'warehouse-1', warehouseCode: 'OWN', warehouseName: 'Own', warehouseType: 'own', supplierId: null, quantity: 4, reserved: 1, available: 3 }],
+      },
+    ]);
+    jest.spyOn(service as any, 'fetchWarehouseLogistics').mockResolvedValue([
+      {
+        productId: 'product-other',
+        generatedAt: '2026-06-13T00:00:00.000Z',
+        preferredRoute: 'supplier_dropship',
+        totals: { totalQuantity: 10, totalReserved: 0, totalAvailable: 10, routeCount: 1, ownAvailable: 0, supplierAvailable: 0, dropshipAvailable: 10 },
+        options: [],
+      },
+      {
+        productId: 'product-1',
+        generatedAt: '2026-06-13T00:00:00.000Z',
+        preferredRoute: 'local_fulfillment',
+        totals: { totalQuantity: 4, totalReserved: 1, totalAvailable: 3, routeCount: 1, ownAvailable: 3, supplierAvailable: 0, dropshipAvailable: 0 },
+        options: [{ productId: 'product-1', warehouseId: 'warehouse-1', warehouseCode: 'OWN', warehouseName: 'Own', warehouseType: 'own', originType: 'own', supplierId: null, priority: 10, quantity: 4, reserved: 1, available: 3, routeType: 'local_fulfillment', routeLabel: 'Local', canReserveFromWarehouse: true, requiresSupplierCoordination: false, legs: [{ sequence: 1, from: 'OWN', to: 'customer', responsibility: 'warehouse' }] }],
+      },
+      {
+        productId: 'product-1',
+        generatedAt: '2026-06-13T00:00:00.000Z',
+        preferredRoute: 'supplier_dropship',
+        totals: { totalQuantity: 4, totalReserved: 1, totalAvailable: 3, routeCount: 1, ownAvailable: 0, supplierAvailable: 0, dropshipAvailable: 3 },
+        options: [{ productId: 'product-1', warehouseId: 'drop-1', warehouseCode: 'DROP', warehouseName: 'Dropship', warehouseType: 'dropship', originType: 'dropship', supplierId: 'supplier-1', priority: 1, quantity: 4, reserved: 1, available: 3, routeType: 'supplier_dropship', routeLabel: 'Dropship', canReserveFromWarehouse: true, requiresSupplierCoordination: true, legs: [{ sequence: 1, from: 'DROP', to: 'customer', responsibility: 'supplier' }] }],
+      },
+    ]);
+
+    const result = await service.getBatchAvailability({ productIds: ['product-1'] });
+
+    expect(result.items[0].logistics).toMatchObject({
+      productId: 'product-1',
+      preferredRoute: 'local_fulfillment',
+    });
+    expect(logger.warn).toHaveBeenCalledWith(
+      'Ignoring Warehouse logistics plan for unrequested product product-other',
+      'WarehouseAvailabilityService',
+    );
+    expect(logger.warn).toHaveBeenCalledWith(
+      'Ignoring duplicate Warehouse logistics plan for product product-1',
+      'WarehouseAvailabilityService',
+    );
+  });
+
   it('continues with stock-only availability when Warehouse logistics enrichment is unavailable', async () => {
     const productsService = {
       findIdentitiesByIds: jest.fn(async () => [{ id: 'product-1', sku: 'SKU-001' }]),

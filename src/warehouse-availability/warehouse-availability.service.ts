@@ -46,7 +46,7 @@ export class WarehouseAvailabilityService {
       this.fetchOptionalWarehouseLogistics(productIds),
     ]);
     const rowsByProductId = new Map<string, WarehouseAvailabilityRow>(warehouseRows.map((row) => [row.productId, row]));
-    const logisticsByProductId = new Map<string, WarehouseProductLogisticsPlan>(logisticsPlans.map((plan) => [plan.productId, plan]));
+    const logisticsByProductId = this.indexWarehouseLogisticsPlans(productIds, logisticsPlans);
 
     return {
       requestedProductIds: productIds,
@@ -61,7 +61,7 @@ export class WarehouseAvailabilityService {
           totalQuantity: Number(row.totalQuantity ?? 0),
           totalReserved: Number(row.totalReserved ?? 0),
           totalAvailable: Number(row.totalAvailable ?? 0),
-          logistics: logisticsByProductId.get(productId) ?? null,
+          logistics: this.resolveConsistentLogisticsPlan(productId, row, logisticsByProductId.get(productId)),
           warehouses: Array.isArray(row.warehouses) ? row.warehouses.map((warehouse) => ({
             warehouseId: warehouse.warehouseId,
             warehouseCode: warehouse.warehouseCode ?? null,
@@ -180,6 +180,52 @@ export class WarehouseAvailabilityService {
     }
 
     return normalized;
+  }
+
+
+  private indexWarehouseLogisticsPlans(
+    requestedProductIds: string[],
+    logisticsPlans: WarehouseProductLogisticsPlan[],
+  ): Map<string, WarehouseProductLogisticsPlan> {
+    const requested = new Set(requestedProductIds);
+    const indexed = new Map<string, WarehouseProductLogisticsPlan>();
+
+    for (const plan of logisticsPlans) {
+      if (!requested.has(plan.productId)) {
+        this.logger.warn(`Ignoring Warehouse logistics plan for unrequested product ${plan.productId}`, 'WarehouseAvailabilityService');
+        continue;
+      }
+      if (indexed.has(plan.productId)) {
+        this.logger.warn(`Ignoring duplicate Warehouse logistics plan for product ${plan.productId}`, 'WarehouseAvailabilityService');
+        continue;
+      }
+      indexed.set(plan.productId, plan);
+    }
+
+    return indexed;
+  }
+
+  private resolveConsistentLogisticsPlan(
+    productId: string,
+    availability: WarehouseAvailabilityRow,
+    logistics?: WarehouseProductLogisticsPlan,
+  ): WarehouseProductLogisticsPlan | null {
+    if (!logistics) return null;
+    if (logistics.productId !== productId) {
+      this.logger.warn(`Ignoring Warehouse logistics plan with mismatched product id ${logistics.productId} for ${productId}`, 'WarehouseAvailabilityService');
+      return null;
+    }
+
+    const totals = logistics.totals;
+    const totalQuantityMatches = Number(totals?.totalQuantity ?? 0) === Number(availability.totalQuantity ?? 0);
+    const totalReservedMatches = Number(totals?.totalReserved ?? 0) === Number(availability.totalReserved ?? 0);
+    const totalAvailableMatches = Number(totals?.totalAvailable ?? 0) === Number(availability.totalAvailable ?? 0);
+    if (!totalQuantityMatches || !totalReservedMatches || !totalAvailableMatches) {
+      this.logger.warn(`Ignoring stale Warehouse logistics plan for product ${productId}; totals do not match availability`, 'WarehouseAvailabilityService');
+      return null;
+    }
+
+    return logistics;
   }
 
   private async fetchWarehouseAvailability(
