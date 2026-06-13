@@ -113,6 +113,26 @@ export class ProductsController {
   }
 
 
+  @Post(":id/bazos-draft")
+  @UseGuards(CatalogAuthGuard)
+  async requestBazosDraft(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() data: any,
+    @Headers("authorization") authorization?: string,
+    @Req() request?: CatalogAuthenticatedRequest,
+  ) {
+    this.logger.log(`POST /api/products/${id}/bazos-draft`, "ProductsController");
+    const result = await this.productsService.requestBazosDraft(id, data, authorization);
+    if (request) {
+      this.logger.auditCatalogWrite(request, {
+        action: 'request_bazos_draft',
+        resourceType: 'product',
+        resourceId: id,
+      });
+    }
+    return { success: result.success !== false, data: result };
+  }
+
   @Post(":id/sell-on-bazos")
   @UseGuards(CatalogAuthGuard)
   async sellOnBazos(
@@ -122,15 +142,7 @@ export class ProductsController {
     @Req() request?: CatalogAuthenticatedRequest,
   ) {
     this.logger.log(`POST /api/products/${id}/sell-on-bazos`, "ProductsController");
-    const result = await this.productsService.sellOnBazos(id, data, authorization);
-    if (request) {
-      this.logger.auditCatalogWrite(request, {
-        action: 'sell_on_bazos',
-        resourceType: 'product',
-        resourceId: id,
-      });
-    }
-    return { success: result.success !== false, data: result };
+    return this.requestBazosDraft(id, data, authorization, request);
   }
 
   /**

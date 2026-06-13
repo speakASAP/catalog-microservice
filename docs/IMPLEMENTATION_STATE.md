@@ -5,6 +5,7 @@ Last updated: 2026-06-13.
 ## Orchestrator Command
 
 ```text
+2026-06-13: Goal 7 source implementation completed on `feature/catalog-goal-07-bazos-draft-integration-contract`. Added protected `POST /api/products/:id/bazos-draft`, kept `sell-on-bazos` as a compatibility alias, delegated draft preparation to Bazos `POST /api/bazos/catalog/products/:productId/sell-action`, removed direct Catalog Bazos account/identity/offer/enqueue orchestration from the action path, and documented `docs/contracts/bazos-draft-integration.md`. Validation passed: `npm test -- --runInBand` 5 suites/23 tests, `npm run build`, and `git diff --check`. Deployment was not run.
 2026-06-13: Goal 6 deployment completed from commit `c989883`. `./scripts/deploy.sh` built and pushed image `localhost:5000/catalog-microservice:c989883`, applied manifests, restarted the deployment, rollout completed, and production health returned healthy. Safe smoke verified `GET /health` 200 and anonymous `POST /api/products/projections/flipflop/batch` 401 with missing/invalid Authorization header, confirming the projection endpoint is deployed and protected. Authorized projection smoke with real availability was not run because it requires approved runtime credentials and product IDs.
 CATALOG ORCHESTRATOR: continue implementation
 ```
@@ -17,8 +18,8 @@ CATALOG ORCHESTRATOR: implement goal number 1
 
 ## Current Status
 
-- Active goal: Goal 6 - FlipFlop Catalog Projection deployed.
-- Active chunk: Goal 6 deployment and bounded production smoke complete.
+- Active goal: Goal 7 - Bazos Draft Integration Contract source implementation complete.
+- Active chunk: Goal 7 source validation complete; commit pending.
 - Current wave: Wave 4 - FlipFlop Projection + Bazos Draft Contract.
 - Completed chunks: Goal 1.1 Intent Preservation Docs, Goal 1.2 Protected Mutation Endpoints, Goal 1.3 Hard Delete Approval Gate, Goal 1.4 Write Audit Context, Goal 1.5 Unauthorized And Authorized Write Verification, Goal 1 production deployment and runtime audit-log proof, Goal 2 lifecycle migration, deployment, and runtime API verification, Goal 3 pricing integrity deployment and runtime API verification, Goal 4 channel readiness deployment and runtime API verification.
 - Running goals: none.
@@ -43,7 +44,7 @@ CATALOG ORCHESTRATOR: implement goal number 1
 | 04 | `implementation-goals/GOAL-04-channel-readiness-model.md` | done | `feature/catalog-goal-04-channel-readiness-model` | 02, 03 | Deployed and runtime-smoked. |
 | 05 | `implementation-goals/GOAL-05-catalog-warehouse-contract.md` | done | `feature/catalog-goal-05-catalog-warehouse-contract` | 02 | Commit `874e080` deployed; safe smoke passed; full authorized Warehouse smoke deferred pending explicit approval. |
 | 06 | `implementation-goals/GOAL-06-flipflop-catalog-projection.md` | done | `feature/catalog-goal-06-flipflop-catalog-projection` | 02, 03, 05 | Commit `c989883` deployed; health and anonymous protected-endpoint smoke passed. |
-| 07 | `implementation-goals/GOAL-07-bazos-draft-integration-contract.md` | pending | `feature/catalog-goal-07-bazos-draft-integration-contract` | 04 | Bazos remains publishing and compliance authority. |
+| 07 | `implementation-goals/GOAL-07-bazos-draft-integration-contract.md` | active | `feature/catalog-goal-07-bazos-draft-integration-contract` | 04 | Source implementation and validation complete; Bazos remains publishing and compliance authority. |
 | 08 | `implementation-goals/GOAL-08-data-import-reconciliation.md` | pending | `feature/catalog-goal-08-data-import-reconciliation` | 02, 03 | Imports must be dry-run capable. |
 | 09 | `implementation-goals/GOAL-09-end-to-end-smoke-tests.md` | pending | `feature/catalog-goal-09-end-to-end-smoke-tests` | 01, 02, 03 | Final proof goal; can add contract checks for other services. |
 
@@ -140,4 +141,4 @@ Next command:
 
 ## Next Action
 
-Goal 6 deployed. Start Goal 7 - Bazos Draft Integration Contract.
+Goal 7 source/docs are ready to commit. Deploy only after explicit owner approval.

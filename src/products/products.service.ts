@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, ILike, In } from 'typeorm';
 import { Product, ProductLifecycle } from "./product.entity";
 import { LoggerService } from '../logger/logger.service';
+import { PricingService } from '../pricing/pricing.service';
 import { CreateProductDto, UpdateProductDto, ProductQueryDto } from './dto';
 import axios from "axios";
 
@@ -46,6 +47,7 @@ export class ProductsService {
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
     private readonly logger: LoggerService,
+    private readonly pricingService?: PricingService,
   ) {}
 
   /**
@@ -348,189 +350,119 @@ export class ProductsService {
   }
 
 
-  async sellOnBazos(id: string, data: any = {}, authorization?: string) {
+  async requestBazosDraft(id: string, data: any = {}, authorization?: string) {
     const product = await this.findOne(id);
 
     if (!product.isActive) {
-      return {
-        success: false,
-        blocked: true,
-        reason: 'inactive_product',
-        message: 'Only active catalog products can be sent to Bazos.',
-      };
-    }
-
-    const activePrice = product.pricing?.find((price: any) => price.isActive) || product.pricing?.[0];
-    if (!activePrice?.basePrice) {
-      return {
-        success: false,
-        blocked: true,
-        reason: 'price_required',
-        message: 'A current catalog price is required before publishing to Bazos.',
-      };
+      return this.blockedBazosDraft(id, 'inactive_product', 'Only active catalog products can be sent to Bazos draft review.');
     }
 
     if (!authorization) {
-      return {
-        success: false,
-        blocked: true,
-        reason: 'auth_required',
-        message: 'Please log in before starting Bazos publishing.',
-      };
+      return this.blockedBazosDraft(id, 'auth_required', 'Authentication is required before requesting a Bazos draft.');
     }
 
-    const bazosBaseUrl = process.env.BAZOS_SERVICE_URL || 'http://bazos-service:3000';
-    const headers = { Authorization: authorization };
-    const phoneNumber = String(data.phoneNumber || '').trim();
-    const displayName = String(data.displayName || data.sellerName || '').trim();
-    const location = String(data.location || '').trim();
+    const identityId = String(data.identityId || '').trim();
+    if (!identityId) {
+      return this.blockedBazosDraft(id, 'identity_required', 'Choose a Bazos identity before requesting a draft.');
+    }
+
     const category = String(data.category || product.categories?.[0]?.name || '').trim();
-
-    if (!phoneNumber) {
-      return {
-        success: false,
-        blocked: true,
-        reason: 'phone_required',
-        message: 'Enter the phone number you want to use on Bazos.',
-      };
-    }
-
-    if (!displayName) {
-      return {
-        success: false,
-        blocked: true,
-        reason: 'seller_name_required',
-        message: 'Enter the seller name shown with the Bazos ad.',
-      };
-    }
-
-    if (!location) {
-      return {
-        success: false,
-        blocked: true,
-        reason: 'location_required',
-        message: 'Choose the location for the Bazos advertisement.',
-      };
-    }
-
     if (!category) {
-      return {
-        success: false,
-        blocked: true,
-        reason: 'category_required',
-        message: 'Choose a Bazos category for the advertisement.',
-      };
+      return this.blockedBazosDraft(id, 'category_required', 'Choose a Bazos category before requesting a draft.');
     }
 
-    const normalizedPhone = phoneNumber.replace(/\s+/g, '');
-    const safePhone = normalizedPhone.replace(/[^0-9+]/g, '').replace(/^\+/, 'plus');
-    const accountEmail = `${safePhone || 'seller'}@bazos.local`;
-    let account: any;
-
-    const accountsResponse = await axios.get(`${bazosBaseUrl}/accounts`, { headers });
-    const accounts = accountsResponse.data?.data || accountsResponse.data || [];
-    account = Array.isArray(accounts)
-      ? accounts.find((item: any) => item.email === accountEmail || item.name === displayName)
-      : undefined;
-
-    if (!account) {
-      const accountResponse = await axios.post(
-        `${bazosBaseUrl}/accounts`,
-        {
-          name: displayName,
-          email: accountEmail,
-          isActive: true,
-        },
-        { headers },
-      );
-      account = accountResponse.data?.data || accountResponse.data;
+    const currentPrice = await this.resolveCurrentPrice(product);
+    if (!currentPrice) {
+      return this.blockedBazosDraft(id, 'price_required', 'A current catalog price is required before requesting a Bazos draft.');
     }
 
-    const identitiesResponse = await axios.get(`${bazosBaseUrl}/identities?accountId=${account.id}`, { headers });
-    const identities = identitiesResponse.data?.data || identitiesResponse.data || [];
-    let identity = Array.isArray(identities)
-      ? identities.find((item: any) => item.phoneNumber === phoneNumber || item.phoneNumber === normalizedPhone)
-      : undefined;
-
-    if (!identity) {
-      const identityResponse = await axios.post(
-        `${bazosBaseUrl}/identities`,
-        {
-          accountId: account.id,
-          phoneNumber,
-          displayName,
-          contactName: displayName,
-          contactPhone: phoneNumber,
-          defaultLocation: location,
-          sessionState: 'missing',
-          status: 'draft',
-          reviewState: 'clear',
-        },
-        { headers },
-      );
-      identity = identityResponse.data?.data || identityResponse.data;
-    }
-
-    let verificationSession: any = null;
-    if (identity.sessionState !== 'ready' || identity.status !== 'verified') {
-      const verificationResponse = await axios.post(
-        `${bazosBaseUrl}/verification-sessions`,
-        {
-          identityId: identity.id,
-          operatorUserId: data.operatorUserId,
-          notes: 'Started from catalog Sell on Bazos guided flow',
-        },
-        { headers },
-      );
-      verificationSession = verificationResponse.data?.data || verificationResponse.data;
-    }
-
-    const offerPayload = {
-      accountId: account.id,
-      identityId: identity.id,
-      productId: product.id,
+    const bazosBaseUrl = (process.env.BAZOS_SERVICE_URL || 'http://bazos-service:3000').replace(/\/$/, '');
+    const draftPayload = {
+      identityId,
       title: data.title || product.title,
-      description: data.description || product.description,
-      price: Number(activePrice.basePrice),
+      description: data.description ?? product.description ?? undefined,
+      price: currentPrice,
       category,
-      location,
-      stockQuantity: data.stockQuantity ?? 1,
-      isActive: true,
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      location: data.location,
+      stockQuantity: data.stockQuantity ?? 0,
     };
 
-    const offerResponse = await axios.post(`${bazosBaseUrl}/offers`, offerPayload, { headers });
-    const offer = offerResponse.data?.data || offerResponse.data;
-    const offerId = offer?.id;
+    try {
+      const response = await axios.post(
+        `${bazosBaseUrl}/api/bazos/catalog/products/${id}/sell-action`,
+        draftPayload,
+        { headers: { Authorization: authorization, 'Content-Type': 'application/json' } },
+      );
+      const bazosAction = response.data?.data || response.data;
+      return this.bazosDraftResponse(id, bazosAction);
+    } catch (error: any) {
+      return {
+        ...this.blockedBazosDraft(id, 'bazos_draft_request_failed', 'Bazos draft request failed. Resolve the Bazos-owned action reason before retrying.'),
+        dependencyStatus: error?.response?.status ?? null,
+        dependencyMessage: error?.response?.data?.message ?? error?.message ?? null,
+      };
+    }
+  }
 
-    if (!offerId) {
-      throw new Error('Bazos service did not return an offer id.');
+  async sellOnBazos(id: string, data: any = {}, authorization?: string) {
+    return this.requestBazosDraft(id, data, authorization);
+  }
+
+  private async resolveCurrentPrice(product: Product): Promise<number | null> {
+    const price = this.pricingService
+      ? await this.pricingService.getCurrentPrice(product.id)
+      : product.pricing?.find((row: any) => row.isActive) || product.pricing?.[0];
+    if (!price) {
+      return null;
     }
 
-    const queueResponse = await axios.post(
-      `${bazosBaseUrl}/offers/${offerId}/enqueue-publish`,
-      { identityId: identity.id },
-      { headers },
-    );
+    const amount = Number(price.salePrice ?? price.basePrice);
+    return Number.isFinite(amount) && amount > 0 ? amount : null;
+  }
 
+  private blockedBazosDraft(productId: string, reason: string, message: string) {
+    return {
+      success: false,
+      action: 'create_bazos_draft',
+      productId,
+      blocked: true,
+      reason,
+      message,
+      authority: 'bazos',
+      policyAuthority: 'bazos',
+      publishAuthority: 'bazos',
+      requiresHumanAction: {
+        required: true,
+        reason,
+        policyFailures: [],
+        error: message,
+      },
+      nextAction: 'resolve_bazos_draft_requirements',
+    };
+  }
+
+  private bazosDraftResponse(productId: string, bazosAction: any) {
     return {
       success: true,
-      productId: product.id,
-      account,
-      identity,
-      verificationSession,
-      bazosOffer: offer,
-      queue: queueResponse.data,
-      nextStep: verificationSession
-        ? {
-            type: 'human_verification_required',
-            message: 'Open the Bazos verification page and complete phone/SMS/CAPTCHA/bank checks manually. After verification, mark the identity verified in Bazos service before final publishing.',
-            verificationUrl: verificationSession.verificationUrl,
-          }
-        : {
-            type: 'queued',
-            message: 'The verified identity was accepted and the offer is queued for compliant publishing.',
-          },
+      action: 'create_bazos_draft',
+      productId,
+      authority: 'bazos',
+      policyAuthority: 'bazos',
+      publishAuthority: 'bazos',
+      draft: bazosAction?.draft ?? null,
+      identity: bazosAction?.identity ?? null,
+      categoryMapping: bazosAction?.categoryMapping ?? null,
+      policyStatus: bazosAction?.policyStatus ?? null,
+      requiresConfirmation: Boolean(bazosAction?.requiresConfirmation),
+      canQueueAfterConfirmation: Boolean(bazosAction?.canQueueAfterConfirmation),
+      requiresHumanAction: bazosAction?.requiresHumanAction ?? {
+        required: false,
+        reason: null,
+        policyFailures: [],
+        error: null,
+      },
+      nextAction: bazosAction?.nextAction ?? 'resolve_policy_failures',
+      bazosAction,
     };
   }
 

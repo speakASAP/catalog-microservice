@@ -1,5 +1,36 @@
 # Catalog Orchestrator Status
 
+## 2026-06-13 - Goal 7 Bazos Draft Integration Contract Source Implementation
+
+Current focus: Goal 7 - Bazos Draft Integration Contract source implementation.
+
+Implementation evidence:
+
+- Added protected `POST /api/products/:id/bazos-draft`.
+- Kept `POST /api/products/:id/sell-on-bazos` as a compatibility alias that delegates to draft request behavior.
+- Removed Catalog direct Bazos account, identity, offer, and enqueue-publish orchestration from the product action path.
+- Catalog now calls Bazos `POST /api/bazos/catalog/products/:productId/sell-action` to request draft preparation.
+- Catalog response surfaces Bazos `policyStatus`, `requiresConfirmation`, `canQueueAfterConfirmation`, `requiresHumanAction`, and `nextAction`.
+- Added `docs/contracts/bazos-draft-integration.md`.
+
+Validation evidence:
+
+- `npm test -- --runInBand` passed: 5 suites / 23 tests.
+- `npm run build` passed.
+- `git diff --check` passed.
+- Created `reports/validation/VAL-GOAL-07-bazos-draft-integration-contract.md`.
+
+Boundary decisions:
+
+- Catalog does not publish directly to Bazos.
+- Catalog does not create Bazos identities/accounts or enqueue publish jobs.
+- Bazos remains final policy and publishing authority.
+- Runtime deployment was not run for Goal 7.
+
+Next unfinished step:
+
+- Commit Goal 7 source/docs when ready, then deploy only with owner approval.
+
 ## 2026-06-13 - Goal 6 FlipFlop Catalog Projection Deployment
 
 Current focus: Goal 6 deployment and bounded production smoke.
