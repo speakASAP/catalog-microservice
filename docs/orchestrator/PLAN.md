@@ -6,7 +6,7 @@ Work one goal chunk at a time. Prefer a complete, verifiable chunk over starting
 
 ## Active Goal
 
-Goal 7 deployed.
+Goal 10/11 projection isolation complete.
 
 ### Goal 1 Closure Evidence
 
@@ -106,4 +106,4 @@ Verification:
 
 ## Next Goal Selection
 
-Goal 7 deployment is complete at commit 3503372. Resolve or isolate existing unrelated Goal 10 worktree changes before starting the next goal.
+Goal 10/11 dirty worktree changes are isolated on `feature/catalog-goal-10-11-projection-isolation`. Review/deploy only after explicit owner approval.

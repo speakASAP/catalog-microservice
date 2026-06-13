@@ -138,6 +138,8 @@ export class FlipFlopProjectionService {
         totalQuantity: Number(availability.totalQuantity ?? 0),
         totalReserved: Number(availability.totalReserved ?? 0),
         totalAvailable: Number(availability.totalAvailable ?? 0),
+        warehouses: Array.isArray(availability.warehouses) ? availability.warehouses : [],
+        logistics: availability.logistics ?? null,
       },
       stockQuantity: Number(availability.totalAvailable ?? 0),
       readiness,
@@ -185,6 +187,7 @@ export class FlipFlopProjectionService {
       totalReserved: 0,
       totalAvailable: 0,
       warehouses: [],
+      logistics: null,
     };
   }
 

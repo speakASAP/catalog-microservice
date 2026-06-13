@@ -1,6 +1,7 @@
 import { ArrayMaxSize, ArrayNotEmpty, IsArray, IsBoolean, IsOptional, IsString } from "class-validator";
 import type { ProductLifecycle } from "../products/product.entity";
 import type { ChannelReadinessStatus } from "../channel-readiness/channel-readiness.types";
+import type { WarehouseAvailabilityWarehouse, WarehouseProductLogisticsPlan } from "../warehouse-availability/warehouse-availability.types";
 
 export class BatchFlipFlopProjectionRequestDto {
   @IsArray()
@@ -28,6 +29,8 @@ export type FlipFlopProjectionAvailability = {
   totalQuantity: number;
   totalReserved: number;
   totalAvailable: number;
+  warehouses: WarehouseAvailabilityWarehouse[];
+  logistics: WarehouseProductLogisticsPlan | null;
 };
 
 export type FlipFlopProjectionReadiness = {

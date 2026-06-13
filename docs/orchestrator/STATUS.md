@@ -1,5 +1,32 @@
 # Catalog Orchestrator Status
 
+## 2026-06-13 - Goal 10/11 Stock And Logistics Projection Isolation
+
+Current focus: isolate pre-existing Goal 10/11 worktree changes after Goal 7 deployment.
+
+Implementation evidence:
+
+- Extended Catalog Warehouse availability rows with Warehouse-owned stock-origin metadata: `warehouseCode`, `warehouseName`, `warehouseType`, and `supplierId`.
+- Added Warehouse logistics batch call to attach Warehouse-owned logistics plans under Catalog availability items.
+- Added `availability.warehouses[]` and `availability.logistics` to the FlipFlop projection while preserving `stockQuantity` as Warehouse `totalAvailable`.
+- Added Goal 10 and Goal 11 goal/validation artifacts.
+
+Validation evidence:
+
+- `npm test -- --runInBand` passed: 5 suites / 23 tests.
+- `npm run build` passed.
+- `git diff --check` passed.
+
+Boundary decisions:
+
+- Warehouse remains stock-origin and logistics authority.
+- Catalog forwards Warehouse-owned metadata only; no Catalog stock persistence, logistics derivation, warehouse mutation, supplier credentials, or deployment was added.
+- Goal 7 deployment evidence from commit `a80b18e` remains preserved.
+
+Next unfinished step:
+
+- Review/deploy Goal 10/11 only after explicit owner approval.
+
 ## 2026-06-13 - Goal 7 Bazos Draft Integration Contract Deployment
 
 Current focus: Goal 7 deployment and bounded production smoke.

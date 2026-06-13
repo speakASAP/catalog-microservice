@@ -53,8 +53,15 @@ Response envelope:
 | `media`, `mainImageUrl`, `imageUrls` | Catalog external media references | Media remains external URL/object references; no inline blobs. |
 | `price.amount` | Catalog deterministic current price, sale price first, otherwise base price | Marked with `source: "catalog_pricing"`. |
 | `availability.totalQuantity`, `availability.totalReserved`, `availability.totalAvailable` | Warehouse availability contract through Catalog bridge | Marked with `source: "warehouse"`; Catalog does not store or own stock. |
+| `availability.warehouses[]` | Warehouse per-location availability rows with `warehouseId`, `warehouseCode`, `warehouseName`, `warehouseType`, `supplierId`, quantity, reserved, and available | Warehouse owns stock origin classification; Catalog only forwards it. |
+| `availability.logistics` | Warehouse product logistics plan with preferredRoute and route options for local fulfillment, supplier replenishment, and supplier dropship/direct routes | Warehouse owns logistics route interpretation; Catalog only forwards it. |
 | `stockQuantity` | Warehouse `totalAvailable` | Compatibility alias for FlipFlop only. |
 | `readiness` | Catalog channel readiness for `flipflop` | FlipFlop remains authority for storefront and checkout behavior. |
+
+
+## Stock Origin Visibility
+
+`availability.warehouses[]` lets consumers distinguish Alfares-owned physical stock from supplier or dropship stock without making Catalog an inventory authority. `warehouseType` values come from Warehouse, for example `own`, `supplier`, or `dropship`. `supplierId` is a Warehouse reference for supplier/dropship warehouses and does not expose supplier credentials.
 
 ## Availability Filtering
 

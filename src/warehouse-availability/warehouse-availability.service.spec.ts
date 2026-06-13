@@ -37,7 +37,17 @@ describe('WarehouseAvailabilityService', () => {
         totalQuantity: 8,
         totalReserved: 3,
         totalAvailable: 5,
-        warehouses: [{ warehouseId: 'warehouse-1', quantity: 8, reserved: 3, available: 5 }],
+        logistics: expect.objectContaining({ preferredRoute: 'local_fulfillment' }),
+        warehouses: [{
+          warehouseId: 'warehouse-1',
+          warehouseCode: 'OWN-PRG',
+          warehouseName: 'Prague Main Warehouse',
+          warehouseType: 'own',
+          supplierId: null,
+          quantity: 8,
+          reserved: 3,
+          available: 5,
+        }],
       },
       {
         productId: 'product-2',
@@ -45,6 +55,32 @@ describe('WarehouseAvailabilityService', () => {
         totalReserved: 0,
         totalAvailable: 0,
         warehouses: [],
+      },
+    ]);
+    jest.spyOn(service as any, 'fetchWarehouseLogistics').mockResolvedValue([
+      {
+        productId: 'product-1',
+        generatedAt: '2026-06-13T00:00:00.000Z',
+        preferredRoute: 'local_fulfillment',
+        totals: { totalQuantity: 8, totalReserved: 3, totalAvailable: 5, routeCount: 1, ownAvailable: 5, supplierAvailable: 0, dropshipAvailable: 0 },
+        options: [{
+          productId: 'product-1',
+          warehouseId: 'warehouse-1',
+          warehouseCode: 'OWN-PRG',
+          warehouseName: 'Prague Main Warehouse',
+          warehouseType: 'own',
+          originType: 'own',
+          supplierId: null,
+          priority: 20,
+          quantity: 8,
+          reserved: 3,
+          available: 5,
+          routeType: 'local_fulfillment',
+          routeLabel: 'Ship from Alfares warehouse to customer',
+          canReserveFromWarehouse: true,
+          requiresSupplierCoordination: false,
+          legs: [{ sequence: 1, from: 'OWN-PRG', to: 'customer', responsibility: 'warehouse' }],
+        }],
       },
     ]);
 
@@ -56,7 +92,22 @@ describe('WarehouseAvailabilityService', () => {
     expect(warehouseSpy).toHaveBeenCalledTimes(1);
     expect(warehouseSpy).toHaveBeenCalledWith(['product-1', 'product-2'], ['warehouse-1']);
     expect(result.items).toEqual([
-      expect.objectContaining({ productId: 'product-1', sku: 'SKU-001', source: 'warehouse', totalAvailable: 5 }),
+      expect.objectContaining({
+        productId: 'product-1',
+        sku: 'SKU-001',
+        source: 'warehouse',
+        totalAvailable: 5,
+        warehouses: [{
+          warehouseId: 'warehouse-1',
+          warehouseCode: 'OWN-PRG',
+          warehouseName: 'Prague Main Warehouse',
+          warehouseType: 'own',
+          supplierId: null,
+          quantity: 8,
+          reserved: 3,
+          available: 5,
+        }],
+      }),
       expect.objectContaining({ productId: 'product-2', sku: 'SKU-002', source: 'warehouse', totalAvailable: 0 }),
     ]);
   });
@@ -67,6 +118,7 @@ describe('WarehouseAvailabilityService', () => {
     };
     const service = new WarehouseAvailabilityService(productsService as any, logger as any);
     jest.spyOn(service as any, 'fetchWarehouseAvailability').mockResolvedValue([]);
+    jest.spyOn(service as any, 'fetchWarehouseLogistics').mockResolvedValue([]);
 
     const result = await service.getBatchAvailability({ productIds: ['product-1'] });
 
@@ -78,6 +130,7 @@ describe('WarehouseAvailabilityService', () => {
       totalReserved: 0,
       totalAvailable: 0,
       warehouses: [],
+      logistics: null,
     });
   });
 

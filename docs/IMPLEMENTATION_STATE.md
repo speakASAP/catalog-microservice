@@ -5,6 +5,7 @@ Last updated: 2026-06-13.
 ## Orchestrator Command
 
 ```text
+2026-06-13: Goal 10/11 projection isolation completed on `feature/catalog-goal-10-11-projection-isolation`. Catalog availability now preserves Warehouse per-row origin metadata and calls Warehouse logistics batch once per product batch; FlipFlop projection exposes `availability.warehouses[]` and `availability.logistics` while preserving `stockQuantity` as Warehouse `totalAvailable`. Validation passed: `npm test -- --runInBand` 5 suites/23 tests, `npm run build`, and `git diff --check`. No deployment was performed.
 2026-06-13: Goal 7 deployment completed from clean commit `3503372`. `./scripts/deploy.sh` built and pushed image `localhost:5000/catalog-microservice:3503372`, applied manifests, restarted the deployment, rollout completed, and production health returned healthy. Safe smoke verified `GET /health` 200 and anonymous `POST /api/products/:id/bazos-draft` 401 with missing/invalid Authorization header. Deployment intentionally excluded unrelated dirty Goal 10 worktree changes.
 2026-06-13: Goal 7 source implementation completed on `feature/catalog-goal-07-bazos-draft-integration-contract`. Added protected `POST /api/products/:id/bazos-draft`, kept `sell-on-bazos` as a compatibility alias, delegated draft preparation to Bazos `POST /api/bazos/catalog/products/:productId/sell-action`, removed direct Catalog Bazos account/identity/offer/enqueue orchestration from the action path, and documented `docs/contracts/bazos-draft-integration.md`. Validation passed: `npm test -- --runInBand` 5 suites/23 tests, `npm run build`, and `git diff --check`. Deployment was not run.
 2026-06-13: Goal 6 deployment completed from commit `c989883`. `./scripts/deploy.sh` built and pushed image `localhost:5000/catalog-microservice:c989883`, applied manifests, restarted the deployment, rollout completed, and production health returned healthy. Safe smoke verified `GET /health` 200 and anonymous `POST /api/products/projections/flipflop/batch` 401 with missing/invalid Authorization header, confirming the projection endpoint is deployed and protected. Authorized projection smoke with real availability was not run because it requires approved runtime credentials and product IDs.
@@ -19,9 +20,9 @@ CATALOG ORCHESTRATOR: implement goal number 1
 
 ## Current Status
 
-- Active goal: Goal 7 - Bazos Draft Integration Contract deployed.
-- Active chunk: Goal 7 deployment and bounded production smoke complete.
-- Current wave: Wave 4 - FlipFlop Projection + Bazos Draft Contract.
+- Active goal: Goal 10/11 projection isolation complete.
+- Active chunk: Goal 10 stock-origin and Goal 11 logistics projection source validation complete; deployment not requested.
+- Current wave: Cross-service stock and logistics projection isolation.
 - Completed chunks: Goal 1.1 Intent Preservation Docs, Goal 1.2 Protected Mutation Endpoints, Goal 1.3 Hard Delete Approval Gate, Goal 1.4 Write Audit Context, Goal 1.5 Unauthorized And Authorized Write Verification, Goal 1 production deployment and runtime audit-log proof, Goal 2 lifecycle migration, deployment, and runtime API verification, Goal 3 pricing integrity deployment and runtime API verification, Goal 4 channel readiness deployment and runtime API verification.
 - Running goals: none.
 - Blocked goals: none.
@@ -47,6 +48,8 @@ CATALOG ORCHESTRATOR: implement goal number 1
 | 06 | `implementation-goals/GOAL-06-flipflop-catalog-projection.md` | done | `feature/catalog-goal-06-flipflop-catalog-projection` | 02, 03, 05 | Commit `c989883` deployed; health and anonymous protected-endpoint smoke passed. |
 | 07 | `implementation-goals/GOAL-07-bazos-draft-integration-contract.md` | done | `feature/catalog-goal-07-bazos-draft-integration-contract` | 04 | Commit `3503372` deployed; health and anonymous protected-endpoint smoke passed. |
 | 08 | `implementation-goals/GOAL-08-data-import-reconciliation.md` | pending | `feature/catalog-goal-08-data-import-reconciliation` | 02, 03 | Imports must be dry-run capable. |
+| 10 | `implementation-goals/GOAL-10-stock-origin-visibility.md` | done | `feature/catalog-goal-10-11-projection-isolation` | 05, 06, Warehouse WH-G11 | Forwarded Warehouse stock-origin metadata without stock ownership drift. |
+| 11 | `implementation-goals/GOAL-11-logistics-route-projection.md` | done | `feature/catalog-goal-10-11-projection-isolation` | 10, Warehouse logistics contract | Forwarded Warehouse-owned logistics plans without Catalog logistics ownership drift. |
 | 09 | `implementation-goals/GOAL-09-end-to-end-smoke-tests.md` | pending | `feature/catalog-goal-09-end-to-end-smoke-tests` | 01, 02, 03 | Final proof goal; can add contract checks for other services. |
 
 ## Execution Waves
@@ -142,4 +145,4 @@ Next command:
 
 ## Next Action
 
-Goal 7 deployed. Resolve or isolate existing unrelated Goal 10 worktree changes before starting the next goal.
+Goal 10/11 dirty worktree changes are isolated on `feature/catalog-goal-10-11-projection-isolation`; deployment was not requested.
