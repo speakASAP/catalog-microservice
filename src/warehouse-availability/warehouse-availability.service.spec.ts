@@ -97,6 +97,13 @@ describe('WarehouseAvailabilityService', () => {
         sku: 'SKU-001',
         source: 'warehouse',
         totalAvailable: 5,
+        logistics: expect.objectContaining({
+          preferredRoute: 'local_fulfillment',
+          options: [expect.objectContaining({
+            routeType: 'local_fulfillment',
+            legs: [{ sequence: 1, from: 'OWN-PRG', to: 'customer', responsibility: 'warehouse' }],
+          })],
+        }),
         warehouses: [{
           warehouseId: 'warehouse-1',
           warehouseCode: 'OWN-PRG',
@@ -224,11 +231,11 @@ describe('WarehouseAvailabilityService', () => {
       },
     ]);
     jest.spyOn(service as any, 'fetchWarehouseLogistics').mockResolvedValue([
-      { productId: 'product-local', generatedAt: '2026-06-13T00:00:00.000Z', preferredRoute: 'local_fulfillment', totals: { totalQuantity: 3, totalReserved: 0, totalAvailable: 3, routeCount: 1, ownAvailable: 3, supplierAvailable: 0, dropshipAvailable: 0 }, options: [{ productId: 'product-local', warehouseId: 'own-1', warehouseCode: 'OWN', warehouseName: 'Own', warehouseType: 'own', originType: 'own', supplierId: null, priority: 10, quantity: 3, reserved: 0, available: 3, routeType: 'local_fulfillment', routeLabel: 'Local', canReserveFromWarehouse: true, requiresSupplierCoordination: false, legs: [] }] },
-      { productId: 'product-supplier', generatedAt: '2026-06-13T00:00:00.000Z', preferredRoute: 'supplier_replenishment', totals: { totalQuantity: 5, totalReserved: 1, totalAvailable: 4, routeCount: 1, ownAvailable: 0, supplierAvailable: 4, dropshipAvailable: 0 }, options: [{ productId: 'product-supplier', warehouseId: 'sup-1', warehouseCode: 'SUP', warehouseName: 'Supplier', warehouseType: 'supplier', originType: 'supplier', supplierId: 'supplier-1', priority: 5, quantity: 5, reserved: 1, available: 4, routeType: 'supplier_replenishment', routeLabel: 'Supplier', canReserveFromWarehouse: true, requiresSupplierCoordination: true, legs: [] }] },
+      { productId: 'product-local', generatedAt: '2026-06-13T00:00:00.000Z', preferredRoute: 'local_fulfillment', totals: { totalQuantity: 3, totalReserved: 0, totalAvailable: 3, routeCount: 1, ownAvailable: 3, supplierAvailable: 0, dropshipAvailable: 0 }, options: [{ productId: 'product-local', warehouseId: 'own-1', warehouseCode: 'OWN', warehouseName: 'Own', warehouseType: 'own', originType: 'own', supplierId: null, priority: 10, quantity: 3, reserved: 0, available: 3, routeType: 'local_fulfillment', routeLabel: 'Local', canReserveFromWarehouse: true, requiresSupplierCoordination: false, legs: [{ sequence: 1, from: 'OWN', to: 'customer', responsibility: 'warehouse' }] }] },
+      { productId: 'product-supplier', generatedAt: '2026-06-13T00:00:00.000Z', preferredRoute: 'supplier_replenishment', totals: { totalQuantity: 5, totalReserved: 1, totalAvailable: 4, routeCount: 1, ownAvailable: 0, supplierAvailable: 4, dropshipAvailable: 0 }, options: [{ productId: 'product-supplier', warehouseId: 'sup-1', warehouseCode: 'SUP', warehouseName: 'Supplier', warehouseType: 'supplier', originType: 'supplier', supplierId: 'supplier-1', priority: 5, quantity: 5, reserved: 1, available: 4, routeType: 'supplier_replenishment', routeLabel: 'Supplier', canReserveFromWarehouse: true, requiresSupplierCoordination: true, legs: [{ sequence: 1, from: 'SUP', to: 'alfares_receiving_or_handoff', responsibility: 'supplier' }, { sequence: 2, from: 'alfares_receiving_or_handoff', to: 'customer', responsibility: 'warehouse' }] }] },
       { productId: 'product-mixed', generatedAt: '2026-06-13T00:00:00.000Z', preferredRoute: 'local_fulfillment', totals: { totalQuantity: 10, totalReserved: 2, totalAvailable: 8, routeCount: 2, ownAvailable: 3, supplierAvailable: 0, dropshipAvailable: 5 }, options: [
-        { productId: 'product-mixed', warehouseId: 'own-1', warehouseCode: 'OWN', warehouseName: 'Own', warehouseType: 'own', originType: 'own', supplierId: null, priority: 10, quantity: 4, reserved: 1, available: 3, routeType: 'local_fulfillment', routeLabel: 'Local', canReserveFromWarehouse: true, requiresSupplierCoordination: false, legs: [] },
-        { productId: 'product-mixed', warehouseId: 'drop-1', warehouseCode: 'DROP', warehouseName: 'Dropship', warehouseType: 'dropship', originType: 'dropship', supplierId: 'supplier-2', priority: 3, quantity: 6, reserved: 1, available: 5, routeType: 'supplier_dropship', routeLabel: 'Dropship', canReserveFromWarehouse: true, requiresSupplierCoordination: true, legs: [] },
+        { productId: 'product-mixed', warehouseId: 'own-1', warehouseCode: 'OWN', warehouseName: 'Own', warehouseType: 'own', originType: 'own', supplierId: null, priority: 10, quantity: 4, reserved: 1, available: 3, routeType: 'local_fulfillment', routeLabel: 'Local', canReserveFromWarehouse: true, requiresSupplierCoordination: false, legs: [{ sequence: 1, from: 'OWN', to: 'customer', responsibility: 'warehouse' }] },
+        { productId: 'product-mixed', warehouseId: 'drop-1', warehouseCode: 'DROP', warehouseName: 'Dropship', warehouseType: 'dropship', originType: 'dropship', supplierId: 'supplier-2', priority: 3, quantity: 6, reserved: 1, available: 5, routeType: 'supplier_dropship', routeLabel: 'Dropship', canReserveFromWarehouse: true, requiresSupplierCoordination: true, legs: [{ sequence: 1, from: 'DROP', to: 'customer', responsibility: 'supplier' }] },
       ] },
     ]);
 
@@ -245,8 +252,37 @@ describe('WarehouseAvailabilityService', () => {
     });
     expect(result.items).toEqual([
       expect.objectContaining({ productId: 'product-local', coverageStatus: 'covered', stockOrigin: 'local_stock', sellableWithWarehouse: true, localAvailable: 3 }),
-      expect.objectContaining({ productId: 'product-supplier', coverageStatus: 'covered', stockOrigin: 'supplier_stock', sellableWithWarehouse: true, supplierAvailable: 4, preferredRoute: 'supplier_replenishment' }),
-      expect.objectContaining({ productId: 'product-mixed', coverageStatus: 'covered', stockOrigin: 'mixed_stock', sellableWithWarehouse: true, dropshipAvailable: 5, preferredRoute: 'local_fulfillment' }),
+      expect.objectContaining({
+        productId: 'product-supplier',
+        coverageStatus: 'covered',
+        stockOrigin: 'supplier_stock',
+        sellableWithWarehouse: true,
+        supplierAvailable: 4,
+        preferredRoute: 'supplier_replenishment',
+        logistics: expect.objectContaining({
+          options: [expect.objectContaining({
+            routeType: 'supplier_replenishment',
+            legs: [
+              { sequence: 1, from: 'SUP', to: 'alfares_receiving_or_handoff', responsibility: 'supplier' },
+              { sequence: 2, from: 'alfares_receiving_or_handoff', to: 'customer', responsibility: 'warehouse' },
+            ],
+          })],
+        }),
+      }),
+      expect.objectContaining({
+        productId: 'product-mixed',
+        coverageStatus: 'covered',
+        stockOrigin: 'mixed_stock',
+        sellableWithWarehouse: true,
+        dropshipAvailable: 5,
+        preferredRoute: 'local_fulfillment',
+        logistics: expect.objectContaining({
+          options: [
+            expect.objectContaining({ routeType: 'local_fulfillment', legs: [{ sequence: 1, from: 'OWN', to: 'customer', responsibility: 'warehouse' }] }),
+            expect.objectContaining({ routeType: 'supplier_dropship', legs: [{ sequence: 1, from: 'DROP', to: 'customer', responsibility: 'supplier' }] }),
+          ],
+        }),
+      }),
       expect.objectContaining({ productId: 'product-missing', coverageStatus: 'missing_stock', stockOrigin: 'out_of_stock', sellableWithWarehouse: false, blockingReasons: ['warehouse_stock_missing'] }),
     ]);
   });

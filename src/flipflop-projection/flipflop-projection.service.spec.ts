@@ -151,7 +151,10 @@ describe("FlipFlopProjectionService", () => {
         totalAvailable: 5,
         logistics: expect.objectContaining({
           preferredRoute: "local_fulfillment",
-          options: [expect.objectContaining({ routeType: "local_fulfillment" })],
+          options: [expect.objectContaining({
+            routeType: "local_fulfillment",
+            legs: [{ sequence: 1, from: "OWN-PRG", to: "customer", responsibility: "warehouse" }],
+          })],
         }),
         warehouses: [{
           warehouseId: "warehouse-1",

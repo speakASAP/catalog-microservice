@@ -54,7 +54,7 @@ Response envelope:
 | `price.amount` | Catalog deterministic current price, sale price first, otherwise base price | Marked with `source: "catalog_pricing"`. |
 | `availability.totalQuantity`, `availability.totalReserved`, `availability.totalAvailable` | Warehouse availability contract through Catalog bridge | Marked with `source: "warehouse"`; Catalog does not store or own stock. |
 | `availability.warehouses[]` | Warehouse per-location availability rows with `warehouseId`, `warehouseCode`, `warehouseName`, `warehouseType`, `supplierId`, quantity, reserved, and available | Warehouse owns stock origin classification; Catalog only forwards it. |
-| `availability.logistics` | Warehouse product logistics plan with preferredRoute and route options for local fulfillment, supplier replenishment, and supplier dropship/direct routes | Warehouse owns logistics route interpretation; Catalog only forwards it. |
+| `availability.logistics` | Warehouse product logistics plan with preferredRoute, route options, and ordered route legs for local fulfillment, supplier replenishment, and supplier dropship/direct routes | Warehouse owns logistics route interpretation and leg semantics; Catalog only forwards it. |
 | `stockQuantity` | Warehouse `totalAvailable` | Compatibility alias for FlipFlop only. |
 | `readiness` | Catalog channel readiness for `flipflop` | FlipFlop remains authority for storefront and checkout behavior. |
 
@@ -88,7 +88,7 @@ Request:
 }
 ```
 
-Each response item includes `coverageStatus`, `stockOrigin`, `sellableWithWarehouse`, available totals by local/supplier/dropship origin, `preferredRoute`, `blockingReasons`, forwarded Warehouse rows, and the Warehouse-owned `logistics` plan. `covered` requires positive Warehouse availability and at least one reservable Warehouse logistics route. `missing_stock` and `missing_route` are blocking diagnostics; Catalog does not fabricate stock or logistics fallbacks.
+Each response item includes `coverageStatus`, `stockOrigin`, `sellableWithWarehouse`, available totals by local/supplier/dropship origin, `preferredRoute`, `blockingReasons`, forwarded Warehouse rows, and the Warehouse-owned `logistics` plan. The forwarded logistics plan must preserve Warehouse route legs, including local warehouse-to-customer, supplier-to-Alfares handoff plus Alfares-to-customer, or direct supplier-to-customer dropship paths. `covered` requires positive Warehouse availability and at least one reservable Warehouse logistics route. `missing_stock` and `missing_route` are blocking diagnostics; Catalog does not fabricate stock or logistics fallbacks.
 
 For operator audits across Catalog goods, use the paginated protected endpoint below. It defaults to active products and returns Catalog pagination plus the same coverage totals and per-product diagnostics for the current page.
 
