@@ -6,7 +6,7 @@ Work one goal chunk at a time. Prefer a complete, verifiable chunk over starting
 
 ## Active Goal
 
-Goal 5 - Catalog/Warehouse Contract source validation complete.
+Goal 5 - Catalog/Warehouse Contract deployment complete.
 
 ### Goal 1 Closure Evidence
 
@@ -78,6 +78,13 @@ Verification:
 - No Catalog stock quantity, reservation, movement, or warehouse-location persistence was added.
 - Validation passed: `npm test -- --runInBand` 4 suites/15 tests, `npm run build`, and `git diff --check`.
 
+### Goal 5 Deployment Evidence
+
+- Commit `874e080` deployed with `./scripts/deploy.sh`.
+- Production rollout and deploy health check passed.
+- Safe production smoke verified `/health` `200` and anonymous `POST /api/products/availability/batch` `401`, confirming the endpoint is deployed and protected.
+- Full authorized Warehouse runtime smoke is deferred until explicit approval for production synthetic product mutations and runtime credential use.
+
 ## Next Goal Selection
 
-Goal 5 source implementation and local validation are complete. Commit source/docs when ready, then deploy only with owner approval and run runtime Warehouse contract smoke with approved service-token handling.
+Goal 5 source implementation is committed and deployed. Confirm whether to run the full authorized Warehouse runtime smoke before starting Goal 6 planning.

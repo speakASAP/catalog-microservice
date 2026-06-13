@@ -2,7 +2,7 @@
 
 ```yaml
 id: VAL-CATALOG-05-WAREHOUSE-CONTRACT
-status: passed
+status: passed_with_runtime_smoke_limitation
 source_goal: implementation-goals/GOAL-05-catalog-warehouse-contract.md
 execution_plan: implementation-goals/GOAL-05-execution-plan.md
 repository_root: /home/ssf/Documents/Github/catalog-microservice
@@ -72,3 +72,20 @@ Direct runtime verification against the deployed Warehouse endpoint was not run 
 ## Next Action
 
 Commit Goal 5 source/docs when ready, then deploy only with owner approval and run a runtime smoke using approved service-token handling without printing token values.
+
+
+## Deployment Evidence
+
+- Commit `874e080` deployed successfully with `./scripts/deploy.sh`.
+- Image `localhost:5000/catalog-microservice:874e080` was built and pushed.
+- Kubernetes rollout completed successfully.
+- Production deploy health returned `healthy`.
+
+## Production Smoke Evidence
+
+Safe smoke passed:
+
+- `GET /health` returned `200`.
+- Anonymous `POST /api/products/availability/batch` returned `401` with `Missing or invalid Authorization header`.
+
+This proves the new endpoint is deployed and protected. Full authorized smoke using synthetic product mutations and Warehouse runtime service credentials was not run because it requires explicit approval for production side effects and secret use.

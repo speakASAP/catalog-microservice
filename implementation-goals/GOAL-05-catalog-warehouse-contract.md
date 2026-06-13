@@ -1,6 +1,6 @@
 # Goal 05 - Catalog/Warehouse Contract
 
-Status: source implemented; runtime verification pending
+Status: deployed; full authorized Warehouse smoke deferred
 
 ## Intent
 
@@ -50,3 +50,11 @@ Add direct contract verification when warehouse endpoint access is available.
 - Warehouse batch availability is called once per valid request.
 - Returned stock fields are explicitly `source: "warehouse"` and are not stored as Catalog truth.
 - Validation passed: `npm test -- --runInBand`, `npm run build`, and `git diff --check`.
+
+
+## Deployment Evidence
+
+- Commit `874e080` deployed successfully with `./scripts/deploy.sh`.
+- Production health returned healthy.
+- Safe smoke confirmed anonymous availability batch access is rejected with `401`.
+- Full authorized Warehouse smoke requires explicit approval for production synthetic mutations and runtime credential use.

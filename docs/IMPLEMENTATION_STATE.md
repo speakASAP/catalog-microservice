@@ -16,8 +16,8 @@ CATALOG ORCHESTRATOR: implement goal number 1
 
 ## Current Status
 
-- Active goal: Goal 5 - Catalog/Warehouse Contract source implementation.
-- Active chunk: Goal 5 source validation complete; runtime smoke/deployment pending approval.
+- Active goal: Goal 5 - Catalog/Warehouse Contract deployment complete; full authorized Warehouse smoke deferred.
+- Active chunk: Goal 5 commit/deployment/safe smoke complete; full authorized Warehouse smoke requires explicit approval for production mutations and runtime credential use.
 - Current wave: Wave 3 - Channel Readiness + Warehouse Contract.
 - Completed chunks: Goal 1.1 Intent Preservation Docs, Goal 1.2 Protected Mutation Endpoints, Goal 1.3 Hard Delete Approval Gate, Goal 1.4 Write Audit Context, Goal 1.5 Unauthorized And Authorized Write Verification, Goal 1 production deployment and runtime audit-log proof, Goal 2 lifecycle migration, deployment, and runtime API verification, Goal 3 pricing integrity deployment and runtime API verification, Goal 4 channel readiness deployment and runtime API verification.
 - Running goals: none.
@@ -40,7 +40,7 @@ CATALOG ORCHESTRATOR: implement goal number 1
 | 02 | `implementation-goals/GOAL-02-product-model-completeness.md` | done | `feature/catalog-goal-02-product-model-completeness` | 01 | Sequential by default. |
 | 03 | `implementation-goals/GOAL-03-pricing-integrity.md` | done | `feature/catalog-goal-03-pricing-integrity` | 01 | May run after Goal 01; avoid touching Goal 02 product lifecycle files in parallel. |
 | 04 | `implementation-goals/GOAL-04-channel-readiness-model.md` | done | `feature/catalog-goal-04-channel-readiness-model` | 02, 03 | Deployed and runtime-smoked. |
-| 05 | `implementation-goals/GOAL-05-catalog-warehouse-contract.md` | active | `feature/catalog-goal-05-catalog-warehouse-contract` | 02 | Source implemented and validated; runtime smoke/deployment pending approval. |
+| 05 | `implementation-goals/GOAL-05-catalog-warehouse-contract.md` | done | `feature/catalog-goal-05-catalog-warehouse-contract` | 02 | Commit `874e080` deployed; safe smoke passed; full authorized Warehouse smoke deferred pending explicit approval. |
 | 06 | `implementation-goals/GOAL-06-flipflop-catalog-projection.md` | pending | `feature/catalog-goal-06-flipflop-catalog-projection` | 02, 03, 05 | Contract work only unless owner asks for FlipFlop changes. |
 | 07 | `implementation-goals/GOAL-07-bazos-draft-integration-contract.md` | pending | `feature/catalog-goal-07-bazos-draft-integration-contract` | 04 | Bazos remains publishing and compliance authority. |
 | 08 | `implementation-goals/GOAL-08-data-import-reconciliation.md` | pending | `feature/catalog-goal-08-data-import-reconciliation` | 02, 03 | Imports must be dry-run capable. |
@@ -96,6 +96,7 @@ Do not paste full logs into this file. Compress each result into a short impleme
 Newest entries first.
 
 ```text
+2026-06-13: Goal 5 deployment completed from commit `874e080`. `./scripts/deploy.sh` built and pushed image `localhost:5000/catalog-microservice:874e080`, restarted the Kubernetes deployment, rollout completed, and production health returned healthy. Safe production smoke verified `/health` 200 and anonymous `POST /api/products/availability/batch` 401 with missing/invalid Authorization header, proving the new endpoint is deployed and protected. Full in-pod contract smoke with synthetic product create/delete and Warehouse service-token call was not run because it requires explicit approval for production mutations and runtime secret use.
 2026-06-13: Goal 5 source implementation completed on `feature/catalog-goal-05-catalog-warehouse-contract`. Added protected `POST /api/products/availability/batch`, Catalog product identity validation before Warehouse calls, one-call Warehouse batch availability client, warehouse-sourced response mapping with Catalog SKU identity and `source: "warehouse"`, zero totals for valid products with no Warehouse rows, and dependency failure handling without stock fabrication. No Catalog stock persistence or product read-envelope changes were added. Validation passed: `npm test -- --runInBand` 4 suites/15 tests, `npm run build`, and `git diff --check`. Runtime Warehouse smoke is pending deployment approval and approved service-token handling.
 2026-06-13: Goal 5 planning/pre-coding gate started on `feature/catalog-goal-05-catalog-warehouse-contract`. Created `implementation-goals/GOAL-05-execution-plan.md` and `reports/validation/GOAL-05-pre-coding-gate.md`. Planning inspected Catalog product/readiness code and Warehouse batch availability contract. Planned implementation is additive and schema-neutral: validate Catalog product IDs, call Warehouse batch availability once, return warehouse-sourced availability with `source: "warehouse"`, and never persist stock quantities in Catalog.
 2026-06-13: Goal 4 runtime closure completed on `feature/catalog-goal-04-channel-readiness-model` at commit `5f0e087`. Branch was pushed to origin, `./scripts/deploy.sh` deployed image `localhost:5000/catalog-microservice:5f0e087`, rollout and health check passed, and in-pod runtime smoke verified synthetic product create 201, `GET /api/products/:id/channel-readiness` 200, two channel entries, FlipFlop blocked with missing description/categories/media/pricing, Bazos authority remained `bazos` with policy-deferred issue, no publish-permission fields were exposed, hard-delete cleanup returned 204, and post-cleanup search for `CODEX-GOAL4` returned zero products. Synthetic JWT was generated inside the pod and not printed.
@@ -136,7 +137,7 @@ Next command:
 
 ## Next Action
 
-Commit Goal 5 source/docs when ready, then deploy only with owner approval and run runtime Warehouse contract smoke with approved service-token handling.
+Start Goal 6 planning only after confirming whether the full authorized Goal 5 Warehouse runtime smoke is required.
 
 Source documents:
 

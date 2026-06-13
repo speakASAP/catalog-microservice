@@ -1,5 +1,28 @@
 # Catalog Orchestrator Status
 
+## 2026-06-13 - Goal 5 Catalog/Warehouse Contract Deployment
+
+Current focus: Goal 5 deployment and bounded production smoke.
+
+Closure evidence:
+
+- Commit `874e080` contains Goal 5 source/docs for the Catalog/Warehouse availability contract.
+- `./scripts/deploy.sh` deployed image `localhost:5000/catalog-microservice:874e080` and `latest`.
+- Deployment phases completed successfully: preflight, image build, push, manifest apply, deployment restart, rollout, and health check.
+- Production health returned `healthy` for `catalog-microservice` version `1.0.0`.
+- Safe production smoke verified `GET /health` returned `200` and anonymous `POST /api/products/availability/batch` returned `401` with `Missing or invalid Authorization header`.
+- Full in-pod contract smoke with synthetic product create/delete and service-token Warehouse call was not run because it requires explicit approval for production mutations and runtime secret use.
+
+Boundary evidence:
+
+- The deployed endpoint is protected by `CatalogAuthGuard`.
+- Goal 5 source tests prove unknown product IDs are rejected before Warehouse calls, valid product batches use one Warehouse request, zero-row Warehouse semantics are preserved, and dependency failures do not fabricate stock.
+- Warehouse remains the stock authority; Catalog schema has no stock persistence.
+
+Next unfinished step:
+
+- If required, run the full authorized runtime contract smoke only after explicit approval for production synthetic product mutations and in-pod runtime credential use.
+
 ## 2026-06-13 - Goal 5 Catalog/Warehouse Contract Source Implementation
 
 Current focus: Goal 5 - Catalog/Warehouse Contract source implementation.
