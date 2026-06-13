@@ -1,5 +1,37 @@
 # Catalog Orchestrator Status
 
+## 2026-06-13 - Goal 6 FlipFlop Catalog Projection Planning
+
+Current focus: Goal 6 - FlipFlop Catalog Projection planning and pre-coding gate.
+
+Planning evidence:
+
+- Created branch `feature/catalog-goal-06-flipflop-catalog-projection` from the Goal 5 closure head.
+- Created `implementation-goals/GOAL-06-execution-plan.md`.
+- Created `reports/validation/GOAL-06-pre-coding-gate.md`.
+- Inspected Catalog product reads, pricing current-price endpoint, channel readiness, and Warehouse availability contract.
+- Inspected FlipFlop Catalog and Warehouse clients plus frontend product type expectations.
+- Confirmed FlipFlop currently expects projection fields such as `name`, `price`, `stockQuantity`, image URLs, categories, SEO/tags, and timestamps.
+- Confirmed current FlipFlop server code performs separate Catalog pricing and Warehouse stock calls; Goal 6 should provide a Catalog projection contract but not change FlipFlop source.
+
+Pre-coding gate evidence:
+
+- `git status --short --branch` confirmed the Goal 6 branch.
+- Missing marker scan found no unresolved IPS missing or unknown markers in the Goal 6 gate target set.
+- `git diff --check` passed.
+
+Boundary decisions:
+
+- Goal 6 source work should be additive and preserve existing product read envelopes.
+- Catalog may expose projection aliases (`name`, `price`, `stockQuantity`) only inside a documented FlipFlop projection contract.
+- Price must come from Catalog deterministic current pricing.
+- Availability must remain Warehouse-sourced through the Goal 5 contract and marked as such.
+- FlipFlop retains storefront, cart, checkout, and UX ownership; no FlipFlop repository source changes are part of this Catalog goal.
+
+Next unfinished step:
+
+- Implement Goal 6 source changes from `implementation-goals/GOAL-06-execution-plan.md`, then run `npm test -- --runInBand`, `npm run build`, and `git diff --check`.
+
 ## 2026-06-13 - Goal 5 Catalog/Warehouse Contract Deployment
 
 Current focus: Goal 5 deployment and bounded production smoke.

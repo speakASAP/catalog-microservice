@@ -6,7 +6,7 @@ Work one goal chunk at a time. Prefer a complete, verifiable chunk over starting
 
 ## Active Goal
 
-Goal 5 - Catalog/Warehouse Contract deployment complete.
+Goal 6 - FlipFlop Catalog Projection planning complete.
 
 ### Goal 1 Closure Evidence
 
@@ -85,6 +85,15 @@ Verification:
 - Safe production smoke verified `/health` `200` and anonymous `POST /api/products/availability/batch` `401`, confirming the endpoint is deployed and protected.
 - Full authorized Warehouse runtime smoke is deferred until explicit approval for production synthetic product mutations and runtime credential use.
 
+### Goal 6 Planning Evidence
+
+- Branch `feature/catalog-goal-06-flipflop-catalog-projection` was created from the Goal 5 closure head.
+- `implementation-goals/GOAL-06-execution-plan.md` defines the source implementation plan.
+- `reports/validation/GOAL-06-pre-coding-gate.md` records the pre-coding gate result.
+- Catalog inspection confirmed available inputs: product reads, deterministic current pricing, channel readiness, and Warehouse-sourced availability.
+- FlipFlop inspection confirmed current consumers expect `name`, `price`, `stockQuantity`, image URLs, categories, SEO/tags, and timestamps, with separate Catalog and Warehouse client calls today.
+- Planned implementation is additive and contract-focused: Catalog may expose a FlipFlop projection surface, but FlipFlop storefront, cart, checkout, and UX stay in FlipFlop.
+
 ## Next Goal Selection
 
-Goal 5 source implementation is committed and deployed. Confirm whether to run the full authorized Warehouse runtime smoke before starting Goal 6 planning.
+Goal 6 planning and pre-coding gate are complete. Implement source changes according to `implementation-goals/GOAL-06-execution-plan.md`, then validate with `npm test -- --runInBand`, `npm run build`, and `git diff --check`.

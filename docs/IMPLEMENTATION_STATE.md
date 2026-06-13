@@ -16,9 +16,9 @@ CATALOG ORCHESTRATOR: implement goal number 1
 
 ## Current Status
 
-- Active goal: Goal 5 - Catalog/Warehouse Contract deployment complete; full authorized Warehouse smoke deferred.
-- Active chunk: Goal 5 commit/deployment/safe smoke complete; full authorized Warehouse smoke requires explicit approval for production mutations and runtime credential use.
-- Current wave: Wave 3 - Channel Readiness + Warehouse Contract.
+- Active goal: Goal 6 - FlipFlop Catalog Projection planning.
+- Active chunk: Goal 6 execution plan and pre-coding gate complete.
+- Current wave: Wave 4 - FlipFlop Projection + Bazos Draft Contract.
 - Completed chunks: Goal 1.1 Intent Preservation Docs, Goal 1.2 Protected Mutation Endpoints, Goal 1.3 Hard Delete Approval Gate, Goal 1.4 Write Audit Context, Goal 1.5 Unauthorized And Authorized Write Verification, Goal 1 production deployment and runtime audit-log proof, Goal 2 lifecycle migration, deployment, and runtime API verification, Goal 3 pricing integrity deployment and runtime API verification, Goal 4 channel readiness deployment and runtime API verification.
 - Running goals: none.
 - Blocked goals: none.
@@ -41,7 +41,7 @@ CATALOG ORCHESTRATOR: implement goal number 1
 | 03 | `implementation-goals/GOAL-03-pricing-integrity.md` | done | `feature/catalog-goal-03-pricing-integrity` | 01 | May run after Goal 01; avoid touching Goal 02 product lifecycle files in parallel. |
 | 04 | `implementation-goals/GOAL-04-channel-readiness-model.md` | done | `feature/catalog-goal-04-channel-readiness-model` | 02, 03 | Deployed and runtime-smoked. |
 | 05 | `implementation-goals/GOAL-05-catalog-warehouse-contract.md` | done | `feature/catalog-goal-05-catalog-warehouse-contract` | 02 | Commit `874e080` deployed; safe smoke passed; full authorized Warehouse smoke deferred pending explicit approval. |
-| 06 | `implementation-goals/GOAL-06-flipflop-catalog-projection.md` | pending | `feature/catalog-goal-06-flipflop-catalog-projection` | 02, 03, 05 | Contract work only unless owner asks for FlipFlop changes. |
+| 06 | `implementation-goals/GOAL-06-flipflop-catalog-projection.md` | active | `feature/catalog-goal-06-flipflop-catalog-projection` | 02, 03, 05 | Planning/pre-coding gate complete; Catalog projection contract only, no FlipFlop source changes. |
 | 07 | `implementation-goals/GOAL-07-bazos-draft-integration-contract.md` | pending | `feature/catalog-goal-07-bazos-draft-integration-contract` | 04 | Bazos remains publishing and compliance authority. |
 | 08 | `implementation-goals/GOAL-08-data-import-reconciliation.md` | pending | `feature/catalog-goal-08-data-import-reconciliation` | 02, 03 | Imports must be dry-run capable. |
 | 09 | `implementation-goals/GOAL-09-end-to-end-smoke-tests.md` | pending | `feature/catalog-goal-09-end-to-end-smoke-tests` | 01, 02, 03 | Final proof goal; can add contract checks for other services. |
@@ -96,6 +96,7 @@ Do not paste full logs into this file. Compress each result into a short impleme
 Newest entries first.
 
 ```text
+2026-06-13: Goal 6 planning/pre-coding gate completed on `feature/catalog-goal-06-flipflop-catalog-projection`. Created `implementation-goals/GOAL-06-execution-plan.md` and `reports/validation/GOAL-06-pre-coding-gate.md`. Planning inspected Catalog product, pricing, channel-readiness, and Warehouse availability contracts plus FlipFlop Catalog/Warehouse clients and frontend product shape. Planned implementation is additive: expose a Catalog FlipFlop projection contract mapping Catalog title/content/media/categories, deterministic current pricing, FlipFlop readiness, and Warehouse-sourced availability into compatibility fields without changing existing product reads or moving FlipFlop storefront/checkout ownership into Catalog.
 2026-06-13: Goal 5 deployment completed from commit `874e080`. `./scripts/deploy.sh` built and pushed image `localhost:5000/catalog-microservice:874e080`, restarted the Kubernetes deployment, rollout completed, and production health returned healthy. Safe production smoke verified `/health` 200 and anonymous `POST /api/products/availability/batch` 401 with missing/invalid Authorization header, proving the new endpoint is deployed and protected. Full in-pod contract smoke with synthetic product create/delete and Warehouse service-token call was not run because it requires explicit approval for production mutations and runtime secret use.
 2026-06-13: Goal 5 source implementation completed on `feature/catalog-goal-05-catalog-warehouse-contract`. Added protected `POST /api/products/availability/batch`, Catalog product identity validation before Warehouse calls, one-call Warehouse batch availability client, warehouse-sourced response mapping with Catalog SKU identity and `source: "warehouse"`, zero totals for valid products with no Warehouse rows, and dependency failure handling without stock fabrication. No Catalog stock persistence or product read-envelope changes were added. Validation passed: `npm test -- --runInBand` 4 suites/15 tests, `npm run build`, and `git diff --check`. Runtime Warehouse smoke is pending deployment approval and approved service-token handling.
 2026-06-13: Goal 5 planning/pre-coding gate started on `feature/catalog-goal-05-catalog-warehouse-contract`. Created `implementation-goals/GOAL-05-execution-plan.md` and `reports/validation/GOAL-05-pre-coding-gate.md`. Planning inspected Catalog product/readiness code and Warehouse batch availability contract. Planned implementation is additive and schema-neutral: validate Catalog product IDs, call Warehouse batch availability once, return warehouse-sourced availability with `source: "warehouse"`, and never persist stock quantities in Catalog.
@@ -137,14 +138,14 @@ Next command:
 
 ## Next Action
 
-Start Goal 6 planning only after confirming whether the full authorized Goal 5 Warehouse runtime smoke is required.
+Implement Goal 6 source changes from `implementation-goals/GOAL-06-execution-plan.md`.
 
 Source documents:
 
 ```text
 docs/orchestrator/GOALS.md
 docs/orchestrator/PLAN.md
-implementation-goals/GOAL-05-catalog-warehouse-contract.md
-implementation-goals/GOAL-05-execution-plan.md
-reports/validation/GOAL-05-pre-coding-gate.md
+implementation-goals/GOAL-06-flipflop-catalog-projection.md
+implementation-goals/GOAL-06-execution-plan.md
+reports/validation/GOAL-06-pre-coding-gate.md
 ```

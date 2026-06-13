@@ -1,6 +1,6 @@
 # Goal 06 - FlipFlop Catalog Projection
 
-Status: pending
+Status: active planning complete
 
 ## Intent
 
@@ -43,3 +43,12 @@ Add contract docs and smoke evidence for catalog response fields consumed by Fli
 ## Boundary Checks
 
 - Preserve `CAT-INV-001`, `CAT-INV-002`, `CAT-INV-004`, and `CAT-INV-009`.
+
+
+## Planning Evidence
+
+- Created `implementation-goals/GOAL-06-execution-plan.md`.
+- Created `reports/validation/GOAL-06-pre-coding-gate.md`.
+- Inspected Catalog product, pricing, channel-readiness, and Warehouse availability contracts.
+- Inspected FlipFlop Catalog/Warehouse client usage and frontend product shape.
+- Planned source work is additive and preserves existing product read compatibility.
