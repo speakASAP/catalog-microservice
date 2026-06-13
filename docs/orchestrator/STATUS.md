@@ -1,5 +1,44 @@
 # Catalog Orchestrator Status
 
+## 2026-06-13 - Goal 14 Authorized Runtime Contract Smoke
+
+Current focus: Goal 14 source implementation on `feature/catalog-goal-14-authorized-runtime-contract-smoke`.
+
+Planning evidence:
+
+- Created `implementation-goals/GOAL-14-authorized-runtime-contract-smoke.md`.
+- Created `implementation-goals/GOAL-14-execution-plan.md`.
+- Created `reports/validation/GOAL-14-pre-coding-gate.md`.
+- Inspected Catalog auth guard, Warehouse availability, FlipFlop projection, Bazos draft action path, and existing smoke script.
+
+Implementation evidence:
+
+- Added npm alias `smoke:e2e:authorized`.
+- Extended `scripts/catalog-smoke.js` with `CATALOG_SMOKE_AUTHORIZED=true` opt-in.
+- Supports approved `CATALOG_SMOKE_AUTH_TOKEN` or `CATALOG_SMOKE_INTERNAL_SERVICE_TOKEN` without printing token values.
+- Added authorized Warehouse availability envelope check.
+- Added authorized FlipFlop projection envelope check.
+- Added separately gated Bazos authorized draft smoke requiring `CATALOG_SMOKE_ENABLE_BAZOS_AUTHORIZED=true`, Bazos identity, and category inputs because that path can request Bazos-owned draft work.
+
+Validation evidence:
+
+- `npm run smoke:e2e` passed: 9 passed, 2 skipped, 0 failed.
+- `npm run smoke:e2e:authorized` without token passed safely: 9 passed, 2 skipped, 0 failed.
+- `npm test -- --runInBand` passed: 6 suites / 33 tests.
+- `npm run build` passed.
+- `git diff --check` passed.
+
+Boundary decisions:
+
+- Default smoke remains anonymous and non-destructive.
+- Token-backed Warehouse/FlipFlop checks were not run because no approved runtime token was supplied.
+- Authorized Bazos draft smoke remains separately disabled by default.
+- No secrets, tokens, Bazos identities, supplier payloads, raw response bodies, authorized mutations, media uploads, pricing writes, or delete actions were used.
+
+Next unfinished step:
+
+- Owner can provide approved credentials for token-backed runtime verification, or review/merge the source-safe Goal 14 implementation first.
+
 ## 2026-06-13 - Goal 9 Merge And Deployment
 
 Current focus: Goal 9 merge, push, deployment, and post-deploy smoke.

@@ -5,6 +5,7 @@ Last updated: 2026-06-13.
 ## Orchestrator Command
 
 ```text
+2026-06-13: Goal 14 source implementation completed on `feature/catalog-goal-14-authorized-runtime-contract-smoke`. Added opt-in authorized runtime smoke checks to `scripts/catalog-smoke.js` and npm alias `smoke:e2e:authorized`. Default smoke remains anonymous and non-destructive. Authorized Warehouse/FlipFlop checks require `CATALOG_SMOKE_AUTHORIZED=true` plus approved token env; Bazos authorized draft smoke requires separate `CATALOG_SMOKE_ENABLE_BAZOS_AUTHORIZED=true` plus Bazos identity/category inputs. Validation passed: `npm run smoke:e2e` 9 passed/2 skipped/0 failed, `npm run smoke:e2e:authorized` without token 9 passed/2 skipped/0 failed, `npm test -- --runInBand`, `npm run build`, and `git diff --check`. Token-backed runtime checks were deferred because no approved token was supplied.
 2026-06-13: Goal 9 deployment completed from merge commit `89e9f24` on `main`. Pushed `main` to origin, deployed image `localhost:5000/catalog-microservice:89e9f24` and `latest` with `./scripts/deploy.sh`, Kubernetes rollout completed, in-pod health returned healthy, and post-deploy `npm run smoke:e2e` against `https://catalog.alfares.cz` passed: 9 passed, 0 skipped, 0 failed.
 2026-06-13: Goal 9 source implementation completed on `feature/catalog-goal-09-end-to-end-smoke-tests`. Added `npm run smoke:e2e` via `scripts/catalog-smoke.js` for production-safe anonymous smoke checks covering health, product search/detail, pricing envelope, media envelope, protected mutation rejection, Warehouse availability contract protection, FlipFlop projection protection, and Bazos draft protection. Validation passed against `https://catalog.alfares.cz`: 9 passed, 0 skipped, 0 failed; selected product `a2e15cc0-1a94-4faf-a82f-64afea9e9817`. `npm test -- --runInBand`, `npm run build`, and `git diff --check` passed.
 2026-06-13: Goal 8 source implementation completed on `feature/catalog-goal-08-data-import-reconciliation`. Added protected `POST /api/imports/reconciliation/dry-run` with read-only reconciliation for SKU/EAN identity, category refs, external media URL refs, pricing rows, duplicate payload identities, existing identity conflicts, exact missing fields, totals, and pricing human-review marker. Validation passed: focused import reconciliation spec, `npm test -- --runInBand`, `npm run build`, and `git diff --check`. No deployment was performed.
@@ -26,8 +27,8 @@ CATALOG ORCHESTRATOR: implement goal number 1
 
 ## Current Status
 
-- Active goal: Goal 9 End-To-End Catalog Smoke Tests deployed.
-- Active chunk: Goal 9 deployment and post-deploy smoke complete.
+- Active goal: Goal 14 Authorized Runtime Contract Smoke source implementation complete.
+- Active chunk: Goal 14 opt-in authorized smoke source validation complete; token-backed runtime checks deferred pending approved credentials.
 - Current wave: Wave 6 - End-To-End Smoke Tests.
 - Completed chunks: Goal 1.1 Intent Preservation Docs, Goal 1.2 Protected Mutation Endpoints, Goal 1.3 Hard Delete Approval Gate, Goal 1.4 Write Audit Context, Goal 1.5 Unauthorized And Authorized Write Verification, Goal 1 production deployment and runtime audit-log proof, Goal 2 lifecycle migration, deployment, and runtime API verification, Goal 3 pricing integrity deployment and runtime API verification, Goal 4 channel readiness deployment and runtime API verification.
 - Running goals: none.
@@ -59,6 +60,7 @@ CATALOG ORCHESTRATOR: implement goal number 1
 | 12 | `implementation-goals/GOAL-12-warehouse-stock-coverage-read-model.md` | done | `feature/catalog-goal-10-11-projection-isolation` | 10, 11 | Classifies mandatory Warehouse-backed stock coverage without Catalog stock ownership drift. |
 | 13 | `implementation-goals/GOAL-13-warehouse-stock-coverage-audit.md` | done | `feature/catalog-goal-10-11-projection-isolation` | 12 | Pages active Catalog goods through Warehouse-backed coverage diagnostics. |
 | 09 | `implementation-goals/GOAL-09-end-to-end-smoke-tests.md` | done | `feature/catalog-goal-09-end-to-end-smoke-tests` | 01, 02, 03 | Merge commit `89e9f24` deployed; post-deploy smoke passed without mutations. |
+| 14 | `implementation-goals/GOAL-14-authorized-runtime-contract-smoke.md` | source complete | `feature/catalog-goal-14-authorized-runtime-contract-smoke` | 05, 06, 07, 09 | Opt-in authorized Warehouse/FlipFlop smoke implemented; token-backed runtime checks deferred pending approved credentials. |
 
 ## Execution Waves
 
@@ -110,6 +112,7 @@ Do not paste full logs into this file. Compress each result into a short impleme
 Newest entries first.
 
 ```text
+2026-06-13: Goal 14 source implementation completed on `feature/catalog-goal-14-authorized-runtime-contract-smoke`. Added `smoke:e2e:authorized`, opt-in token-backed Warehouse/FlipFlop contract checks, and separately gated Bazos authorized draft smoke. Validation passed with safe skips: default smoke 9 passed/2 skipped/0 failed, authorized mode without token 9 passed/2 skipped/0 failed, full Jest 6 suites/33 tests, build, and diff check.
 2026-06-13: Goal 9 deployment completed from merge commit `89e9f24` on `main`. Pushed `main` to origin, deployed image `localhost:5000/catalog-microservice:89e9f24`, rollout completed, in-pod health returned `healthy`, and post-deploy `npm run smoke:e2e` passed: 9 passed, 0 skipped, 0 failed.
 2026-06-13: Goal 9 source implementation completed on `feature/catalog-goal-09-end-to-end-smoke-tests`. Added `scripts/catalog-smoke.js` and `npm run smoke:e2e`, with named contract output and nonzero failure exit. Production-safe anonymous smoke against `https://catalog.alfares.cz` passed: health, product search/detail, current pricing envelope, media envelope, protected category mutation rejection, Warehouse availability protection, FlipFlop projection protection, and Bazos draft protection all passed. Validation passed: `npm run smoke:e2e`, `npm test -- --runInBand`, `npm run build`, and `git diff --check`.
 2026-06-13: Goal 8 source implementation completed on `feature/catalog-goal-08-data-import-reconciliation`. Added protected dry-run import reconciliation report with create/update/skip decisions, SKU/product identity evidence, category matching, missing field reports, duplicate identity reports, inline media rejection, pricing validation, and mass pricing human-review marker. Validation passed: focused import reconciliation spec, `npm test -- --runInBand`, `npm run build`, and `git diff --check`. Production deployment was not run and requires owner approval.
@@ -159,4 +162,4 @@ Next command:
 
 ## Next Action
 
-Goal 9 is merged, pushed, deployed, and post-deploy smoke verified. Next valid work is owner review or production monitoring.
+Goal 14 source implementation is complete. Next valid work is to supply approved runtime credentials for token-backed Warehouse/FlipFlop smoke, decide whether to run separately gated Bazos authorized draft smoke, then merge/deploy after review.
