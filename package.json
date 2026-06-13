@@ -14,6 +14,7 @@
     "test": "jest",
     "smoke:e2e": "node scripts/catalog-smoke.js",
     "smoke:e2e:authorized": "CATALOG_SMOKE_AUTHORIZED=true node scripts/catalog-smoke.js",
+    "smoke:e2e:bazos-authorized": "CATALOG_SMOKE_AUTHORIZED=true CATALOG_SMOKE_ENABLE_BAZOS_AUTHORIZED=true node scripts/catalog-smoke.js",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage"
   },

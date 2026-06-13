@@ -1,5 +1,40 @@
 # Catalog Orchestrator Status
 
+## 2026-06-13 - Goal 15 Bazos Authorized Draft Runtime Smoke
+
+Current focus: Goal 15 source implementation and runtime setup on `feature/catalog-goal-15-bazos-authorized-draft-smoke`.
+
+Implementation evidence:
+
+- Added `npm run smoke:e2e:bazos-authorized`.
+- Bazos authorized smoke now requires explicit `CATALOG_SMOKE_BAZOS_PRODUCT_ID`.
+- Bazos smoke validates Bazos authority, draft identity, confirmation flags, policy status, human-action state, and next action without printing raw payloads.
+- Added Vault/Kubernetes ExternalSecret mappings for Bazos smoke inputs and `BAZOS_SERVICE_TOKEN`.
+- Catalog now uses `BAZOS_SERVICE_TOKEN` for service-to-service Bazos calls when present, while still requiring Catalog auth at the Catalog endpoint.
+- Bazos-service commit `c58d8b7` was deployed to expose the existing shared catalog sell-action controller in the deployed app.
+
+Validation evidence:
+
+- `npm run smoke:e2e` passed: 9 passed, 2 skipped, 0 failed.
+- `npm run smoke:e2e:authorized` passed: 11 passed, 1 skipped, 0 failed.
+- `npm run smoke:e2e:bazos-authorized` without Bazos inputs passed safe skip behavior: 11 passed, 1 skipped, 0 failed.
+- Bazos `npm --prefix shared test` passed: 5 suites / 79 tests.
+- Bazos `npm --prefix shared run build` passed.
+- Bazos `npm --prefix services/aukro-service run build` passed.
+- Catalog `npm test -- --runInBand` passed: 6 suites / 34 tests.
+- Catalog `npm run build` passed.
+- `git diff --check` passed.
+
+Boundary decisions:
+
+- No Bazos publish confirmation, queue, browser submit, renewal, delete, CAPTCHA, SMS, bank, cookie, or session path was invoked.
+- Runtime token and Bazos identity inputs are stored in Vault/Kubernetes only.
+- Runtime Bazos draft smoke is pending Catalog deployment from this branch so the app loads `BAZOS_SERVICE_TOKEN`.
+
+Next unfinished step:
+
+- Commit, push, merge/deploy Catalog Goal 15, then rerun `npm run smoke:e2e:bazos-authorized` with Vault/Kubernetes inputs.
+
 ## 2026-06-13 - Goal 14 Authorized Runtime Contract Smoke
 
 Current focus: Goal 14 merged, deployed, and runtime-smoked from `main`.
