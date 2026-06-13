@@ -36,8 +36,19 @@ The smoke command selected product `a2e15cc0-1a94-4faf-a82f-64afea9e9817` from t
 
 CAT-G09 passed source and runtime-safe validation. The smoke script names each contract, returns structured JSON, and exits nonzero when a contract fails.
 
+## Deployment Evidence
+
+Deployment was run after owner approval:
+
+- Merge commit: `89e9f24`.
+- Command: `./scripts/deploy.sh`.
+- Image: `localhost:5000/catalog-microservice:89e9f24` and `latest`.
+- Kubernetes rollout: completed successfully.
+- In-pod health check: `status=healthy`, service `catalog-microservice`, version `1.0.0`, environment `production`.
+- Post-deploy smoke: `npm run smoke:e2e` passed against `https://catalog.alfares.cz` with 9 passed, 0 skipped, 0 failed.
+
 ## Boundary Evidence
 
 - No authorized requests, JWTs, service tokens, runtime secrets, customer data, supplier payloads, media uploads, pricing writes, product writes, or delete actions were used.
 - Anonymous protected-contract checks intentionally relied on `401` responses before any mutation could occur.
-- Production deployment was not run.
+- Production deployment used the approved deploy script and post-deploy smoke remained non-destructive.

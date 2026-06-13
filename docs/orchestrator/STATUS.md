@@ -1,5 +1,39 @@
 # Catalog Orchestrator Status
 
+## 2026-06-13 - Goal 9 Merge And Deployment
+
+Current focus: Goal 9 merge, push, deployment, and post-deploy smoke.
+
+Merge evidence:
+
+- Merged `feature/catalog-goal-09-end-to-end-smoke-tests` into `main` with merge commit `89e9f24`.
+- Pushed `main` to `origin/main`.
+
+Deployment evidence:
+
+- Ran `./scripts/deploy.sh` from `main` at `89e9f24`.
+- Built image `localhost:5000/catalog-microservice:89e9f24` and tagged `latest`.
+- Pushed both image tags to the local registry.
+- Applied Kubernetes manifests.
+- Restarted `deployment/catalog-microservice` in namespace `statex-apps`.
+- Rollout completed successfully.
+- In-pod health returned `{"status":"healthy","service":"catalog-microservice","version":"1.0.0","environment":"production"}`.
+
+Post-deploy smoke evidence:
+
+- `npm run smoke:e2e` passed against `https://catalog.alfares.cz`: 9 passed, 0 skipped, 0 failed.
+- Smoke selected product `a2e15cc0-1a94-4faf-a82f-64afea9e9817`.
+- Protected anonymous checks returned `401` for category mutation, Warehouse availability, FlipFlop projection, and Bazos draft.
+
+Boundary decisions:
+
+- No JWTs, service tokens, secrets, authorized mutations, media uploads, pricing writes, product writes, or delete actions were used during post-deploy smoke.
+- Deployment includes the accumulated validated goal line through Goal 9.
+
+Next unfinished step:
+
+- Owner review or production monitoring.
+
 ## 2026-06-13 - Goal 9 End-To-End Catalog Smoke Tests
 
 Current focus: Goal 9 source implementation on `feature/catalog-goal-09-end-to-end-smoke-tests`.
@@ -31,11 +65,11 @@ Boundary decisions:
 - Smoke performed no authorized production mutations.
 - Protected mutation/projection checks used anonymous requests and expected `401`.
 - No JWTs, service tokens, secrets, raw response bodies, customer data, or supplier payloads were printed or stored.
-- Production deployment was not run.
+- Production deployment was later completed from merge commit `89e9f24`; see Goal 9 merge and deployment entry above.
 
 Next unfinished step:
 
-- Commit Goal 9 source/docs, then owner can review, push/merge, or approve deployment separately.
+- Goal 9 source/docs were committed, merged, pushed, deployed, and post-deploy smoke verified.
 
 ## 2026-06-13 - Goal 8 Data Import And Reconciliation
 
