@@ -1,5 +1,14 @@
 # Catalog Orchestrator Status
 
+## 2026-06-13 - FlipFlop Supplier Route Ownership Gate
+
+Change: tightened FlipFlop projection sellability so positive supplier replenishment or dropship availability is not included by default unless the Warehouse logistics option also carries a non-empty supplierId. This aligns the channel projection path with Catalog Warehouse coverage, which already blocks supplier-managed routes without Warehouse-owned supplier linkage.
+
+Validation evidence: npm test -- --runInBand src/flipflop-projection/flipflop-projection.service.spec.ts passed, npm run build passed, and git diff --check passed. Added focused coverage proving supplier stock with a reservable-looking route but missing supplier linkage is hidden by default and only visible with includeUnavailable=true.
+
+Boundary decision: no deployment, runtime token inspection, live fixture creation, production supplier import, Warehouse stock mutation, or cleanup mutation was performed. Current-head runtime completion remains unproven until owner-approved guarded runtime evidence regeneration.
+
+
 ## 2026-06-13 - Goal 16 Production Contract Monitoring And Drift Audit
 
 Current focus: Goal 16 merged, deployed, and live CronJob verified from `main`.

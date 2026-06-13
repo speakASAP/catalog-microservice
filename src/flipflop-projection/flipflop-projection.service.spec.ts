@@ -236,6 +236,68 @@ describe("FlipFlopProjectionService", () => {
     expect(includedResult.items[0].readiness).toMatchObject({ ready: false, status: "blocked", missingFields: ["pricing"] });
   });
 
+  it("filters supplier stock without Warehouse-owned supplier route linkage by default", async () => {
+    const availability = {
+      requestedProductIds: ["product-1"],
+      invalidProductIds: [],
+      items: [{
+        productId: "product-1",
+        sku: "SKU-001",
+        source: "warehouse",
+        totalQuantity: 5,
+        totalReserved: 1,
+        totalAvailable: 4,
+        warehouses: [{ warehouseId: "sup-1", warehouseCode: "SUP", warehouseName: "Supplier", warehouseType: "supplier", supplierId: null, quantity: 5, reserved: 1, available: 4 }],
+        logistics: {
+          generatedAt: "2026-06-13T00:00:00.000Z",
+          productId: "product-1",
+          preferredRoute: null,
+          totals: { totalQuantity: 5, totalReserved: 1, totalAvailable: 4, routeCount: 1, ownAvailable: 0, supplierAvailable: 4, dropshipAvailable: 0 },
+          options: [{
+            productId: "product-1",
+            warehouseId: "sup-1",
+            warehouseCode: "SUP",
+            warehouseName: "Supplier",
+            warehouseType: "supplier",
+            originType: "supplier",
+            supplierId: null,
+            priority: 5,
+            quantity: 5,
+            reserved: 1,
+            available: 4,
+            routeType: "supplier_replenishment",
+            routeLabel: "Supplier",
+            canReserveFromWarehouse: true,
+            requiresSupplierCoordination: true,
+            legs: [
+              { sequence: 1, from: "SUP", to: "alfares_receiving_or_handoff", responsibility: "supplier" },
+              { sequence: 2, from: "alfares_receiving_or_handoff", to: "customer", responsibility: "warehouse" },
+            ],
+          }],
+        },
+      }],
+    };
+    const { service } = buildService({ availability });
+
+    const defaultResult = await service.getBatchProjection({ productIds: ["product-1"] });
+    const includedResult = await service.getBatchProjection({ productIds: ["product-1"], includeUnavailable: true });
+
+    expect(defaultResult.items).toEqual([]);
+    expect(includedResult.items[0]).toMatchObject({
+      productId: "product-1",
+      stockQuantity: 4,
+      availability: {
+        logistics: expect.objectContaining({
+          options: [expect.objectContaining({
+            routeType: "supplier_replenishment",
+            supplierId: null,
+            canReserveFromWarehouse: true,
+          })],
+        }),
+      },
+    });
+  });
+
   it("filters products with stock but no reservable Warehouse logistics route by default", async () => {
     const availability = {
       requestedProductIds: ["product-1"],
