@@ -34,7 +34,7 @@ spec:
                     name: catalog-microservice-secret
               env:
                 - name: CATALOG_SMOKE_BASE_URL
-                  value: "https://catalog.alfares.cz"
+                  value: "http://catalog-microservice.statex-apps.svc.cluster.local:3200"
                 - name: CATALOG_MONITOR_AUTHORIZED
                   value: "true"
                 - name: CATALOG_MONITOR_INCLUDE_BAZOS_AUTHORIZED
