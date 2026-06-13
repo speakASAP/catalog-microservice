@@ -1,5 +1,27 @@
 # Catalog Orchestrator Status
 
+## 2026-06-13 - Goal 7 Bazos Draft Integration Contract Deployment
+
+Current focus: Goal 7 deployment and bounded production smoke.
+
+Deployment evidence:
+
+- Commit `3503372` deployed from clean detached worktree `/tmp/catalog-goal7-deploy`.
+- Image `localhost:5000/catalog-microservice:3503372` and `latest` were built and pushed.
+- Kubernetes manifests applied, deployment restarted, rollout completed, and deployment health check returned `healthy`.
+- Production `GET /health` returned `200` with status `healthy`.
+- Anonymous `POST /api/products/:id/bazos-draft` returned `401` with `Missing or invalid Authorization header`, confirming the new action endpoint is deployed and protected.
+
+Boundary evidence:
+
+- Deployment used clean commit `3503372`, excluding unrelated dirty Goal 10 worktree changes.
+- Smoke did not use service tokens, runtime secrets, Bazos identity data, cookies, verification codes, production product data, or session material.
+- Authorized Bazos draft runtime smoke was not run because it would require approved runtime credentials and Bazos identity context.
+
+Next unfinished step:
+
+- Continue to the next ready goal only after resolving or isolating the existing unrelated Goal 10 worktree changes.
+
 ## 2026-06-13 - Goal 7 Bazos Draft Integration Contract Source Implementation
 
 Current focus: Goal 7 - Bazos Draft Integration Contract source implementation.

@@ -40,3 +40,12 @@ Validation used synthetic IDs, prices, categories, and policy reasons. No servic
 ## Runtime Smoke
 
 Not run. Production deployment requires explicit owner approval after source review.
+
+
+## Deployment Evidence
+
+- Commit `3503372` deployed from clean detached worktree `/tmp/catalog-goal7-deploy`.
+- Deployment rollout completed and deploy health check returned `healthy`.
+- Production `GET /health` returned `200`.
+- Anonymous `POST /api/products/:id/bazos-draft` returned `401` with `Missing or invalid Authorization header`.
+- No service tokens, runtime secrets, Bazos identity data, cookies, verification codes, production product data, or session material were printed or stored.

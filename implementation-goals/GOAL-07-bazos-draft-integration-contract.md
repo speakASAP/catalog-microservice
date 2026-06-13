@@ -1,6 +1,6 @@
 # Goal 07 - Bazos Draft Integration Contract
 
-Status: source implemented validation passed
+Status: done
 
 ## Intent
 
@@ -56,3 +56,12 @@ Verify the contract names Bazos as final policy and publishing authority.
 - `npm run build` passed.
 - `git diff --check` passed.
 - Created `reports/validation/VAL-GOAL-07-bazos-draft-integration-contract.md`.
+
+
+## Deployment Evidence
+
+- Commit `3503372` deployed from clean detached worktree `/tmp/catalog-goal7-deploy`.
+- Deployment rollout and health check passed.
+- Production `GET /health` returned `200`.
+- Anonymous `POST /api/products/:id/bazos-draft` returned `401`, proving the Bazos draft endpoint is deployed and protected.
+- Authorized runtime draft smoke was not run because it requires approved runtime credentials and Bazos identity context.
