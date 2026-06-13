@@ -2,7 +2,7 @@
 
 ## 2026-06-13 - Goal 14 Authorized Runtime Contract Smoke
 
-Current focus: Goal 14 source implementation on `feature/catalog-goal-14-authorized-runtime-contract-smoke`.
+Current focus: Goal 14 merged, deployed, and runtime-smoked from `main`.
 
 Planning evidence:
 
@@ -19,6 +19,9 @@ Implementation evidence:
 - Added authorized Warehouse availability envelope check.
 - Added authorized FlipFlop projection envelope check.
 - Added separately gated Bazos authorized draft smoke requiring `CATALOG_SMOKE_ENABLE_BAZOS_AUTHORIZED=true`, Bazos identity, and category inputs because that path can request Bazos-owned draft work.
+- Merged source with merge commit `8b85197`.
+- Added Vault-backed runtime wiring for `WAREHOUSE_SERVICE_TOKEN`, in-cluster `WAREHOUSE_SERVICE_URL`, and smoke env placeholders with commit `3abbe1f`.
+- Added stock-only fallback for optional Warehouse logistics enrichment with commit `1747c87` so live Warehouse logistics `404` does not convert valid stock availability into `503`.
 
 Validation evidence:
 
@@ -27,17 +30,23 @@ Validation evidence:
 - `npm test -- --runInBand` passed: 6 suites / 33 tests.
 - `npm run build` passed.
 - `git diff --check` passed.
+- Runtime credentials were created/stored in Vault and synced via ExternalSecret without printing token values.
+- Deployment from `3abbe1f` completed successfully with healthy rollout.
+- Focused Warehouse availability spec passed after fallback update: 11 tests.
+- Full Jest suite passed after fallback update: 6 suites / 34 tests.
+- Deployment from `1747c87` completed successfully with healthy rollout.
+- Runtime `npm run smoke:e2e:authorized` passed against `https://catalog.alfares.cz`: 11 passed, 1 skipped, 0 failed.
 
 Boundary decisions:
 
 - Default smoke remains anonymous and non-destructive.
-- Token-backed Warehouse/FlipFlop checks were not run because no approved runtime token was supplied.
+- Token-backed Warehouse/FlipFlop checks were run with Vault/Kubernetes runtime credentials and passed.
 - Authorized Bazos draft smoke remains separately disabled by default.
 - No secrets, tokens, Bazos identities, supplier payloads, raw response bodies, authorized mutations, media uploads, pricing writes, or delete actions were used.
 
 Next unfinished step:
 
-- Owner can provide approved credentials for token-backed runtime verification, or review/merge the source-safe Goal 14 implementation first.
+- Decide whether to run separately gated Bazos authorized draft smoke only after approved Bazos identity/category inputs are available.
 
 ## 2026-06-13 - Goal 9 Merge And Deployment
 
