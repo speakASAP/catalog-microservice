@@ -28,10 +28,10 @@ RUN npm install --omit=dev
 # Copy built files
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/scripts ./scripts
 
 # Expose port (default: 3372, configured via PORT env var)
 EXPOSE ${PORT:-3372}
 
 # Start application
 CMD ["node", "dist/main.js"]
-
