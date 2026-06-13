@@ -155,14 +155,21 @@ export class FlipFlopProjectionService {
 
   private hasSellableWarehouseAvailability(availability: CatalogWarehouseAvailabilityItem): boolean {
     const hasPositiveStock = Number(availability.totalAvailable ?? 0) > 0;
-    const hasReservableRoute = Boolean(availability.logistics?.options?.some((option) => Number(option.available ?? 0) > 0 && option.canReserveFromWarehouse));
+    const hasReservableRoute = this.hasTraceableReservableRoute(availability.logistics?.options);
     return hasPositiveStock && hasReservableRoute;
+  }
+
+  private hasTraceableReservableRoute(options: CatalogWarehouseAvailabilityItem['logistics']['options'] | undefined): boolean {
+    return Boolean(options?.some((option) => Number(option.available ?? 0) > 0
+      && option.canReserveFromWarehouse
+      && Array.isArray(option.legs)
+      && option.legs.length > 0));
   }
 
   private toReadinessWarehouseCoverage(availability: CatalogWarehouseAvailabilityItem): ChannelWarehouseCoverageFacts {
     const hasPositiveStock = Number(availability.totalAvailable ?? 0) > 0;
     const hasWarehouses = Array.isArray(availability.warehouses) && availability.warehouses.length > 0;
-    const hasReservableRoute = Boolean(availability.logistics?.options?.some((option) => Number(option.available ?? 0) > 0 && option.canReserveFromWarehouse));
+    const hasReservableRoute = this.hasTraceableReservableRoute(availability.logistics?.options);
     const blockingReasons: string[] = [];
 
     if (!hasPositiveStock || !hasWarehouses) {

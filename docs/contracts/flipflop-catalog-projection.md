@@ -71,7 +71,7 @@ Unknown product IDs are reported in `invalidProductIds` and no projections are e
 
 ## Warehouse Stock Coverage Read Model
 
-Catalog also exposes a protected stock coverage audit endpoint for operators and channel checks that need to confirm Catalog goods have Warehouse-backed stock and a reservable Warehouse logistics route before treating them as sellable.
+Catalog also exposes a protected stock coverage audit endpoint for operators and channel checks that need to confirm Catalog goods have Warehouse-backed stock and a reservable Warehouse logistics route with route legs before treating them as sellable.
 
 ```http
 POST /api/products/availability/coverage
@@ -88,7 +88,7 @@ Request:
 }
 ```
 
-Each response item includes `coverageStatus`, `stockOrigin`, `sellableWithWarehouse`, available totals by local/supplier/dropship origin, `preferredRoute`, `blockingReasons`, forwarded Warehouse rows, and the Warehouse-owned `logistics` plan. The forwarded logistics plan must preserve Warehouse route legs, including local warehouse-to-customer, supplier-to-Alfares handoff plus Alfares-to-customer, or direct supplier-to-customer dropship paths. Catalog only attaches a Warehouse logistics plan when its product ID and total quantity/reserved/available values match the Warehouse availability row for the same Catalog product; stale, duplicate, or unrequested route plans are ignored and the product remains blocked as `missing_route` when stock exists without consistent logistics evidence. `covered` requires positive Warehouse availability and at least one reservable Warehouse logistics route. `missing_stock` and `missing_route` are blocking diagnostics; Catalog does not fabricate stock or logistics fallbacks.
+Each response item includes `coverageStatus`, `stockOrigin`, `sellableWithWarehouse`, available totals by local/supplier/dropship origin, `preferredRoute`, `blockingReasons`, forwarded Warehouse rows, and the Warehouse-owned `logistics` plan. The forwarded logistics plan must preserve Warehouse route legs, including local warehouse-to-customer, supplier-to-Alfares handoff plus Alfares-to-customer, or direct supplier-to-customer dropship paths. Catalog only attaches a Warehouse logistics plan when its product ID and total quantity/reserved/available values match the Warehouse availability row for the same Catalog product; stale, duplicate, or unrequested route plans are ignored and the product remains blocked as `missing_route` when stock exists without consistent logistics evidence. `covered` requires positive Warehouse availability and at least one reservable Warehouse logistics route with route-leg evidence. `missing_stock` and `missing_route` are blocking diagnostics; Catalog does not fabricate stock or logistics fallbacks.
 
 For operator audits across Catalog goods, use the paginated protected endpoint below. It defaults to active products and returns Catalog pagination plus the same coverage totals and per-product diagnostics for the current page.
 

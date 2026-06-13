@@ -314,7 +314,7 @@ export class WarehouseAvailabilityService {
     const dropshipAvailable = this.sumAvailableByOrigin(item, ['dropship']);
     const stockOrigin = this.resolveCoverageStockOrigin(localAvailable, supplierAvailable, dropshipAvailable, item.totalAvailable);
     const routeCount = item.logistics?.options?.length ?? 0;
-    const hasReservableRoute = Boolean(item.logistics?.options?.some((option) => option.available > 0 && option.canReserveFromWarehouse));
+    const hasReservableRoute = this.hasTraceableReservableRoute(item.logistics?.options);
     const blockingReasons: string[] = [];
 
     if (item.totalAvailable <= 0 || item.warehouses.length === 0) {
@@ -350,6 +350,13 @@ export class WarehouseAvailabilityService {
       warehouses: item.warehouses,
       logistics: item.logistics,
     };
+  }
+
+  private hasTraceableReservableRoute(options: CatalogWarehouseAvailabilityItem['logistics']['options'] | undefined): boolean {
+    return Boolean(options?.some((option) => Number(option.available ?? 0) > 0
+      && option.canReserveFromWarehouse
+      && Array.isArray(option.legs)
+      && option.legs.length > 0));
   }
 
   private sumAvailableByOrigin(item: CatalogWarehouseAvailabilityItem, origins: string[]): number {

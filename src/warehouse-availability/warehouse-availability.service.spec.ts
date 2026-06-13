@@ -466,9 +466,9 @@ describe('WarehouseAvailabilityService', () => {
     });
     expect(result.pagination).toEqual({ total: 12, page: 2, limit: 2, pages: 6 });
     expect(result.catalogQuery).toEqual({ page: 2, limit: 2, isActive: true, warehouseIds: ['own-1'] });
-    expect(result.totals).toMatchObject({ totalProducts: 2, coveredProducts: 1, missingCoverageProducts: 1 });
+    expect(result.totals).toMatchObject({ totalProducts: 2, coveredProducts: 0, missingCoverageProducts: 2 });
     expect(result.items).toEqual([
-      expect.objectContaining({ productId: 'product-covered', coverageStatus: 'covered', stockOrigin: 'local_stock' }),
+      expect.objectContaining({ productId: 'product-covered', coverageStatus: 'missing_route', stockOrigin: 'local_stock', blockingReasons: ['warehouse_logistics_route_missing'] }),
       expect.objectContaining({ productId: 'product-missing', coverageStatus: 'missing_stock', stockOrigin: 'out_of_stock' }),
     ]);
   });
