@@ -233,7 +233,7 @@ Intent: Catalog should prove the protected Bazos draft-preparation contract with
 
 ## Goal 16 - Production Contract Monitoring And Drift Audit
 
-Status: active
+Status: done
 
 Intent: Catalog should continuously prove production cross-service contracts and surface drift without moving ownership from Warehouse, FlipFlop, Auth, or Bazos into Catalog.
 

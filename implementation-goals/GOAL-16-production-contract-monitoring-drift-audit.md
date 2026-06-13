@@ -1,6 +1,6 @@
 # Goal 16 - Production Contract Monitoring And Drift Audit
 
-Status: source_validated
+Status: done
 
 ## Intent
 
@@ -45,6 +45,17 @@ Catalog should continuously prove that its production cross-service contracts st
 - `npm run build` passed.
 - `kubectl apply --dry-run=server -f k8s/contract-monitor-cronjob.yaml -n statex-apps` passed.
 - `git diff --check` passed.
+
+## Runtime Closure Evidence
+
+- Source merged to `main` with merge commit `baad7fb`.
+- Production image packaging fix committed as `afb7cef` so monitor scripts are present in the runtime image.
+- CronJob internal service URL fix committed as `9575158`.
+- Smoke retry hardening committed and deployed as `f6abce4`.
+- Final deployment from `f6abce4` completed successfully with healthy rollout.
+- Live manual Job created from `cronjob/catalog-contract-monitor` completed successfully.
+- Live monitor output passed both profiles: anonymous 9 passed / 2 skipped / 0 failed; authorized 11 passed / 1 skipped / 0 failed.
+- CronJob schedule verified as `*/30 * * * *` and not suspended.
 
 ## Boundary Checks
 

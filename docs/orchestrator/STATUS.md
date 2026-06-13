@@ -2,7 +2,7 @@
 
 ## 2026-06-13 - Goal 16 Production Contract Monitoring And Drift Audit
 
-Current focus: Goal 16 source implementation on `feature/catalog-goal-16-contract-monitoring`.
+Current focus: Goal 16 merged, deployed, and live CronJob verified from `main`.
 
 Implementation evidence:
 
@@ -12,6 +12,10 @@ Implementation evidence:
 - Added `k8s/contract-monitor-cronjob.yaml` for recurring contract drift checks every 30 minutes.
 - Updated `scripts/deploy.sh` to apply the CronJob manifest.
 - CronJob enables anonymous plus authorized Warehouse/FlipFlop monitoring and keeps Bazos authorized draft monitoring disabled by default.
+- Source merged to `main` with merge commit `baad7fb`.
+- Runtime image packaging fix committed as `afb7cef`.
+- CronJob in-cluster URL fix committed as `9575158`.
+- Smoke retry hardening committed and deployed as `f6abce4`.
 
 Validation evidence:
 
@@ -22,6 +26,9 @@ Validation evidence:
 - `npm run build` passed.
 - Kubernetes server dry-run accepted the CronJob manifest.
 - `git diff --check` passed.
+- Final deployment from `f6abce4` passed: rollout completed and health returned `healthy`.
+- Live manual Job created from `cronjob/catalog-contract-monitor` passed: anonymous profile 9/2/0 and authorized profile 11/1/0.
+- CronJob schedule verified as `*/30 * * * *` and not suspended.
 
 Boundary decisions:
 
@@ -31,7 +38,7 @@ Boundary decisions:
 
 Next unfinished step:
 
-- Commit, push, merge, deploy Goal 16, then verify the live CronJob exists and can run.
+- Goal 16 is complete. Select the next owner-approved goal or monitor scheduled CronJob history.
 
 ## 2026-06-13 - Goal 15 Bazos Authorized Draft Runtime Smoke
 

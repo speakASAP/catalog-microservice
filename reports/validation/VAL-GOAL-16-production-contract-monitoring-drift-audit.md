@@ -2,7 +2,7 @@
 
 ```yaml
 id: VAL-CAT-G16
-status: source_validated
+status: passed
 goal_id: CAT-G16
 created: 2026-06-13
 last_updated: 2026-06-13
@@ -22,6 +22,8 @@ data_classification: masked
 | `kubectl apply --dry-run=server -f k8s/contract-monitor-cronjob.yaml -n statex-apps` | passed | Kubernetes accepted the CronJob manifest as a server dry run. |
 | `git diff --check` | passed | Whitespace gate passed. |
 | Sensitive-pattern scan | passed | No token values, authorization headers, raw contact data, cookies, or session secrets were found in the diff. |
+| `./scripts/deploy.sh` | passed | Deployed final image from `f6abce4`; rollout and health check passed. |
+| Manual Job from `cronjob/catalog-contract-monitor` | passed | Anonymous profile 9/2/0 and authorized profile 11/1/0; Bazos draft remained skipped. |
 
 ## Boundary Evidence
 
@@ -30,8 +32,8 @@ data_classification: masked
 - Scheduled Bazos authorized draft monitoring is disabled by default.
 - No Bazos confirmation, queue, publish, browser submit, renewal, delete, CAPTCHA, SMS, bank, cookie, session, or challenge path was invoked.
 
-## Pending Runtime Closure
+## Runtime Closure
 
-- Merge to `main`.
-- Deploy so `k8s/contract-monitor-cronjob.yaml` is applied.
-- Verify the live CronJob exists and run one manual Job from it or inspect the next scheduled run.
+- CronJob schedule verified as `*/30 * * * *`.
+- CronJob suspend flag verified as `false`.
+- Manual verification Job was cleaned up after successful log capture.

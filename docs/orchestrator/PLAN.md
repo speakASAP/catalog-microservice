@@ -6,11 +6,9 @@ Work one goal chunk at a time. Prefer a complete, verifiable chunk over starting
 
 ## Active Goal
 
-Goal 16 - Production Contract Monitoring And Drift Audit.
+No active goal.
 
-Source implementation is validated on `feature/catalog-goal-16-contract-monitoring`. Merge, deployment, and live CronJob verification are pending.
-
-All earlier documented Catalog implementation goals are complete, merged, pushed, deployed, and post-deploy smoke verified through Goal 15.
+All documented Catalog implementation goals are complete, merged, pushed, deployed, and post-deploy or runtime verified through Goal 16.
 
 ### Goal 1 Closure Evidence
 
@@ -135,6 +133,13 @@ Verification:
 - Updated deployment manifest application to include the CronJob.
 - Validation passed: anonymous monitor, authorized runtime-token monitor, default smoke, Jest, build, CronJob server dry-run, diff check, and sensitive-pattern scan.
 
+## Goal 16 Runtime Evidence
+
+- Source merged to `main` with `baad7fb`.
+- Final deployment from `f6abce4` completed successfully.
+- Live manual Job from `cronjob/catalog-contract-monitor` passed anonymous and authorized profiles.
+- CronJob schedule is `*/30 * * * *` and not suspended.
+
 ## Next Goal Selection
 
-Goal 16 is active. Next valid work is merge, deployment, and live CronJob verification.
+No numbered goal remains pending. Next valid work is owner review, scheduled monitor observation, or creating the next owner-approved goal.

@@ -2,7 +2,7 @@
 
 ```yaml
 goal_id: CAT-G16
-status: source_validated
+status: done
 created: 2026-06-13
 branch: feature/catalog-goal-16-contract-monitoring
 data_classification: masked
@@ -46,4 +46,10 @@ Runtime token validation must read tokens from Kubernetes or Vault at execution 
 
 ## Source Validation Result
 
-All planned source checks passed. Deployment and live CronJob verification remain the final closure steps after merge.
+All planned source checks passed. Deployment and live CronJob verification completed.
+
+## Runtime Closure Result
+
+- `main` deployed successfully after the monitor script was included in the runtime image.
+- The deployed CronJob uses the in-cluster Catalog service URL and bounded smoke retries.
+- A manual Job from the CronJob completed with anonymous and authorized profiles passing.
