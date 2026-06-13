@@ -1,5 +1,38 @@
 # Catalog Orchestrator Status
 
+## 2026-06-13 - Goal 6 FlipFlop Catalog Projection Source Implementation
+
+Current focus: Goal 6 - FlipFlop Catalog Projection source implementation.
+
+Implementation evidence:
+
+- Added protected `POST /api/products/projections/flipflop/batch` as an additive Catalog contract.
+- Added typed FlipFlop projection request and response models.
+- Added product batch lookup with categories, media, and pricing relations without changing existing product read envelopes.
+- Composed Catalog product truth, deterministic current pricing, FlipFlop readiness, and Warehouse-sourced availability.
+- Mapped `name`, `price`, and `stockQuantity` compatibility fields only inside the FlipFlop projection contract.
+- Documented the contract in `docs/contracts/flipflop-catalog-projection.md`.
+- Added focused Jest coverage for mapping, invalid IDs, unavailable filtering, and batched Warehouse availability use.
+
+Validation evidence:
+
+- Commit SHA: 94f6cf0.
+- `npm test -- --runInBand` passed: 5 suites / 21 tests.
+- `npm run build` passed.
+- `git diff --check` passed.
+- Created `reports/validation/VAL-GOAL-06-flipflop-catalog-projection.md`.
+
+Boundary decisions:
+
+- Existing product read envelopes remain unchanged.
+- Warehouse remains stock authority through explicit `source: "warehouse"` availability fields.
+- FlipFlop remains storefront, cart, checkout, order, payment, and UX owner.
+- Production deployment and authorized runtime smoke require explicit owner approval.
+
+Next unfinished step:
+
+- Commit Goal 6 source/docs when ready, then deploy only with owner approval.
+
 ## 2026-06-13 - Goal 6 FlipFlop Catalog Projection Planning
 
 Current focus: Goal 6 - FlipFlop Catalog Projection planning and pre-coding gate.

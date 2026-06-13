@@ -6,7 +6,7 @@ Work one goal chunk at a time. Prefer a complete, verifiable chunk over starting
 
 ## Active Goal
 
-Goal 6 - FlipFlop Catalog Projection planning complete.
+Goal 6 - FlipFlop Catalog Projection source implementation complete.
 
 ### Goal 1 Closure Evidence
 
@@ -94,6 +94,16 @@ Verification:
 - FlipFlop inspection confirmed current consumers expect `name`, `price`, `stockQuantity`, image URLs, categories, SEO/tags, and timestamps, with separate Catalog and Warehouse client calls today.
 - Planned implementation is additive and contract-focused: Catalog may expose a FlipFlop projection surface, but FlipFlop storefront, cart, checkout, and UX stay in FlipFlop.
 
+
+### Goal 6 Source Implementation Evidence
+
+- Added protected `POST /api/products/projections/flipflop/batch` as an additive Catalog contract.
+- Added typed projection contracts and focused Jest coverage.
+- Projection composes Catalog product truth, deterministic current pricing, FlipFlop readiness, and Warehouse-sourced availability.
+- Compatibility aliases remain projection-only: `title` to `name`, current Catalog price to `price`, and Warehouse `totalAvailable` to `stockQuantity`.
+- Existing product read envelopes remain unchanged and no FlipFlop source code was changed.
+- Validation passed: `npm test -- --runInBand` 5 suites/21 tests, `npm run build`, and `git diff --check`.
+
 ## Next Goal Selection
 
-Goal 6 planning and pre-coding gate are complete. Implement source changes according to `implementation-goals/GOAL-06-execution-plan.md`, then validate with `npm test -- --runInBand`, `npm run build`, and `git diff --check`.
+Goal 6 source implementation and validation are complete at commit 94f6cf0. Deploy only after explicit owner approval.

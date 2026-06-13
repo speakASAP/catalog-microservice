@@ -1,6 +1,6 @@
 # Goal 06 - FlipFlop Catalog Projection
 
-Status: active planning complete
+Status: source implemented validation passed
 
 ## Intent
 
@@ -52,3 +52,20 @@ Add contract docs and smoke evidence for catalog response fields consumed by Fli
 - Inspected Catalog product, pricing, channel-readiness, and Warehouse availability contracts.
 - Inspected FlipFlop Catalog/Warehouse client usage and frontend product shape.
 - Planned source work is additive and preserves existing product read compatibility.
+
+
+## Source Implementation Evidence
+
+- Added protected `POST /api/products/projections/flipflop/batch`.
+- Added `docs/contracts/flipflop-catalog-projection.md`.
+- Mapped Catalog `title` to projection `name` only inside the FlipFlop contract.
+- Mapped deterministic current Catalog pricing to projection `price` with `source: "catalog_pricing"`.
+- Mapped Warehouse `totalAvailable` to `stockQuantity` with availability `source: "warehouse"`.
+- Preserved existing product read envelopes and did not modify FlipFlop source.
+
+## Validation Evidence
+
+- `npm test -- --runInBand` passed: 5 suites / 21 tests.
+- `npm run build` passed.
+- `git diff --check` passed.
+- Created `reports/validation/VAL-GOAL-06-flipflop-catalog-projection.md`.

@@ -159,6 +159,17 @@ export class ProductsService {
     });
   }
 
+  async findByIdsWithProjectionRelations(productIds: string[]): Promise<Product[]> {
+    if (!productIds.length) {
+      return [];
+    }
+
+    return this.productRepository.find({
+      where: { id: In(productIds) },
+      relations: ["categories", "media", "pricing"],
+    });
+  }
+
   /**
    * Update a product
    */

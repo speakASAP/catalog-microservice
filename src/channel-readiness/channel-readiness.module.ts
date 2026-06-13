@@ -8,5 +8,6 @@ import { ChannelReadinessService } from './channel-readiness.service';
   imports: [ProductsModule, PricingModule],
   controllers: [ChannelReadinessController],
   providers: [ChannelReadinessService],
+  exports: [ChannelReadinessService],
 })
 export class ChannelReadinessModule {}

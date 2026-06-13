@@ -9,5 +9,6 @@ import { WarehouseAvailabilityService } from './warehouse-availability.service';
   imports: [ProductsModule, LoggerModule],
   controllers: [WarehouseAvailabilityController],
   providers: [WarehouseAvailabilityService, CatalogAuthGuard],
+  exports: [WarehouseAvailabilityService],
 })
 export class WarehouseAvailabilityModule {}
