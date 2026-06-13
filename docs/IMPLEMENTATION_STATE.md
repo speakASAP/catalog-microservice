@@ -117,6 +117,7 @@ Do not paste full logs into this file. Compress each result into a short impleme
 Newest entries first.
 
 ```text
+2026-06-13: Post-Goal-16 monitor-history follow-up completed on `main`. `catalog-contract-monitor` CronJob is active on schedule `*/30 * * * *`, not suspended, with no active job. Job `catalog-contract-monitor-29689200` from 2026-06-13T12:00:00Z failed anonymous health once with `fetch failed` while authorized profile passed; subsequent jobs `29689380`, `29689410`, and `29689440` completed. Latest inspected run `29689440` passed anonymous 9/2/0 and authorized 11/1/0, with Bazos authorized draft intentionally skipped. No code or deployment change was required.
 2026-06-13: Goal 16 completed on `main`. Merge commit `baad7fb` introduced sanitized contract monitoring; fixes `afb7cef`, `9575158`, and `f6abce4` closed runtime packaging, in-cluster targeting, and retry hardening. Deployment from `f6abce4` passed. Live manual Job from `cronjob/catalog-contract-monitor` passed anonymous 9/2/0 and authorized 11/1/0; Bazos draft remained skipped.
 2026-06-13: Goal 15 completed on `main`. Catalog merge commit `555652c` deployed successfully; Bazos-service commit `c58d8b7` deployed the shared catalog sell-action route. Vault/Kubernetes runtime inputs and service token were synced without committing values. Runtime `npm run smoke:e2e:bazos-authorized` passed against `https://catalog.alfares.cz`: 12 passed, 0 skipped, 0 failed. The Bazos draft remained `draft`; no confirmation, queue, publish, browser submit, renewal, delete, CAPTCHA, SMS, bank, cookie, session, or challenge path was invoked.
 2026-06-13: Goal 14 source implementation completed on `feature/catalog-goal-14-authorized-runtime-contract-smoke`. Added `smoke:e2e:authorized`, opt-in token-backed Warehouse/FlipFlop contract checks, and separately gated Bazos authorized draft smoke. Validation passed with safe skips: default smoke 9 passed/2 skipped/0 failed, authorized mode without token 9 passed/2 skipped/0 failed, full Jest 6 suites/33 tests, build, and diff check.
@@ -169,4 +170,4 @@ Next command:
 
 ## Next Action
 
-Goal 16 is complete. Next valid work is selecting the next owner-approved goal or monitoring scheduled CronJob history.
+Goal 16 is complete. Scheduled CronJob history was checked on 2026-06-13: the CronJob is active, not suspended, and the latest three scheduled runs completed successfully. Next valid work is selecting the next owner-approved goal or continuing routine monitor-history review.
