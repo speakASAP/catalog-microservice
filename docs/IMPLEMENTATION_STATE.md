@@ -17,7 +17,7 @@ CATALOG ORCHESTRATOR: implement goal number 1
 ## Current Status
 
 - Active goal: Goal 6 - FlipFlop Catalog Projection source implementation complete.
-- Active chunk: Goal 6 source validation complete; committed at 94f6cf0.
+- Active chunk: Goal 6 source validation complete; committed at 028a404.
 - Current wave: Wave 4 - FlipFlop Projection + Bazos Draft Contract.
 - Completed chunks: Goal 1.1 Intent Preservation Docs, Goal 1.2 Protected Mutation Endpoints, Goal 1.3 Hard Delete Approval Gate, Goal 1.4 Write Audit Context, Goal 1.5 Unauthorized And Authorized Write Verification, Goal 1 production deployment and runtime audit-log proof, Goal 2 lifecycle migration, deployment, and runtime API verification, Goal 3 pricing integrity deployment and runtime API verification, Goal 4 channel readiness deployment and runtime API verification.
 - Running goals: none.
@@ -41,7 +41,7 @@ CATALOG ORCHESTRATOR: implement goal number 1
 | 03 | `implementation-goals/GOAL-03-pricing-integrity.md` | done | `feature/catalog-goal-03-pricing-integrity` | 01 | May run after Goal 01; avoid touching Goal 02 product lifecycle files in parallel. |
 | 04 | `implementation-goals/GOAL-04-channel-readiness-model.md` | done | `feature/catalog-goal-04-channel-readiness-model` | 02, 03 | Deployed and runtime-smoked. |
 | 05 | `implementation-goals/GOAL-05-catalog-warehouse-contract.md` | done | `feature/catalog-goal-05-catalog-warehouse-contract` | 02 | Commit `874e080` deployed; safe smoke passed; full authorized Warehouse smoke deferred pending explicit approval. |
-| 06 | `implementation-goals/GOAL-06-flipflop-catalog-projection.md` | active | `feature/catalog-goal-06-flipflop-catalog-projection` | 02, 03, 05 | Source implementation and validation complete at commit 94f6cf0; no FlipFlop source changes. |
+| 06 | `implementation-goals/GOAL-06-flipflop-catalog-projection.md` | active | `feature/catalog-goal-06-flipflop-catalog-projection` | 02, 03, 05 | Source implementation and validation complete at commit 028a404; no FlipFlop source changes. |
 | 07 | `implementation-goals/GOAL-07-bazos-draft-integration-contract.md` | pending | `feature/catalog-goal-07-bazos-draft-integration-contract` | 04 | Bazos remains publishing and compliance authority. |
 | 08 | `implementation-goals/GOAL-08-data-import-reconciliation.md` | pending | `feature/catalog-goal-08-data-import-reconciliation` | 02, 03 | Imports must be dry-run capable. |
 | 09 | `implementation-goals/GOAL-09-end-to-end-smoke-tests.md` | pending | `feature/catalog-goal-09-end-to-end-smoke-tests` | 01, 02, 03 | Final proof goal; can add contract checks for other services. |
@@ -139,4 +139,4 @@ Next command:
 
 ## Next Action
 
-Goal 6 source/docs committed at 94f6cf0. Deploy only after explicit owner approval.
+Goal 6 source/docs committed at 028a404. Deploy only after explicit owner approval.

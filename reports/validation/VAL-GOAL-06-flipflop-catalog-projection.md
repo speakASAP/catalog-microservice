@@ -35,7 +35,7 @@ git diff --check
 
 ## Results
 
-- Commit SHA: 94f6cf0.
+- Commit SHA: 028a404.
 - `npm test -- --runInBand`: passed, 5 suites / 21 tests.
 - `npm run build`: passed after correcting the `FlipFlopProjectionModule` import.
 - `git diff --check`: passed.
@@ -57,4 +57,4 @@ Not run. Production deployment and any authorized runtime smoke require explicit
 
 ## Remaining Follow-Up
 
-Commit Goal 6 source/docs when ready. Deploy only after owner approval, then run a bounded runtime smoke that does not print tokens or production-sensitive data.
+Source commit 028a404 is recorded. Deploy only after owner approval, then run a bounded runtime smoke that does not print tokens or production-sensitive data.

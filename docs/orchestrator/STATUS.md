@@ -16,7 +16,7 @@ Implementation evidence:
 
 Validation evidence:
 
-- Commit SHA: 94f6cf0.
+- Commit SHA: 028a404.
 - `npm test -- --runInBand` passed: 5 suites / 21 tests.
 - `npm run build` passed.
 - `git diff --check` passed.
@@ -31,7 +31,7 @@ Boundary decisions:
 
 Next unfinished step:
 
-- Commit Goal 6 source/docs when ready, then deploy only with owner approval.
+- Source commit 028a404 is recorded. Deploy only with owner approval.
 
 ## 2026-06-13 - Goal 6 FlipFlop Catalog Projection Planning
 
