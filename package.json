@@ -12,6 +12,7 @@
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
+    "smoke:e2e": "node scripts/catalog-smoke.js",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage"
   },
@@ -52,4 +53,3 @@
     "typescript": "^5.3.3"
   }
 }
-

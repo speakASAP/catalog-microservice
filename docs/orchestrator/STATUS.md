@@ -1,5 +1,42 @@
 # Catalog Orchestrator Status
 
+## 2026-06-13 - Goal 9 End-To-End Catalog Smoke Tests
+
+Current focus: Goal 9 source implementation on `feature/catalog-goal-09-end-to-end-smoke-tests`.
+
+Planning evidence:
+
+- Created `implementation-goals/GOAL-09-execution-plan.md`.
+- Created `reports/validation/GOAL-09-pre-coding-gate.md`.
+- Inspected package scripts and Catalog endpoint surfaces for health, products, pricing, media, Warehouse availability, FlipFlop projection, and Bazos draft.
+
+Implementation evidence:
+
+- Added `scripts/catalog-smoke.js`.
+- Added `npm run smoke:e2e`.
+- Smoke output names each contract and returns structured JSON with pass/fail/skip counts.
+- Default smoke uses `https://catalog.alfares.cz`; override is available through `CATALOG_SMOKE_BASE_URL`.
+- Optional product selection is available through `CATALOG_SMOKE_PRODUCT_ID`.
+
+Validation evidence:
+
+- `npm run smoke:e2e` passed against `https://catalog.alfares.cz`: 9 passed, 0 skipped, 0 failed.
+- Smoke selected product `a2e15cc0-1a94-4faf-a82f-64afea9e9817`.
+- `npm test -- --runInBand` passed: 6 suites / 33 tests.
+- `npm run build` passed.
+- `git diff --check` passed.
+
+Boundary decisions:
+
+- Smoke performed no authorized production mutations.
+- Protected mutation/projection checks used anonymous requests and expected `401`.
+- No JWTs, service tokens, secrets, raw response bodies, customer data, or supplier payloads were printed or stored.
+- Production deployment was not run.
+
+Next unfinished step:
+
+- Commit Goal 9 source/docs, then owner can review, push/merge, or approve deployment separately.
+
 ## 2026-06-13 - Goal 8 Data Import And Reconciliation
 
 Current focus: Goal 8 source implementation on `feature/catalog-goal-08-data-import-reconciliation`.
