@@ -1,5 +1,38 @@
 # Catalog Orchestrator Status
 
+## 2026-06-13 - Goal 16 Production Contract Monitoring And Drift Audit
+
+Current focus: Goal 16 source implementation on `feature/catalog-goal-16-contract-monitoring`.
+
+Implementation evidence:
+
+- Added `scripts/catalog-contract-monitor.js` to run existing smoke contracts by profile and emit sanitized monitor JSON.
+- Added `npm run monitor:contracts`.
+- Added `JWT_TOKEN` fallback for smoke auth so Kubernetes envFrom secrets can support authorized monitoring without duplicating token values.
+- Added `k8s/contract-monitor-cronjob.yaml` for recurring contract drift checks every 30 minutes.
+- Updated `scripts/deploy.sh` to apply the CronJob manifest.
+- CronJob enables anonymous plus authorized Warehouse/FlipFlop monitoring and keeps Bazos authorized draft monitoring disabled by default.
+
+Validation evidence:
+
+- `npm run monitor:contracts` passed: anonymous profile 9 passed, 2 skipped, 0 failed.
+- Runtime-token monitor passed: anonymous profile 9/2/0 and authorized profile 11/1/0.
+- `npm run smoke:e2e` passed: 9 passed, 2 skipped, 0 failed.
+- `npm test -- --runInBand` passed: 6 suites / 34 tests.
+- `npm run build` passed.
+- Kubernetes server dry-run accepted the CronJob manifest.
+- `git diff --check` passed.
+
+Boundary decisions:
+
+- Monitor output is sanitized and does not print token values or raw response bodies.
+- Bazos authorized draft monitoring remains opt-in and disabled in the scheduled manifest.
+- Catalog observes Warehouse, FlipFlop, Auth, and Bazos contracts without taking over their ownership.
+
+Next unfinished step:
+
+- Commit, push, merge, deploy Goal 16, then verify the live CronJob exists and can run.
+
 ## 2026-06-13 - Goal 15 Bazos Authorized Draft Runtime Smoke
 
 Current focus: Goal 15 merged, deployed, and runtime-smoked from `main`.

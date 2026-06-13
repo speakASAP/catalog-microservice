@@ -6,7 +6,11 @@ Work one goal chunk at a time. Prefer a complete, verifiable chunk over starting
 
 ## Active Goal
 
-All documented Catalog implementation goals are complete, merged, pushed, deployed, and post-deploy smoke verified through Goal 9. Additional cross-service projection and Warehouse coverage goals 10-13 are also merged into the deployed main line.
+Goal 16 - Production Contract Monitoring And Drift Audit.
+
+Source implementation is validated on `feature/catalog-goal-16-contract-monitoring`. Merge, deployment, and live CronJob verification are pending.
+
+All earlier documented Catalog implementation goals are complete, merged, pushed, deployed, and post-deploy smoke verified through Goal 15.
 
 ### Goal 1 Closure Evidence
 
@@ -123,6 +127,14 @@ Verification:
 - Catalog forwards Warehouse-owned stock origin and logistics data without owning stock, reservations, movements, warehouse locations, or fulfillment logic.
 - Coverage diagnostics remain Warehouse-backed and non-mutating.
 
+## Goal 16 Source Evidence
+
+- Added a sanitized contract monitor wrapper around the existing smoke contracts.
+- Added `npm run monitor:contracts`.
+- Added Kubernetes CronJob manifest for recurring drift checks.
+- Updated deployment manifest application to include the CronJob.
+- Validation passed: anonymous monitor, authorized runtime-token monitor, default smoke, Jest, build, CronJob server dry-run, diff check, and sensitive-pattern scan.
+
 ## Next Goal Selection
 
-No numbered implementation goal remains pending in the current Catalog roadmap. Next valid work is owner review, production monitoring, or creating a new owner-approved goal.
+Goal 16 is active. Next valid work is merge, deployment, and live CronJob verification.

@@ -218,6 +218,31 @@ Acceptance criteria:
 
 - Audit defaults to active products.
 - Empty pages avoid Warehouse calls.
+
+## Goal 14 - Authorized Runtime Contract Smoke
+
+Status: done
+
+Intent: Catalog should prove protected Warehouse and FlipFlop runtime contracts with approved runtime credentials while keeping Bazos draft smoke separately gated.
+
+## Goal 15 - Bazos Authorized Draft Runtime Smoke
+
+Status: done
+
+Intent: Catalog should prove the protected Bazos draft-preparation contract with approved runtime credentials and explicit Bazos smoke inputs, without queueing or publishing.
+
+## Goal 16 - Production Contract Monitoring And Drift Audit
+
+Status: active
+
+Intent: Catalog should continuously prove production cross-service contracts and surface drift without moving ownership from Warehouse, FlipFlop, Auth, or Bazos into Catalog.
+
+Acceptance criteria:
+
+- Scheduled monitor runs anonymous plus authorized Warehouse/FlipFlop checks from runtime secrets.
+- Monitor output is sanitized and names failed contract profiles.
+- Bazos authorized draft monitoring remains opt-in and disabled by default.
+- CronJob manifest is deployed and a live run is verified.
 - Coverage diagnostics remain Warehouse-backed.
 
 ## Goal 14 - Authorized Runtime Contract Smoke
