@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere, ILike } from 'typeorm';
+import { Repository, FindOptionsWhere, ILike, In } from 'typeorm';
 import { Product, ProductLifecycle } from "./product.entity";
 import { LoggerService } from '../logger/logger.service';
 import { CreateProductDto, UpdateProductDto, ProductQueryDto } from './dto';
@@ -145,6 +145,17 @@ export class ProductsService {
     return this.productRepository.findOne({
       where: { sku },
       relations: ['categories', 'media', 'pricing'],
+    });
+  }
+
+  async findIdentitiesByIds(productIds: string[]): Promise<Array<Pick<Product, 'id' | 'sku' | 'title'>>> {
+    if (!productIds.length) {
+      return [];
+    }
+
+    return this.productRepository.find({
+      where: { id: In(productIds) },
+      select: ['id', 'sku', 'title'],
     });
   }
 

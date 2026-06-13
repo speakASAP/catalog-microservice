@@ -6,7 +6,7 @@ Work one goal chunk at a time. Prefer a complete, verifiable chunk over starting
 
 ## Active Goal
 
-Goal 5 - Catalog/Warehouse Contract planning.
+Goal 5 - Catalog/Warehouse Contract source validation complete.
 
 ### Goal 1 Closure Evidence
 
@@ -59,6 +59,25 @@ Verification:
 - Goal 2 plan names applicable invariants and validation commands.
 - Public product read compatibility is preserved by design before coding.
 
+### Goal 5 Planning Evidence
+
+- Branch `feature/catalog-goal-05-catalog-warehouse-contract` was created from the clean Goal 4 head.
+- `implementation-goals/GOAL-05-execution-plan.md` defines the source implementation plan.
+- `reports/validation/GOAL-05-pre-coding-gate.md` records the pre-coding gate result.
+- Catalog source inspection found no existing warehouse availability integration under `src/`.
+- Warehouse source/docs inspection confirmed `POST /api/stock/availability/batch` exists and is protected by the global JWT roles guard.
+- Planned implementation is additive and schema-neutral: validate Catalog product IDs, call Warehouse batch availability once, and return warehouse-sourced availability without storing stock truth in Catalog.
+
+
+### Goal 5 Source Implementation Evidence
+
+- Added protected `POST /api/products/availability/batch` as an additive Catalog contract.
+- Added `ProductsService.findIdentitiesByIds` so Catalog proves product IDs before Warehouse use.
+- Added Warehouse batch availability client that calls Warehouse once per request and reads service credentials from runtime env only.
+- Response items include Catalog SKU metadata and `source: "warehouse"`; stock totals and warehouse rows remain Warehouse-sourced.
+- No Catalog stock quantity, reservation, movement, or warehouse-location persistence was added.
+- Validation passed: `npm test -- --runInBand` 4 suites/15 tests, `npm run build`, and `git diff --check`.
+
 ## Next Goal Selection
 
-Goal 4 is complete. Start Goal 5 planning and pre-coding gate according to `implementation-goals/GOAL-05-catalog-warehouse-contract.md`.
+Goal 5 source implementation and local validation are complete. Commit source/docs when ready, then deploy only with owner approval and run runtime Warehouse contract smoke with approved service-token handling.

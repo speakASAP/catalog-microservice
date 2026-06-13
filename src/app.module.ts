@@ -10,6 +10,7 @@ import { HealthModule } from './health/health.module';
 import { LoggerModule } from './logger/logger.module';
 import { AuthModule } from './auth/auth.module';
 import { ChannelReadinessModule } from './channel-readiness/channel-readiness.module';
+import { WarehouseAvailabilityModule } from './warehouse-availability/warehouse-availability.module';
 
 /**
  * Main application module for Catalog Microservice
@@ -46,6 +47,7 @@ import { ChannelReadinessModule } from './channel-readiness/channel-readiness.mo
     MediaModule,
     PricingModule,
     ChannelReadinessModule,
+    WarehouseAvailabilityModule,
   ],
 })
 export class AppModule {}

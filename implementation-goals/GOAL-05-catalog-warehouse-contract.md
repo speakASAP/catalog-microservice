@@ -1,6 +1,6 @@
 # Goal 05 - Catalog/Warehouse Contract
 
-Status: pending
+Status: source implemented; runtime verification pending
 
 ## Intent
 
@@ -41,3 +41,12 @@ Add direct contract verification when warehouse endpoint access is available.
 ## Boundary Checks
 
 - Preserve `CAT-INV-001`, `CAT-INV-002`, `CAT-INV-009`, and `CAT-INV-010`.
+
+
+## Source Implementation Evidence
+
+- Added protected `POST /api/products/availability/batch`.
+- Catalog validates product IDs before any Warehouse request.
+- Warehouse batch availability is called once per valid request.
+- Returned stock fields are explicitly `source: "warehouse"` and are not stored as Catalog truth.
+- Validation passed: `npm test -- --runInBand`, `npm run build`, and `git diff --check`.

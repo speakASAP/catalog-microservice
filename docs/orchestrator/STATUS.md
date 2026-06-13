@@ -1,5 +1,69 @@
 # Catalog Orchestrator Status
 
+## 2026-06-13 - Goal 5 Catalog/Warehouse Contract Source Implementation
+
+Current focus: Goal 5 - Catalog/Warehouse Contract source implementation.
+
+Implementation evidence:
+
+- Added protected `POST /api/products/availability/batch` through a new `warehouse-availability` module.
+- Added Catalog product identity lookup before Warehouse use through `ProductsService.findIdentitiesByIds`.
+- Unknown Catalog product IDs return `400 Bad Request` before any Warehouse request is made.
+- Valid product IDs are sent to Warehouse `POST /api/stock/availability/batch` in one batch request with optional `warehouseIds`.
+- Availability response items include Catalog `sku`, `source: "warehouse"`, Warehouse totals, and Warehouse per-location rows.
+- Valid products missing Warehouse rows map to zero totals and empty `warehouses`, preserving Warehouse zero-row semantics without Catalog stock ownership.
+- Warehouse service URL/token are read from runtime env only; no credentials are hardcoded, printed, or stored in validation evidence.
+- No Catalog product schema stock fields were added.
+
+Validation evidence:
+
+- `npm test -- --runInBand` passed: 4 suites / 15 tests.
+- `npm run build` passed.
+- `git diff --check` passed.
+- Created `reports/validation/VAL-GOAL-05-catalog-warehouse-contract.md`.
+
+Boundary decisions:
+
+- Catalog proves product identity and enriches SKU metadata only.
+- Warehouse remains the stock authority for total quantity, reserved, available, warehouses, reservations, movements, and locations.
+- Existing product and channel-readiness read envelopes remain unchanged.
+- Runtime Warehouse verification is deferred until deployment and approved service-token handling are available.
+
+Next unfinished step:
+
+- Commit Goal 5 source/docs when ready, then deploy only with owner approval and run a runtime contract smoke without printing token values.
+
+## 2026-06-13 - Goal 5 Catalog/Warehouse Contract Planning
+
+Current focus: Goal 5 - Catalog/Warehouse Contract planning and pre-coding gate.
+
+Planning evidence:
+
+- Created branch `feature/catalog-goal-05-catalog-warehouse-contract` from the clean Goal 4 head.
+- Created `implementation-goals/GOAL-05-execution-plan.md`.
+- Inspected Catalog product, readiness, app module, and existing stock-related code.
+- Inspected Warehouse `POST /api/stock/availability/batch`, availability contract docs, and global JWT roles guard.
+- Confirmed Catalog currently has no warehouse availability integration under `src/`.
+- Confirmed Warehouse batch availability already returns zero totals for known product IDs with no stock rows and remains the stock authority.
+
+Pre-coding gate evidence:
+
+- `git status --short --branch` confirmed the Goal 5 branch and a documented planning-only diff.
+- Missing marker scan found no unresolved IPS missing or unknown markers in the Goal 5 gate target set.
+- `git diff --check` passed.
+
+Boundary decisions:
+
+- Goal 5 source work should be additive and schema-neutral.
+- Catalog may validate requested product IDs and call Warehouse batch availability once.
+- Catalog must not persist stock quantities, reservations, movements, or warehouse locations.
+- Warehouse auth must be preserved through approved service-token configuration; no token values may be printed or committed.
+- FlipFlop consumption remains Goal 6 unless the owner expands scope.
+
+Next unfinished step:
+
+- Implement Goal 5 source changes from `implementation-goals/GOAL-05-execution-plan.md`, then run `npm test`, `npm run build`, and `git diff --check`.
+
 ## 2026-06-13 - RBAC-REM-03 Catalog Frontend Admin Guard
 
 Current focus: Auth remediation RBAC-REM-03 for Catalog frontend role-aware admin guard and stale comment cleanup.
