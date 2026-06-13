@@ -5,6 +5,8 @@ Last updated: 2026-06-13.
 ## Orchestrator Command
 
 ```text
+2026-06-13: Goal 8 source implementation completed on `feature/catalog-goal-08-data-import-reconciliation`. Added protected `POST /api/imports/reconciliation/dry-run` with read-only reconciliation for SKU/EAN identity, category refs, external media URL refs, pricing rows, duplicate payload identities, existing identity conflicts, exact missing fields, totals, and pricing human-review marker. Validation passed: focused import reconciliation spec, `npm test -- --runInBand`, `npm run build`, and `git diff --check`. No deployment was performed.
+2026-06-13: Goal 13 source implementation committed as `9c01e0a` on `feature/catalog-goal-10-11-projection-isolation` before Goal 8 started. Added protected `GET /api/products/availability/coverage/audit`, defaulting to active Catalog goods and returning pagination plus Warehouse-backed coverage diagnostics for each page. Validation passed: focused Warehouse availability spec, `npm test -- --runInBand`, `npm run build`, and `git diff --check`. No deployment was performed.
 2026-06-13: Goal 13 source implementation completed on `feature/catalog-goal-10-11-projection-isolation`. Added protected `GET /api/products/availability/coverage/audit`, defaulting to active Catalog goods and returning pagination plus Warehouse-backed coverage diagnostics for each page. Validation passed: focused Warehouse availability spec, `npm test -- --runInBand`, `npm run build`, and `git diff --check`. No deployment was performed.
 2026-06-13: Goal 12 source implementation completed on `feature/catalog-goal-10-11-projection-isolation`. Added protected `POST /api/products/availability/coverage`, reusing Warehouse availability/logistics to classify products as local, supplier, dropship, mixed, or missing Warehouse-backed coverage. Coverage is sellable only with positive Warehouse availability and a reservable Warehouse route. Validation passed: focused Warehouse availability spec, `npm test -- --runInBand`, `npm run build`, and `git diff --check`. No deployment was performed.
 2026-06-13: Goal 10/11 projection isolation completed on `feature/catalog-goal-10-11-projection-isolation`. Catalog availability now preserves Warehouse per-row origin metadata and calls Warehouse logistics batch once per product batch; FlipFlop projection exposes `availability.warehouses[]` and `availability.logistics` while preserving `stockQuantity` as Warehouse `totalAvailable`. Validation passed: `npm test -- --runInBand` 5 suites/23 tests, `npm run build`, and `git diff --check`. No deployment was performed.
@@ -22,9 +24,9 @@ CATALOG ORCHESTRATOR: implement goal number 1
 
 ## Current Status
 
-- Active goal: Goal 10/11/12/13 stock origin, logistics, coverage, and coverage audit source integration complete.
-- Active chunk: Goal 13 Warehouse stock coverage audit source validation complete; deployment not requested.
-- Current wave: Cross-service stock and logistics projection isolation.
+- Active goal: Goal 8 Data Import And Reconciliation source implementation complete.
+- Active chunk: Goal 8 dry-run reconciliation source validation complete; deployment not requested.
+- Current wave: Wave 5 - Import/Reconciliation.
 - Completed chunks: Goal 1.1 Intent Preservation Docs, Goal 1.2 Protected Mutation Endpoints, Goal 1.3 Hard Delete Approval Gate, Goal 1.4 Write Audit Context, Goal 1.5 Unauthorized And Authorized Write Verification, Goal 1 production deployment and runtime audit-log proof, Goal 2 lifecycle migration, deployment, and runtime API verification, Goal 3 pricing integrity deployment and runtime API verification, Goal 4 channel readiness deployment and runtime API verification.
 - Running goals: none.
 - Blocked goals: none.
@@ -49,7 +51,7 @@ CATALOG ORCHESTRATOR: implement goal number 1
 | 05 | `implementation-goals/GOAL-05-catalog-warehouse-contract.md` | done | `feature/catalog-goal-05-catalog-warehouse-contract` | 02 | Commit `874e080` deployed; safe smoke passed; full authorized Warehouse smoke deferred pending explicit approval. |
 | 06 | `implementation-goals/GOAL-06-flipflop-catalog-projection.md` | done | `feature/catalog-goal-06-flipflop-catalog-projection` | 02, 03, 05 | Commit `c989883` deployed; health and anonymous protected-endpoint smoke passed. |
 | 07 | `implementation-goals/GOAL-07-bazos-draft-integration-contract.md` | done | `feature/catalog-goal-07-bazos-draft-integration-contract` | 04 | Commit `3503372` deployed; health and anonymous protected-endpoint smoke passed. |
-| 08 | `implementation-goals/GOAL-08-data-import-reconciliation.md` | pending | `feature/catalog-goal-08-data-import-reconciliation` | 02, 03 | Imports must be dry-run capable. |
+| 08 | `implementation-goals/GOAL-08-data-import-reconciliation.md` | done | `feature/catalog-goal-08-data-import-reconciliation` | 02, 03 | Source implementation complete; dry-run only; no deployment performed. |
 | 10 | `implementation-goals/GOAL-10-stock-origin-visibility.md` | done | `feature/catalog-goal-10-11-projection-isolation` | 05, 06, Warehouse WH-G11 | Forwarded Warehouse stock-origin metadata without stock ownership drift. |
 | 11 | `implementation-goals/GOAL-11-logistics-route-projection.md` | done | `feature/catalog-goal-10-11-projection-isolation` | 10, Warehouse logistics contract | Forwarded Warehouse-owned logistics plans without Catalog logistics ownership drift. |
 | 12 | `implementation-goals/GOAL-12-warehouse-stock-coverage-read-model.md` | done | `feature/catalog-goal-10-11-projection-isolation` | 10, 11 | Classifies mandatory Warehouse-backed stock coverage without Catalog stock ownership drift. |
@@ -106,6 +108,8 @@ Do not paste full logs into this file. Compress each result into a short impleme
 Newest entries first.
 
 ```text
+2026-06-13: Goal 8 source implementation completed on `feature/catalog-goal-08-data-import-reconciliation`. Added protected dry-run import reconciliation report with create/update/skip decisions, SKU/product identity evidence, category matching, missing field reports, duplicate identity reports, inline media rejection, pricing validation, and mass pricing human-review marker. Validation passed: focused import reconciliation spec, `npm test -- --runInBand`, `npm run build`, and `git diff --check`. Production deployment was not run and requires owner approval.
+2026-06-13: Goal 13 source implementation committed as `9c01e0a` before starting Goal 8. Validation was rerun and passed: focused Warehouse availability spec, `npm test -- --runInBand`, `npm run build`, and `git diff --check`.
 2026-06-13: Goal 13 source implementation completed on `feature/catalog-goal-10-11-projection-isolation`. Added protected paginated coverage audit for active Catalog goods, with inactive override, Warehouse filter normalization, empty-page handling without Warehouse calls, coverage totals, and per-product diagnostics. Validation passed: focused Warehouse availability spec, `npm test -- --runInBand`, `npm run build`, and `git diff --check`. Production deployment was not run and requires owner approval.
 2026-06-13: Goal 12 source implementation completed on `feature/catalog-goal-10-11-projection-isolation`. Added protected `POST /api/products/availability/coverage`, coverage totals, per-product `coverageStatus`, `stockOrigin`, `sellableWithWarehouse`, origin availability totals, preferred route, blocking reasons, and forwarded Warehouse rows/logistics. Validation passed: focused Warehouse availability spec, `npm test -- --runInBand`, `npm run build`, and `git diff --check`. Production deployment was not run and requires owner approval.
 2026-06-13: Goal 6 source implementation completed on `feature/catalog-goal-06-flipflop-catalog-projection`. Added protected `POST /api/products/projections/flipflop/batch`, typed projection contracts, product batch lookup with categories/media/pricing relations, Catalog current-price mapping with `source: "catalog_pricing"`, Warehouse availability mapping with `source: "warehouse"`, `stockQuantity` as Warehouse `totalAvailable`, FlipFlop readiness mapping, contract docs, and focused Jest coverage. Validation passed: `npm test -- --runInBand` 5 suites/21 tests, `npm run build`, and `git diff --check`. Production deployment was not run and requires owner approval.
@@ -151,4 +155,4 @@ Next command:
 
 ## Next Action
 
-Goal 10/11/12/13 dirty worktree changes are isolated on `feature/catalog-goal-10-11-projection-isolation`; deployment was not requested.
+Goal 8 source implementation is complete on `feature/catalog-goal-08-data-import-reconciliation`; deployment was not requested. Next valid work is Goal 9 end-to-end smoke tests after committing Goal 8.

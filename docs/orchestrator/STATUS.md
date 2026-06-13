@@ -1,5 +1,41 @@
 # Catalog Orchestrator Status
 
+## 2026-06-13 - Goal 8 Data Import And Reconciliation
+
+Current focus: Goal 8 source implementation on `feature/catalog-goal-08-data-import-reconciliation`.
+
+Planning evidence:
+
+- Created `implementation-goals/GOAL-08-execution-plan.md`.
+- Created `reports/validation/GOAL-08-pre-coding-gate.md`.
+- Inspected product, category, media, pricing, auth, logger, and app module contracts.
+
+Implementation evidence:
+
+- Added protected `POST /api/imports/reconciliation/dry-run`.
+- Added read-only reconciliation for product import rows with SKU, title, EAN, category refs, media URL refs, and pricing rows.
+- Report output includes per-row `create`, `update`, or `skip` action, matched product ID, exact missing/invalid fields, duplicate payload identities, existing SKU/EAN conflicts, matched/missing categories, media URL counts, pricing row counts, and totals.
+- No product, pricing, media, or category write path is called by the dry-run service.
+
+Validation evidence:
+
+- `npm test -- --runInBand src/import-reconciliation/import-reconciliation.service.spec.ts` passed.
+- `npm test -- --runInBand` passed: 6 suites / 33 tests.
+- `npm run build` passed.
+- `git diff --check` passed.
+
+Boundary decisions:
+
+- Import execution remains dry-run only.
+- No destructive action, product delete/archive, media upload, or pricing upsert is exposed.
+- Inline media references are blocked; media remains external URLs/object references.
+- Pricing batches over 10 rows are reported as requiring human review.
+- Production deployment was not run.
+
+Next unfinished step:
+
+- Commit Goal 8 source/docs, then start Goal 9 end-to-end smoke tests or deploy only after explicit owner approval.
+
 ## 2026-06-13 - Goal 10/11 Stock And Logistics Projection Isolation
 
 Current focus: isolate pre-existing Goal 10/11 worktree changes after Goal 7 deployment.
