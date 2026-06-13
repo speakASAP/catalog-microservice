@@ -1,5 +1,24 @@
 # Catalog Orchestrator Status
 
+## 2026-06-13 - RBAC-REM-03 Catalog Frontend Admin Guard
+
+Current focus: Auth remediation RBAC-REM-03 for Catalog frontend role-aware admin guard and stale comment cleanup.
+
+Implementation evidence:
+
+- Updated services/frontend/components/AdminGuard.tsx to use Auth user roles before rendering admin pages.
+- Removed stale text that said Auth does not support roles/admin flags.
+- Accepted roles now mirror Catalog backend admin/write roles: global:superadmin, app:catalog-microservice:admin, internal:catalog-microservice:admin, and catalog:write.
+- Non-authorized authenticated users see an access-required state instead of admin content.
+
+Validation evidence:
+
+- services/frontend npm run build passed.
+- git diff --check -- services/frontend/components/AdminGuard.tsx passed.
+- No secrets, JWTs, service tokens, production user data, backend authorization, deployment, or database changes.
+
+Next action: Return to Auth RBAC remediation state; recommended next chunk is RBAC-REM-04 SpeakASAP scoped-role normalization review.
+
 ## 2026-06-12
 
 Current focus: Goal 4 - Channel Readiness Model planning.

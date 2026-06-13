@@ -5,6 +5,7 @@ Last updated: 2026-06-12.
 ## Orchestrator Command
 
 ```text
+2026-06-13: RBAC-REM-03 Catalog frontend role-aware admin guard completed from Auth remediation. Updated services/frontend/components/AdminGuard.tsx to remove stale Auth role-support text, require Auth role claims before rendering admin surfaces, and allow global:superadmin, app:catalog-microservice:admin, internal:catalog-microservice:admin, or catalog:write. Validation passed: services/frontend npm run build and git diff --check for AdminGuard. No secrets, tokens, production data, backend authorization, deployment, or database changes.
 CATALOG ORCHESTRATOR: continue implementation
 ```
 
