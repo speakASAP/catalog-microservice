@@ -3,11 +3,37 @@
 const DEFAULT_BASE_URL = "https://catalog.alfares.cz";
 const baseUrl = (process.env.CATALOG_SMOKE_BASE_URL || DEFAULT_BASE_URL).replace(/\/+$/, "");
 const configuredProductId = process.env.CATALOG_SMOKE_PRODUCT_ID || "";
+const authorizedSmokeEnabled = isEnabled(process.env.CATALOG_SMOKE_AUTHORIZED);
+const authorizedBazosSmokeEnabled = isEnabled(process.env.CATALOG_SMOKE_ENABLE_BAZOS_AUTHORIZED);
+const authToken = process.env.CATALOG_SMOKE_AUTH_TOKEN || "";
+const internalServiceToken = process.env.CATALOG_SMOKE_INTERNAL_SERVICE_TOKEN || "";
+const smokeServiceName = process.env.CATALOG_SMOKE_SERVICE_NAME || "catalog-authorized-smoke";
+const bazosIdentityId = process.env.CATALOG_SMOKE_BAZOS_IDENTITY_ID || "";
+const bazosCategory = process.env.CATALOG_SMOKE_BAZOS_CATEGORY || "";
 
 const results = [];
 
 function record(contract, status, detail = {}) {
   results.push({ contract, status, ...detail });
+}
+
+function isEnabled(value) {
+  return value === "1" || value === "true" || value === "yes";
+}
+
+function getAuthorizedHeaders() {
+  if (authToken) {
+    return {
+      authorization: authToken.startsWith("Bearer ") ? authToken : `Bearer ${authToken}`,
+    };
+  }
+  if (internalServiceToken) {
+    return {
+      "x-internal-service-token": internalServiceToken,
+      "x-service-name": smokeServiceName,
+    };
+  }
+  return null;
 }
 
 async function request(path, options = {}) {
@@ -184,6 +210,94 @@ async function main() {
     });
   } else {
     record("bazos-contract-protection", "skip", { reason: "No product ID available for Bazos route check." });
+  }
+
+  const authorizedHeaders = getAuthorizedHeaders();
+  if (!authorizedSmokeEnabled) {
+    record("authorized-runtime-contracts", "skip", { reason: "Set CATALOG_SMOKE_AUTHORIZED=true to run authorized runtime contract checks." });
+  } else if (!authorizedHeaders) {
+    record("authorized-runtime-contracts", "skip", {
+      reason: "Set CATALOG_SMOKE_AUTH_TOKEN or CATALOG_SMOKE_INTERNAL_SERVICE_TOKEN to run authorized checks.",
+    });
+  } else {
+    await check("authorized-warehouse-availability", async () => {
+      if (!productId) {
+        record("authorized-warehouse-availability", "skip", { reason: "No product ID available for authorized Warehouse check." });
+        return;
+      }
+      const response = await request("/api/products/availability/batch", {
+        method: "POST",
+        headers: authorizedHeaders,
+        body: JSON.stringify({ productIds: [productId] }),
+      });
+      assert(response.ok, "authorized-warehouse-availability", "Authorized Warehouse availability contract did not return 2xx", {
+        statusCode: response.status,
+        productId,
+      });
+      assert(response.body?.success === true && Array.isArray(response.body?.data?.items), "authorized-warehouse-availability", "Warehouse availability response did not use the expected envelope", {
+        statusCode: response.status,
+        productId,
+      });
+      record("authorized-warehouse-availability", "pass", {
+        statusCode: response.status,
+        productId,
+        itemCount: response.body.data.items.length,
+      });
+    });
+
+    await check("authorized-flipflop-projection", async () => {
+      if (!productId) {
+        record("authorized-flipflop-projection", "skip", { reason: "No product ID available for authorized FlipFlop projection check." });
+        return;
+      }
+      const response = await request("/api/products/projections/flipflop/batch", {
+        method: "POST",
+        headers: authorizedHeaders,
+        body: JSON.stringify({ productIds: [productId], includeUnavailable: true }),
+      });
+      assert(response.ok, "authorized-flipflop-projection", "Authorized FlipFlop projection contract did not return 2xx", {
+        statusCode: response.status,
+        productId,
+      });
+      assert(response.body?.success === true && Array.isArray(response.body?.data?.items), "authorized-flipflop-projection", "FlipFlop projection response did not use the expected envelope", {
+        statusCode: response.status,
+        productId,
+      });
+      record("authorized-flipflop-projection", "pass", {
+        statusCode: response.status,
+        productId,
+        itemCount: response.body.data.items.length,
+      });
+    });
+  }
+
+  if (!authorizedBazosSmokeEnabled) {
+    record("authorized-bazos-draft", "skip", {
+      reason: "Set CATALOG_SMOKE_ENABLE_BAZOS_AUTHORIZED=true with approved Bazos identity/category inputs to run this side-effect-risk check.",
+    });
+  } else if (!authorizedHeaders) {
+    record("authorized-bazos-draft", "skip", { reason: "Authorized Bazos smoke requires an approved auth token or internal service token." });
+  } else if (!productId || !bazosIdentityId || !bazosCategory) {
+    record("authorized-bazos-draft", "skip", {
+      reason: "Authorized Bazos smoke requires CATALOG_SMOKE_PRODUCT_ID or a listed product plus CATALOG_SMOKE_BAZOS_IDENTITY_ID and CATALOG_SMOKE_BAZOS_CATEGORY.",
+    });
+  } else {
+    await check("authorized-bazos-draft", async () => {
+      const response = await request(`/api/products/${encodeURIComponent(productId)}/bazos-draft`, {
+        method: "POST",
+        headers: authorizedHeaders,
+        body: JSON.stringify({ identityId: bazosIdentityId, category: bazosCategory }),
+      });
+      assert(response.ok, "authorized-bazos-draft", "Authorized Bazos draft contract did not return 2xx", {
+        statusCode: response.status,
+        productId,
+      });
+      assert(response.body?.success === true && response.body?.data?.authority === "bazos", "authorized-bazos-draft", "Bazos draft response did not preserve Bazos authority", {
+        statusCode: response.status,
+        productId,
+      });
+      record("authorized-bazos-draft", "pass", { statusCode: response.status, productId });
+    });
   }
 
   const failed = results.filter((result) => result.status === "fail");

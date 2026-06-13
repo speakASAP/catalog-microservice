@@ -219,3 +219,16 @@ Acceptance criteria:
 - Audit defaults to active products.
 - Empty pages avoid Warehouse calls.
 - Coverage diagnostics remain Warehouse-backed.
+
+## Goal 14 - Authorized Runtime Contract Smoke
+
+Status: source complete; token-backed runtime checks deferred pending approved credentials
+
+Intent: Catalog should prove protected integration contracts work with approved runtime credentials while default smoke remains anonymous and non-destructive.
+
+Acceptance criteria:
+
+- Default smoke remains safe without credentials.
+- Authorized Warehouse and FlipFlop checks run only when explicitly enabled with an approved token.
+- Bazos authorized draft smoke requires separate explicit opt-in and Bazos-owned inputs.
+- No secrets or raw production payloads are printed.
