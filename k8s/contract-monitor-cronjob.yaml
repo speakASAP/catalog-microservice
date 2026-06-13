@@ -1,0 +1,55 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: catalog-contract-monitor
+  namespace: statex-apps
+  labels:
+    app: catalog-microservice
+    component: contract-monitor
+    managed-by: k8s-migration
+spec:
+  schedule: "*/30 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            app: catalog-microservice
+            component: contract-monitor
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: monitor
+              image: localhost:5000/catalog-microservice:latest
+              imagePullPolicy: Always
+              command: ["node", "scripts/catalog-contract-monitor.js"]
+              envFrom:
+                - configMapRef:
+                    name: catalog-microservice-config
+                - secretRef:
+                    name: catalog-microservice-secret
+              env:
+                - name: CATALOG_SMOKE_BASE_URL
+                  value: "https://catalog.alfares.cz"
+                - name: CATALOG_MONITOR_AUTHORIZED
+                  value: "true"
+                - name: CATALOG_MONITOR_INCLUDE_BAZOS_AUTHORIZED
+                  value: "false"
+                - name: CATALOG_MONITOR_TIMEOUT_MS
+                  value: "120000"
+                - name: CATALOG_SMOKE_AUTH_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: catalog-microservice-secret
+                      key: JWT_TOKEN
+              resources:
+                requests:
+                  memory: "64Mi"
+                  cpu: "25m"
+                limits:
+                  memory: "256Mi"
+                  cpu: "250m"

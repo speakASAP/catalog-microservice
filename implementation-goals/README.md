@@ -123,3 +123,5 @@ production deployment without owner approval
 12. `GOAL-12-warehouse-stock-coverage-read-model.md` - Catalog coverage diagnostics for mandatory Warehouse-backed stock and routes.
 13. `GOAL-13-warehouse-stock-coverage-audit.md` - Paginated Catalog audit for goods missing Warehouse-backed stock coverage.
 14. `GOAL-14-authorized-runtime-contract-smoke.md` - Opt-in authorized runtime contract smoke for protected Warehouse, FlipFlop, and separately gated Bazos paths.
+15. `GOAL-15-bazos-authorized-draft-runtime-smoke.md` - Bazos authorized draft runtime smoke with explicit runtime inputs and no publishing.
+16. `GOAL-16-production-contract-monitoring-drift-audit.md` - Scheduled production contract monitor and drift audit.
