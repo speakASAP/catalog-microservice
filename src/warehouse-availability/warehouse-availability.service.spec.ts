@@ -155,6 +155,38 @@ describe('WarehouseAvailabilityService', () => {
       .rejects.toThrow(ServiceUnavailableException);
   });
 
+  it('continues with stock-only availability when Warehouse logistics enrichment is unavailable', async () => {
+    const productsService = {
+      findIdentitiesByIds: jest.fn(async () => [{ id: 'product-1', sku: 'SKU-001' }]),
+    };
+    const service = new WarehouseAvailabilityService(productsService as any, logger as any);
+    jest.spyOn(service as any, 'fetchWarehouseAvailability').mockResolvedValue([
+      {
+        productId: 'product-1',
+        totalQuantity: 4,
+        totalReserved: 1,
+        totalAvailable: 3,
+        warehouses: [{ warehouseId: 'warehouse-1', warehouseCode: 'OWN', warehouseName: 'Own', warehouseType: 'own', supplierId: null, quantity: 4, reserved: 1, available: 3 }],
+      },
+    ]);
+    jest.spyOn(service as any, 'fetchWarehouseLogistics')
+      .mockRejectedValue(new ServiceUnavailableException('Warehouse logistics dependency is unavailable'));
+
+    const result = await service.getBatchAvailability({ productIds: ['product-1'] });
+
+    expect(result.items[0]).toMatchObject({
+      productId: 'product-1',
+      sku: 'SKU-001',
+      source: 'warehouse',
+      totalAvailable: 3,
+      logistics: null,
+    });
+    expect(logger.warn).toHaveBeenCalledWith(
+      'Warehouse logistics enrichment is unavailable; continuing with stock-only availability',
+      'WarehouseAvailabilityService',
+    );
+  });
+
   it('classifies local, supplier, mixed, and missing warehouse coverage', async () => {
     const productsService = {
       findIdentitiesByIds: jest.fn(async () => [

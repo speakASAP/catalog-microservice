@@ -43,7 +43,7 @@ export class WarehouseAvailabilityService {
 
     const [warehouseRows, logisticsPlans] = await Promise.all([
       this.fetchWarehouseAvailability(productIds, warehouseIds),
-      this.fetchWarehouseLogistics(productIds),
+      this.fetchOptionalWarehouseLogistics(productIds),
     ]);
     const rowsByProductId = new Map<string, WarehouseAvailabilityRow>(warehouseRows.map((row) => [row.productId, row]));
     const logisticsByProductId = new Map<string, WarehouseProductLogisticsPlan>(logisticsPlans.map((plan) => [plan.productId, plan]));
@@ -250,6 +250,15 @@ export class WarehouseAvailabilityService {
         throw new ServiceUnavailableException('Warehouse logistics dependency rejected catalog service credentials');
       }
       throw new ServiceUnavailableException('Warehouse logistics dependency is unavailable');
+    }
+  }
+
+  private async fetchOptionalWarehouseLogistics(productIds: string[]): Promise<WarehouseProductLogisticsPlan[]> {
+    try {
+      return await this.fetchWarehouseLogistics(productIds);
+    } catch (error) {
+      this.logger.warn('Warehouse logistics enrichment is unavailable; continuing with stock-only availability', 'WarehouseAvailabilityService');
+      return [];
     }
   }
 
