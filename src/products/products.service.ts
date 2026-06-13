@@ -377,6 +377,7 @@ export class ProductsService {
     }
 
     const bazosBaseUrl = (process.env.BAZOS_SERVICE_URL || 'http://bazos-service:3000').replace(/\/$/, '');
+    const bazosAuthorization = this.resolveBazosAuthorization(authorization);
     const draftPayload = {
       identityId,
       title: data.title || product.title,
@@ -391,7 +392,7 @@ export class ProductsService {
       const response = await axios.post(
         `${bazosBaseUrl}/api/bazos/catalog/products/${id}/sell-action`,
         draftPayload,
-        { headers: { Authorization: authorization, 'Content-Type': 'application/json' } },
+        { headers: { Authorization: bazosAuthorization, 'Content-Type': 'application/json' } },
       );
       const bazosAction = response.data?.data || response.data;
       return this.bazosDraftResponse(id, bazosAction);
@@ -406,6 +407,14 @@ export class ProductsService {
 
   async sellOnBazos(id: string, data: any = {}, authorization?: string) {
     return this.requestBazosDraft(id, data, authorization);
+  }
+
+  private resolveBazosAuthorization(callerAuthorization?: string): string {
+    const token = process.env.BAZOS_SERVICE_TOKEN || process.env.BAZOS_INTERNAL_SERVICE_TOKEN;
+    if (token?.trim()) {
+      return token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+    }
+    return callerAuthorization || '';
   }
 
   private async resolveCurrentPrice(product: Product): Promise<number | null> {
@@ -494,4 +503,3 @@ export class ProductsService {
     this.logger.log(`Product deleted: ${id}`, 'ProductsService');
   }
 }
-

@@ -8,8 +8,10 @@ const authorizedBazosSmokeEnabled = isEnabled(process.env.CATALOG_SMOKE_ENABLE_B
 const authToken = process.env.CATALOG_SMOKE_AUTH_TOKEN || "";
 const internalServiceToken = process.env.CATALOG_SMOKE_INTERNAL_SERVICE_TOKEN || "";
 const smokeServiceName = process.env.CATALOG_SMOKE_SERVICE_NAME || "catalog-authorized-smoke";
+const bazosProductId = process.env.CATALOG_SMOKE_BAZOS_PRODUCT_ID || "";
 const bazosIdentityId = process.env.CATALOG_SMOKE_BAZOS_IDENTITY_ID || "";
 const bazosCategory = process.env.CATALOG_SMOKE_BAZOS_CATEGORY || "";
+const bazosLocation = process.env.CATALOG_SMOKE_BAZOS_LOCATION || "";
 
 const results = [];
 
@@ -277,26 +279,52 @@ async function main() {
     });
   } else if (!authorizedHeaders) {
     record("authorized-bazos-draft", "skip", { reason: "Authorized Bazos smoke requires an approved auth token or internal service token." });
-  } else if (!productId || !bazosIdentityId || !bazosCategory) {
+  } else if (!bazosProductId || !bazosIdentityId || !bazosCategory) {
     record("authorized-bazos-draft", "skip", {
-      reason: "Authorized Bazos smoke requires CATALOG_SMOKE_PRODUCT_ID or a listed product plus CATALOG_SMOKE_BAZOS_IDENTITY_ID and CATALOG_SMOKE_BAZOS_CATEGORY.",
+      reason: "Authorized Bazos smoke requires explicit CATALOG_SMOKE_BAZOS_PRODUCT_ID plus CATALOG_SMOKE_BAZOS_IDENTITY_ID and CATALOG_SMOKE_BAZOS_CATEGORY.",
     });
   } else {
     await check("authorized-bazos-draft", async () => {
-      const response = await request(`/api/products/${encodeURIComponent(productId)}/bazos-draft`, {
+      const response = await request(`/api/products/${encodeURIComponent(bazosProductId)}/bazos-draft`, {
         method: "POST",
         headers: authorizedHeaders,
-        body: JSON.stringify({ identityId: bazosIdentityId, category: bazosCategory }),
+        body: JSON.stringify({
+          identityId: bazosIdentityId,
+          category: bazosCategory,
+          ...(bazosLocation ? { location: bazosLocation } : {}),
+        }),
       });
       assert(response.ok, "authorized-bazos-draft", "Authorized Bazos draft contract did not return 2xx", {
         statusCode: response.status,
-        productId,
+        productId: bazosProductId,
       });
-      assert(response.body?.success === true && response.body?.data?.authority === "bazos", "authorized-bazos-draft", "Bazos draft response did not preserve Bazos authority", {
+      const data = response.body?.data;
+      assert(response.body?.success === true && data?.authority === "bazos", "authorized-bazos-draft", "Bazos draft response did not preserve Bazos authority", {
         statusCode: response.status,
-        productId,
+        productId: bazosProductId,
       });
-      record("authorized-bazos-draft", "pass", { statusCode: response.status, productId });
+      assert(data?.policyAuthority === "bazos" && data?.publishAuthority === "bazos", "authorized-bazos-draft", "Bazos draft response did not preserve policy/publish authority", {
+        statusCode: response.status,
+        productId: bazosProductId,
+      });
+      assert(data?.draft?.id && data?.draft?.identityId === bazosIdentityId, "authorized-bazos-draft", "Bazos draft response did not include the expected draft identity", {
+        statusCode: response.status,
+        productId: bazosProductId,
+      });
+      assert(typeof data?.requiresConfirmation === "boolean" && typeof data?.canQueueAfterConfirmation === "boolean", "authorized-bazos-draft", "Bazos draft response did not expose confirmation flags", {
+        statusCode: response.status,
+        productId: bazosProductId,
+      });
+      record("authorized-bazos-draft", "pass", {
+        statusCode: response.status,
+        productId: bazosProductId,
+        draftStatus: data.draft.publishStatus || null,
+        policyAllowed: Boolean(data.policyStatus?.allowed),
+        requiresConfirmation: data.requiresConfirmation,
+        canQueueAfterConfirmation: data.canQueueAfterConfirmation,
+        requiresHumanAction: Boolean(data.requiresHumanAction?.required),
+        nextAction: data.nextAction || null,
+      });
     });
   }
 
