@@ -6,7 +6,7 @@ Work one goal chunk at a time. Prefer a complete, verifiable chunk over starting
 
 ## Active Goal
 
-Goal 10/11 projection isolation complete.
+All documented Catalog implementation goals are complete, merged, pushed, deployed, and post-deploy smoke verified through Goal 9. Additional cross-service projection and Warehouse coverage goals 10-13 are also merged into the deployed main line.
 
 ### Goal 1 Closure Evidence
 
@@ -104,6 +104,25 @@ Verification:
 - Existing product read envelopes remain unchanged and no FlipFlop source code was changed.
 - Validation passed: `npm test -- --runInBand` 5 suites/21 tests, `npm run build`, and `git diff --check`.
 
+### Goal 8 Closure Evidence
+
+- Commit `d5e82dc` added protected `POST /api/imports/reconciliation/dry-run`.
+- Dry-run reconciliation reports create/update/skip decisions, SKU/product identity evidence, category matching, duplicate identity issues, missing fields, inline media rejection, pricing validation, and mass pricing human-review marker.
+- Validation passed: focused import reconciliation spec, `npm test -- --runInBand`, `npm run build`, and `git diff --check`.
+
+### Goal 9 Closure Evidence
+
+- Commit `47b9c93` added `scripts/catalog-smoke.js` and `npm run smoke:e2e`.
+- Merge commit `89e9f24` was deployed to production.
+- Post-deploy smoke against `https://catalog.alfares.cz` passed: 9 passed, 0 skipped, 0 failed.
+- Smoke covered health, product search/detail, pricing envelope, media envelope, protected mutation rejection, Warehouse availability protection, FlipFlop projection protection, and Bazos draft protection.
+
+### Goal 10-13 Closure Evidence
+
+- Goal 10/11 projection isolation, Goal 12 Warehouse stock coverage read model, and Goal 13 Warehouse stock coverage audit are merged into the deployed main line.
+- Catalog forwards Warehouse-owned stock origin and logistics data without owning stock, reservations, movements, warehouse locations, or fulfillment logic.
+- Coverage diagnostics remain Warehouse-backed and non-mutating.
+
 ## Next Goal Selection
 
-Goal 10/11 dirty worktree changes are isolated on `feature/catalog-goal-10-11-projection-isolation`. Review/deploy only after explicit owner approval.
+No numbered implementation goal remains pending in the current Catalog roadmap. Next valid work is owner review, production monitoring, or creating a new owner-approved goal.
