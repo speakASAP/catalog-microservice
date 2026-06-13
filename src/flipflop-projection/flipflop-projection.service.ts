@@ -144,7 +144,7 @@ export class FlipFlopProjectionService {
         warehouses: Array.isArray(availability.warehouses) ? availability.warehouses : [],
         logistics: availability.logistics ?? null,
       },
-      stockQuantity: Number(availability.totalAvailable ?? 0),
+      stockQuantity: this.sumTraceableReservableAvailability(availability.logistics?.options),
       readiness,
       seoData: product.seoData ? { ...product.seoData } : null,
       tags: Array.isArray(product.tags) ? product.tags : [],
@@ -160,11 +160,20 @@ export class FlipFlopProjectionService {
   }
 
   private hasTraceableReservableRoute(options: CatalogWarehouseAvailabilityItem['logistics']['options'] | undefined): boolean {
-    return Boolean(options?.some((option) => Number(option.available ?? 0) > 0
-      && option.canReserveFromWarehouse
-      && this.hasRequiredSupplierOwnership(option)
-      && Array.isArray(option.legs)
-      && option.legs.length > 0));
+    return this.sumTraceableReservableAvailability(options) > 0;
+  }
+
+  private sumTraceableReservableAvailability(options: CatalogWarehouseAvailabilityItem['logistics']['options'] | undefined): number {
+    return (options ?? []).reduce((total, option) => {
+      if (Number(option.available ?? 0) <= 0
+        || !option.canReserveFromWarehouse
+        || !this.hasRequiredSupplierOwnership(option)
+        || !Array.isArray(option.legs)
+        || option.legs.length === 0) {
+        return total;
+      }
+      return total + Number(option.available ?? 0);
+    }, 0);
   }
 
   private hasRequiredSupplierOwnership(option: CatalogWarehouseAvailabilityItem['logistics']['options'][number]): boolean {

@@ -1,5 +1,13 @@
 # Catalog Orchestrator Status
 
+## 2026-06-13 - FlipFlop Sellable Quantity From Reservable Routes
+
+Change: tightened FlipFlop projection stock quantity so channel-facing stockQuantity is calculated from traceable reservable Warehouse logistics routes instead of raw Warehouse totalAvailable. Raw Warehouse totals and rows still remain forwarded under availability for diagnostics, but non-reservable supplier/dropship diagnostics no longer inflate the sellable channel quantity.
+
+Validation evidence: npm test -- --runInBand src/flipflop-projection/flipflop-projection.service.spec.ts src/warehouse-availability/warehouse-availability.service.spec.ts passed, npm run build passed, and git diff --check passed. Added focused coverage for mixed local plus unlinked supplier stock where stockQuantity exposes only the local reservable amount.
+
+Boundary decision: no deployment, runtime token inspection, live fixture creation, production supplier import, Warehouse stock mutation, or cleanup mutation was performed. Current-head runtime completion remains unproven until owner-approved guarded runtime evidence regeneration.
+
 ## 2026-06-13 - FlipFlop Supplier Route Ownership Gate
 
 Change: tightened FlipFlop projection sellability so positive supplier replenishment or dropship availability is not included by default unless the Warehouse logistics option also carries a non-empty supplierId. This aligns the channel projection path with Catalog Warehouse coverage, which already blocks supplier-managed routes without Warehouse-owned supplier linkage.

@@ -54,8 +54,8 @@ Response envelope:
 | `price.amount` | Catalog deterministic current price, sale price first, otherwise base price | Marked with `source: "catalog_pricing"`. |
 | `availability.totalQuantity`, `availability.totalReserved`, `availability.totalAvailable` | Warehouse availability contract through Catalog bridge | Marked with `source: "warehouse"`; Catalog does not store or own stock. |
 | `availability.warehouses[]` | Warehouse per-location availability rows with `warehouseId`, `warehouseCode`, `warehouseName`, `warehouseType`, `supplierId`, quantity, reserved, and available | Warehouse owns stock origin classification; Catalog only forwards it. |
-| `availability.logistics` | Warehouse product logistics plan with preferredRoute, route options, and ordered route legs for local fulfillment, supplier replenishment, and supplier dropship/direct routes | Warehouse owns logistics route interpretation and leg semantics; Catalog only forwards it. |
-| `stockQuantity` | Warehouse `totalAvailable` | Compatibility alias for FlipFlop only. |
+| `availability.logistics` | Warehouse product logistics plan with preferredRoute, route options, and ordered route legs for local fulfillment, supplier replenishment, and supplier dropship/direct routes | Warehouse owns logistics route interpretation and leg semantics; Catalog only forwards it. FlipFlop `stockQuantity` is calculated from traceable reservable route availability, while raw Warehouse totals remain visible inside `availability` for diagnostics. |
+| `stockQuantity` | Sum of traceable reservable Warehouse logistics route availability | Compatibility alias for FlipFlop sellable stock only; raw Warehouse totals remain in `availability`. |
 | `readiness` | Catalog channel readiness for `flipflop` | FlipFlop remains authority for storefront and checkout behavior. |
 
 

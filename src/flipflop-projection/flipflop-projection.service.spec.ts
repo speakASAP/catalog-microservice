@@ -285,7 +285,7 @@ describe("FlipFlopProjectionService", () => {
     expect(defaultResult.items).toEqual([]);
     expect(includedResult.items[0]).toMatchObject({
       productId: "product-1",
-      stockQuantity: 4,
+      stockQuantity: 0,
       availability: {
         logistics: expect.objectContaining({
           options: [expect.objectContaining({
@@ -293,6 +293,89 @@ describe("FlipFlopProjectionService", () => {
             supplierId: null,
             canReserveFromWarehouse: true,
           })],
+        }),
+      },
+    });
+  });
+
+  it("projects only traceable reservable route availability as channel stock quantity", async () => {
+    const availability = {
+      requestedProductIds: ["product-1"],
+      invalidProductIds: [],
+      items: [{
+        productId: "product-1",
+        sku: "SKU-001",
+        source: "warehouse",
+        totalQuantity: 15,
+        totalReserved: 1,
+        totalAvailable: 14,
+        warehouses: [
+          { warehouseId: "own-1", warehouseCode: "OWN", warehouseName: "Own", warehouseType: "own", supplierId: null, quantity: 5, reserved: 1, available: 4 },
+          { warehouseId: "sup-1", warehouseCode: "SUP", warehouseName: "Supplier", warehouseType: "supplier", supplierId: null, quantity: 10, reserved: 0, available: 10 },
+        ],
+        logistics: {
+          generatedAt: "2026-06-13T00:00:00.000Z",
+          productId: "product-1",
+          preferredRoute: "local_fulfillment",
+          totals: { totalQuantity: 15, totalReserved: 1, totalAvailable: 14, routeCount: 2, ownAvailable: 4, supplierAvailable: 10, dropshipAvailable: 0 },
+          options: [
+            {
+              productId: "product-1",
+              warehouseId: "own-1",
+              warehouseCode: "OWN",
+              warehouseName: "Own",
+              warehouseType: "own",
+              originType: "own",
+              supplierId: null,
+              priority: 10,
+              quantity: 5,
+              reserved: 1,
+              available: 4,
+              routeType: "local_fulfillment",
+              routeLabel: "Local",
+              canReserveFromWarehouse: true,
+              requiresSupplierCoordination: false,
+              legs: [{ sequence: 1, from: "OWN", to: "customer", responsibility: "warehouse" }],
+            },
+            {
+              productId: "product-1",
+              warehouseId: "sup-1",
+              warehouseCode: "SUP",
+              warehouseName: "Supplier",
+              warehouseType: "supplier",
+              originType: "supplier",
+              supplierId: null,
+              priority: 5,
+              quantity: 10,
+              reserved: 0,
+              available: 10,
+              routeType: "supplier_replenishment",
+              routeLabel: "Supplier",
+              canReserveFromWarehouse: false,
+              requiresSupplierCoordination: true,
+              legs: [
+                { sequence: 1, from: "SUP", to: "alfares_receiving_or_handoff", responsibility: "supplier" },
+                { sequence: 2, from: "alfares_receiving_or_handoff", to: "customer", responsibility: "warehouse" },
+              ],
+            },
+          ],
+        },
+      }],
+    };
+    const { service } = buildService({ availability });
+
+    const result = await service.getBatchProjection({ productIds: ["product-1"] });
+
+    expect(result.items[0]).toMatchObject({
+      productId: "product-1",
+      stockQuantity: 4,
+      availability: {
+        totalAvailable: 14,
+        logistics: expect.objectContaining({
+          options: [
+            expect.objectContaining({ routeType: "local_fulfillment", available: 4, canReserveFromWarehouse: true }),
+            expect.objectContaining({ routeType: "supplier_replenishment", available: 10, canReserveFromWarehouse: false, supplierId: null }),
+          ],
         }),
       },
     });
@@ -327,7 +410,7 @@ describe("FlipFlopProjectionService", () => {
     expect(defaultResult.items).toEqual([]);
     expect(includedResult.items[0]).toMatchObject({
       productId: "product-1",
-      stockQuantity: 5,
+      stockQuantity: 0,
       availability: { logistics: expect.objectContaining({ options: [] }) },
     });
   });
