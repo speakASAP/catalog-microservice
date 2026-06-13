@@ -83,7 +83,7 @@ Acceptance criteria:
 
 ## Goal 5 - Catalog/Warehouse Contract
 
-Status: pending
+Status: done
 
 Intent: Catalog product identity and warehouse stock must align without moving stock ownership into catalog.
 
@@ -102,7 +102,7 @@ Acceptance criteria:
 
 ## Goal 6 - FlipFlop Catalog Projection
 
-Status: pending
+Status: done
 
 Intent: FlipFlop should consume catalog product truth and show real sellable products.
 
@@ -121,7 +121,7 @@ Acceptance criteria:
 
 ## Goal 7 - Bazos Draft Integration Contract
 
-Status: pending
+Status: done
 
 Intent: Catalog may initiate Bazos draft creation but must not bypass Bazos compliance.
 
@@ -139,7 +139,7 @@ Acceptance criteria:
 
 ## Goal 8 - Data Import And Reconciliation
 
-Status: pending
+Status: done
 
 Intent: Catalog must move beyond seeded demo records and stay reconciled.
 
@@ -157,7 +157,7 @@ Acceptance criteria:
 
 ## Goal 9 - End-To-End Catalog Smoke Tests
 
-Status: pending
+Status: done
 
 Intent: Catalog must prove it serves its function.
 
@@ -171,3 +171,51 @@ Acceptance criteria:
 - Smoke output names the broken contract when failing.
 - Protected write check proves unauthorized mutation is rejected.
 - `npm run build` and smoke checks are documented in status.
+
+## Goal 10 - Stock Origin Visibility
+
+Status: done
+
+Intent: Catalog and FlipFlop projections should expose Warehouse-owned stock origin metadata without Catalog becoming stock owner.
+
+Acceptance criteria:
+
+- Warehouse remains stock authority.
+- Catalog forwards origin metadata only.
+- Existing stock totals remain Warehouse-sourced.
+
+## Goal 11 - Logistics Route Projection
+
+Status: done
+
+Intent: Catalog should forward Warehouse-owned logistics route information without owning fulfillment logic.
+
+Acceptance criteria:
+
+- Warehouse remains logistics authority.
+- Catalog exposes route projection only.
+- No Catalog shipment or reservation mutation is added.
+
+## Goal 12 - Warehouse Stock Coverage Read Model
+
+Status: done
+
+Intent: Catalog should report whether products have mandatory Warehouse-backed stock coverage and reservable routes.
+
+Acceptance criteria:
+
+- Coverage is derived from Warehouse availability/logistics.
+- Catalog does not persist stock truth.
+- Missing coverage is visible to operators.
+
+## Goal 13 - Warehouse Stock Coverage Audit
+
+Status: done
+
+Intent: Operators can page active Catalog goods and identify missing Warehouse-backed coverage.
+
+Acceptance criteria:
+
+- Audit defaults to active products.
+- Empty pages avoid Warehouse calls.
+- Coverage diagnostics remain Warehouse-backed.

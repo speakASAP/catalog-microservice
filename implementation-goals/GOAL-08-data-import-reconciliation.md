@@ -1,6 +1,8 @@
 # Goal 08 - Data Import And Reconciliation
 
-Status: pending
+Status: done
+
+Completion: Implemented in commit `d5e82dc` and deployed through main merge commit `89e9f24`. The delivered surface is protected `POST /api/imports/reconciliation/dry-run`, with non-destructive create/update/skip reporting, exact missing-field diagnostics, duplicate identity detection, inline media rejection, pricing validation, and mass-pricing human-review indication.
 
 ## Intent
 

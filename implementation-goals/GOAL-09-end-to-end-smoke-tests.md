@@ -1,6 +1,8 @@
 # Goal 09 - End-To-End Catalog Smoke Tests
 
-Status: pending
+Status: done
+
+Completion: Implemented in commit `47b9c93`, merged through `89e9f24`, deployed to production, and post-deploy smoke verified. `npm run smoke:e2e` passed against `https://catalog.alfares.cz` with 9 passed, 0 skipped, and 0 failed.
 
 ## Intent
 
