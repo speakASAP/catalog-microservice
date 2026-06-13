@@ -3,11 +3,14 @@ import { PricingService } from '../pricing/pricing.service';
 import { ProductPricing } from '../pricing/product-pricing.entity';
 import { ProductsService } from '../products/products.service';
 import { Product } from '../products/product.entity';
+import { WarehouseAvailabilityService } from '../warehouse-availability/warehouse-availability.service';
+import type { CatalogWarehouseCoverageItem } from '../warehouse-availability/warehouse-availability.types';
 import type {
   ChannelReadiness,
   ChannelReadinessIssue,
   ChannelReadinessResponse,
   ChannelReadinessStatus,
+  ChannelWarehouseCoverageFacts,
 } from './channel-readiness.types';
 
 type ProductReadinessFacts = {
@@ -22,6 +25,11 @@ type ProductReadinessFacts = {
   duplicateSku: boolean;
   duplicateEan: boolean;
   currentPrice: ProductPricing | null;
+  warehouseCoverage: ChannelWarehouseCoverageFacts | null;
+};
+
+type GetProductReadinessOptions = {
+  warehouseCoverage?: ChannelWarehouseCoverageFacts | null;
 };
 
 type ChannelRule = {
@@ -35,13 +43,17 @@ export class ChannelReadinessService {
   constructor(
     private readonly productsService: ProductsService,
     private readonly pricingService: PricingService,
+    private readonly warehouseAvailabilityService: WarehouseAvailabilityService,
   ) {}
 
-  async getProductReadiness(productId: string): Promise<ChannelReadinessResponse> {
+  async getProductReadiness(productId: string, options: GetProductReadinessOptions = {}): Promise<ChannelReadinessResponse> {
     const product = await this.productsService.findOne(productId);
-    const productReadiness = await this.productsService.getReadiness(productId);
-    const currentPrice = await this.pricingService.getCurrentPrice(productId);
-    const facts = this.buildFacts(product, productReadiness, currentPrice);
+    const [productReadiness, currentPrice, warehouseCoverage] = await Promise.all([
+      this.productsService.getReadiness(productId),
+      this.pricingService.getCurrentPrice(productId),
+      options.warehouseCoverage === undefined ? this.getWarehouseCoverage(productId) : Promise.resolve(options.warehouseCoverage),
+    ]);
+    const facts = this.buildFacts(product, productReadiness, currentPrice, warehouseCoverage);
     const channels = this.channelRules().map((rule) => rule.build(product, facts));
 
     return {
@@ -71,6 +83,7 @@ export class ChannelReadinessService {
     product: Product,
     productReadiness: { lifecycle?: string; checks?: { duplicateSku?: boolean; duplicateEan?: boolean } },
     currentPrice: ProductPricing | null,
+    warehouseCoverage: ChannelWarehouseCoverageFacts | null,
   ): ProductReadinessFacts {
     return {
       lifecycle: productReadiness.lifecycle || product.lifecycle || (product.isActive ? 'active' : 'archived'),
@@ -84,6 +97,7 @@ export class ChannelReadinessService {
       duplicateSku: Boolean(productReadiness.checks?.duplicateSku),
       duplicateEan: Boolean(productReadiness.checks?.duplicateEan),
       currentPrice,
+      warehouseCoverage,
     };
   }
 
@@ -95,6 +109,7 @@ export class ChannelReadinessService {
       ...this.requireField(facts.hasCategory, 'categories', 'missing_category', 'A product category is required for FlipFlop navigation.', 'Assign at least one active catalog category.'),
       ...this.requireField(facts.hasMedia, 'media', 'missing_media', 'Product media is required before FlipFlop can present the item.', 'Add at least one external media reference.'),
       ...this.requireField(facts.hasCurrentPrice, 'pricing', 'missing_current_price', 'A deterministic current price is required for FlipFlop.', 'Add an active valid catalog price.'),
+      ...this.warehouseCoverageIssues(facts.warehouseCoverage),
     ];
 
     if (facts.hasPlaceholderMedia) {
@@ -111,8 +126,9 @@ export class ChannelReadinessService {
       channel: 'flipflop',
       authority: 'flipflop',
       issues,
-      readyAction: 'Product truth is ready for FlipFlop projection. FlipFlop still owns storefront and checkout behavior.',
-      blockedAction: 'Fix the catalog fields listed before FlipFlop consumes this product.',
+      readyAction: 'Product truth and Warehouse coverage are ready for FlipFlop projection. FlipFlop still owns storefront and checkout behavior.',
+      blockedAction: 'Fix the catalog fields and Warehouse coverage listed before FlipFlop consumes this product.',
+      warehouseCoverage: facts.warehouseCoverage,
     });
   }
 
@@ -204,6 +220,24 @@ export class ChannelReadinessService {
     return issues;
   }
 
+  private warehouseCoverageIssues(coverage: ChannelWarehouseCoverageFacts | null): ChannelReadinessIssue[] {
+    if (coverage?.sellableWithWarehouse) {
+      return [];
+    }
+
+    const reason = coverage?.coverageStatus === 'missing_route'
+      ? 'Warehouse has positive stock but no reservable logistics route for this product.'
+      : 'Warehouse coverage is missing sellable stock for this product.';
+
+    return [{
+      code: coverage?.coverageStatus === 'missing_route' ? 'warehouse_logistics_route_missing' : 'warehouse_stock_missing',
+      field: 'warehouseCoverage',
+      severity: 'blocking',
+      message: reason,
+      nextAction: 'Create or fix Warehouse stock coverage with a reservable local, supplier replenishment, or dropship route before channel use.',
+    }];
+  }
+
   private requireField(
     present: boolean,
     field: string,
@@ -224,6 +258,7 @@ export class ChannelReadinessService {
     issues: ChannelReadinessIssue[];
     readyAction: string;
     blockedAction: string;
+    warehouseCoverage?: ChannelWarehouseCoverageFacts | null;
   }): ChannelReadiness {
     const hasBlockingIssue = input.issues.some((issue) => issue.severity === 'blocking');
     const hasWarning = input.issues.some((issue) => issue.severity === 'warning');
@@ -239,6 +274,27 @@ export class ChannelReadinessService {
         .map((issue) => issue.field as string),
       issues: input.issues,
       nextAction: hasBlockingIssue ? input.blockedAction : input.readyAction,
+      ...(input.warehouseCoverage !== undefined ? { warehouseCoverage: input.warehouseCoverage } : {}),
+    };
+  }
+
+  private async getWarehouseCoverage(productId: string): Promise<ChannelWarehouseCoverageFacts | null> {
+    const coverage = await this.warehouseAvailabilityService.getBatchCoverage({ productIds: [productId] });
+    return this.toWarehouseCoverageFacts(coverage.items.find((item) => item.productId === productId) ?? null);
+  }
+
+  private toWarehouseCoverageFacts(item: CatalogWarehouseCoverageItem | null): ChannelWarehouseCoverageFacts | null {
+    if (!item) {
+      return null;
+    }
+
+    return {
+      sellableWithWarehouse: Boolean(item.sellableWithWarehouse),
+      coverageStatus: item.coverageStatus,
+      totalAvailable: Number(item.totalAvailable ?? 0),
+      routeCount: Number(item.routeCount ?? 0),
+      stockOrigin: item.stockOrigin ?? null,
+      blockingReasons: Array.isArray(item.blockingReasons) ? item.blockingReasons : [],
     };
   }
 

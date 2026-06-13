@@ -6,6 +6,15 @@ export type ChannelReadinessSeverity = "blocking" | "warning";
 
 export type ChannelAuthority = "catalog" | "flipflop" | "bazos" | string;
 
+export type ChannelWarehouseCoverageFacts = {
+  sellableWithWarehouse: boolean;
+  coverageStatus: "covered" | "missing_stock" | "missing_route" | string;
+  totalAvailable: number;
+  routeCount: number;
+  stockOrigin?: string | null;
+  blockingReasons: string[];
+};
+
 export type ChannelReadinessIssue = {
   code: string;
   field?: string;
@@ -22,6 +31,7 @@ export type ChannelReadiness = {
   issues: ChannelReadinessIssue[];
   nextAction: string;
   authority: ChannelAuthority;
+  warehouseCoverage?: ChannelWarehouseCoverageFacts | null;
 };
 
 export type ChannelReadinessResponse = {

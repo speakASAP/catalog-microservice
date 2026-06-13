@@ -718,3 +718,11 @@ Change: tightened `FlipFlopProjectionService` so default FlipFlop projection now
 Validation evidence: focused `src/flipflop-projection/flipflop-projection.service.spec.ts` passed, `npm run build` passed, and `git diff --check` passed. Added focused coverage for stock with no reservable Warehouse route.
 
 Boundary decision: no deployment, runtime token inspection, production product mutation, Warehouse stock mutation, or supplier import was performed. Runtime completion remains pending cross-service approved evidence regeneration.
+
+## 2026-06-13 - Channel Readiness Warehouse Coverage Gate
+
+Change: tightened Catalog channel readiness so FlipFlop readiness now requires sellable Warehouse coverage, including positive stock and a reservable Warehouse logistics route. The readiness response exposes Warehouse coverage facts for FlipFlop, and FlipFlop projection passes its already-fetched Warehouse availability snapshot into readiness to avoid an extra Warehouse coverage call per projected product.
+
+Validation evidence: focused src/channel-readiness/channel-readiness.service.spec.ts and src/flipflop-projection/flipflop-projection.service.spec.ts passed, npm run build passed, and git diff --check passed. Added focused coverage for Warehouse stock without a reservable route blocking FlipFlop readiness and for injected Warehouse coverage facts.
+
+Boundary decision: no deployment, runtime token inspection, production product mutation, Warehouse stock mutation, or supplier import was performed. Runtime completion remains pending owner-approved cross-service evidence regeneration.

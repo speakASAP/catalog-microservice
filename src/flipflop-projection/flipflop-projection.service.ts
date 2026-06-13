@@ -4,6 +4,7 @@ import { PricingService } from "../pricing/pricing.service";
 import type { ProductPricing } from "../pricing/product-pricing.entity";
 import type { Product } from "../products/product.entity";
 import { ProductsService } from "../products/products.service";
+import type { ChannelWarehouseCoverageFacts } from "../channel-readiness/channel-readiness.types";
 import { WarehouseAvailabilityService } from "../warehouse-availability/warehouse-availability.service";
 import type { CatalogWarehouseAvailabilityItem } from "../warehouse-availability/warehouse-availability.types";
 import type {
@@ -45,12 +46,14 @@ export class FlipFlopProjectionService {
         continue;
       }
 
+      const availabilityItem = availabilityByProductId.get(productId) ?? this.zeroAvailability(product);
       const [currentPrice, readinessResponse] = await Promise.all([
         this.pricingService.getCurrentPrice(productId),
-        this.channelReadinessService.getProductReadiness(productId),
+        this.channelReadinessService.getProductReadiness(productId, {
+          warehouseCoverage: this.toReadinessWarehouseCoverage(availabilityItem),
+        }),
       ]);
       const flipflopReadiness = readinessResponse.channels.find((channel) => channel.channel === "flipflop");
-      const availabilityItem = availabilityByProductId.get(productId) ?? this.zeroAvailability(product);
       const readiness = this.toProjectionReadiness(flipflopReadiness);
       const item = this.toProjectionItem(product, currentPrice, availabilityItem, readiness);
 
@@ -154,6 +157,35 @@ export class FlipFlopProjectionService {
     const hasPositiveStock = Number(availability.totalAvailable ?? 0) > 0;
     const hasReservableRoute = Boolean(availability.logistics?.options?.some((option) => Number(option.available ?? 0) > 0 && option.canReserveFromWarehouse));
     return hasPositiveStock && hasReservableRoute;
+  }
+
+  private toReadinessWarehouseCoverage(availability: CatalogWarehouseAvailabilityItem): ChannelWarehouseCoverageFacts {
+    const hasPositiveStock = Number(availability.totalAvailable ?? 0) > 0;
+    const hasWarehouses = Array.isArray(availability.warehouses) && availability.warehouses.length > 0;
+    const hasReservableRoute = Boolean(availability.logistics?.options?.some((option) => Number(option.available ?? 0) > 0 && option.canReserveFromWarehouse));
+    const blockingReasons: string[] = [];
+
+    if (!hasPositiveStock || !hasWarehouses) {
+      blockingReasons.push("warehouse_stock_missing");
+    }
+    if (hasPositiveStock && !hasReservableRoute) {
+      blockingReasons.push("warehouse_logistics_route_missing");
+    }
+
+    const coverageStatus = blockingReasons.includes("warehouse_stock_missing")
+      ? "missing_stock"
+      : blockingReasons.includes("warehouse_logistics_route_missing")
+        ? "missing_route"
+        : "covered";
+
+    return {
+      sellableWithWarehouse: coverageStatus === "covered",
+      coverageStatus,
+      totalAvailable: Number(availability.totalAvailable ?? 0),
+      routeCount: Number(availability.logistics?.options?.length ?? 0),
+      stockOrigin: null,
+      blockingReasons,
+    };
   }
 
   private toProjectionPrice(price: ProductPricing | null): FlipFlopProjectionPrice | null {
