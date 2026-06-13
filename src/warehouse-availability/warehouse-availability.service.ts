@@ -355,8 +355,16 @@ export class WarehouseAvailabilityService {
   private hasTraceableReservableRoute(options: CatalogWarehouseAvailabilityItem['logistics']['options'] | undefined): boolean {
     return Boolean(options?.some((option) => Number(option.available ?? 0) > 0
       && option.canReserveFromWarehouse
+      && this.hasRequiredSupplierOwnership(option)
       && Array.isArray(option.legs)
       && option.legs.length > 0));
+  }
+
+  private hasRequiredSupplierOwnership(option: CatalogWarehouseAvailabilityItem['logistics']['options'][number]): boolean {
+    if (option.routeType === 'supplier_replenishment' || option.routeType === 'supplier_dropship') {
+      return typeof option.supplierId === 'string' && option.supplierId.trim().length > 0;
+    }
+    return true;
   }
 
   private sumAvailableByOrigin(item: CatalogWarehouseAvailabilityItem, origins: string[]): number {

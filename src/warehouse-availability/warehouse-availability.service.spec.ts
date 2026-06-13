@@ -384,6 +384,41 @@ describe('WarehouseAvailabilityService', () => {
     ]);
   });
 
+  it('blocks supplier-managed coverage when Warehouse logistics lacks supplier ownership', async () => {
+    const productsService = {
+      findIdentitiesByIds: jest.fn(async () => [{ id: 'product-1', sku: 'SKU-001' }]),
+    };
+    const service = new WarehouseAvailabilityService(productsService as any, logger as any);
+    jest.spyOn(service as any, 'fetchWarehouseAvailability').mockResolvedValue([
+      {
+        productId: 'product-1',
+        totalQuantity: 5,
+        totalReserved: 1,
+        totalAvailable: 4,
+        warehouses: [{ warehouseId: 'sup-1', warehouseCode: 'SUP', warehouseName: 'Supplier', warehouseType: 'supplier', supplierId: null, quantity: 5, reserved: 1, available: 4 }],
+      },
+    ]);
+    jest.spyOn(service as any, 'fetchWarehouseLogistics').mockResolvedValue([
+      {
+        productId: 'product-1',
+        generatedAt: '2026-06-13T00:00:00.000Z',
+        preferredRoute: 'supplier_replenishment',
+        totals: { totalQuantity: 5, totalReserved: 1, totalAvailable: 4, routeCount: 1, ownAvailable: 0, supplierAvailable: 4, dropshipAvailable: 0 },
+        options: [{ productId: 'product-1', warehouseId: 'sup-1', warehouseCode: 'SUP', warehouseName: 'Supplier', warehouseType: 'supplier', originType: 'supplier', supplierId: null, priority: 5, quantity: 5, reserved: 1, available: 4, routeType: 'supplier_replenishment', routeLabel: 'Supplier', canReserveFromWarehouse: true, requiresSupplierCoordination: true, legs: [{ sequence: 1, from: 'SUP', to: 'alfares_receiving_or_handoff', responsibility: 'supplier' }, { sequence: 2, from: 'alfares_receiving_or_handoff', to: 'customer', responsibility: 'warehouse' }] }],
+      },
+    ]);
+
+    const result = await service.getBatchCoverage({ productIds: ['product-1'] });
+
+    expect(result.items[0]).toMatchObject({
+      coverageStatus: 'missing_route',
+      stockOrigin: 'supplier_stock',
+      sellableWithWarehouse: false,
+      blockingReasons: ['warehouse_logistics_route_missing'],
+      preferredRoute: 'supplier_replenishment',
+    });
+  });
+
   it('blocks coverage when stock exists without a reservable logistics route', async () => {
     const productsService = {
       findIdentitiesByIds: jest.fn(async () => [{ id: 'product-1', sku: 'SKU-001' }]),
