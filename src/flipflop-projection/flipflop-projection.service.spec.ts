@@ -236,6 +236,40 @@ describe("FlipFlopProjectionService", () => {
     expect(includedResult.items[0].readiness).toMatchObject({ ready: false, status: "blocked", missingFields: ["pricing"] });
   });
 
+  it("filters products with stock but no reservable Warehouse logistics route by default", async () => {
+    const availability = {
+      requestedProductIds: ["product-1"],
+      invalidProductIds: [],
+      items: [{
+        productId: "product-1",
+        sku: "SKU-001",
+        source: "warehouse",
+        totalQuantity: 7,
+        totalReserved: 2,
+        totalAvailable: 5,
+        warehouses: [{ warehouseId: "warehouse-1", warehouseCode: "OWN-PRG", warehouseName: "Prague Main Warehouse", warehouseType: "own", supplierId: null, quantity: 7, reserved: 2, available: 5 }],
+        logistics: {
+          generatedAt: "2026-06-13T00:00:00.000Z",
+          productId: "product-1",
+          preferredRoute: null,
+          totals: { totalQuantity: 7, totalReserved: 2, totalAvailable: 5, routeCount: 0, ownAvailable: 5, supplierAvailable: 0, dropshipAvailable: 0 },
+          options: [],
+        },
+      }],
+    };
+    const { service } = buildService({ availability });
+
+    const defaultResult = await service.getBatchProjection({ productIds: ["product-1"] });
+    const includedResult = await service.getBatchProjection({ productIds: ["product-1"], includeUnavailable: true });
+
+    expect(defaultResult.items).toEqual([]);
+    expect(includedResult.items[0]).toMatchObject({
+      productId: "product-1",
+      stockQuantity: 5,
+      availability: { logistics: expect.objectContaining({ options: [] }) },
+    });
+  });
+
   it("rejects duplicate and empty IDs", async () => {
     const { service } = buildService();
 

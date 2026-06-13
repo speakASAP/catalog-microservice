@@ -710,3 +710,11 @@ Current focus:
 Next unfinished step:
 
 - Create Goal 5 execution plan and run the pre-coding gate before catalog/warehouse contract source changes.
+
+## 2026-06-13 - FlipFlop Projection Warehouse Route Gate
+
+Change: tightened `FlipFlopProjectionService` so default FlipFlop projection now requires positive Warehouse availability and at least one reservable Warehouse logistics route. Products with stock but no reservable Warehouse route are excluded by default and remain inspectable with `includeUnavailable=true`, preserving diagnostics without treating them as sellable downstream goods.
+
+Validation evidence: focused `src/flipflop-projection/flipflop-projection.service.spec.ts` passed, `npm run build` passed, and `git diff --check` passed. Added focused coverage for stock with no reservable Warehouse route.
+
+Boundary decision: no deployment, runtime token inspection, production product mutation, Warehouse stock mutation, or supplier import was performed. Runtime completion remains pending cross-service approved evidence regeneration.

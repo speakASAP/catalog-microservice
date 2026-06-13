@@ -54,7 +54,7 @@ export class FlipFlopProjectionService {
       const readiness = this.toProjectionReadiness(flipflopReadiness);
       const item = this.toProjectionItem(product, currentPrice, availabilityItem, readiness);
 
-      if (!input.includeUnavailable && (!readiness.ready || item.stockQuantity <= 0)) {
+      if (!input.includeUnavailable && (!readiness.ready || !this.hasSellableWarehouseAvailability(availabilityItem))) {
         continue;
       }
 
@@ -148,6 +148,12 @@ export class FlipFlopProjectionService {
       createdAt: this.toIsoString(product.createdAt),
       updatedAt: this.toIsoString(product.updatedAt),
     };
+  }
+
+  private hasSellableWarehouseAvailability(availability: CatalogWarehouseAvailabilityItem): boolean {
+    const hasPositiveStock = Number(availability.totalAvailable ?? 0) > 0;
+    const hasReservableRoute = Boolean(availability.logistics?.options?.some((option) => Number(option.available ?? 0) > 0 && option.canReserveFromWarehouse));
+    return hasPositiveStock && hasReservableRoute;
   }
 
   private toProjectionPrice(price: ProductPricing | null): FlipFlopProjectionPrice | null {
