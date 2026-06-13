@@ -69,6 +69,27 @@ By default, products are returned only when the FlipFlop readiness entry is read
 
 Unknown product IDs are reported in `invalidProductIds` and no projections are emitted for that request.
 
+## Warehouse Stock Coverage Read Model
+
+Catalog also exposes a protected stock coverage audit endpoint for operators and channel checks that need to confirm Catalog goods have Warehouse-backed stock and a reservable Warehouse logistics route before treating them as sellable.
+
+```http
+POST /api/products/availability/coverage
+Authorization: Bearer <catalog-approved caller token>
+Content-Type: application/json
+```
+
+Request:
+
+```json
+{
+  "productIds": ["catalog-product-id"],
+  "warehouseIds": ["optional-warehouse-filter"]
+}
+```
+
+Each response item includes `coverageStatus`, `stockOrigin`, `sellableWithWarehouse`, available totals by local/supplier/dropship origin, `preferredRoute`, `blockingReasons`, forwarded Warehouse rows, and the Warehouse-owned `logistics` plan. `covered` requires positive Warehouse availability and at least one reservable Warehouse logistics route. `missing_stock` and `missing_route` are blocking diagnostics; Catalog does not fabricate stock or logistics fallbacks.
+
 ## Boundary Constraints
 
 - Catalog does not implement FlipFlop storefront UX, cart, checkout, order, or payment behavior.

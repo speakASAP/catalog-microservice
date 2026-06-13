@@ -88,3 +88,48 @@ export type CatalogWarehouseAvailabilityResponse = {
   invalidProductIds: string[];
   items: CatalogWarehouseAvailabilityItem[];
 };
+
+
+export class BatchWarehouseCoverageRequestDto extends BatchWarehouseAvailabilityRequestDto {}
+
+export type WarehouseCoverageStockOrigin = 'local_stock' | 'supplier_stock' | 'dropship_stock' | 'mixed_stock' | 'out_of_stock';
+
+export type WarehouseCoverageStatus = 'covered' | 'missing_stock' | 'missing_route';
+
+export type CatalogWarehouseCoverageItem = {
+  productId: string;
+  sku: string;
+  source: 'warehouse';
+  coverageStatus: WarehouseCoverageStatus;
+  stockOrigin: WarehouseCoverageStockOrigin;
+  sellableWithWarehouse: boolean;
+  totalQuantity: number;
+  totalReserved: number;
+  totalAvailable: number;
+  localAvailable: number;
+  supplierAvailable: number;
+  dropshipAvailable: number;
+  warehouseCount: number;
+  routeCount: number;
+  preferredRoute: WarehouseLogisticsRouteType | null;
+  blockingReasons: string[];
+  warehouses: WarehouseAvailabilityWarehouse[];
+  logistics: WarehouseProductLogisticsPlan | null;
+};
+
+export type CatalogWarehouseCoverageResponse = {
+  generatedAt: string;
+  requestedProductIds: string[];
+  invalidProductIds: string[];
+  totals: {
+    totalProducts: number;
+    coveredProducts: number;
+    missingCoverageProducts: number;
+    localStockProducts: number;
+    supplierStockProducts: number;
+    dropshipStockProducts: number;
+    mixedStockProducts: number;
+    outOfStockProducts: number;
+  };
+  items: CatalogWarehouseCoverageItem[];
+};

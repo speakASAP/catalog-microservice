@@ -120,3 +120,4 @@ production deployment without owner approval
 ```
 
 11. `GOAL-11-logistics-route-projection.md` - Warehouse-owned logistics route projection forwarding.
+12. `GOAL-12-warehouse-stock-coverage-read-model.md` - Catalog coverage diagnostics for mandatory Warehouse-backed stock and routes.
