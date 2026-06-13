@@ -1,8 +1,8 @@
 # Goal 14 - Authorized Runtime Contract Smoke
 
-Status: source complete; token-backed runtime checks deferred pending approved credentials
+Status: done
 
-Completion: Implemented on `feature/catalog-goal-14-authorized-runtime-contract-smoke`. Default smoke remains anonymous and non-destructive. Authorized Warehouse/FlipFlop checks are available behind `CATALOG_SMOKE_AUTHORIZED=true` plus approved token env, and authorized Bazos draft smoke is separately gated.
+Completion: Implemented on `feature/catalog-goal-14-authorized-runtime-contract-smoke`, merged to `main` with `8b85197`, runtime credential wiring committed as `3abbe1f`, and optional Warehouse logistics fallback committed/deployed as `1747c87`. Default smoke remains anonymous and non-destructive. Authorized Warehouse/FlipFlop checks passed with Vault/Kubernetes runtime credentials. Authorized Bazos draft smoke remains separately gated because it can request Bazos-owned draft work.
 
 ## Intent
 
