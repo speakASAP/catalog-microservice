@@ -2,7 +2,7 @@
 
 ## 2026-06-13 - Goal 15 Bazos Authorized Draft Runtime Smoke
 
-Current focus: Goal 15 source implementation and runtime setup on `feature/catalog-goal-15-bazos-authorized-draft-smoke`.
+Current focus: Goal 15 merged, deployed, and runtime-smoked from `main`.
 
 Implementation evidence:
 
@@ -12,6 +12,9 @@ Implementation evidence:
 - Added Vault/Kubernetes ExternalSecret mappings for Bazos smoke inputs and `BAZOS_SERVICE_TOKEN`.
 - Catalog now uses `BAZOS_SERVICE_TOKEN` for service-to-service Bazos calls when present, while still requiring Catalog auth at the Catalog endpoint.
 - Bazos-service commit `c58d8b7` was deployed to expose the existing shared catalog sell-action controller in the deployed app.
+- Catalog source was merged to `main` with merge commit `555652c`.
+- Catalog deployment from `555652c` completed successfully with healthy rollout.
+- Dedicated runtime Bazos smoke account linkage was created outside the codebase; no token, account, identity, or contact values were committed.
 
 Validation evidence:
 
@@ -24,16 +27,17 @@ Validation evidence:
 - Catalog `npm test -- --runInBand` passed: 6 suites / 34 tests.
 - Catalog `npm run build` passed.
 - `git diff --check` passed.
+- Runtime `npm run smoke:e2e:bazos-authorized` passed against `https://catalog.alfares.cz`: 12 passed, 0 skipped, 0 failed. The Bazos draft remained `draft`, required confirmation, did not queue after confirmation because policy was not allowed, and returned next action `resolve_policy_failures`.
 
 Boundary decisions:
 
 - No Bazos publish confirmation, queue, browser submit, renewal, delete, CAPTCHA, SMS, bank, cookie, or session path was invoked.
 - Runtime token and Bazos identity inputs are stored in Vault/Kubernetes only.
-- Runtime Bazos draft smoke is pending Catalog deployment from this branch so the app loads `BAZOS_SERVICE_TOKEN`.
+- Bazos policy remained authoritative; the smoke validated draft preparation and status surfacing only.
 
 Next unfinished step:
 
-- Commit, push, merge/deploy Catalog Goal 15, then rerun `npm run smoke:e2e:bazos-authorized` with Vault/Kubernetes inputs.
+- Goal 15 is complete. Select the next implementation goal.
 
 ## 2026-06-13 - Goal 14 Authorized Runtime Contract Smoke
 

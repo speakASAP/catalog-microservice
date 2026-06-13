@@ -2,11 +2,11 @@
 
 ```yaml
 id: VAL-CAT-G15
-status: in_progress
+status: passed
 goal_id: CAT-G15
 created: 2026-06-13
 last_updated: 2026-06-13
-branch: feature/catalog-goal-15-bazos-authorized-draft-smoke
+branch: main
 ```
 
 ## Planned Validation
@@ -19,7 +19,7 @@ branch: feature/catalog-goal-15-bazos-authorized-draft-smoke
 | `npm test -- --runInBand` | passed | Full Catalog Jest suite passed: 6 suites / 34 tests. |
 | `npm run build` | passed | Nest build passed. |
 | `git diff --check` | passed | Whitespace gate passed. |
-| `npm run smoke:e2e:bazos-authorized` with Vault/Kubernetes runtime inputs | pending | Draft preparation contract only; no confirmation, queue, or publish. |
+| `npm run smoke:e2e:bazos-authorized` with Vault/Kubernetes runtime inputs | passed | Runtime smoke passed against `https://catalog.alfares.cz`: 12 passed, 0 skipped, 0 failed. Draft status remained `draft`; no confirmation, queue, or publish was invoked. |
 
 ## Boundary Evidence
 
@@ -32,4 +32,17 @@ No token values, Bazos identity contact data, Bazos sessions/cookies, verificati
 - Added `BAZOS_SERVICE_TOKEN` Vault/Kubernetes mapping for Catalog-to-Bazos service calls.
 - Bazos-service deployed commit `c58d8b7`, exposing the shared catalog sell-action controller in the deployed app.
 - Direct route mapping evidence showed `POST /api/bazos/catalog/products/:productId/sell-action` registered.
-- Runtime smoke is pending Catalog deployment so the app process loads `BAZOS_SERVICE_TOKEN`.
+- Catalog deployed merge commit `555652c`; the rollout completed successfully and health returned `healthy`.
+- Kubernetes secret sync exposed `BAZOS_SERVICE_TOKEN` before the active Catalog pod started.
+- Linked the dedicated smoke identity to a dedicated runtime Bazos smoke account in the Bazos database. No token values, contact data, or account/identity IDs were committed or printed.
+
+## Runtime Smoke Evidence
+
+- `authorized-bazos-draft` passed with HTTP `201`.
+- The response preserved Bazos authority and publish/policy authority.
+- The response included a Bazos-owned draft for the configured smoke identity.
+- The draft remained `draft`.
+- `requiresConfirmation` was `true`.
+- `canQueueAfterConfirmation` was `false`.
+- `policyAllowed` was `false`, with next action `resolve_policy_failures`.
+- No confirmation, queue, publish, browser submit, renewal, delete, CAPTCHA, SMS, bank, cookie, session, or challenge path was invoked.

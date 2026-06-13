@@ -2,14 +2,14 @@
 
 ```yaml
 goal_id: CAT-G15
-status: active
+status: done
 created: 2026-06-13
 branch: feature/catalog-goal-15-bazos-authorized-draft-smoke
 ```
 
 ## Context
 
-Goal 14 proved authorized Warehouse and FlipFlop runtime contracts. The Bazos draft path remained skipped because it needs explicit Bazos identity/category inputs and can create Bazos-owned draft work. Goal 15 closes that gap without changing the Bazos service or committing runtime inputs.
+Goal 14 proved authorized Warehouse and FlipFlop runtime contracts. The Bazos draft path remained skipped because it needs explicit Bazos identity/category inputs and can create Bazos-owned draft work. Goal 15 closed that gap without committing runtime inputs.
 
 ## Plan
 
@@ -22,6 +22,13 @@ Goal 14 proved authorized Warehouse and FlipFlop runtime contracts. The Bazos dr
 7. Run authorized smoke first without Bazos inputs to prove safe skip.
 8. Run Bazos-authorized runtime smoke only after runtime inputs are present.
 9. Update validation/status evidence without token values or raw Bazos payloads.
+
+## Completion
+
+- Steps 1-9 completed.
+- Catalog deployed from `main` merge commit `555652c`.
+- Runtime Bazos smoke passed: 12 passed, 0 skipped, 0 failed.
+- Runtime data and service tokens remain in Vault/Kubernetes and Bazos runtime storage, not source.
 
 ## Invariants
 
