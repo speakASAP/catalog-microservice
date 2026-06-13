@@ -9,6 +9,10 @@ import { PricingModule } from './pricing/pricing.module';
 import { HealthModule } from './health/health.module';
 import { LoggerModule } from './logger/logger.module';
 import { AuthModule } from './auth/auth.module';
+import { ChannelReadinessModule } from './channel-readiness/channel-readiness.module';
+import { WarehouseAvailabilityModule } from './warehouse-availability/warehouse-availability.module';
+import { FlipFlopProjectionModule } from "./flipflop-projection/flipflop-projection.module";
+import { ImportReconciliationModule } from "./import-reconciliation/import-reconciliation.module";
 
 /**
  * Main application module for Catalog Microservice
@@ -44,7 +48,10 @@ import { AuthModule } from './auth/auth.module';
     AttributesModule,
     MediaModule,
     PricingModule,
+    ChannelReadinessModule,
+    WarehouseAvailabilityModule,
+    FlipFlopProjectionModule,
+    ImportReconciliationModule,
   ],
 })
 export class AppModule {}
-

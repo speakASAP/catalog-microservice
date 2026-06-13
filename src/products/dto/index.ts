@@ -1,5 +1,6 @@
-import { IsString, IsOptional, IsBoolean, IsNumber, IsArray, IsObject, IsUUID, Min, Max } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsNumber, IsArray, IsObject, IsUUID, IsIn, Min, Max } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
+import type { ProductLifecycle } from "../product.entity";
 
 /**
  * DTO for creating a new product
@@ -42,6 +43,10 @@ export class CreateProductDto {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
+
+  @IsIn(["draft", "active", "archived", "needs_review"])
+  @IsOptional()
+  lifecycle?: ProductLifecycle;
 
   @IsObject()
   @IsOptional()
@@ -102,6 +107,10 @@ export class UpdateProductDto {
   @IsOptional()
   isActive?: boolean;
 
+  @IsIn(["draft", "active", "archived", "needs_review"])
+  @IsOptional()
+  lifecycle?: ProductLifecycle;
+
   @IsObject()
   @IsOptional()
   seoData?: {
@@ -142,6 +151,11 @@ export class ProductQueryDto {
   @Transform(({ value }) => value === 'true' || value === true)
   @IsBoolean()
   isActive?: boolean;
+
+
+  @IsOptional()
+  @IsIn(["draft", "active", "archived", "needs_review"])
+  lifecycle?: ProductLifecycle;
 
   @IsOptional()
   @IsUUID()

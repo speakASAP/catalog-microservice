@@ -1,8 +1,354 @@
 # Catalog Orchestrator Status
 
+## 2026-06-13 - Goal 9 End-To-End Catalog Smoke Tests
+
+Current focus: Goal 9 source implementation on `feature/catalog-goal-09-end-to-end-smoke-tests`.
+
+Planning evidence:
+
+- Created `implementation-goals/GOAL-09-execution-plan.md`.
+- Created `reports/validation/GOAL-09-pre-coding-gate.md`.
+- Inspected package scripts and Catalog endpoint surfaces for health, products, pricing, media, Warehouse availability, FlipFlop projection, and Bazos draft.
+
+Implementation evidence:
+
+- Added `scripts/catalog-smoke.js`.
+- Added `npm run smoke:e2e`.
+- Smoke output names each contract and returns structured JSON with pass/fail/skip counts.
+- Default smoke uses `https://catalog.alfares.cz`; override is available through `CATALOG_SMOKE_BASE_URL`.
+- Optional product selection is available through `CATALOG_SMOKE_PRODUCT_ID`.
+
+Validation evidence:
+
+- `npm run smoke:e2e` passed against `https://catalog.alfares.cz`: 9 passed, 0 skipped, 0 failed.
+- Smoke selected product `a2e15cc0-1a94-4faf-a82f-64afea9e9817`.
+- `npm test -- --runInBand` passed: 6 suites / 33 tests.
+- `npm run build` passed.
+- `git diff --check` passed.
+
+Boundary decisions:
+
+- Smoke performed no authorized production mutations.
+- Protected mutation/projection checks used anonymous requests and expected `401`.
+- No JWTs, service tokens, secrets, raw response bodies, customer data, or supplier payloads were printed or stored.
+- Production deployment was not run.
+
+Next unfinished step:
+
+- Commit Goal 9 source/docs, then owner can review, push/merge, or approve deployment separately.
+
+## 2026-06-13 - Goal 8 Data Import And Reconciliation
+
+Current focus: Goal 8 source implementation on `feature/catalog-goal-08-data-import-reconciliation`.
+
+Planning evidence:
+
+- Created `implementation-goals/GOAL-08-execution-plan.md`.
+- Created `reports/validation/GOAL-08-pre-coding-gate.md`.
+- Inspected product, category, media, pricing, auth, logger, and app module contracts.
+
+Implementation evidence:
+
+- Added protected `POST /api/imports/reconciliation/dry-run`.
+- Added read-only reconciliation for product import rows with SKU, title, EAN, category refs, media URL refs, and pricing rows.
+- Report output includes per-row `create`, `update`, or `skip` action, matched product ID, exact missing/invalid fields, duplicate payload identities, existing SKU/EAN conflicts, matched/missing categories, media URL counts, pricing row counts, and totals.
+- No product, pricing, media, or category write path is called by the dry-run service.
+
+Validation evidence:
+
+- `npm test -- --runInBand src/import-reconciliation/import-reconciliation.service.spec.ts` passed.
+- `npm test -- --runInBand` passed: 6 suites / 33 tests.
+- `npm run build` passed.
+- `git diff --check` passed.
+
+Boundary decisions:
+
+- Import execution remains dry-run only.
+- No destructive action, product delete/archive, media upload, or pricing upsert is exposed.
+- Inline media references are blocked; media remains external URLs/object references.
+- Pricing batches over 10 rows are reported as requiring human review.
+- Production deployment was not run.
+
+Next unfinished step:
+
+- Commit Goal 8 source/docs, then start Goal 9 end-to-end smoke tests or deploy only after explicit owner approval.
+
+## 2026-06-13 - Goal 10/11 Stock And Logistics Projection Isolation
+
+Current focus: isolate pre-existing Goal 10/11 worktree changes after Goal 7 deployment.
+
+Implementation evidence:
+
+- Extended Catalog Warehouse availability rows with Warehouse-owned stock-origin metadata: `warehouseCode`, `warehouseName`, `warehouseType`, and `supplierId`.
+- Added Warehouse logistics batch call to attach Warehouse-owned logistics plans under Catalog availability items.
+- Added `availability.warehouses[]` and `availability.logistics` to the FlipFlop projection while preserving `stockQuantity` as Warehouse `totalAvailable`.
+- Added Goal 10 and Goal 11 goal/validation artifacts.
+
+Validation evidence:
+
+- `npm test -- --runInBand` passed: 5 suites / 23 tests.
+- `npm run build` passed.
+- `git diff --check` passed.
+
+Boundary decisions:
+
+- Warehouse remains stock-origin and logistics authority.
+- Catalog forwards Warehouse-owned metadata only; no Catalog stock persistence, logistics derivation, warehouse mutation, supplier credentials, or deployment was added.
+- Goal 7 deployment evidence from commit `a80b18e` remains preserved.
+
+Next unfinished step:
+
+- Review/deploy Goal 10/11 only after explicit owner approval.
+
+## 2026-06-13 - Goal 7 Bazos Draft Integration Contract Deployment
+
+Current focus: Goal 7 deployment and bounded production smoke.
+
+Deployment evidence:
+
+- Commit `3503372` deployed from clean detached worktree `/tmp/catalog-goal7-deploy`.
+- Image `localhost:5000/catalog-microservice:3503372` and `latest` were built and pushed.
+- Kubernetes manifests applied, deployment restarted, rollout completed, and deployment health check returned `healthy`.
+- Production `GET /health` returned `200` with status `healthy`.
+- Anonymous `POST /api/products/:id/bazos-draft` returned `401` with `Missing or invalid Authorization header`, confirming the new action endpoint is deployed and protected.
+
+Boundary evidence:
+
+- Deployment used clean commit `3503372`, excluding unrelated dirty Goal 10 worktree changes.
+- Smoke did not use service tokens, runtime secrets, Bazos identity data, cookies, verification codes, production product data, or session material.
+- Authorized Bazos draft runtime smoke was not run because it would require approved runtime credentials and Bazos identity context.
+
+Next unfinished step:
+
+- Continue to the next ready goal only after resolving or isolating the existing unrelated Goal 10 worktree changes.
+
+## 2026-06-13 - Goal 7 Bazos Draft Integration Contract Source Implementation
+
+Current focus: Goal 7 - Bazos Draft Integration Contract source implementation.
+
+Implementation evidence:
+
+- Added protected `POST /api/products/:id/bazos-draft`.
+- Kept `POST /api/products/:id/sell-on-bazos` as a compatibility alias that delegates to draft request behavior.
+- Removed Catalog direct Bazos account, identity, offer, and enqueue-publish orchestration from the product action path.
+- Catalog now calls Bazos `POST /api/bazos/catalog/products/:productId/sell-action` to request draft preparation.
+- Catalog response surfaces Bazos `policyStatus`, `requiresConfirmation`, `canQueueAfterConfirmation`, `requiresHumanAction`, and `nextAction`.
+- Added `docs/contracts/bazos-draft-integration.md`.
+
+Validation evidence:
+
+- `npm test -- --runInBand` passed: 5 suites / 23 tests.
+- `npm run build` passed.
+- `git diff --check` passed.
+- Created `reports/validation/VAL-GOAL-07-bazos-draft-integration-contract.md`.
+
+Boundary decisions:
+
+- Catalog does not publish directly to Bazos.
+- Catalog does not create Bazos identities/accounts or enqueue publish jobs.
+- Bazos remains final policy and publishing authority.
+- Runtime deployment was not run for Goal 7.
+
+Next unfinished step:
+
+- Commit Goal 7 source/docs when ready, then deploy only with owner approval.
+
+## 2026-06-13 - Goal 6 FlipFlop Catalog Projection Deployment
+
+Current focus: Goal 6 deployment and bounded production smoke.
+
+Deployment evidence:
+
+- Commit `c989883` deployed with `./scripts/deploy.sh`.
+- Image `localhost:5000/catalog-microservice:c989883` and `latest` were built and pushed.
+- Kubernetes manifests applied, deployment restarted, rollout completed, and deployment health check returned `healthy`.
+- Production `GET /health` returned `200` with status `healthy`.
+- Anonymous `POST /api/products/projections/flipflop/batch` returned `401` with `Missing or invalid Authorization header`, confirming the new projection endpoint is deployed and protected.
+
+Boundary evidence:
+
+- Smoke did not use service tokens, runtime secrets, production product lists, or Warehouse-sensitive data.
+- Authorized projection smoke with real availability was not run because it would require approved runtime credentials and product IDs.
+- Existing product read envelopes were not changed by the deployment.
+
+Next unfinished step:
+
+- Start Goal 7 - Bazos Draft Integration Contract.
+
+## 2026-06-13 - Goal 6 FlipFlop Catalog Projection Source Implementation
+
+Current focus: Goal 6 - FlipFlop Catalog Projection source implementation.
+
+Implementation evidence:
+
+- Added protected `POST /api/products/projections/flipflop/batch` as an additive Catalog contract.
+- Added typed FlipFlop projection request and response models.
+- Added product batch lookup with categories, media, and pricing relations without changing existing product read envelopes.
+- Composed Catalog product truth, deterministic current pricing, FlipFlop readiness, and Warehouse-sourced availability.
+- Mapped `name`, `price`, and `stockQuantity` compatibility fields only inside the FlipFlop projection contract.
+- Documented the contract in `docs/contracts/flipflop-catalog-projection.md`.
+- Added focused Jest coverage for mapping, invalid IDs, unavailable filtering, and batched Warehouse availability use.
+
+Validation evidence:
+
+- Commit SHA: 028a404.
+- `npm test -- --runInBand` passed: 5 suites / 21 tests.
+- `npm run build` passed.
+- `git diff --check` passed.
+- Created `reports/validation/VAL-GOAL-06-flipflop-catalog-projection.md`.
+
+Boundary decisions:
+
+- Existing product read envelopes remain unchanged.
+- Warehouse remains stock authority through explicit `source: "warehouse"` availability fields.
+- FlipFlop remains storefront, cart, checkout, order, payment, and UX owner.
+- Production deployment and authorized runtime smoke require explicit owner approval.
+
+Next unfinished step:
+
+- Source commit 028a404 is recorded. Deploy only with owner approval.
+
+## 2026-06-13 - Goal 6 FlipFlop Catalog Projection Planning
+
+Current focus: Goal 6 - FlipFlop Catalog Projection planning and pre-coding gate.
+
+Planning evidence:
+
+- Created branch `feature/catalog-goal-06-flipflop-catalog-projection` from the Goal 5 closure head.
+- Created `implementation-goals/GOAL-06-execution-plan.md`.
+- Created `reports/validation/GOAL-06-pre-coding-gate.md`.
+- Inspected Catalog product reads, pricing current-price endpoint, channel readiness, and Warehouse availability contract.
+- Inspected FlipFlop Catalog and Warehouse clients plus frontend product type expectations.
+- Confirmed FlipFlop currently expects projection fields such as `name`, `price`, `stockQuantity`, image URLs, categories, SEO/tags, and timestamps.
+- Confirmed current FlipFlop server code performs separate Catalog pricing and Warehouse stock calls; Goal 6 should provide a Catalog projection contract but not change FlipFlop source.
+
+Pre-coding gate evidence:
+
+- `git status --short --branch` confirmed the Goal 6 branch.
+- Missing marker scan found no unresolved IPS missing or unknown markers in the Goal 6 gate target set.
+- `git diff --check` passed.
+
+Boundary decisions:
+
+- Goal 6 source work should be additive and preserve existing product read envelopes.
+- Catalog may expose projection aliases (`name`, `price`, `stockQuantity`) only inside a documented FlipFlop projection contract.
+- Price must come from Catalog deterministic current pricing.
+- Availability must remain Warehouse-sourced through the Goal 5 contract and marked as such.
+- FlipFlop retains storefront, cart, checkout, and UX ownership; no FlipFlop repository source changes are part of this Catalog goal.
+
+Next unfinished step:
+
+- Implement Goal 6 source changes from `implementation-goals/GOAL-06-execution-plan.md`, then run `npm test -- --runInBand`, `npm run build`, and `git diff --check`.
+
+## 2026-06-13 - Goal 5 Catalog/Warehouse Contract Deployment
+
+Current focus: Goal 5 deployment and bounded production smoke.
+
+Closure evidence:
+
+- Commit `874e080` contains Goal 5 source/docs for the Catalog/Warehouse availability contract.
+- `./scripts/deploy.sh` deployed image `localhost:5000/catalog-microservice:874e080` and `latest`.
+- Deployment phases completed successfully: preflight, image build, push, manifest apply, deployment restart, rollout, and health check.
+- Production health returned `healthy` for `catalog-microservice` version `1.0.0`.
+- Safe production smoke verified `GET /health` returned `200` and anonymous `POST /api/products/availability/batch` returned `401` with `Missing or invalid Authorization header`.
+- Full in-pod contract smoke with synthetic product create/delete and service-token Warehouse call was not run because it requires explicit approval for production mutations and runtime secret use.
+
+Boundary evidence:
+
+- The deployed endpoint is protected by `CatalogAuthGuard`.
+- Goal 5 source tests prove unknown product IDs are rejected before Warehouse calls, valid product batches use one Warehouse request, zero-row Warehouse semantics are preserved, and dependency failures do not fabricate stock.
+- Warehouse remains the stock authority; Catalog schema has no stock persistence.
+
+Next unfinished step:
+
+- If required, run the full authorized runtime contract smoke only after explicit approval for production synthetic product mutations and in-pod runtime credential use.
+
+## 2026-06-13 - Goal 5 Catalog/Warehouse Contract Source Implementation
+
+Current focus: Goal 5 - Catalog/Warehouse Contract source implementation.
+
+Implementation evidence:
+
+- Added protected `POST /api/products/availability/batch` through a new `warehouse-availability` module.
+- Added Catalog product identity lookup before Warehouse use through `ProductsService.findIdentitiesByIds`.
+- Unknown Catalog product IDs return `400 Bad Request` before any Warehouse request is made.
+- Valid product IDs are sent to Warehouse `POST /api/stock/availability/batch` in one batch request with optional `warehouseIds`.
+- Availability response items include Catalog `sku`, `source: "warehouse"`, Warehouse totals, and Warehouse per-location rows.
+- Valid products missing Warehouse rows map to zero totals and empty `warehouses`, preserving Warehouse zero-row semantics without Catalog stock ownership.
+- Warehouse service URL/token are read from runtime env only; no credentials are hardcoded, printed, or stored in validation evidence.
+- No Catalog product schema stock fields were added.
+
+Validation evidence:
+
+- `npm test -- --runInBand` passed: 4 suites / 15 tests.
+- `npm run build` passed.
+- `git diff --check` passed.
+- Created `reports/validation/VAL-GOAL-05-catalog-warehouse-contract.md`.
+
+Boundary decisions:
+
+- Catalog proves product identity and enriches SKU metadata only.
+- Warehouse remains the stock authority for total quantity, reserved, available, warehouses, reservations, movements, and locations.
+- Existing product and channel-readiness read envelopes remain unchanged.
+- Runtime Warehouse verification is deferred until deployment and approved service-token handling are available.
+
+Next unfinished step:
+
+- Commit Goal 5 source/docs when ready, then deploy only with owner approval and run a runtime contract smoke without printing token values.
+
+## 2026-06-13 - Goal 5 Catalog/Warehouse Contract Planning
+
+Current focus: Goal 5 - Catalog/Warehouse Contract planning and pre-coding gate.
+
+Planning evidence:
+
+- Created branch `feature/catalog-goal-05-catalog-warehouse-contract` from the clean Goal 4 head.
+- Created `implementation-goals/GOAL-05-execution-plan.md`.
+- Inspected Catalog product, readiness, app module, and existing stock-related code.
+- Inspected Warehouse `POST /api/stock/availability/batch`, availability contract docs, and global JWT roles guard.
+- Confirmed Catalog currently has no warehouse availability integration under `src/`.
+- Confirmed Warehouse batch availability already returns zero totals for known product IDs with no stock rows and remains the stock authority.
+
+Pre-coding gate evidence:
+
+- `git status --short --branch` confirmed the Goal 5 branch and a documented planning-only diff.
+- Missing marker scan found no unresolved IPS missing or unknown markers in the Goal 5 gate target set.
+- `git diff --check` passed.
+
+Boundary decisions:
+
+- Goal 5 source work should be additive and schema-neutral.
+- Catalog may validate requested product IDs and call Warehouse batch availability once.
+- Catalog must not persist stock quantities, reservations, movements, or warehouse locations.
+- Warehouse auth must be preserved through approved service-token configuration; no token values may be printed or committed.
+- FlipFlop consumption remains Goal 6 unless the owner expands scope.
+
+Next unfinished step:
+
+- Implement Goal 5 source changes from `implementation-goals/GOAL-05-execution-plan.md`, then run `npm test`, `npm run build`, and `git diff --check`.
+
+## 2026-06-13 - RBAC-REM-03 Catalog Frontend Admin Guard
+
+Current focus: Auth remediation RBAC-REM-03 for Catalog frontend role-aware admin guard and stale comment cleanup.
+
+Implementation evidence:
+
+- Updated services/frontend/components/AdminGuard.tsx to use Auth user roles before rendering admin pages.
+- Removed stale text that said Auth does not support roles/admin flags.
+- Accepted roles now mirror Catalog backend admin/write roles: global:superadmin, app:catalog-microservice:admin, internal:catalog-microservice:admin, and catalog:write.
+- Non-authorized authenticated users see an access-required state instead of admin content.
+
+Validation evidence:
+
+- services/frontend npm run build passed.
+- git diff --check -- services/frontend/components/AdminGuard.tsx passed.
+- No secrets, JWTs, service tokens, production user data, backend authorization, deployment, or database changes.
+
+Next action: Return to Auth RBAC remediation state; recommended next chunk is RBAC-REM-04 SpeakASAP scoped-role normalization review.
+
 ## 2026-06-12
 
-Current focus: Goal 1 - Catalog Contract And Auth Boundary.
+Current focus: Goal 4 - Channel Readiness Model planning.
 
 Evidence gathered:
 
@@ -88,3 +434,118 @@ Current focus:
 Next unfinished step:
 
 - Create Goal 2 execution plan and run pre-coding gate before product model changes.
+
+Goal 2 source implementation evidence:
+
+- Added additive product lifecycle model for draft, active, archived, and needs_review while preserving isActive compatibility.
+- Added product readiness diagnostics through GET /api/products/:id/readiness.
+- Added quality audit endpoint GET /api/products/audits/quality for missing EAN and duplicate SKU/EAN summaries.
+- Added diagnostics for missing EAN, duplicate identifiers, missing description/category/media/current price, placeholder media, inactive state, and lifecycle blockers.
+- Added additive migration script scripts/migrations/20260612_goal02_product_lifecycle.sql; production runtime validation is pending until this migration is approved and applied before deployment.
+- Added focused Jest coverage for lifecycle defaults and incomplete-product readiness diagnostics.
+- npm test passed: 1 suite, 2 tests.
+- npm run build passed.
+- git diff --check passed.
+
+Next unfinished step:
+
+- Goal 2 complete. Create Goal 3 execution plan and run the pre-coding gate before pricing integrity source changes.
+
+Goal 2 closure evidence:
+
+- Production schema check used `psql` from the Kubernetes Postgres environment before migration and confirmed `products."isActive"` exists.
+- Applied `scripts/migrations/20260612_goal02_product_lifecycle.sql` with `ON_ERROR_STOP=1`; verified `products.lifecycle`, `products_lifecycle_check`, and `idx_products_lifecycle`.
+- Commit `fcb1919` deployed with `./scripts/deploy.sh`; preflight, image build, push, manifest apply, rollout, and health check passed.
+- Runtime in-pod smoke returned health `200` and confirmed the existing `GET /api/products` envelope remains `success` plus `data` array plus `pagination`.
+- Runtime smoke created and updated synthetic lifecycle products, verified readiness lifecycle/checks/issues, missing EAN/current price diagnostics, placeholder media diagnostics, and duplicate EAN diagnostics.
+- Runtime smoke verified `GET /api/products/audits/quality` returns `missingEan`, `duplicateSkus`, and `duplicateEans` summaries.
+- Cleanup proved hard delete is blocked without explicit owner approval, then deleted only the synthetic products with `x-owner-approval: explicit`; post-cleanup database check found zero `CODEX-GOAL2-%` products.
+- Synthetic JWT was generated inside the deployed pod from runtime secret and was not printed.
+
+Current focus:
+
+- Goal 3 - Pricing Integrity planning.
+
+Next unfinished step:
+
+- Implement Goal 3 pricing integrity source changes according to `implementation-goals/GOAL-03-execution-plan.md`.
+
+Goal 3 planning evidence:
+
+- Created `implementation-goals/GOAL-03-execution-plan.md`.
+- Created `reports/validation/GOAL-03-pre-coding-gate.md`.
+- Pre-coding scope covers deterministic current-price selection, pricing validation, mass-change human-review guard, and non-sensitive audit metadata.
+- Source implementation has not started.
+
+Next unfinished step:
+
+- Implement Goal 3 pricing integrity source changes, then run `npm test`, `npm run build`, and `git diff --check`.
+
+Goal 3 source implementation evidence:
+
+- Updated current-price selection to evaluate active rows whose validity window contains the request time and choose deterministically by sale priority, newest valid start date, newest update timestamp, then newest creation timestamp.
+- Added service-level pricing write validation for required product ID, three-letter uppercase currency, positive base/cost/sale amounts, sale price not exceeding base price, lowercase price type tokens, finite margin values, and valid date windows.
+- Added `POST /api/pricing/bulk` behind `CatalogAuthGuard`; more than 10 pricing rows require `x-human-review: explicit`.
+- Preserved existing pricing read envelopes as `{ success: true, data: ... }`.
+- Kept pricing mutations protected by `CatalogAuthGuard` and expanded non-sensitive audit metadata with price type, currency, row count, product count, and human-review marker status.
+- Added focused Jest coverage in `src/pricing/pricing.service.spec.ts` for deterministic current price priority, invalid pricing rejection, validity window rejection, and mass-change human-review guard.
+- Validation passed: `npm test` returned 2 suites/6 tests passed; `npm run build` passed; `git diff --check` passed.
+- Production deployment was not requested and was not run.
+
+Next unfinished step:
+
+- Goal 3 deployment approved, completed, and runtime-smoked. Start Goal 4 planning/pre-coding gate.
+
+
+Goal 3 closure evidence:
+
+- Branch `feature/catalog-goal-03-pricing-integrity` was pushed to `origin` at commit `d222e11`.
+- Validation before deployment passed: `npm test` 2 suites/6 tests, `npm run build`, and `git diff --check`.
+- `./scripts/deploy.sh` completed successfully after owner approval; image `localhost:5000/catalog-microservice:d222e11` and `latest` were pushed.
+- Kubernetes rollout for `deployment/catalog-microservice` in namespace `statex-apps` completed and deploy health check returned healthy.
+- Runtime in-pod smoke returned health `200`, synthetic product create `201`, invalid pricing rejection `400`, regular pricing create `201`, sale pricing create `201`, current-price selection `sale`, bulk without human review `400`, bulk with `x-human-review: explicit` `201`, and synthetic cleanup hard delete `204`.
+- Active pod logs emitted structured `catalog.write` events for pricing upsert and bulk upsert with synthetic actor `codex-goal3-runtime-smoke`, route/method/source metadata, price metadata, `rowCount: 11`, and `humanReviewExplicit: true`.
+- Synthetic JWT was generated inside the pod from runtime secret and was not printed.
+
+Current focus:
+
+- Goal 4 - Channel Readiness Model planning.
+
+Next unfinished step:
+
+- Create Goal 4 execution plan and run the pre-coding gate before channel readiness source changes.
+
+Goal 4 source implementation evidence:
+
+- Created `implementation-goals/GOAL-04-execution-plan.md` and reran the Goal 4 pre-coding gate after Goal 3 closure was documented remotely.
+- Added a read-only channel readiness module and endpoint at `GET /api/products/:id/channel-readiness`.
+- Added typed readiness response entries with channel, status, missing fields, issues, next action, and authority.
+- Added FlipFlop readiness rules for active lifecycle, active product state, title, description, category, media, and deterministic current price while preserving FlipFlop storefront/checkout authority.
+- Added Bazos draft-readiness rules that require catalog fields but defer compliance, identity, queueing, and publish decisions to Bazos.
+- Did not call Bazos, enqueue publishing, implement FlipFlop checkout, move stock ownership, or add mutations.
+- Existing `sellOnBazos` remains a documented boundary risk for separate Goal 7 or owner-approved follow-up; Goal 4 did not expand it.
+- Validation passed: `npm test` 3 suites/10 tests, `npm run build`, and `git diff --check`.
+- Production deployment was not requested and was not run.
+
+Next unfinished step:
+
+- Commit and push Goal 4 source/docs changes, then request explicit owner approval before any production deployment or runtime smoke.
+
+Goal 4 closure evidence:
+
+- Owner approved Goal 4 production deployment on 2026-06-13.
+- Branch `feature/catalog-goal-04-channel-readiness-model` was pushed to `origin` at `5f0e087`; Goal 4 source commit is `75d0700`.
+- `./scripts/deploy.sh` completed successfully; image `localhost:5000/catalog-microservice:5f0e087` and `latest` were pushed.
+- Kubernetes rollout for `deployment/catalog-microservice` in namespace `statex-apps` completed and deploy health check returned healthy.
+- Runtime in-pod smoke returned synthetic product create `201`, channel readiness `200`, `channelCount: 2`, FlipFlop `ready: false`, missing fields `description`, `categories`, `media`, and `pricing`, Bazos `authority: "bazos"`, and Bazos policy-deferred issue present.
+- Runtime smoke verified no Bazos publish-permission fields and deleted the synthetic product through hard delete with explicit owner approval.
+- Post-cleanup public read check for `CODEX-GOAL4` returned total `0`.
+- Synthetic JWT was generated inside the deployed pod from runtime secret and was not printed.
+
+Current focus:
+
+- Goal 5 - Catalog/Warehouse Contract planning.
+
+Next unfinished step:
+
+- Create Goal 5 execution plan and run the pre-coding gate before catalog/warehouse contract source changes.

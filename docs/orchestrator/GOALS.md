@@ -26,7 +26,7 @@ Acceptance criteria:
 
 ## Goal 2 - Catalog Product Model Completeness
 
-Status: active
+Status: done
 
 Intent: Catalog records must describe goods well enough for online sale and future channels.
 
@@ -45,7 +45,7 @@ Acceptance criteria:
 
 ## Goal 3 - Pricing Integrity
 
-Status: pending
+Status: done
 
 Intent: Catalog pricing must be reliable and safe to consume.
 
@@ -64,7 +64,7 @@ Acceptance criteria:
 
 ## Goal 4 - Channel Readiness Model
 
-Status: pending
+Status: done
 
 Intent: Catalog should say whether a product is ready for FlipFlop, Bazos drafts, and future channels without taking over those services.
 

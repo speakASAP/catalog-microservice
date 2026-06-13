@@ -1,6 +1,6 @@
 # Goal 07 - Bazos Draft Integration Contract
 
-Status: pending
+Status: done
 
 ## Intent
 
@@ -40,3 +40,28 @@ Verify the contract names Bazos as final policy and publishing authority.
 ## Boundary Checks
 
 - Preserve `CAT-INV-001`, `CAT-INV-005`, `CAT-INV-009`, and `CAT-INV-010`.
+
+
+## Source Implementation Evidence
+
+- Added protected `POST /api/products/:id/bazos-draft`.
+- Preserved `POST /api/products/:id/sell-on-bazos` as a compatibility alias.
+- Catalog now requests Bazos draft preparation through Bazos-owned `sell-action` contract.
+- Catalog no longer directly creates Bazos accounts, identities, offers, or enqueue-publish jobs in this action path.
+- Bazos policy and human-action reasons are surfaced in Catalog action responses.
+
+## Validation Evidence
+
+- `npm test -- --runInBand` passed: 5 suites / 23 tests.
+- `npm run build` passed.
+- `git diff --check` passed.
+- Created `reports/validation/VAL-GOAL-07-bazos-draft-integration-contract.md`.
+
+
+## Deployment Evidence
+
+- Commit `3503372` deployed from clean detached worktree `/tmp/catalog-goal7-deploy`.
+- Deployment rollout and health check passed.
+- Production `GET /health` returned `200`.
+- Anonymous `POST /api/products/:id/bazos-draft` returned `401`, proving the Bazos draft endpoint is deployed and protected.
+- Authorized runtime draft smoke was not run because it requires approved runtime credentials and Bazos identity context.

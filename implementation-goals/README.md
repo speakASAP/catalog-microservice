@@ -31,6 +31,7 @@ To print the current resume checkpoint:
 7. `GOAL-07-bazos-draft-integration-contract.md` - draft request/readiness contract without publishing ownership.
 8. `GOAL-08-data-import-reconciliation.md` - idempotent imports, dry-run, duplicate/missing-data reports.
 9. `GOAL-09-end-to-end-smoke-tests.md` - health, reads, pricing, media, protected mutation rejection.
+10. `GOAL-10-stock-origin-visibility.md` - stock origin visibility projection from Warehouse through Catalog and FlipFlop.
 
 ## Parallelization
 
@@ -117,3 +118,7 @@ mass pricing changes without human review
 inline media blob storage in catalog records
 production deployment without owner approval
 ```
+
+11. `GOAL-11-logistics-route-projection.md` - Warehouse-owned logistics route projection forwarding.
+12. `GOAL-12-warehouse-stock-coverage-read-model.md` - Catalog coverage diagnostics for mandatory Warehouse-backed stock and routes.
+13. `GOAL-13-warehouse-stock-coverage-audit.md` - Paginated Catalog audit for goods missing Warehouse-backed stock coverage.
