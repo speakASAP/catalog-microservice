@@ -6,7 +6,7 @@ Work one goal chunk at a time. Prefer a complete, verifiable chunk over starting
 
 ## Active Goal
 
-Goal 6 - FlipFlop Catalog Projection source implementation complete.
+Goal 6 deployed; Goal 7 ready to start.
 
 ### Goal 1 Closure Evidence
 
@@ -106,4 +106,4 @@ Verification:
 
 ## Next Goal Selection
 
-Goal 6 source implementation and validation are complete at commit 028a404. Deploy only after explicit owner approval.
+Goal 6 deployment is complete at commit c989883. Start Goal 7 - Bazos Draft Integration Contract.

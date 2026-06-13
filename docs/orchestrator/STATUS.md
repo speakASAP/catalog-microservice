@@ -1,5 +1,27 @@
 # Catalog Orchestrator Status
 
+## 2026-06-13 - Goal 6 FlipFlop Catalog Projection Deployment
+
+Current focus: Goal 6 deployment and bounded production smoke.
+
+Deployment evidence:
+
+- Commit `c989883` deployed with `./scripts/deploy.sh`.
+- Image `localhost:5000/catalog-microservice:c989883` and `latest` were built and pushed.
+- Kubernetes manifests applied, deployment restarted, rollout completed, and deployment health check returned `healthy`.
+- Production `GET /health` returned `200` with status `healthy`.
+- Anonymous `POST /api/products/projections/flipflop/batch` returned `401` with `Missing or invalid Authorization header`, confirming the new projection endpoint is deployed and protected.
+
+Boundary evidence:
+
+- Smoke did not use service tokens, runtime secrets, production product lists, or Warehouse-sensitive data.
+- Authorized projection smoke with real availability was not run because it would require approved runtime credentials and product IDs.
+- Existing product read envelopes were not changed by the deployment.
+
+Next unfinished step:
+
+- Start Goal 7 - Bazos Draft Integration Contract.
+
 ## 2026-06-13 - Goal 6 FlipFlop Catalog Projection Source Implementation
 
 Current focus: Goal 6 - FlipFlop Catalog Projection source implementation.
