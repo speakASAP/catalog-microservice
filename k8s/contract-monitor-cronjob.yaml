@@ -41,6 +41,10 @@ spec:
                   value: "false"
                 - name: CATALOG_MONITOR_TIMEOUT_MS
                   value: "120000"
+                - name: CATALOG_SMOKE_RETRIES
+                  value: "3"
+                - name: CATALOG_SMOKE_RETRY_DELAY_MS
+                  value: "1000"
                 - name: CATALOG_SMOKE_AUTH_TOKEN
                   valueFrom:
                     secretKeyRef:

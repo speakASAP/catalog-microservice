@@ -12,6 +12,9 @@ const bazosProductId = process.env.CATALOG_SMOKE_BAZOS_PRODUCT_ID || "";
 const bazosIdentityId = process.env.CATALOG_SMOKE_BAZOS_IDENTITY_ID || "";
 const bazosCategory = process.env.CATALOG_SMOKE_BAZOS_CATEGORY || "";
 const bazosLocation = process.env.CATALOG_SMOKE_BAZOS_LOCATION || "";
+const requestRetries = Number(process.env.CATALOG_SMOKE_RETRIES || 0);
+const requestRetryDelayMs = Number(process.env.CATALOG_SMOKE_RETRY_DELAY_MS || 750);
+const transientStatusCodes = new Set([502, 503, 504]);
 
 const results = [];
 
@@ -38,26 +41,47 @@ function getAuthorizedHeaders() {
   return null;
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function request(path, options = {}) {
   const url = `${baseUrl}${path}`;
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      accept: "application/json",
-      ...(options.body ? { "content-type": "application/json" } : {}),
-      ...(options.headers || {}),
-    },
-  });
-  const text = await response.text();
-  let body = null;
-  if (text) {
+  const attempts = Number.isFinite(requestRetries) && requestRetries > 0 ? requestRetries + 1 : 1;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
-      body = JSON.parse(text);
-    } catch {
-      body = text;
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          accept: "application/json",
+          ...(options.body ? { "content-type": "application/json" } : {}),
+          ...(options.headers || {}),
+        },
+      });
+      const text = await response.text();
+      let body = null;
+      if (text) {
+        try {
+          body = JSON.parse(text);
+        } catch {
+          body = text;
+        }
+      }
+      if (attempt < attempts && transientStatusCodes.has(response.status)) {
+        await sleep(requestRetryDelayMs);
+        continue;
+      }
+      return { url, status: response.status, ok: response.ok, body };
+    } catch (error) {
+      if (attempt >= attempts) {
+        throw error;
+      }
+      await sleep(requestRetryDelayMs);
     }
   }
-  return { url, status: response.status, ok: response.ok, body };
+
+  throw new Error("Request failed without a response");
 }
 
 function assert(condition, contract, message, detail = {}) {
