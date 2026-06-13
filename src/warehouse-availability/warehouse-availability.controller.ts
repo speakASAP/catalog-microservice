@@ -1,7 +1,7 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query, UseGuards } from '@nestjs/common';
 import { CatalogAuthGuard } from '../auth/catalog-auth.guard';
 import { LoggerService } from '../logger/logger.service';
-import { BatchWarehouseAvailabilityRequestDto, BatchWarehouseCoverageRequestDto } from './warehouse-availability.types';
+import { BatchWarehouseAvailabilityRequestDto, BatchWarehouseCoverageRequestDto, WarehouseCoverageAuditRequestDto } from './warehouse-availability.types';
 import { WarehouseAvailabilityService } from './warehouse-availability.service';
 
 @Controller('products/availability')
@@ -18,6 +18,15 @@ export class WarehouseAvailabilityController {
     this.logger.log('POST /api/products/availability/batch', 'WarehouseAvailabilityController');
     const availability = await this.warehouseAvailabilityService.getBatchAvailability(request);
     return { success: true, data: availability };
+  }
+
+
+  @Get('coverage/audit')
+  @UseGuards(CatalogAuthGuard)
+  async coverageAudit(@Query() query: WarehouseCoverageAuditRequestDto) {
+    this.logger.log('GET /api/products/availability/coverage/audit', 'WarehouseAvailabilityController');
+    const audit = await this.warehouseAvailabilityService.getCoverageAudit(query);
+    return { success: true, data: audit };
   }
 
   @Post('coverage')

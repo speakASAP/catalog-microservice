@@ -1,11 +1,13 @@
 import { BadRequestException, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import axios, { AxiosError } from 'axios';
 import { ProductsService } from '../products/products.service';
+import { ProductQueryDto } from '../products/dto';
 import { LoggerService } from '../logger/logger.service';
 import {
   BatchWarehouseAvailabilityRequestDto,
   CatalogWarehouseAvailabilityItem,
   CatalogWarehouseAvailabilityResponse,
+  CatalogWarehouseCoverageAuditResponse,
   CatalogWarehouseCoverageItem,
   CatalogWarehouseCoverageResponse,
   WarehouseAvailabilityRow,
@@ -109,6 +111,48 @@ export class WarehouseAvailabilityService {
       invalidProductIds: availability.invalidProductIds,
       totals,
       items,
+    };
+  }
+
+
+  async getCoverageAudit(
+    query: ProductQueryDto & { warehouseIds?: string[] } = {},
+  ): Promise<CatalogWarehouseCoverageAuditResponse> {
+    const page = this.normalizePositiveInteger(query.page, 1, 1, Number.MAX_SAFE_INTEGER);
+    const limit = this.normalizePositiveInteger(query.limit, 20, 1, 100);
+    const isActive = this.normalizeOptionalBoolean(query.isActive, true);
+    const productPage = await this.productsService.findAll({
+      page,
+      limit,
+      search: query.search,
+      isActive,
+      lifecycle: query.lifecycle,
+      categoryId: query.categoryId,
+    });
+    const productIds = productPage.items.map((product) => product.id);
+    const warehouseIds = this.normalizeOptionalIds((query as { warehouseIds?: string[] | string }).warehouseIds, 'warehouseIds');
+
+    const coverage = productIds.length > 0
+      ? await this.getBatchCoverage({ productIds, ...(warehouseIds ? { warehouseIds } : {}) })
+      : this.emptyCoverageResponse();
+
+    return {
+      ...coverage,
+      catalogQuery: {
+        page,
+        limit,
+        isActive,
+        ...(query.lifecycle ? { lifecycle: query.lifecycle } : {}),
+        ...(query.search ? { search: query.search } : {}),
+        ...(query.categoryId ? { categoryId: query.categoryId } : {}),
+        ...(warehouseIds ? { warehouseIds } : {}),
+      },
+      pagination: {
+        total: productPage.total,
+        page: productPage.page,
+        limit: productPage.limit,
+        pages: Math.ceil(productPage.total / productPage.limit),
+      },
     };
   }
 
@@ -286,6 +330,55 @@ export class WarehouseAvailabilityService {
       return 'dropship_stock';
     }
     return 'out_of_stock';
+  }
+
+
+  private normalizeOptionalIds(value: string[] | string | undefined, field: string): string[] | undefined {
+    if (value === undefined) {
+      return undefined;
+    }
+    const ids = Array.isArray(value) ? value : String(value).split(',');
+    return this.normalizeIds(ids, field);
+  }
+
+  private normalizeOptionalBoolean(value: unknown, fallback: boolean): boolean {
+    if (value === undefined || value === null || value === '') {
+      return fallback;
+    }
+    if (value === true || value === 'true') {
+      return true;
+    }
+    if (value === false || value === 'false') {
+      return false;
+    }
+    return fallback;
+  }
+
+  private normalizePositiveInteger(value: unknown, fallback: number, min: number, max: number): number {
+    const parsed = typeof value === 'number' ? value : Number(value);
+    if (!Number.isFinite(parsed)) {
+      return fallback;
+    }
+    return Math.min(Math.max(Math.trunc(parsed), min), max);
+  }
+
+  private emptyCoverageResponse(): CatalogWarehouseCoverageResponse {
+    return {
+      generatedAt: new Date().toISOString(),
+      requestedProductIds: [],
+      invalidProductIds: [],
+      totals: {
+        totalProducts: 0,
+        coveredProducts: 0,
+        missingCoverageProducts: 0,
+        localStockProducts: 0,
+        supplierStockProducts: 0,
+        dropshipStockProducts: 0,
+        mixedStockProducts: 0,
+        outOfStockProducts: 0,
+      },
+      items: [],
+    };
   }
 
   private zeroAvailability(productId: string): WarehouseAvailabilityRow {

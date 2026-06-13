@@ -1,4 +1,6 @@
-import { ArrayNotEmpty, IsArray, IsOptional, IsString, ArrayMaxSize } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsBoolean, IsIn, IsNumber, IsOptional, IsString, IsUUID, ArrayMaxSize, Max, Min } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import type { ProductLifecycle } from '../products/product.entity';
 
 export class BatchWarehouseAvailabilityRequestDto {
   @IsArray()
@@ -92,6 +94,44 @@ export type CatalogWarehouseAvailabilityResponse = {
 
 export class BatchWarehouseCoverageRequestDto extends BatchWarehouseAvailabilityRequestDto {}
 
+export class WarehouseCoverageAuditRequestDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  page?: number = 1;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(100)
+  limit?: number = 20;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
+  isActive?: boolean;
+
+  @IsOptional()
+  @IsIn(['draft', 'active', 'archived', 'needs_review'])
+  lifecycle?: ProductLifecycle;
+
+  @IsOptional()
+  @IsUUID()
+  categoryId?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(100)
+  @IsString({ each: true })
+  warehouseIds?: string[];
+}
+
 export type WarehouseCoverageStockOrigin = 'local_stock' | 'supplier_stock' | 'dropship_stock' | 'mixed_stock' | 'out_of_stock';
 
 export type WarehouseCoverageStatus = 'covered' | 'missing_stock' | 'missing_route';
@@ -132,4 +172,23 @@ export type CatalogWarehouseCoverageResponse = {
     outOfStockProducts: number;
   };
   items: CatalogWarehouseCoverageItem[];
+};
+
+
+export type CatalogWarehouseCoverageAuditResponse = CatalogWarehouseCoverageResponse & {
+  catalogQuery: {
+    page: number;
+    limit: number;
+    isActive: boolean | undefined;
+    lifecycle?: ProductLifecycle;
+    search?: string;
+    categoryId?: string;
+    warehouseIds?: string[];
+  };
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
 };

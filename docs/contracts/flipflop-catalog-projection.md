@@ -90,6 +90,13 @@ Request:
 
 Each response item includes `coverageStatus`, `stockOrigin`, `sellableWithWarehouse`, available totals by local/supplier/dropship origin, `preferredRoute`, `blockingReasons`, forwarded Warehouse rows, and the Warehouse-owned `logistics` plan. `covered` requires positive Warehouse availability and at least one reservable Warehouse logistics route. `missing_stock` and `missing_route` are blocking diagnostics; Catalog does not fabricate stock or logistics fallbacks.
 
+For operator audits across Catalog goods, use the paginated protected endpoint below. It defaults to active products and returns Catalog pagination plus the same coverage totals and per-product diagnostics for the current page.
+
+```http
+GET /api/products/availability/coverage/audit?page=1&limit=20&isActive=true
+Authorization: Bearer <catalog-approved caller token>
+```
+
 ## Boundary Constraints
 
 - Catalog does not implement FlipFlop storefront UX, cart, checkout, order, or payment behavior.
