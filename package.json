@@ -17,7 +17,8 @@
     "smoke:e2e:bazos-authorized": "CATALOG_SMOKE_AUTHORIZED=true CATALOG_SMOKE_ENABLE_BAZOS_AUTHORIZED=true node scripts/catalog-smoke.js",
     "monitor:contracts": "node scripts/catalog-contract-monitor.js",
     "test:watch": "jest --watch",
-    "test:cov": "jest --coverage"
+    "test:cov": "jest --coverage",
+    "check:aos-auth-contract": "node scripts/check-aos-auth-contract.js"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

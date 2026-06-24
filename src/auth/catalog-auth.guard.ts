@@ -6,16 +6,21 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { createHmac, timingSafeEqual } from 'crypto';
+import { timingSafeEqual } from 'crypto';
 import { Request } from 'express';
 import { CATALOG_ROLES_KEY } from './catalog-auth.decorator';
 
-type JwtPayload = {
+type AuthValidateUser = {
+  id?: string;
   sub?: string;
   email?: string;
   roles?: string[];
-  exp?: number;
   [key: string]: unknown;
+};
+
+type AuthValidateResponse = {
+  valid?: boolean;
+  user?: AuthValidateUser;
 };
 
 export type CatalogActor = {
@@ -24,14 +29,23 @@ export type CatalogActor = {
   email?: string;
   roles: string[];
   source?: string;
+  serviceName?: string;
+  authMethod?: 'auth-validate' | 'internal-service-token';
 };
 
 export type CatalogAuthenticatedRequest = Request & {
   catalogActor?: CatalogActor;
+  serviceActor?: CatalogActor;
 };
 
 @Injectable()
 export class CatalogAuthGuard implements CanActivate {
+  private readonly authServiceUrl = (
+    process.env.AUTH_SERVICE_URL || 'http://auth-microservice:3370'
+  ).replace(/\/+$/, '');
+  private readonly authValidateTimeoutMs = Number(
+    process.env.AUTH_VALIDATE_TIMEOUT_MS || 3000,
+  );
   private readonly defaultWriteRoles = [
     'global:superadmin',
     'global:platform_admin',
@@ -42,7 +56,7 @@ export class CatalogAuthGuard implements CanActivate {
 
   constructor(private readonly reflector: Reflector) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<CatalogAuthenticatedRequest>();
     const requiredRoles =
       this.reflector.getAllAndOverride<string[]>(CATALOG_ROLES_KEY, [
@@ -50,17 +64,20 @@ export class CatalogAuthGuard implements CanActivate {
         context.getClass(),
       ]) ?? this.defaultWriteRoles;
 
-    const actor = this.resolveActor(request);
+    const actor = await this.resolveActor(request);
     const hasRequiredRole = requiredRoles.some((role) => actor.roles.includes(role));
     if (!hasRequiredRole) {
       throw new ForbiddenException('Insufficient catalog permissions');
     }
 
     request.catalogActor = actor;
+    if (actor.type === 'service') {
+      request.serviceActor = actor;
+    }
     return true;
   }
 
-  private resolveActor(request: Request): CatalogActor {
+  private async resolveActor(request: Request): Promise<CatalogActor> {
     const serviceActor = this.resolveInternalServiceActor(request);
     if (serviceActor) {
       return serviceActor;
@@ -71,13 +88,7 @@ export class CatalogAuthGuard implements CanActivate {
       throw new UnauthorizedException('Missing or invalid Authorization header');
     }
 
-    const payload = this.verifyJwt(authHeader.slice(7));
-    return {
-      type: 'jwt',
-      sub: payload.sub || payload.email || 'unknown',
-      email: payload.email,
-      roles: Array.isArray(payload.roles) ? payload.roles : [],
-    };
+    return this.validateBearerToken(authHeader.slice(7));
   }
 
   private resolveInternalServiceActor(request: Request): CatalogActor | null {
@@ -97,48 +108,68 @@ export class CatalogAuthGuard implements CanActivate {
       sub: source,
       roles: ['internal:catalog-microservice:admin', 'catalog:write'],
       source,
+      serviceName: source,
+      authMethod: 'internal-service-token',
     };
   }
 
-  private verifyJwt(token: string): JwtPayload {
-    const secret = process.env.JWT_SECRET || process.env.AUTH_JWT_SECRET;
-    if (!secret) {
-      throw new UnauthorizedException('Catalog JWT verification is not configured');
-    }
-
-    const parts = token.split('.');
-    if (parts.length !== 3) {
+  private async validateBearerToken(token: string): Promise<CatalogActor> {
+    if (!token) {
       throw new UnauthorizedException('Invalid token');
     }
 
-    const [encodedHeader, encodedPayload, signature] = parts;
-    const header = this.decodeJson<{ alg?: string }>(encodedHeader);
-    if (header.alg !== 'HS256') {
-      throw new UnauthorizedException('Unsupported token algorithm');
-    }
+    const controller = new AbortController();
+    const timeout = setTimeout(
+      () => controller.abort(),
+      Number.isFinite(this.authValidateTimeoutMs) && this.authValidateTimeoutMs > 0
+        ? this.authValidateTimeoutMs
+        : 3000,
+    );
 
-    const expectedSignature = createHmac('sha256', secret)
-      .update(`${encodedHeader}.${encodedPayload}`)
-      .digest('base64url');
-
-    if (!this.safeEqual(signature, expectedSignature)) {
-      throw new UnauthorizedException('Invalid token signature');
-    }
-
-    const payload = this.decodeJson<JwtPayload>(encodedPayload);
-    if (payload.exp && payload.exp * 1000 < Date.now()) {
-      throw new UnauthorizedException('Token expired');
-    }
-
-    return payload;
-  }
-
-  private decodeJson<T>(encoded: string): T {
+    let response: Response;
     try {
-      return JSON.parse(Buffer.from(encoded, 'base64url').toString('utf8')) as T;
+      response = await fetch(`${this.authServiceUrl}/auth/validate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+        signal: controller.signal,
+      });
     } catch {
-      throw new UnauthorizedException('Invalid token payload');
+      throw new UnauthorizedException('Token validation failed');
+    } finally {
+      clearTimeout(timeout);
     }
+
+    if (!response.ok) {
+      throw new UnauthorizedException('Token validation failed');
+    }
+
+    let validation: AuthValidateResponse;
+    try {
+      validation = (await response.json()) as AuthValidateResponse;
+    } catch {
+      throw new UnauthorizedException('Token validation failed');
+    }
+
+    const user = validation.user;
+    if (!validation.valid || !user) {
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    const sub = user.id || user.sub || user.email;
+    if (!sub) {
+      throw new UnauthorizedException('Invalid token subject');
+    }
+
+    return {
+      type: 'jwt',
+      sub,
+      email: user.email,
+      roles: Array.isArray(user.roles) ? user.roles : [],
+      authMethod: 'auth-validate',
+    };
   }
 
   private safeEqual(a: string, b: string): boolean {
