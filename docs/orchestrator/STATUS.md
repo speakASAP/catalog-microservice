@@ -5,6 +5,8 @@ Change: owner requested product-level sales statistics on the Catalog admin prod
 
 Validation evidence: `git diff --check` passed, root `npm run build` passed, root `npm test -- --runInBand` passed (7 suites/49 tests), and frontend `./node_modules/.bin/tsc --noEmit` passed. `cd services/frontend && npm run build` was blocked by an existing `.next/lock`; no live Next process was found, but the lock was not removed in this session. `npm run lint` is blocked by missing ESLint 9 flat config.
 
+Deployment evidence: `./scripts/deploy.sh` built and pushed `localhost:5000/catalog-microservice:d3021d8` / `latest` with digest `sha256:57374bb613c7506a2856395801bc6ac6807a46326112db54437bf6cc5f0bc2a5`, applied manifests, restarted deployment, and Kubernetes reported rollout success. The script exited during its final health phase because it selected a completed `catalog-contract-monitor` pod for `kubectl exec`; direct checks then confirmed `https://catalog.alfares.cz/health` HTTP 200 with uptime from the new rollout, deployment readiness 1/1, and the live Next chunk contains `Marketplace sales`.
+
 Next action: implement the Orders product sales statistics read model, then bridge it into Catalog and replace the placeholder with live data.
 
 # Catalog Orchestrator Status
