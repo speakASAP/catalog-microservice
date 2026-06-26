@@ -28,9 +28,9 @@ Change: created a dedicated Vault property `CATALOG_INTERNAL_SERVICE_TOKEN` unde
 
 Boundary decision: no token values, decoded JWTs, passwords, or raw secret material were printed, committed, or copied into docs. Auth `/auth/validate` currently requires an active user `sub`, so an arbitrary Auth-signed service JWT is not a valid replacement without a separate Auth service-identity model; the dedicated credential follows the active service-identity standard of `x-internal-service-token` plus `x-service-name`.
 
-Validation expectation: Kubernetes server dry-run for both ExternalSecret manifests, then apply/reconcile, restart Catalog and Orders pods, and rerun the sanitized Catalog-to-Orders smoke.
+Validation evidence: Kubernetes server dry-run passed for Catalog and Orders ExternalSecret manifests. Both ExternalSecrets were applied and force-reconciled; live Kubernetes Secrets now expose `CATALOG_INTERNAL_SERVICE_TOKEN` from the dedicated Vault property, Catalog and Orders token material matches, and Catalog's `CATALOG_INTERNAL_SERVICE_TOKEN` is distinct from `BAZOS_SERVICE_TOKEN` without printing either value. Catalog and Orders deployments were restarted successfully. New Catalog pod `catalog-microservice-55475f5f58-b5485` and Orders pod `orders-microservice-5d9fb5958b-t57bl` expose `CATALOG_INTERNAL_SERVICE_TOKEN` in env. Sanitized Catalog-to-Orders smoke returned HTTP 200, `success=true`, `sourceStatus=available`, five channel rows, zero recent-history rows, and no customer/payment/address/provider markers.
 
-Next action: apply ExternalSecret manifests and restart both deployments so runtime pods consume the dedicated credential.
+Next action: no immediate action needed; monitor scheduled contract checks and keep Bazos and Catalog service credentials separate during future rotations.
 
 ## 2026-06-27 - Goal 17 Runtime Token And Orders Bridge Wiring
 
