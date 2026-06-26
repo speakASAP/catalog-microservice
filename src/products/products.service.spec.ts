@@ -352,6 +352,8 @@ describe("ProductsService sales statistics bridge", () => {
     jest.clearAllMocks();
     delete process.env.ORDERS_SERVICE_TOKEN;
     delete process.env.ORDERS_INTERNAL_SERVICE_TOKEN;
+    delete process.env.CATALOG_INTERNAL_SERVICE_TOKEN;
+    delete process.env.INTERNAL_SERVICE_TOKEN;
     delete process.env.ORDERS_SERVICE_URL;
     delete process.env.ORDERS_BASE_URL;
     delete process.env.ORDERS_STATISTICS_TIMEOUT_MS;
@@ -383,11 +385,37 @@ describe("ProductsService sales statistics bridge", () => {
       productId: product.id,
       source: "orders",
       sourceStatus: "unavailable",
-      unavailableReason: "[MISSING: Catalog-to-Orders service token/env contract]",
+      unavailableReason: "[MISSING: Catalog-to-Orders service credential; configure ORDERS_SERVICE_TOKEN, ORDERS_INTERNAL_SERVICE_TOKEN, CATALOG_INTERNAL_SERVICE_TOKEN, or INTERNAL_SERVICE_TOKEN]",
       totals: { orderCount: 0, quantitySold: 0 },
     });
     expect(result.channels).toHaveLength(5);
     expect(result.channels.every((channel) => channel.status === "unavailable")).toBe(true);
+  });
+
+  it("uses the Catalog internal service token when no Orders-specific token is configured", async () => {
+    process.env.CATALOG_INTERNAL_SERVICE_TOKEN = "catalog-internal-token";
+    process.env.ORDERS_SERVICE_URL = "http://orders-service.test";
+    const repository = {
+      findOne: jest.fn(async () => product),
+    };
+    const mockedAxios = axios as jest.Mocked<typeof axios>;
+    mockedAxios.get.mockResolvedValueOnce({
+      data: { data: { productId: product.id, allowedChannels: ["flipflop"], channels: [] } },
+    } as any);
+    const service = new ProductsService(repository as any, logger as any);
+
+    await service.getSalesStatistics(product.id);
+
+    expect(mockedAxios.get).toHaveBeenCalledWith(
+      "http://orders-service.test/api/orders/statistics/products/11111111-1111-4111-8111-111111111111",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: "Bearer catalog-internal-token",
+          "x-internal-service-token": "catalog-internal-token",
+          "x-service-name": "catalog-microservice",
+        }),
+      }),
+    );
   });
 
   it("calls Orders product statistics and fills zero rows for allowed channels without sales", async () => {

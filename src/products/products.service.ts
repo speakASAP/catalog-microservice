@@ -250,7 +250,7 @@ export class ProductsService {
     if (!serviceToken) {
       return this.unavailableSalesStatistics(
         id,
-        '[MISSING: Catalog-to-Orders service token/env contract]',
+        '[MISSING: Catalog-to-Orders service credential; configure ORDERS_SERVICE_TOKEN, ORDERS_INTERNAL_SERVICE_TOKEN, CATALOG_INTERNAL_SERVICE_TOKEN, or INTERNAL_SERVICE_TOKEN]',
       );
     }
 
@@ -685,7 +685,11 @@ export class ProductsService {
   }
 
   private getOrdersServiceToken(): string | null {
-    const token = process.env.ORDERS_SERVICE_TOKEN || process.env.ORDERS_INTERNAL_SERVICE_TOKEN;
+    const token =
+      process.env.ORDERS_SERVICE_TOKEN ||
+      process.env.ORDERS_INTERNAL_SERVICE_TOKEN ||
+      process.env.CATALOG_INTERNAL_SERVICE_TOKEN ||
+      process.env.INTERNAL_SERVICE_TOKEN;
     return token?.trim() || null;
   }
 

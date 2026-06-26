@@ -23,6 +23,8 @@ data:
   BAZOS_SERVICE_URL: "http://bazos-service.statex-apps.svc.cluster.local:3000"
   WAREHOUSE_SERVICE_URL: "http://warehouse-microservice.statex-apps.svc.cluster.local:3201"
   WAREHOUSE_AVAILABILITY_TIMEOUT_MS: "5000"
+  ORDERS_SERVICE_URL: "http://orders-microservice.statex-apps.svc.cluster.local:3202"
+  ORDERS_STATISTICS_TIMEOUT_MS: "5000"
   CATALOG_MEDIA_S3_ENDPOINT: "http://minio-microservice.statex-apps.svc.cluster.local:9000"
   CATALOG_MEDIA_PUBLIC_BASE_URL: "https://minio.alfares.cz"
   CATALOG_MEDIA_BUCKET: "catalog-media"
