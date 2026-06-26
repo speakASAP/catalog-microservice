@@ -45,11 +45,13 @@ spec:
                   value: "3"
                 - name: CATALOG_SMOKE_RETRY_DELAY_MS
                   value: "1000"
-                - name: CATALOG_SMOKE_AUTH_TOKEN
+                - name: JWT_TOKEN
+                  value: ""
+                - name: CATALOG_SMOKE_INTERNAL_SERVICE_TOKEN
                   valueFrom:
                     secretKeyRef:
                       name: catalog-microservice-secret
-                      key: JWT_TOKEN
+                      key: CATALOG_INTERNAL_SERVICE_TOKEN
               resources:
                 requests:
                   memory: "64Mi"
