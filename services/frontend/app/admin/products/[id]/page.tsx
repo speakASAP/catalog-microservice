@@ -9,6 +9,25 @@ import PricingManagement from '@/components/PricingManagement';
 import BazosPublishPanel from '@/components/BazosPublishPanel';
 import ChannelSalesPanel from '@/components/ChannelSalesPanel';
 
+
+type ProductMarketplaceSalesStat = {
+  channel: string;
+  label: string;
+  soldCount: number;
+  grossRevenueCzk: number;
+  historyEvents: number;
+  status: 'connected' | 'planned';
+};
+
+const PRODUCT_MARKETPLACE_SALES_STATS: ProductMarketplaceSalesStat[] = [
+  { channel: 'flipflop', label: 'FlipFlop', soldCount: 0, grossRevenueCzk: 0, historyEvents: 0, status: 'connected' },
+  { channel: 'bazos', label: 'Bazos', soldCount: 0, grossRevenueCzk: 0, historyEvents: 0, status: 'connected' },
+  { channel: 'allegro', label: 'Allegro', soldCount: 0, grossRevenueCzk: 0, historyEvents: 0, status: 'planned' },
+];
+
+const totalSalesCount = PRODUCT_MARKETPLACE_SALES_STATS.reduce((total, item) => total + item.soldCount, 0);
+const totalGrossRevenueCzk = PRODUCT_MARKETPLACE_SALES_STATS.reduce((total, item) => total + item.grossRevenueCzk, 0);
+
 export default function EditProductPage() {
   const router = useRouter();
   const params = useParams();
@@ -309,7 +328,7 @@ export default function EditProductPage() {
             <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-right">
               <div className="text-xs font-semibold uppercase text-gray-500">Total sold</div>
               <div className="text-3xl font-extrabold text-gray-900">{totalSalesCount}</div>
-              <div className="text-xs text-gray-500">{totalGrossRevenueCzk.toLocaleString(cs-CZ)} CZK</div>
+              <div className="text-xs text-gray-500">{totalGrossRevenueCzk.toLocaleString('cs-CZ')} CZK</div>
             </div>
           </div>
 
@@ -318,8 +337,8 @@ export default function EditProductPage() {
               <div key={stat.channel} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="font-bold text-gray-900">{stat.label}</h3>
-                  <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${stat.status === connected ? bg-emerald-100 text-emerald-800 : bg-amber-100 text-amber-800}`}>
-                    {stat.status === connected ? connected : planned}
+                  <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${stat.status === 'connected' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                    {stat.status === 'connected' ? 'connected' : 'planned'}
                   </span>
                 </div>
                 <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
@@ -329,7 +348,7 @@ export default function EditProductPage() {
                   </div>
                   <div>
                     <div className="text-xs font-semibold uppercase text-gray-500">Revenue</div>
-                    <div className="text-lg font-bold text-gray-900">{stat.grossRevenueCzk.toLocaleString(cs-CZ)}</div>
+                    <div className="text-lg font-bold text-gray-900">{stat.grossRevenueCzk.toLocaleString('cs-CZ')}</div>
                   </div>
                   <div>
                     <div className="text-xs font-semibold uppercase text-gray-500">Events</div>
