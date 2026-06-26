@@ -22,6 +22,16 @@ Next action: implement the Orders product sales statistics read model, then brid
 
 # Catalog Orchestrator Status
 
+## 2026-06-27 - Goal 17 Runtime Token And Orders Bridge Wiring
+
+Change: verified Vault and Kubernetes runtime key wiring without printing secret values. Vault `secret/prod/catalog-microservice` contains `BAZOS_SERVICE_TOKEN`; ExternalSecret maps it into live Kubernetes keys `BAZOS_SERVICE_TOKEN` and `CATALOG_INTERNAL_SERVICE_TOKEN` for Catalog, and into `CATALOG_INTERNAL_SERVICE_TOKEN` for Orders. Both live ExternalSecrets report `SecretSynced=True`, and both live Kubernetes Secrets expose `CATALOG_INTERNAL_SERVICE_TOKEN`. Orders is deployed from `62e1e2d`, which accepts `x-internal-service-token` plus `x-service-name: catalog-microservice` and maps it to `internal:catalog-microservice:service`. Corrected Catalog `ORDERS_SERVICE_URL` to `http://orders-microservice.statex-apps.svc.cluster.local:3203`, matching the live Orders Kubernetes Service.
+
+Boundary decision: no secret values were printed or committed. Runtime still uses the existing Catalog internal-token mapping sourced from `BAZOS_SERVICE_TOKEN`; a dedicated Auth-owned Catalog service JWT remains `[MISSING: Auth-owned confirmation]`.
+
+Validation evidence before deploy: `git diff --check` passed; `npm test -- --runInBand src/products/products.service.spec.ts` passed (14 tests); `npm run build` passed; `npm test -- --runInBand` passed (7 suites/56 tests).
+
+Next action: deploy Catalog and run a live Catalog-to-Orders sales-statistics smoke.
+
 ## 2026-06-26 - Goal 17 Catalog Orders Bridge And Product UI
 
 Change: added protected Catalog bridge endpoint `GET /api/products/:id/sales-statistics` for product marketplace sales statistics. The endpoint validates Catalog product existence, calls Orders `GET /api/orders/statistics/products/:productId` with service credentials when configured, normalizes allowed channels to available/zero states, and returns an explicit unavailable zero aggregate when the Orders token/env contract is missing or Orders is unreachable. Replaced the product admin static `PRODUCT_MARKETPLACE_SALES_STATS` placeholder with typed API-backed loading, zero, unavailable, per-channel, and sanitized bounded recent-history display states.

@@ -681,7 +681,7 @@ export class ProductsService {
 
 
   private getOrdersBaseUrl(): string {
-    return (process.env.ORDERS_SERVICE_URL || process.env.ORDERS_BASE_URL || 'http://orders-microservice:3202').replace(/\/$/, '');
+    return (process.env.ORDERS_SERVICE_URL || process.env.ORDERS_BASE_URL || 'http://orders-microservice:3203').replace(/\/$/, '');
   }
 
   private getOrdersServiceToken(): string | null {
