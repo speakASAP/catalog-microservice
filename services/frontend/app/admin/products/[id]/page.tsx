@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { productsApi, Product } from '@/lib/api/products';
+import { productsApi, Product, ProductSalesChannel, ProductSalesStatistics } from '@/lib/api/products';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import MediaManagement from '@/components/MediaManagement';
 import PricingManagement from '@/components/PricingManagement';
@@ -10,23 +10,40 @@ import BazosPublishPanel from '@/components/BazosPublishPanel';
 import ChannelSalesPanel from '@/components/ChannelSalesPanel';
 
 
-type ProductMarketplaceSalesStat = {
-  channel: string;
-  label: string;
-  soldCount: number;
-  grossRevenueCzk: number;
-  historyEvents: number;
-  status: 'connected' | 'planned';
+const channelLabels: Record<string, string> = {
+  flipflop: 'FlipFlop',
+  allegro: 'Allegro',
+  aukro: 'Aukro',
+  bazos: 'Bazos',
+  heureka: 'Heureka',
 };
 
-const PRODUCT_MARKETPLACE_SALES_STATS: ProductMarketplaceSalesStat[] = [
-  { channel: 'flipflop', label: 'FlipFlop', soldCount: 0, grossRevenueCzk: 0, historyEvents: 0, status: 'connected' },
-  { channel: 'bazos', label: 'Bazos', soldCount: 0, grossRevenueCzk: 0, historyEvents: 0, status: 'connected' },
-  { channel: 'allegro', label: 'Allegro', soldCount: 0, grossRevenueCzk: 0, historyEvents: 0, status: 'planned' },
-];
+const defaultSalesChannels = ['flipflop', 'bazos', 'allegro', 'aukro', 'heureka'];
 
-const totalSalesCount = PRODUCT_MARKETPLACE_SALES_STATS.reduce((total, item) => total + item.soldCount, 0);
-const totalGrossRevenueCzk = PRODUCT_MARKETPLACE_SALES_STATS.reduce((total, item) => total + item.grossRevenueCzk, 0);
+const buildFallbackSalesChannels = (
+  productId: string,
+  status: 'zero' | 'unavailable',
+  unavailableReason?: string,
+): ProductSalesChannel[] => defaultSalesChannels.map((channel) => ({
+  productId,
+  channel,
+  currency: 'CZK',
+  orderCount: 0,
+  quantitySold: 0,
+  grossSales: 0,
+  lastOrderedAt: null,
+  status,
+  unavailableReason,
+}));
+
+const formatGrossSales = (totals: Array<{ currency: string; amount: number }> = []) => {
+  if (totals.length === 0) {
+    return '0 CZK';
+  }
+  return totals
+    .map((total) => `${total.amount.toLocaleString('cs-CZ')} ${total.currency}`)
+    .join(' / ');
+};
 
 export default function EditProductPage() {
   const router = useRouter();
@@ -35,6 +52,9 @@ export default function EditProductPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [product, setProduct] = useState<Product | null>(null);
+  const [salesStats, setSalesStats] = useState<ProductSalesStatistics | null>(null);
+  const [salesStatsLoading, setSalesStatsLoading] = useState(false);
+  const [salesStatsError, setSalesStatsError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     sku: '',
     title: '',
@@ -48,6 +68,28 @@ export default function EditProductPage() {
     height: '',
     isActive: true,
   });
+
+
+  const loadSalesStats = useCallback(async () => {
+    setSalesStatsLoading(true);
+    setSalesStatsError(null);
+
+    try {
+      const response = await productsApi.getSalesStatistics(productId);
+      if (response.success && response.data) {
+        setSalesStats(response.data);
+      } else {
+        setSalesStats(null);
+        setSalesStatsError(response.error?.message || 'Sales statistics are unavailable.');
+      }
+    } catch (error) {
+      console.error('Failed to load sales statistics:', error);
+      setSalesStats(null);
+      setSalesStatsError('Sales statistics are unavailable.');
+    } finally {
+      setSalesStatsLoading(false);
+    }
+  }, [productId]);
 
   const loadProduct = useCallback(async () => {
     try {
@@ -79,8 +121,9 @@ export default function EditProductPage() {
   useEffect(() => {
     if (productId) {
       loadProduct();
+      loadSalesStats();
     }
-  }, [productId, loadProduct]);
+  }, [productId, loadProduct, loadSalesStats]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -151,6 +194,14 @@ export default function EditProductPage() {
       </div>
     );
   }
+
+  const totalSalesCount = salesStats?.totals.quantitySold ?? 0;
+  const totalGrossRevenue = formatGrossSales(salesStats?.totals.grossSalesByCurrency);
+  const salesUnavailableReason = salesStatsError || salesStats?.unavailableReason;
+  const salesChannels = salesStats?.channels?.length
+    ? salesStats.channels
+    : buildFallbackSalesChannels(productId, salesUnavailableReason ? 'unavailable' : 'zero', salesUnavailableReason);
+  const recentSalesHistory = salesStats?.recentHistory ?? [];
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -325,41 +376,75 @@ export default function EditProductPage() {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h2 className="text-xl font-bold text-gray-900">Marketplace sales</h2>
-              <p className="text-sm text-gray-600">Product-specific sales totals from connected channels.</p>
+              <p className="text-sm text-gray-600">Product-specific sales totals from Orders.</p>
+              {salesUnavailableReason && (
+                <p className="mt-2 text-sm text-amber-700">{salesUnavailableReason}</p>
+              )}
             </div>
             <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-right">
               <div className="text-xs font-semibold uppercase text-gray-500">Total sold</div>
-              <div className="text-3xl font-extrabold text-gray-900">{totalSalesCount}</div>
-              <div className="text-xs text-gray-500">{totalGrossRevenueCzk.toLocaleString('cs-CZ')} CZK</div>
+              <div className="text-3xl font-extrabold text-gray-900">{salesStatsLoading ? '...' : totalSalesCount}</div>
+              <div className="text-xs text-gray-500">{salesStatsLoading ? 'Loading' : totalGrossRevenue}</div>
             </div>
           </div>
 
-          <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
-            {PRODUCT_MARKETPLACE_SALES_STATS.map((stat) => (
-              <div key={stat.channel} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="font-bold text-gray-900">{stat.label}</h3>
-                  <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${stat.status === 'connected' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
-                    {stat.status === 'connected' ? 'connected' : 'planned'}
-                  </span>
+          {salesStatsLoading ? (
+            <div className="mt-5 flex min-h-[120px] items-center justify-center rounded-xl border border-gray-200 bg-gray-50">
+              <LoadingSpinner size="sm" />
+            </div>
+          ) : (
+            <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
+              {salesChannels.map((stat) => (
+                <div key={stat.channel} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="font-bold text-gray-900">{channelLabels[stat.channel] || stat.channel}</h3>
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${stat.status === 'unavailable' ? 'bg-amber-100 text-amber-800' : stat.status === 'available' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-700'}`}>
+                      {stat.status}
+                    </span>
+                  </div>
+                  <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
+                    <div>
+                      <div className="text-xs font-semibold uppercase text-gray-500">Sold</div>
+                      <div className="text-2xl font-extrabold text-gray-900">{stat.quantitySold}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs font-semibold uppercase text-gray-500">Revenue</div>
+                      <div className="text-lg font-bold text-gray-900">{stat.grossSales.toLocaleString('cs-CZ')} {stat.currency}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs font-semibold uppercase text-gray-500">Orders</div>
+                      <div className="text-lg font-bold text-gray-900">{stat.orderCount}</div>
+                    </div>
+                  </div>
+                  {stat.lastOrderedAt && (
+                    <div className="mt-3 text-xs text-gray-500">
+                      Last order {new Date(stat.lastOrderedAt).toLocaleDateString('cs-CZ')}
+                    </div>
+                  )}
                 </div>
-                <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
-                  <div>
-                    <div className="text-xs font-semibold uppercase text-gray-500">Sold</div>
-                    <div className="text-2xl font-extrabold text-gray-900">{stat.soldCount}</div>
+              ))}
+            </div>
+          )}
+
+          {!salesStatsLoading && recentSalesHistory.length > 0 && (
+            <div className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <h3 className="font-bold text-gray-900">Recent sales</h3>
+              <div className="mt-3 divide-y divide-gray-200">
+                {recentSalesHistory.map((event, index) => (
+                  <div key={`${event.channel}-${event.orderedAt || index}`} className="flex flex-col gap-1 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <div className="font-semibold text-gray-900">{channelLabels[event.channel] || event.channel}</div>
+                      <div className="text-gray-500">{event.orderedAt ? new Date(event.orderedAt).toLocaleDateString('cs-CZ') : 'Date unavailable'}</div>
+                    </div>
+                    <div className="text-gray-700 sm:text-right">
+                      <div>{event.quantitySold} sold</div>
+                      <div className="font-semibold">{event.grossSales.toLocaleString('cs-CZ')} {event.currency}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-xs font-semibold uppercase text-gray-500">Revenue</div>
-                    <div className="text-lg font-bold text-gray-900">{stat.grossRevenueCzk.toLocaleString('cs-CZ')}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold uppercase text-gray-500">Events</div>
-                    <div className="text-lg font-bold text-gray-900">{stat.historyEvents}</div>
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
         </section>
 
         <div className="flex gap-4 pt-6 border-t border-gray-200">

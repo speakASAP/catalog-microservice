@@ -72,6 +72,8 @@ describe("ProductsService product readiness", () => {
       "missing_current_price",
     ]));
   });
+
+
 });
 
 
@@ -330,5 +332,182 @@ describe("ProductsService Bazos draft action", () => {
     } else {
       process.env.BAZOS_SERVICE_TOKEN = previousToken;
     }
+  });
+});
+
+
+describe("ProductsService sales statistics bridge", () => {
+  const logger = {
+    log: jest.fn(),
+    warn: jest.fn(),
+  };
+  const product = {
+    id: "11111111-1111-4111-8111-111111111111",
+    sku: "SKU-SALES-001",
+    title: "Sales stats product",
+    isActive: true,
+  } as unknown as Product;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    delete process.env.ORDERS_SERVICE_TOKEN;
+    delete process.env.ORDERS_INTERNAL_SERVICE_TOKEN;
+    delete process.env.ORDERS_SERVICE_URL;
+    delete process.env.ORDERS_BASE_URL;
+    delete process.env.ORDERS_STATISTICS_TIMEOUT_MS;
+  });
+
+
+
+  it("does not call Orders when the Catalog product does not exist", async () => {
+    process.env.ORDERS_SERVICE_TOKEN = "orders-token";
+    const repository = {
+      findOne: jest.fn(async () => null),
+    };
+    const service = new ProductsService(repository as any, logger as any);
+
+    await expect(service.getSalesStatistics(product.id)).rejects.toThrow("Product with ID 11111111-1111-4111-8111-111111111111 not found");
+    expect((axios as jest.Mocked<typeof axios>).get).not.toHaveBeenCalled();
+  });
+
+  it("returns an unavailable zero aggregate when the Orders service token contract is missing", async () => {
+    const repository = {
+      findOne: jest.fn(async () => product),
+    };
+    const service = new ProductsService(repository as any, logger as any);
+
+    const result = await service.getSalesStatistics(product.id);
+
+    expect((axios as jest.Mocked<typeof axios>).get).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      productId: product.id,
+      source: "orders",
+      sourceStatus: "unavailable",
+      unavailableReason: "[MISSING: Catalog-to-Orders service token/env contract]",
+      totals: { orderCount: 0, quantitySold: 0 },
+    });
+    expect(result.channels).toHaveLength(5);
+    expect(result.channels.every((channel) => channel.status === "unavailable")).toBe(true);
+  });
+
+  it("calls Orders product statistics and fills zero rows for allowed channels without sales", async () => {
+    process.env.ORDERS_SERVICE_TOKEN = "orders-token";
+    process.env.ORDERS_SERVICE_URL = "http://orders-service.test";
+    const repository = {
+      findOne: jest.fn(async () => product),
+    };
+    const mockedAxios = axios as jest.Mocked<typeof axios>;
+    mockedAxios.get.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: {
+          productId: product.id,
+          allowedChannels: ["flipflop", "allegro"],
+          currencyStrategy: "per_currency_no_fx_conversion",
+          conversion: "[UNKNOWN: conversion]",
+          channels: [
+            {
+              productId: product.id,
+              channel: "flipflop",
+              currency: "CZK",
+              orderCount: 1,
+              quantitySold: 2,
+              grossSales: 200,
+              lastOrderedAt: "2026-06-13T08:00:00.000Z",
+            },
+          ],
+        },
+      },
+    } as any);
+    const service = new ProductsService(repository as any, logger as any);
+
+    const result = await service.getSalesStatistics(product.id);
+
+    expect(mockedAxios.get).toHaveBeenCalledWith(
+      "http://orders-service.test/api/orders/statistics/products/11111111-1111-4111-8111-111111111111",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: "Bearer orders-token",
+          "x-internal-service-token": "orders-token",
+          "x-service-name": "catalog-microservice",
+        }),
+      }),
+    );
+    expect(result).toMatchObject({
+      productId: product.id,
+      sourceStatus: "available",
+      totals: {
+        orderCount: 1,
+        quantitySold: 2,
+        grossSalesByCurrency: [{ currency: "CZK", amount: 200 }],
+      },
+      channels: [
+        { channel: "flipflop", status: "available", orderCount: 1, quantitySold: 2, grossSales: 200 },
+        { channel: "allegro", status: "zero", orderCount: 0, quantitySold: 0, grossSales: 0 },
+      ],
+    });
+  });
+  it("returns an unavailable zero aggregate when Orders fails", async () => {
+    process.env.ORDERS_SERVICE_TOKEN = "orders-token";
+    const repository = {
+      findOne: jest.fn(async () => product),
+    };
+    const mockedAxios = axios as jest.Mocked<typeof axios>;
+    mockedAxios.get.mockRejectedValueOnce({ response: { status: 503 } });
+    const service = new ProductsService(repository as any, logger as any);
+
+    const result = await service.getSalesStatistics(product.id);
+
+    expect(result.sourceStatus).toBe("unavailable");
+    expect(result.totals).toMatchObject({ orderCount: 0, quantitySold: 0 });
+    expect(result.channels.every((channel) => channel.status === "unavailable")).toBe(true);
+  });
+
+
+  it("normalizes bounded recent history without forwarding sensitive Orders fields", async () => {
+    process.env.ORDERS_SERVICE_TOKEN = "orders-token";
+    const repository = {
+      findOne: jest.fn(async () => product),
+    };
+    const mockedAxios = axios as jest.Mocked<typeof axios>;
+    mockedAxios.get.mockResolvedValueOnce({
+      data: {
+        data: {
+          productId: product.id,
+          allowedChannels: ["bazos"],
+          channels: [{ channel: "bazos", currency: "CZK", orderCount: 1, quantitySold: 1, grossSales: 150 }],
+          recentHistory: Array.from({ length: 12 }, (_, index) => ({
+            channel: "bazos",
+            orderedAt: `2026-06-${String(index + 1).padStart(2, "0")}T08:00:00.000Z`,
+            currency: "CZK",
+            quantity: 1,
+            amount: 150,
+            status: "paid",
+            customerEmail: "customer@example.test",
+            paymentCardLast4: "4242",
+            shippingAddress: "Main Street 1",
+            providerPayload: { secret: "provider-secret" },
+          })),
+        },
+      },
+    } as any);
+    const service = new ProductsService(repository as any, logger as any);
+
+    const result = await service.getSalesStatistics(product.id);
+    const serialized = JSON.stringify(result);
+
+    expect(result.recentHistory).toHaveLength(10);
+    expect(result.recentHistory[0]).toMatchObject({
+      channel: "bazos",
+      orderedAt: "2026-06-01T08:00:00.000Z",
+      currency: "CZK",
+      quantitySold: 1,
+      grossSales: 150,
+      status: "paid",
+    });
+    expect(serialized).not.toContain("customer@example.test");
+    expect(serialized).not.toContain("4242");
+    expect(serialized).not.toContain("Main Street");
+    expect(serialized).not.toContain("provider-secret");
   });
 });

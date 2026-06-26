@@ -22,6 +22,17 @@ Next action: implement the Orders product sales statistics read model, then brid
 
 # Catalog Orchestrator Status
 
+## 2026-06-26 - Goal 17 Catalog Orders Bridge And Product UI
+
+Change: added protected Catalog bridge endpoint `GET /api/products/:id/sales-statistics` for product marketplace sales statistics. The endpoint validates Catalog product existence, calls Orders `GET /api/orders/statistics/products/:productId` with service credentials when configured, normalizes allowed channels to available/zero states, and returns an explicit unavailable zero aggregate when the Orders token/env contract is missing or Orders is unreachable. Replaced the product admin static `PRODUCT_MARKETPLACE_SALES_STATS` placeholder with typed API-backed loading, zero, unavailable, per-channel, and sanitized bounded recent-history display states.
+
+Boundary decision: Catalog still stores no order/order-item/payment/customer/provider data and does not poll marketplaces. No deployment was run. Runtime wiring remains `[MISSING: Catalog-to-Orders service token/env contract]` until `ORDERS_SERVICE_TOKEN` or `ORDERS_INTERNAL_SERVICE_TOKEN` is provided to Catalog runtime.
+
+Validation evidence: `git diff --check` passed; focused `npm test -- --runInBand src/products/products.service.spec.ts` passed (13 tests); root `npm run build` passed; root `npm test -- --runInBand` passed (7 suites/55 tests); frontend `./node_modules/.bin/tsc --noEmit` passed; frontend `npm run build` passed with a Next.js multiple-lockfile workspace-root warning only.
+
+Next action: hand off runtime env/deploy readiness to final integration after owner wires the Catalog-to-Orders service token/env contract.
+
+
 ## 2026-06-13 - FlipFlop Sellable Quantity From Reservable Routes
 
 Change: tightened FlipFlop projection stock quantity so channel-facing stockQuantity is calculated from traceable reservable Warehouse logistics routes instead of raw Warehouse totalAvailable. Raw Warehouse totals and rows still remain forwarded under availability for diagnostics, but non-reservable supplier/dropship diagnostics no longer inflate the sellable channel quantity.

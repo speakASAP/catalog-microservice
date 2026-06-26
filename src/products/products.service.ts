@@ -83,6 +83,15 @@ export type ProductSalesChannel = {
   unavailableReason?: string;
 };
 
+export type ProductSalesHistoryEvent = {
+  channel: string;
+  orderedAt: string | null;
+  currency: string;
+  quantitySold: number;
+  grossSales: number;
+  status: string | null;
+};
+
 export type ProductSalesStatistics = {
   productId: string;
   source: 'orders';
@@ -96,6 +105,7 @@ export type ProductSalesStatistics = {
     grossSalesByCurrency: Array<{ currency: string; amount: number }>;
   };
   channels: ProductSalesChannel[];
+  recentHistory: ProductSalesHistoryEvent[];
   unavailableReason?: string;
 };
 
@@ -707,6 +717,7 @@ export class ProductsService {
       conversion: String(payload?.conversion || '[UNKNOWN: conversion]'),
       totals: this.sumSalesTotals(channelRows),
       channels: channelRows,
+      recentHistory: this.normalizeSalesHistory(payload),
     };
   }
 
@@ -727,6 +738,27 @@ export class ProductsService {
       lastOrderedAt: row?.lastOrderedAt ? String(row.lastOrderedAt) : null,
       status: hasSales ? 'available' : 'zero',
     };
+  }
+
+  private normalizeSalesHistory(payload: any): ProductSalesHistoryEvent[] {
+    const rawHistory = Array.isArray(payload?.recentHistory)
+      ? payload.recentHistory
+      : Array.isArray(payload?.history)
+        ? payload.history
+        : Array.isArray(payload?.recentOrders)
+          ? payload.recentOrders
+          : [];
+
+    return rawHistory.slice(0, 10).map((event: any) => ({
+      channel: String(event?.channel ?? event?.source ?? 'unknown'),
+      orderedAt: event?.orderedAt || event?.createdAt || event?.lastOrderedAt
+        ? String(event.orderedAt || event.createdAt || event.lastOrderedAt)
+        : null,
+      currency: String(event?.currency || 'CZK'),
+      quantitySold: this.toNonNegativeNumber(event?.quantitySold ?? event?.quantity ?? event?.itemsQuantity),
+      grossSales: this.toNonNegativeNumber(event?.grossSales ?? event?.amount ?? event?.total),
+      status: event?.status ? String(event.status) : null,
+    }));
   }
 
   private sumSalesTotals(channels: ProductSalesChannel[]): ProductSalesStatistics['totals'] {
@@ -769,6 +801,7 @@ export class ProductsService {
       conversion: '[UNKNOWN: conversion]',
       totals: this.sumSalesTotals(channels),
       channels,
+      recentHistory: [],
       unavailableReason,
     };
   }

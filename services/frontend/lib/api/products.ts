@@ -110,6 +110,45 @@ export interface BazosListingStatus {
   nextAction?: string;
 }
 
+
+export interface ProductSalesChannel {
+  productId: string;
+  channel: string;
+  currency: string;
+  orderCount: number;
+  quantitySold: number;
+  grossSales: number;
+  lastOrderedAt: string | null;
+  status: 'available' | 'zero' | 'unavailable';
+  unavailableReason?: string;
+}
+
+export interface ProductSalesHistoryEvent {
+  channel: string;
+  orderedAt: string | null;
+  currency: string;
+  quantitySold: number;
+  grossSales: number;
+  status: string | null;
+}
+
+export interface ProductSalesStatistics {
+  productId: string;
+  source: 'orders';
+  sourceStatus: 'available' | 'unavailable';
+  allowedChannels: string[];
+  currencyStrategy: string;
+  conversion: string;
+  totals: {
+    orderCount: number;
+    quantitySold: number;
+    grossSalesByCurrency: Array<{ currency: string; amount: number }>;
+  };
+  channels: ProductSalesChannel[];
+  recentHistory: ProductSalesHistoryEvent[];
+  unavailableReason?: string;
+}
+
 export const productsApi = {
   async getProducts(query?: ProductQuery) {
     const params = new URLSearchParams();
@@ -136,6 +175,11 @@ export const productsApi = {
 
   async updateProduct(id: string, data: Partial<Product>) {
     return apiClient.put<Product>(`/products/${id}`, data);
+  },
+
+
+  async getSalesStatistics(id: string) {
+    return apiClient.get<ProductSalesStatistics>(`/products/${id}/sales-statistics`);
   },
 
   async getBazosStatus(id: string) {
