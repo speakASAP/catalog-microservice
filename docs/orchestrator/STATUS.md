@@ -1,4 +1,15 @@
 
+## 2026-06-26 - Goal 17 Sub-Agents Driven Development Launch
+
+Change: launched Goal 17 as Sub-Agents Driven Development. Original Catalog thread remains integration owner. Orders read-model implementation is active in thread `019f05b7-b84d-7351-b1dc-9c51cd4ad2ef`. Channel fidelity implementation is active in FlipFlop thread `019f05d9-5ea9-7fe2-8bc7-be7fb2c57396`, Allegro thread `019f05d9-8836-7e22-b4ae-5e8a7fea49c9`, Bazos thread `019f05d9-b313-79c1-8214-6e8eaca05317`, and Aukro thread `019f05d9-df9b-74f0-9715-72e7652824ae`. Heureka remains blocked because audit found no runtime order service path.
+
+Parallel execution state: Workstream A Orders statistics endpoint is `active`; Workstream B channel adapter fixes are `active` for FlipFlop/Allegro/Bazos/Aukro and `blocked` for Heureka; Workstream C Catalog Orders bridge is `dependency-gated`; Workstream D Catalog UI live-data replacement is `dependency-gated`; Workstream E final integration and runtime smoke is `final integration`.
+
+Validation expectation: each sub-agent must run repo-local `git diff --check` plus the narrowest build/test/verifier, commit only passing bounded changes, and avoid deploy. Integration owner will merge evidence, implement Catalog bridge after Orders contract exists, then run final Catalog validation/deploy.
+
+Next action: poll sub-agent outputs, integrate the Orders stats contract first, then wire Catalog bridge and frontend live statistics.
+
+
 ## 2026-06-26 - Goal 17 Product Marketplace Sales Statistics Planning
 
 Change: owner requested product-level sales statistics on the Catalog admin product page for connected marketplaces. Added Goal 17 and an execution plan that keeps Orders as the sales/order source of truth, Catalog as product truth, and marketplace services as channel ingestion owners. Added a zero-value frontend placeholder block to the product edit page so the requested statistics area is visible while the Orders-backed contract is implemented.
