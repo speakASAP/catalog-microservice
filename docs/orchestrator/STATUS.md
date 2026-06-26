@@ -30,7 +30,11 @@ Boundary decision: no secret values were printed or committed. Runtime still use
 
 Validation evidence before deploy: `git diff --check` passed; `npm test -- --runInBand src/products/products.service.spec.ts` passed (14 tests); `npm run build` passed; `npm test -- --runInBand` passed (7 suites/56 tests).
 
-Next action: deploy Catalog and run a live Catalog-to-Orders sales-statistics smoke.
+Deployment evidence: Catalog deploy from `7abf6c9` built and pushed `localhost:5000/catalog-microservice:7abf6c9` / `latest` with digest `sha256:8501cc3d55b681f7c3ac78c5aeb7ba4033b53794152a3dd6beb5896dbc64485e`, applied manifests, and Kubernetes reported rollout success. The deploy script exited nonzero during its final health phase because it selected a completed `catalog-contract-monitor` pod; direct health against the new running Catalog pod returned HTTP 200.
+
+Runtime smoke evidence: the new Catalog pod has `CATALOG_INTERNAL_SERVICE_TOKEN`, `ORDERS_SERVICE_URL`, and `ORDERS_STATISTICS_TIMEOUT_MS` present without printing values. A sanitized in-pod smoke selected one existing product through public Catalog read, called `GET /api/products/:id/sales-statistics` with `x-internal-service-token` and `x-service-name: catalog-microservice`, and received HTTP 200, `success=true`, `sourceStatus=available`, five channel rows, zero recent-history rows, and no customer/payment/address/provider markers.
+
+Next action: monitor scheduled contract checks and replace the temporary `BAZOS_SERVICE_TOKEN`-sourced Catalog internal credential with a dedicated Auth-owned Catalog service JWT after Auth-owned confirmation.
 
 ## 2026-06-26 - Goal 17 Catalog Orders Bridge And Product UI
 
