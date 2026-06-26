@@ -3,7 +3,7 @@
 
 Change: owner requested product-level sales statistics on the Catalog admin product page for connected marketplaces. Added Goal 17 and an execution plan that keeps Orders as the sales/order source of truth, Catalog as product truth, and marketplace services as channel ingestion owners. Added a zero-value frontend placeholder block to the product edit page so the requested statistics area is visible while the Orders-backed contract is implemented.
 
-Validation evidence: planning/source inspection only so far. Full build/test validation remains pending because the remote worktree already had unrelated dirty changes in the same frontend/backend files before this session.
+Validation evidence: `git diff --check` passed, root `npm run build` passed, root `npm test -- --runInBand` passed (7 suites/49 tests), and frontend `./node_modules/.bin/tsc --noEmit` passed. `cd services/frontend && npm run build` was blocked by an existing `.next/lock`; no live Next process was found, but the lock was not removed in this session. `npm run lint` is blocked by missing ESLint 9 flat config.
 
 Next action: implement the Orders product sales statistics read model, then bridge it into Catalog and replace the placeholder with live data.
 
