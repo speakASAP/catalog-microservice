@@ -1,3 +1,10 @@
+## 2026-06-27 - Auth-Owned Catalog Service Token Source Applied
+
+Change: switched Catalog `CATALOG_INTERNAL_SERVICE_TOKEN` ExternalSecret source to Auth-owned Vault property `secret/prod/auth-microservice#CATALOG_INTERNAL_SERVICE_TOKEN`. Bazos-owned `BAZOS_SERVICE_TOKEN` remains only for Bazos integration and is distinct from the Catalog-to-Orders credential.
+
+Validation evidence: Kubernetes server dry-run passed for `k8s/external-secret.yaml`; Catalog and Orders ExternalSecrets were applied and force-reconciled with `SecretSynced=True`; live Kubernetes Secrets expose matching `CATALOG_INTERNAL_SERVICE_TOKEN` material for Catalog and Orders without printing values; Catalog's token is distinct from `BAZOS_SERVICE_TOKEN`. Rollout restart completed for Catalog pod `catalog-microservice-77b79bd855-5xj9t` and Orders pod `orders-microservice-757696f875-8gprf`. Sanitized in-pod Catalog bridge smoke returned health HTTP 200, products HTTP 200, sales statistics HTTP 200, `success=true`, `sourceStatus=available`, five channel rows, zero recent-history rows, and no customer/payment/address/provider markers.
+
+Next action: monitor scheduled Catalog contract checks with the Auth-owned service credential.
 
 ## 2026-06-26 - Goal 17 Sub-Agents Driven Development Launch
 
@@ -24,19 +31,19 @@ Next action: implement the Orders product sales statistics read model, then brid
 
 ## 2026-06-27 - Dedicated Catalog Internal Service Token
 
-Change: created a dedicated Vault property `CATALOG_INTERNAL_SERVICE_TOKEN` under `secret/prod/catalog-microservice` without printing the value. Switched Catalog and Orders ExternalSecret mappings for `CATALOG_INTERNAL_SERVICE_TOKEN` away from the temporary `BAZOS_SERVICE_TOKEN` source and onto the dedicated property. Existing `BAZOS_SERVICE_TOKEN` remains present for Bazos-owned integration only.
+Change: created an Auth-owned Vault property `CATALOG_INTERNAL_SERVICE_TOKEN` under `secret/prod/auth-microservice` without printing the value. Switched Catalog and Orders ExternalSecret mappings for `CATALOG_INTERNAL_SERVICE_TOKEN` away from Bazos-owned credentials and onto the Auth-owned property. Existing `BAZOS_SERVICE_TOKEN` remains present for Bazos-owned integration only.
 
 Boundary decision: no token values, decoded JWTs, passwords, or raw secret material were printed, committed, or copied into docs. Auth `/auth/validate` currently requires an active user `sub`, so an arbitrary Auth-signed service JWT is not a valid replacement without a separate Auth service-identity model; the dedicated credential follows the active service-identity standard of `x-internal-service-token` plus `x-service-name`.
 
-Validation evidence: Kubernetes server dry-run passed for Catalog and Orders ExternalSecret manifests. Both ExternalSecrets were applied and force-reconciled; live Kubernetes Secrets now expose `CATALOG_INTERNAL_SERVICE_TOKEN` from the dedicated Vault property, Catalog and Orders token material matches, and Catalog's `CATALOG_INTERNAL_SERVICE_TOKEN` is distinct from `BAZOS_SERVICE_TOKEN` without printing either value. Catalog and Orders deployments were restarted successfully. New Catalog pod `catalog-microservice-55475f5f58-b5485` and Orders pod `orders-microservice-5d9fb5958b-t57bl` expose `CATALOG_INTERNAL_SERVICE_TOKEN` in env. Sanitized Catalog-to-Orders smoke returned HTTP 200, `success=true`, `sourceStatus=available`, five channel rows, zero recent-history rows, and no customer/payment/address/provider markers.
+Validation evidence: Kubernetes server dry-run passed for Catalog and Orders ExternalSecret manifests. Both ExternalSecrets were applied and force-reconciled; live Kubernetes Secrets now expose `CATALOG_INTERNAL_SERVICE_TOKEN` from Auth-owned `secret/prod/auth-microservice#CATALOG_INTERNAL_SERVICE_TOKEN`, Catalog and Orders token material matches, and Catalog's `CATALOG_INTERNAL_SERVICE_TOKEN` is distinct from `BAZOS_SERVICE_TOKEN` without printing either value. Catalog and Orders deployments were restarted successfully. New Catalog pod `catalog-microservice-55475f5f58-b5485` and Orders pod `orders-microservice-5d9fb5958b-t57bl` expose `CATALOG_INTERNAL_SERVICE_TOKEN` in env. Sanitized Catalog-to-Orders smoke returned HTTP 200, `success=true`, `sourceStatus=available`, five channel rows, zero recent-history rows, and no customer/payment/address/provider markers.
 
 Next action: no immediate action needed; monitor scheduled contract checks and keep Bazos and Catalog service credentials separate during future rotations.
 
 ## 2026-06-27 - Goal 17 Runtime Token And Orders Bridge Wiring
 
-Change: verified Vault and Kubernetes runtime key wiring without printing secret values. Vault `secret/prod/catalog-microservice` contains `BAZOS_SERVICE_TOKEN`; ExternalSecret maps it into live Kubernetes keys `BAZOS_SERVICE_TOKEN` and `CATALOG_INTERNAL_SERVICE_TOKEN` for Catalog, and into `CATALOG_INTERNAL_SERVICE_TOKEN` for Orders. Both live ExternalSecrets report `SecretSynced=True`, and both live Kubernetes Secrets expose `CATALOG_INTERNAL_SERVICE_TOKEN`. Orders is deployed from `62e1e2d`, which accepts `x-internal-service-token` plus `x-service-name: catalog-microservice` and maps it to `internal:catalog-microservice:service`. Corrected Catalog `ORDERS_SERVICE_URL` to `http://orders-microservice.statex-apps.svc.cluster.local:3203`, matching the live Orders Kubernetes Service.
+Change: verified Vault and Kubernetes runtime key wiring without printing secret values. Vault `secret/prod/catalog-microservice` contains `BAZOS_SERVICE_TOKEN` for Bazos-owned integration only; Catalog and Orders ExternalSecrets map `CATALOG_INTERNAL_SERVICE_TOKEN` from Auth-owned Vault path `secret/prod/auth-microservice#CATALOG_INTERNAL_SERVICE_TOKEN`. Both live ExternalSecrets report `SecretSynced=True`, and both live Kubernetes Secrets expose `CATALOG_INTERNAL_SERVICE_TOKEN`. Orders is deployed from `62e1e2d`, which accepts `x-internal-service-token` plus `x-service-name: catalog-microservice` and maps it to `internal:catalog-microservice:service`. Corrected Catalog `ORDERS_SERVICE_URL` to `http://orders-microservice.statex-apps.svc.cluster.local:3203`, matching the live Orders Kubernetes Service.
 
-Boundary decision: no secret values were printed or committed. Runtime still uses the existing Catalog internal-token mapping sourced from `BAZOS_SERVICE_TOKEN`; a dedicated Auth-owned Catalog service JWT remains `[MISSING: Auth-owned confirmation]`.
+Boundary decision: no secret values were printed or committed. Runtime uses the Auth-owned Catalog internal service token from `secret/prod/auth-microservice#CATALOG_INTERNAL_SERVICE_TOKEN`; no Bazos-owned token is used for Catalog-to-Orders authentication.
 
 Validation evidence before deploy: `git diff --check` passed; `npm test -- --runInBand src/products/products.service.spec.ts` passed (14 tests); `npm run build` passed; `npm test -- --runInBand` passed (7 suites/56 tests).
 
@@ -44,13 +51,13 @@ Deployment evidence: Catalog deploy from `7abf6c9` built and pushed `localhost:5
 
 Runtime smoke evidence: the new Catalog pod has `CATALOG_INTERNAL_SERVICE_TOKEN`, `ORDERS_SERVICE_URL`, and `ORDERS_STATISTICS_TIMEOUT_MS` present without printing values. A sanitized in-pod smoke selected one existing product through public Catalog read, called `GET /api/products/:id/sales-statistics` with `x-internal-service-token` and `x-service-name: catalog-microservice`, and received HTTP 200, `success=true`, `sourceStatus=available`, five channel rows, zero recent-history rows, and no customer/payment/address/provider markers.
 
-Next action: monitor scheduled contract checks and replace the temporary `BAZOS_SERVICE_TOKEN`-sourced Catalog internal credential with a dedicated Auth-owned Catalog service JWT after Auth-owned confirmation.
+Next action: monitor scheduled contract checks with the Auth-owned Catalog service credential now sourced from `secret/prod/auth-microservice#CATALOG_INTERNAL_SERVICE_TOKEN`.
 
 ## 2026-06-26 - Goal 17 Catalog Orders Bridge And Product UI
 
 Change: added protected Catalog bridge endpoint `GET /api/products/:id/sales-statistics` for product marketplace sales statistics. The endpoint validates Catalog product existence, calls Orders `GET /api/orders/statistics/products/:productId` with service credentials when configured, normalizes allowed channels to available/zero states, and returns an explicit unavailable zero aggregate when the Orders token/env contract is missing or Orders is unreachable. Replaced the product admin static `PRODUCT_MARKETPLACE_SALES_STATS` placeholder with typed API-backed loading, zero, unavailable, per-channel, and sanitized bounded recent-history display states.
 
-Boundary decision: Catalog still stores no order/order-item/payment/customer/provider data and does not poll marketplaces. No deployment was run. Runtime wiring uses the existing `CATALOG_INTERNAL_SERVICE_TOKEN` service credential through `x-internal-service-token` / `x-service-name: catalog-microservice`; a dedicated Auth-owned Catalog service JWT remains `[MISSING: Auth-owned confirmation]` but is no longer blocking the Catalog-to-Orders bridge.
+Boundary decision: Catalog still stores no order/order-item/payment/customer/provider data and does not poll marketplaces. No deployment was run. Runtime wiring uses the existing `CATALOG_INTERNAL_SERVICE_TOKEN` service credential through `x-internal-service-token` / `x-service-name: catalog-microservice`; Auth-owned Catalog service identity is confirmed by Vault source `secret/prod/auth-microservice#CATALOG_INTERNAL_SERVICE_TOKEN` and the canonical machine-auth header contract.
 
 Validation evidence: `git diff --check` passed; focused `npm test -- --runInBand src/products/products.service.spec.ts` passed (13 tests); root `npm run build` passed; root `npm test -- --runInBand` passed (7 suites/55 tests); frontend `./node_modules/.bin/tsc --noEmit` passed; frontend `npm run build` passed with a Next.js multiple-lockfile workspace-root warning only.
 
