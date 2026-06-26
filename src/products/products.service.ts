@@ -70,6 +70,37 @@ export type ProductIdentifierAudit = {
   duplicateEans: Array<{ ean: string; count: number }>;
 };
 
+
+export type ProductSalesChannel = {
+  productId: string;
+  channel: string;
+  currency: string;
+  orderCount: number;
+  quantitySold: number;
+  grossSales: number;
+  lastOrderedAt: string | null;
+  status: 'available' | 'zero' | 'unavailable';
+  unavailableReason?: string;
+};
+
+export type ProductSalesStatistics = {
+  productId: string;
+  source: 'orders';
+  sourceStatus: 'available' | 'unavailable';
+  allowedChannels: string[];
+  currencyStrategy: string;
+  conversion: string;
+  totals: {
+    orderCount: number;
+    quantitySold: number;
+    grossSalesByCurrency: Array<{ currency: string; amount: number }>;
+  };
+  channels: ProductSalesChannel[];
+  unavailableReason?: string;
+};
+
+const DEFAULT_SALES_CHANNELS = ['flipflop', 'allegro', 'aukro', 'bazos', 'heureka'];
+
 @Injectable()
 export class ProductsService {
   constructor(
@@ -199,6 +230,46 @@ export class ProductsService {
       where: { id: In(productIds) },
       relations: ["categories", "media", "pricing"],
     });
+  }
+
+
+  async getSalesStatistics(id: string): Promise<ProductSalesStatistics> {
+    await this.findOne(id);
+
+    const serviceToken = this.getOrdersServiceToken();
+    if (!serviceToken) {
+      return this.unavailableSalesStatistics(
+        id,
+        '[MISSING: Catalog-to-Orders service token/env contract]',
+      );
+    }
+
+    const ordersBaseUrl = this.getOrdersBaseUrl();
+    try {
+      const response = await axios.get(
+        `${ordersBaseUrl}/api/orders/statistics/products/${encodeURIComponent(id)}`,
+        {
+          timeout: this.getOrdersTimeoutMs(),
+          headers: {
+            Authorization: this.asBearerToken(serviceToken),
+            'x-internal-service-token': serviceToken,
+            'x-service-name': 'catalog-microservice',
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+      const payload = response.data?.data ?? response.data;
+      return this.normalizeOrdersSalesStatistics(id, payload);
+    } catch (error: any) {
+      this.logger.warn(
+        `Orders product sales statistics unavailable for ${id}: ${error?.response?.status ?? error?.message ?? 'unknown error'}`,
+        'ProductsService',
+      );
+      return this.unavailableSalesStatistics(
+        id,
+        'Orders product sales statistics are unavailable. Try again after the Orders-owned read model is reachable.',
+      );
+    }
   }
 
   /**
@@ -596,6 +667,115 @@ export class ProductsService {
         dependencyMessage: error?.response?.data?.message ?? error?.message ?? null,
       };
     }
+  }
+
+
+  private getOrdersBaseUrl(): string {
+    return (process.env.ORDERS_SERVICE_URL || process.env.ORDERS_BASE_URL || 'http://orders-microservice:3202').replace(/\/$/, '');
+  }
+
+  private getOrdersServiceToken(): string | null {
+    const token = process.env.ORDERS_SERVICE_TOKEN || process.env.ORDERS_INTERNAL_SERVICE_TOKEN;
+    return token?.trim() || null;
+  }
+
+  private getOrdersTimeoutMs(): number {
+    const timeout = Number(process.env.ORDERS_STATISTICS_TIMEOUT_MS || 5000);
+    return Number.isFinite(timeout) && timeout > 0 ? timeout : 5000;
+  }
+
+  private asBearerToken(token: string): string {
+    return token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+  }
+
+  private normalizeOrdersSalesStatistics(productId: string, payload: any): ProductSalesStatistics {
+    const allowedChannels = Array.isArray(payload?.allowedChannels) && payload.allowedChannels.length
+      ? payload.allowedChannels.map((channel: unknown) => String(channel))
+      : DEFAULT_SALES_CHANNELS;
+    const rawChannels = Array.isArray(payload?.channels) ? payload.channels : [];
+    const channelRows = allowedChannels.map((channel) => {
+      const row = rawChannels.find((candidate: any) => String(candidate?.channel) === channel);
+      return this.normalizeSalesChannel(productId, channel, row);
+    });
+
+    return {
+      productId,
+      source: 'orders',
+      sourceStatus: 'available',
+      allowedChannels,
+      currencyStrategy: String(payload?.currencyStrategy || 'per_currency_no_fx_conversion'),
+      conversion: String(payload?.conversion || '[UNKNOWN: conversion]'),
+      totals: this.sumSalesTotals(channelRows),
+      channels: channelRows,
+    };
+  }
+
+  private normalizeSalesChannel(productId: string, channel: string, row: any): ProductSalesChannel {
+    const orderCount = this.toNonNegativeNumber(row?.orderCount);
+    const quantitySold = this.toNonNegativeNumber(row?.quantitySold);
+    const grossSales = this.toNonNegativeNumber(row?.grossSales);
+    const currency = String(row?.currency || 'CZK');
+    const hasSales = orderCount > 0 || quantitySold > 0 || grossSales > 0;
+
+    return {
+      productId,
+      channel,
+      currency,
+      orderCount,
+      quantitySold,
+      grossSales,
+      lastOrderedAt: row?.lastOrderedAt ? String(row.lastOrderedAt) : null,
+      status: hasSales ? 'available' : 'zero',
+    };
+  }
+
+  private sumSalesTotals(channels: ProductSalesChannel[]): ProductSalesStatistics['totals'] {
+    const grossSales = new Map<string, number>();
+    let orderCount = 0;
+    let quantitySold = 0;
+
+    for (const channel of channels) {
+      orderCount += channel.orderCount;
+      quantitySold += channel.quantitySold;
+      grossSales.set(channel.currency, (grossSales.get(channel.currency) || 0) + channel.grossSales);
+    }
+
+    return {
+      orderCount,
+      quantitySold,
+      grossSalesByCurrency: Array.from(grossSales.entries()).map(([currency, amount]) => ({ currency, amount })),
+    };
+  }
+
+  private unavailableSalesStatistics(productId: string, unavailableReason: string): ProductSalesStatistics {
+    const channels = DEFAULT_SALES_CHANNELS.map((channel) => ({
+      productId,
+      channel,
+      currency: 'CZK',
+      orderCount: 0,
+      quantitySold: 0,
+      grossSales: 0,
+      lastOrderedAt: null,
+      status: 'unavailable' as const,
+      unavailableReason,
+    }));
+
+    return {
+      productId,
+      source: 'orders',
+      sourceStatus: 'unavailable',
+      allowedChannels: DEFAULT_SALES_CHANNELS,
+      currencyStrategy: 'per_currency_no_fx_conversion',
+      conversion: '[UNKNOWN: conversion]',
+      totals: this.sumSalesTotals(channels),
+      channels,
+      unavailableReason,
+    };
+  }
+
+  private toNonNegativeNumber(value: unknown): number {
+    const numeric = Number(value ?? 0);
+    return Number.isFinite(numeric) && numeric > 0 ? numeric : 0;
   }
 
   private getBazosBaseUrl(): string {

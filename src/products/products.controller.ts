@@ -207,6 +207,19 @@ export class ProductsController {
     return this.requestBazosDraft(id, data, authorization, request);
   }
 
+
+  /**
+   * Get product marketplace sales statistics
+   * GET /api/products/:id/sales-statistics
+   */
+  @Get(':id/sales-statistics')
+  @UseGuards(CatalogAuthGuard)
+  async getSalesStatistics(@Param('id', ParseUUIDPipe) id: string) {
+    this.logger.log(`GET /api/products/${id}/sales-statistics`, 'ProductsController');
+    const statistics = await this.productsService.getSalesStatistics(id);
+    return { success: true, data: statistics };
+  }
+
   /**
    * Get a single product by ID
    * GET /api/products/:id
