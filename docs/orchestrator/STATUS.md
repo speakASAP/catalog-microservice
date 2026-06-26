@@ -22,6 +22,16 @@ Next action: implement the Orders product sales statistics read model, then brid
 
 # Catalog Orchestrator Status
 
+## 2026-06-27 - Dedicated Catalog Internal Service Token
+
+Change: created a dedicated Vault property `CATALOG_INTERNAL_SERVICE_TOKEN` under `secret/prod/catalog-microservice` without printing the value. Switched Catalog and Orders ExternalSecret mappings for `CATALOG_INTERNAL_SERVICE_TOKEN` away from the temporary `BAZOS_SERVICE_TOKEN` source and onto the dedicated property. Existing `BAZOS_SERVICE_TOKEN` remains present for Bazos-owned integration only.
+
+Boundary decision: no token values, decoded JWTs, passwords, or raw secret material were printed, committed, or copied into docs. Auth `/auth/validate` currently requires an active user `sub`, so an arbitrary Auth-signed service JWT is not a valid replacement without a separate Auth service-identity model; the dedicated credential follows the active service-identity standard of `x-internal-service-token` plus `x-service-name`.
+
+Validation expectation: Kubernetes server dry-run for both ExternalSecret manifests, then apply/reconcile, restart Catalog and Orders pods, and rerun the sanitized Catalog-to-Orders smoke.
+
+Next action: apply ExternalSecret manifests and restart both deployments so runtime pods consume the dedicated credential.
+
 ## 2026-06-27 - Goal 17 Runtime Token And Orders Bridge Wiring
 
 Change: verified Vault and Kubernetes runtime key wiring without printing secret values. Vault `secret/prod/catalog-microservice` contains `BAZOS_SERVICE_TOKEN`; ExternalSecret maps it into live Kubernetes keys `BAZOS_SERVICE_TOKEN` and `CATALOG_INTERNAL_SERVICE_TOKEN` for Catalog, and into `CATALOG_INTERNAL_SERVICE_TOKEN` for Orders. Both live ExternalSecrets report `SecretSynced=True`, and both live Kubernetes Secrets expose `CATALOG_INTERNAL_SERVICE_TOKEN`. Orders is deployed from `62e1e2d`, which accepts `x-internal-service-token` plus `x-service-name: catalog-microservice` and maps it to `internal:catalog-microservice:service`. Corrected Catalog `ORDERS_SERVICE_URL` to `http://orders-microservice.statex-apps.svc.cluster.local:3203`, matching the live Orders Kubernetes Service.
