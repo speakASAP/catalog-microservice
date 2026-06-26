@@ -35,6 +35,35 @@ export type ProductReadiness = {
   };
 };
 
+
+export type BazosIdentitySummary = {
+  id: string;
+  displayName?: string | null;
+  contactName?: string | null;
+  defaultLocation?: string | null;
+  status?: string | null;
+  reviewState?: string | null;
+  sessionState?: string | null;
+  activeAdCount?: number | null;
+  verificationExpiresAt?: string | null;
+  nextPublishNotBefore?: string | null;
+  canSell: boolean;
+  blockingReasons: string[];
+};
+
+export type BazosAccountStatus = {
+  connected: boolean;
+  active: boolean;
+  canSell: boolean;
+  authority: 'bazos';
+  message: string;
+  selectedIdentity: BazosIdentitySummary | null;
+  identities: BazosIdentitySummary[];
+  nextAction: string;
+  dependencyStatus?: number | null;
+  dependencyMessage?: string | null;
+};
+
 export type ProductIdentifierAudit = {
   missingEan: Array<{ id: string; sku: string; title: string }>;
   duplicateSkus: Array<{ sku: string; count: number }>;
@@ -350,6 +379,77 @@ export class ProductsService {
   }
 
 
+  async getBazosStatus(id: string, authorization?: string) {
+    await this.findOne(id);
+
+    if (!authorization) {
+      return this.blockedBazosDraft(id, 'auth_required', 'Authentication is required before reading Bazos listing status.');
+    }
+
+    const bazosBaseUrl = this.getBazosBaseUrl();
+    const bazosAuthorization = this.resolveBazosAuthorization(authorization);
+
+    try {
+      const response = await axios.get(
+        `${bazosBaseUrl}/api/bazos/catalog/products/${id}/sell-action/status`,
+        { headers: { Authorization: bazosAuthorization, 'Content-Type': 'application/json' } },
+      );
+      const bazosStatus = response.data?.data || response.data;
+      return this.bazosStatusResponse(id, bazosStatus);
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        return this.bazosStatusResponse(id, null);
+      }
+      return {
+        ...this.blockedBazosDraft(id, 'bazos_status_request_failed', 'Bazos listing status check failed. Try again after resolving the Bazos-owned dependency.'),
+        dependencyStatus: error?.response?.status ?? null,
+        dependencyMessage: error?.response?.data?.message ?? error?.message ?? null,
+      };
+    }
+  }
+
+  async getBazosAccountStatus(authorization?: string): Promise<BazosAccountStatus> {
+    if (!authorization) {
+      return this.blockedBazosAccountStatus('Catalog login is required before checking Bazos account status.', 'login_to_catalog');
+    }
+
+    const bazosBaseUrl = this.getBazosBaseUrl();
+
+    try {
+      const response = await axios.get(`${bazosBaseUrl}/api/bazos/identities`, {
+        headers: { Authorization: authorization, 'Content-Type': 'application/json' },
+      });
+      const rawIdentities = Array.isArray(response.data?.data)
+        ? response.data.data
+        : Array.isArray(response.data)
+          ? response.data
+          : [];
+      const identities = rawIdentities.map((identity: any) => this.summarizeBazosIdentity(identity));
+      const selectedIdentity =
+        identities.find((identity) => identity.canSell) ||
+        identities.find((identity) => identity.status === 'verified') ||
+        identities[0] ||
+        null;
+
+      return {
+        connected: identities.length > 0,
+        active: identities.some((identity) => identity.status === 'verified' && identity.sessionState === 'active'),
+        canSell: Boolean(selectedIdentity?.canSell),
+        authority: 'bazos',
+        message: this.bazosAccountStatusMessage(identities, selectedIdentity),
+        selectedIdentity,
+        identities,
+        nextAction: selectedIdentity?.canSell ? 'create_bazos_draft' : 'connect_or_verify_bazos_identity',
+      };
+    } catch (error: any) {
+      return {
+        ...this.blockedBazosAccountStatus('Bazos account status is unavailable. Sign in to Catalog again or reconnect Bazos.', 'bazos_status_unavailable'),
+        dependencyStatus: error?.response?.status ?? null,
+        dependencyMessage: error?.response?.data?.message ?? error?.message ?? null,
+      };
+    }
+  }
+
   async requestBazosDraft(id: string, data: any = {}, authorization?: string) {
     const product = await this.findOne(id);
 
@@ -376,8 +476,8 @@ export class ProductsService {
       return this.blockedBazosDraft(id, 'price_required', 'A current catalog price is required before requesting a Bazos draft.');
     }
 
-    const bazosBaseUrl = (process.env.BAZOS_SERVICE_URL || 'http://bazos-service:3000').replace(/\/$/, '');
-    const bazosAuthorization = this.resolveBazosAuthorization(authorization);
+    const bazosBaseUrl = this.getBazosBaseUrl();
+    const bazosAuthorization = this.resolveBazosAuthorization(authorization, data.useCallerBazosIdentity === true);
     const draftPayload = {
       identityId,
       title: data.title || product.title,
@@ -409,7 +509,108 @@ export class ProductsService {
     return this.requestBazosDraft(id, data, authorization);
   }
 
-  private resolveBazosAuthorization(callerAuthorization?: string): string {
+  async prepareAllegroSale(id: string, data: any = {}, authorization?: string) {
+    const product = await this.findOne(id);
+
+    if (!authorization) {
+      return this.blockedChannelAction('allegro', id, 'auth_required', 'Authentication is required before preparing an Allegro offer.');
+    }
+
+    if (!product.isActive) {
+      return this.blockedChannelAction('allegro', id, 'inactive_product', 'Only active catalog products can be prepared for Allegro.');
+    }
+
+    const currentPrice = await this.resolveCurrentPrice(product);
+    if (!currentPrice) {
+      return this.blockedChannelAction('allegro', id, 'price_required', 'A current catalog price is required before preparing an Allegro offer.');
+    }
+
+    const allegroBaseUrl = (process.env.ALLEGRO_SERVICE_URL || 'http://allegro-service:3000').replace(/\/$/, '');
+    const payload = {
+      catalogProductId: id,
+      categoryId: data.categoryId || product.categories?.[0]?.id,
+      title: data.title || product.title,
+      description: data.description ?? product.description ?? undefined,
+      price: data.price ?? currentPrice,
+      quantity: data.quantity ?? 0,
+      idempotencyKey: data.idempotencyKey || `catalog:${id}:allegro`,
+      forceNewDraft: Boolean(data.forceNewDraft),
+    };
+
+    try {
+      const response = await axios.post(
+        `${allegroBaseUrl}/allegro/catalog-sell/prepare`,
+        payload,
+        { headers: { Authorization: authorization, 'Content-Type': 'application/json' } },
+      );
+      const allegroAction = response.data?.data || response.data;
+      return this.allegroSaleResponse(id, allegroAction);
+    } catch (error: any) {
+      return {
+        ...this.blockedChannelAction('allegro', id, 'allegro_prepare_failed', 'Allegro offer preparation failed. Resolve the Allegro-owned dependency before retrying.'),
+        dependencyStatus: error?.response?.status ?? null,
+        dependencyMessage: error?.response?.data?.message ?? error?.message ?? null,
+      };
+    }
+  }
+
+  async prepareFlipFlopSale(id: string) {
+    const product = await this.findOne(id);
+    const listingUrl = `${this.getFlipFlopPublicUrl()}/products/${encodeURIComponent(id)}`;
+
+    if (!product.isActive) {
+      return {
+        ...this.blockedChannelAction('flipflop', id, 'inactive_product', 'Only active catalog products can be shown on FlipFlop.'),
+        listingUrl,
+      };
+    }
+
+    const currentPrice = await this.resolveCurrentPrice(product);
+    if (!currentPrice) {
+      return {
+        ...this.blockedChannelAction('flipflop', id, 'price_required', 'A current catalog price is required before showing this product on FlipFlop.'),
+        listingUrl,
+      };
+    }
+
+    const flipflopBaseUrl = this.getFlipFlopPublicUrl();
+    try {
+      const response = await axios.get(`${flipflopBaseUrl}/api/products/${encodeURIComponent(id)}?includeWarehouse=true`);
+      const productProjection = response.data?.data || response.data;
+      return {
+        success: true,
+        action: 'prepare_flipflop_sale',
+        productId: id,
+        authority: 'flipflop',
+        listingUrl,
+        availableOnFlipFlop: true,
+        message: 'Product is available through the FlipFlop storefront projection.',
+        nextAction: 'view_flipflop_listing',
+        productProjection,
+      };
+    } catch (error: any) {
+      return {
+        ...this.blockedChannelAction('flipflop', id, 'flipflop_projection_unavailable', 'FlipFlop product projection is not available yet. Check FlipFlop product-service routing and catalog projection.'),
+        listingUrl,
+        dependencyStatus: error?.response?.status ?? null,
+        dependencyMessage: error?.response?.data?.message ?? error?.message ?? null,
+      };
+    }
+  }
+
+  private getBazosBaseUrl(): string {
+    return (process.env.BAZOS_SERVICE_URL || 'http://bazos-service:3000').replace(/\/$/, '');
+  }
+
+  private getFlipFlopPublicUrl(): string {
+    return (process.env.FLIPFLOP_PUBLIC_URL || 'https://flipflop.alfares.cz').replace(/\/$/, '');
+  }
+
+  private resolveBazosAuthorization(callerAuthorization?: string, preferCaller = false): string {
+    if (preferCaller && callerAuthorization) {
+      return callerAuthorization;
+    }
+
     const token = process.env.BAZOS_SERVICE_TOKEN || process.env.BAZOS_INTERNAL_SERVICE_TOKEN;
     if (token?.trim()) {
       return token.startsWith('Bearer ') ? token : `Bearer ${token}`;
@@ -427,6 +628,58 @@ export class ProductsService {
 
     const amount = Number(price.salePrice ?? price.basePrice);
     return Number.isFinite(amount) && amount > 0 ? amount : null;
+  }
+
+  private blockedBazosAccountStatus(message: string, nextAction: string): BazosAccountStatus {
+    return {
+      connected: false,
+      active: false,
+      canSell: false,
+      authority: 'bazos',
+      message,
+      selectedIdentity: null,
+      identities: [],
+      nextAction,
+    };
+  }
+
+  private summarizeBazosIdentity(identity: any): BazosIdentitySummary {
+    const blockingReasons: string[] = [];
+    const activeAdCount = Number(identity.activeAdCount ?? 0);
+    const nextPublishNotBefore = identity.nextPublishNotBefore ? new Date(identity.nextPublishNotBefore) : null;
+    const verificationExpiresAt = identity.verificationExpiresAt ? new Date(identity.verificationExpiresAt) : null;
+
+    if (identity.status !== 'verified') blockingReasons.push('Bazos phone identity is not verified.');
+    if (identity.reviewState !== 'clear') blockingReasons.push('Bazos review state requires manual action.');
+    if (identity.sessionState !== 'active') blockingReasons.push('Bazos session is missing, expired, or blocked by a challenge.');
+    if (Number.isFinite(activeAdCount) && activeAdCount >= 50) blockingReasons.push('Bazos active ad limit is reached for this identity.');
+    if (nextPublishNotBefore && nextPublishNotBefore.getTime() > Date.now()) blockingReasons.push('Bazos publish pacing delay is still active.');
+    if (verificationExpiresAt && verificationExpiresAt.getTime() <= Date.now()) blockingReasons.push('Bazos verification session is expired.');
+
+    return {
+      id: String(identity.id),
+      displayName: identity.displayName ?? null,
+      contactName: identity.contactName ?? null,
+      defaultLocation: identity.defaultLocation ?? null,
+      status: identity.status ?? null,
+      reviewState: identity.reviewState ?? null,
+      sessionState: identity.sessionState ?? null,
+      activeAdCount: Number.isFinite(activeAdCount) ? activeAdCount : null,
+      verificationExpiresAt: identity.verificationExpiresAt ?? null,
+      nextPublishNotBefore: identity.nextPublishNotBefore ?? null,
+      canSell: blockingReasons.length === 0,
+      blockingReasons,
+    };
+  }
+
+  private bazosAccountStatusMessage(identities: BazosIdentitySummary[], selectedIdentity: BazosIdentitySummary | null): string {
+    if (identities.length === 0) {
+      return 'No Bazos phone identity is connected. Connect and verify a Bazos phone identity before publishing.';
+    }
+    if (selectedIdentity?.canSell) {
+      return 'Bazos account is connected and ready for a catalog draft.';
+    }
+    return selectedIdentity?.blockingReasons[0] || 'Bazos account needs manual verification before publishing.';
   }
 
   private blockedBazosDraft(productId: string, reason: string, message: string) {
@@ -447,6 +700,54 @@ export class ProductsService {
         error: message,
       },
       nextAction: 'resolve_bazos_draft_requirements',
+    };
+  }
+
+  private blockedChannelAction(channel: 'allegro' | 'flipflop', productId: string, reason: string, message: string) {
+    return {
+      success: false,
+      action: channel === 'allegro' ? 'prepare_allegro_sale' : 'prepare_flipflop_sale',
+      productId,
+      blocked: true,
+      reason,
+      message,
+      authority: channel,
+      requiresHumanAction: {
+        required: true,
+        reason,
+        error: message,
+      },
+      nextAction: `resolve_${channel}_requirements`,
+    };
+  }
+
+  private bazosStatusResponse(productId: string, bazosStatus: any) {
+    const draft = bazosStatus?.draft ?? null;
+    const listingUrl = bazosStatus?.listingUrl ?? draft?.listingUrl ?? null;
+    const publishedOnBasus = Boolean(bazosStatus?.publishedOnBasus ?? draft?.publishedOnBasus ?? bazosStatus?.publishedOnBazos ?? draft?.publishedOnBazos);
+
+    return {
+      success: true,
+      action: 'read_bazos_listing_status',
+      productId,
+      authority: 'bazos',
+      policyAuthority: 'bazos',
+      publishAuthority: 'bazos',
+      publishedOnBasus,
+      publishedOnBazos: publishedOnBasus,
+      listingUrl,
+      draft,
+      identity: bazosStatus?.identity ?? null,
+      latestAttempt: bazosStatus?.latestAttempt ?? null,
+      requiresConfirmation: Boolean(bazosStatus?.requiresConfirmation),
+      requiresHumanAction: bazosStatus?.requiresHumanAction ?? {
+        required: false,
+        reason: null,
+        policyFailures: [],
+        error: null,
+      },
+      nextAction: publishedOnBasus ? 'view_bazos_listing' : (bazosStatus?.nextAction ?? 'create_bazos_draft'),
+      bazosStatus,
     };
   }
 
@@ -472,6 +773,27 @@ export class ProductsService {
       },
       nextAction: bazosAction?.nextAction ?? 'resolve_policy_failures',
       bazosAction,
+    };
+  }
+
+  private allegroSaleResponse(productId: string, allegroAction: any) {
+    const draft = allegroAction?.draft ?? null;
+    const listingUrl = allegroAction?.listingUrl ?? draft?.publicUrl ?? draft?.listingUrl ?? null;
+
+    return {
+      success: true,
+      action: 'prepare_allegro_sale',
+      productId,
+      authority: 'allegro',
+      draft,
+      attempt: allegroAction?.attempt ?? null,
+      status: allegroAction?.status ?? allegroAction?.attempt?.status ?? null,
+      listingUrl,
+      categoryChoice: allegroAction?.categoryChoice ?? null,
+      accountChoices: allegroAction?.accountChoices ?? [],
+      requiresConfirmation: allegroAction?.nextAction === 'confirm_publish',
+      nextAction: listingUrl ? 'view_allegro_listing' : (allegroAction?.nextAction ?? 'confirm_publish'),
+      allegroAction,
     };
   }
 

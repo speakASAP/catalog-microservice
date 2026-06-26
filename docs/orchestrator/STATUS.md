@@ -1,3 +1,12 @@
+
+## 2026-06-26 - Goal 17 Product Marketplace Sales Statistics Planning
+
+Change: owner requested product-level sales statistics on the Catalog admin product page for connected marketplaces. Added Goal 17 and an execution plan that keeps Orders as the sales/order source of truth, Catalog as product truth, and marketplace services as channel ingestion owners. Added a zero-value frontend placeholder block to the product edit page so the requested statistics area is visible while the Orders-backed contract is implemented.
+
+Validation evidence: planning/source inspection only so far. Full build/test validation remains pending because the remote worktree already had unrelated dirty changes in the same frontend/backend files before this session.
+
+Next action: implement the Orders product sales statistics read model, then bridge it into Catalog and replace the placeholder with live data.
+
 # Catalog Orchestrator Status
 
 ## 2026-06-13 - FlipFlop Sellable Quantity From Reservable Routes

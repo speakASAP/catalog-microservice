@@ -7,6 +7,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import MediaManagement from '@/components/MediaManagement';
 import PricingManagement from '@/components/PricingManagement';
 import BazosPublishPanel from '@/components/BazosPublishPanel';
+import ChannelSalesPanel from '@/components/ChannelSalesPanel';
 
 export default function EditProductPage() {
   const router = useRouter();
@@ -297,7 +298,48 @@ export default function EditProductPage() {
         {/* Pricing Management */}
         <PricingManagement productId={productId} />
 
-        <BazosPublishPanel productId={productId} />
+        <BazosPublishPanel productId={productId} defaultCategory={product.categories?.[0]?.name} />
+
+        <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Marketplace sales</h2>
+              <p className="text-sm text-gray-600">Product-specific sales totals from connected channels.</p>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-right">
+              <div className="text-xs font-semibold uppercase text-gray-500">Total sold</div>
+              <div className="text-3xl font-extrabold text-gray-900">{totalSalesCount}</div>
+              <div className="text-xs text-gray-500">{totalGrossRevenueCzk.toLocaleString(cs-CZ)} CZK</div>
+            </div>
+          </div>
+
+          <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
+            {PRODUCT_MARKETPLACE_SALES_STATS.map((stat) => (
+              <div key={stat.channel} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="font-bold text-gray-900">{stat.label}</h3>
+                  <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${stat.status === connected ? bg-emerald-100 text-emerald-800 : bg-amber-100 text-amber-800}`}>
+                    {stat.status === connected ? connected : planned}
+                  </span>
+                </div>
+                <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
+                  <div>
+                    <div className="text-xs font-semibold uppercase text-gray-500">Sold</div>
+                    <div className="text-2xl font-extrabold text-gray-900">{stat.soldCount}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold uppercase text-gray-500">Revenue</div>
+                    <div className="text-lg font-bold text-gray-900">{stat.grossRevenueCzk.toLocaleString(cs-CZ)}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold uppercase text-gray-500">Events</div>
+                    <div className="text-lg font-bold text-gray-900">{stat.historyEvents}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
 
         <div className="flex gap-4 pt-6 border-t border-gray-200">
           <button

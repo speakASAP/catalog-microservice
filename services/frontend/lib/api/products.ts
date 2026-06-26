@@ -21,6 +21,54 @@ export interface Product {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  categories?: Array<{ id: string; name: string }>;
+}
+
+export interface BazosIdentitySummary {
+  id: string;
+  displayName?: string | null;
+  contactName?: string | null;
+  defaultLocation?: string | null;
+  status?: string | null;
+  reviewState?: string | null;
+  sessionState?: string | null;
+  activeAdCount?: number | null;
+  verificationExpiresAt?: string | null;
+  nextPublishNotBefore?: string | null;
+  canSell: boolean;
+  blockingReasons: string[];
+}
+
+export interface BazosAccountStatus {
+  connected: boolean;
+  active: boolean;
+  canSell: boolean;
+  authority: 'bazos';
+  message: string;
+  selectedIdentity: BazosIdentitySummary | null;
+  identities: BazosIdentitySummary[];
+  nextAction: string;
+  dependencyStatus?: number | null;
+  dependencyMessage?: string | null;
+}
+
+export interface BazosSellActionResponse {
+  success: boolean;
+  action: string;
+  productId: string;
+  authority: 'bazos';
+  policyAuthority: 'bazos';
+  publishAuthority: 'bazos';
+  draft?: any;
+  identity?: any;
+  categoryMapping?: any;
+  policyStatus?: any;
+  requiresConfirmation?: boolean;
+  canQueueAfterConfirmation?: boolean;
+  requiresHumanAction?: any;
+  nextAction?: string;
+  message?: string;
+  reason?: string;
 }
 
 export interface ProductQuery {
@@ -38,6 +86,28 @@ export interface PaginatedResponse<T> {
     limit: number;
     pages: number;
   };
+}
+
+export interface BazosListingStatus {
+  publishedOnBasus: boolean;
+  listingUrl?: string | null;
+  draft?: {
+    id?: string;
+    publishStatus?: string;
+    bazosAdId?: string | null;
+    listingUrl?: string | null;
+    publishedOnBasus?: boolean;
+  } | null;
+  identity?: {
+    displayName?: string | null;
+    contactName?: string | null;
+    defaultLocation?: string | null;
+  } | null;
+  requiresHumanAction?: {
+    required?: boolean;
+    reason?: string | null;
+  };
+  nextAction?: string;
 }
 
 export const productsApi = {
@@ -68,8 +138,25 @@ export const productsApi = {
     return apiClient.put<Product>(`/products/${id}`, data);
   },
 
-  async sellOnBazos(id: string, data: { phoneNumber: string; displayName: string; category: string; location: string }) {
-    return apiClient.post(`/products/${id}/sell-on-bazos`, data);
+  async getBazosStatus(id: string) {
+    return apiClient.get<BazosListingStatus>(`/products/${id}/bazos-status`);
+  },
+
+  async getBazosAccountStatus() {
+    return apiClient.get<BazosAccountStatus>('/products/bazos/account-status');
+  },
+
+  async sellOnBazos(id: string, data: { identityId: string; category: string; location?: string; useCallerBazosIdentity?: boolean }) {
+    return apiClient.post<BazosSellActionResponse>(`/products/${id}/sell-on-bazos`, data);
+  },
+
+
+  async sellOnAllegro(id: string, data: { categoryId?: string; quantity?: number; forceNewDraft?: boolean } = {}) {
+    return apiClient.post(`/products/${id}/sell-on-allegro`, data);
+  },
+
+  async sellOnFlipFlop(id: string) {
+    return apiClient.post(`/products/${id}/sell-on-flipflop`, {});
   },
 
   async deleteProduct(id: string) {

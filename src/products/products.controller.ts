@@ -102,6 +102,20 @@ export class ProductsController {
   }
 
   /**
+   * Get Bazos account status for the current Catalog user
+   * GET /api/products/bazos/account-status
+   */
+  @Get("bazos/account-status")
+  @UseGuards(CatalogAuthGuard)
+  async getBazosAccountStatus(
+    @Headers("authorization") authorization?: string,
+  ) {
+    this.logger.log("GET /api/products/bazos/account-status", "ProductsController");
+    const status = await this.productsService.getBazosAccountStatus(authorization);
+    return { success: true, data: status };
+  }
+
+  /**
    * Get readiness diagnostics for a product
    * GET /api/products/:id/readiness
    */
@@ -112,6 +126,54 @@ export class ProductsController {
     return { success: true, data: readiness };
   }
 
+  @Get(":id/bazos-status")
+  @UseGuards(CatalogAuthGuard)
+  async getBazosStatus(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Headers("authorization") authorization?: string,
+  ) {
+    this.logger.log(`GET /api/products/${id}/bazos-status`, "ProductsController");
+    const result = await this.productsService.getBazosStatus(id, authorization);
+    return { success: result.success !== false, data: result };
+  }
+
+  @Post(":id/sell-on-allegro")
+  @UseGuards(CatalogAuthGuard)
+  async sellOnAllegro(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() data: any,
+    @Headers("authorization") authorization?: string,
+    @Req() request?: CatalogAuthenticatedRequest,
+  ) {
+    this.logger.log(`POST /api/products/${id}/sell-on-allegro`, "ProductsController");
+    const result = await this.productsService.prepareAllegroSale(id, data, authorization);
+    if (request) {
+      this.logger.auditCatalogWrite(request, {
+        action: 'prepare_allegro_sale',
+        resourceType: 'product',
+        resourceId: id,
+      });
+    }
+    return { success: result.success !== false, data: result };
+  }
+
+  @Post(":id/sell-on-flipflop")
+  @UseGuards(CatalogAuthGuard)
+  async sellOnFlipFlop(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Req() request?: CatalogAuthenticatedRequest,
+  ) {
+    this.logger.log(`POST /api/products/${id}/sell-on-flipflop`, "ProductsController");
+    const result = await this.productsService.prepareFlipFlopSale(id);
+    if (request) {
+      this.logger.auditCatalogWrite(request, {
+        action: 'prepare_flipflop_sale',
+        resourceType: 'product',
+        resourceId: id,
+      });
+    }
+    return { success: result.success !== false, data: result };
+  }
 
   @Post(":id/bazos-draft")
   @UseGuards(CatalogAuthGuard)

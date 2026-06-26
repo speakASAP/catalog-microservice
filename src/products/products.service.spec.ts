@@ -143,6 +143,46 @@ describe("ProductsService Bazos draft action", () => {
     expect((result as any).policyStatus.failures[0].gate).toBe("public_duplicate_check_missing");
   });
 
+
+  it('reads Bazos listing status and preserves the published listing URL', async () => {
+    const repository = {
+      findOne: jest.fn(async () => readyProduct),
+      count: jest.fn(async () => 1),
+    };
+    const mockedAxios = axios as jest.Mocked<typeof axios>;
+    mockedAxios.get.mockResolvedValueOnce({
+      data: {
+        action: 'sell_on_bazos',
+        productId: readyProduct.id,
+        publishedOnBasus: true,
+        listingUrl: 'https://www.bazos.cz/inzerat/123456789/',
+        draft: {
+          id: '33333333-3333-4333-8333-333333333333',
+          productId: readyProduct.id,
+          publishStatus: 'published',
+          bazosAdId: '123456789',
+          publishedOnBasus: true,
+          listingUrl: 'https://www.bazos.cz/inzerat/123456789/',
+        },
+      },
+    } as any);
+    const service = new ProductsService(repository as any, logger as any);
+
+    const result = await service.getBazosStatus(readyProduct.id, 'Bearer user-token');
+
+    expect(mockedAxios.get).toHaveBeenCalledWith(
+      'http://bazos-service:3000/api/bazos/catalog/products/11111111-1111-4111-8111-111111111111/sell-action/status',
+      { headers: { Authorization: 'Bearer user-token', 'Content-Type': 'application/json' } },
+    );
+    expect(result).toMatchObject({
+      success: true,
+      action: 'read_bazos_listing_status',
+      publishedOnBasus: true,
+      listingUrl: 'https://www.bazos.cz/inzerat/123456789/',
+      nextAction: 'view_bazos_listing',
+    });
+  });
+
   it("blocks draft requests locally when Bazos identity is missing", async () => {
     const repository = {
       findOne: jest.fn(async () => readyProduct),
@@ -164,5 +204,95 @@ describe("ProductsService Bazos draft action", () => {
       publishAuthority: "bazos",
       requiresHumanAction: { required: true, reason: "identity_required" },
     });
+  });
+
+
+  it("reports the current user's Bazos account readiness from Bazos identities", async () => {
+    const repository = {
+      findOne: jest.fn(async () => readyProduct),
+      count: jest.fn(async () => 1),
+    };
+    const mockedAxios = axios as jest.Mocked<typeof axios>;
+    mockedAxios.get.mockResolvedValueOnce({
+      data: [
+        {
+          id: "33333333-3333-4333-8333-333333333333",
+          displayName: "Verified seller",
+          defaultLocation: "Praha",
+          status: "verified",
+          reviewState: "clear",
+          sessionState: "active",
+          activeAdCount: 3,
+        },
+      ],
+    } as any);
+    const service = new ProductsService(repository as any, logger as any);
+
+    const status = await service.getBazosAccountStatus("Bearer current-user-token");
+
+    expect(mockedAxios.get).toHaveBeenCalledWith(
+      "http://bazos-service:3000/api/bazos/identities",
+      { headers: { Authorization: "Bearer current-user-token", "Content-Type": "application/json" } },
+    );
+    expect(status).toMatchObject({
+      connected: true,
+      active: true,
+      canSell: true,
+      authority: "bazos",
+      selectedIdentity: {
+        id: "33333333-3333-4333-8333-333333333333",
+        canSell: true,
+        blockingReasons: [],
+      },
+      nextAction: "create_bazos_draft",
+    });
+  });
+
+  it("uses the caller token for user-owned Bazos identity draft requests when requested", async () => {
+    const previousToken = process.env.BAZOS_SERVICE_TOKEN;
+    process.env.BAZOS_SERVICE_TOKEN = "service-smoke-token";
+    const repository = {
+      findOne: jest.fn(async () => readyProduct),
+      count: jest.fn(async () => 1),
+    };
+    const pricingService = {
+      getCurrentPrice: jest.fn(async () => ({ productId: readyProduct.id, basePrice: 1000, currency: "CZK" })),
+    };
+    const mockedAxios = axios as jest.Mocked<typeof axios>;
+    mockedAxios.post.mockResolvedValueOnce({
+      data: {
+        action: "sell_on_bazos",
+        productId: readyProduct.id,
+        draft: { id: "draft-user-1", productId: readyProduct.id, publishStatus: "draft" },
+        identity: { id: "33333333-3333-4333-8333-333333333333", status: "verified" },
+        policyStatus: { allowed: true, failures: [] },
+        requiresConfirmation: true,
+        canQueueAfterConfirmation: true,
+        requiresHumanAction: { required: false, reason: null, policyFailures: [] },
+        nextAction: "confirm_publish",
+      },
+    } as any);
+    const service = new ProductsService(repository as any, logger as any, pricingService as any);
+
+    const result = await service.requestBazosDraft(readyProduct.id, {
+      identityId: "33333333-3333-4333-8333-333333333333",
+      category: "elektro",
+      useCallerBazosIdentity: true,
+    }, "Bearer current-user-token");
+
+    expect(mockedAxios.post.mock.calls[0][2]).toMatchObject({
+      headers: { Authorization: "Bearer current-user-token" },
+    });
+    expect(result).toMatchObject({
+      success: true,
+      canQueueAfterConfirmation: true,
+      nextAction: "confirm_publish",
+    });
+
+    if (previousToken === undefined) {
+      delete process.env.BAZOS_SERVICE_TOKEN;
+    } else {
+      process.env.BAZOS_SERVICE_TOKEN = previousToken;
+    }
   });
 });

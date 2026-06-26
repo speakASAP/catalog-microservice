@@ -114,6 +114,10 @@ Do not paste full logs into this file. Compress each result into a short impleme
 
 ## Validation Evidence Log
 
+
+2026-06-26: Goal 17 planned from owner request for per-product marketplace sales statistics on Catalog product detail pages. Current Catalog has no Orders-backed product sales stats contract; Bazos draft/listing status is not sales evidence. Added `implementation-goals/GOAL-17-product-marketplace-sales-statistics.md` and `implementation-goals/GOAL-17-execution-plan.md`. Added a zero-value Marketplace sales placeholder to `services/frontend/app/admin/products/[id]/page.tsx` for FlipFlop, Bazos, and Allegro while the real Orders-owned aggregate contract is implemented. Existing remote worktree was already dirty in product admin/auth/product backend files before this session; full validation and deploy are pending.
+
+
 Newest entries first.
 
 ```text
