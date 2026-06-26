@@ -387,7 +387,7 @@ export class ProductsService {
     }
 
     const bazosBaseUrl = this.getBazosBaseUrl();
-    const bazosAuthorization = this.resolveBazosAuthorization(authorization);
+    const bazosAuthorization = this.resolveBazosAuthorization(authorization, true);
 
     try {
       const response = await axios.get(

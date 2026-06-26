@@ -207,6 +207,42 @@ describe("ProductsService Bazos draft action", () => {
   });
 
 
+
+
+  it("uses the caller token for user-owned Bazos listing status checks", async () => {
+    const previousToken = process.env.BAZOS_SERVICE_TOKEN;
+    process.env.BAZOS_SERVICE_TOKEN = "invalid-service-token";
+    const repository = {
+      findOne: jest.fn(async () => readyProduct),
+      count: jest.fn(async () => 1),
+    };
+    const mockedAxios = axios as jest.Mocked<typeof axios>;
+    mockedAxios.get.mockResolvedValueOnce({
+      data: {
+        action: "sell_on_bazos",
+        productId: readyProduct.id,
+        draft: { id: "draft-user-1", productId: readyProduct.id, publishStatus: "draft" },
+        identity: { id: "33333333-3333-4333-8333-333333333333" },
+        requiresHumanAction: { required: false, reason: null },
+        nextAction: "confirm_publish",
+      },
+    } as any);
+    const service = new ProductsService(repository as any, logger as any);
+
+    await service.getBazosStatus(readyProduct.id, "Bearer current-user-token");
+
+    expect(mockedAxios.get).toHaveBeenCalledWith(
+      "http://bazos-service:3000/api/bazos/catalog/products/11111111-1111-4111-8111-111111111111/sell-action/status",
+      { headers: { Authorization: "Bearer current-user-token", "Content-Type": "application/json" } },
+    );
+
+    if (previousToken === undefined) {
+      delete process.env.BAZOS_SERVICE_TOKEN;
+    } else {
+      process.env.BAZOS_SERVICE_TOKEN = previousToken;
+    }
+  });
+
   it("reports the current user's Bazos account readiness from Bazos identities", async () => {
     const repository = {
       findOne: jest.fn(async () => readyProduct),
