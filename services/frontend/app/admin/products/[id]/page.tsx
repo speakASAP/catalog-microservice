@@ -319,6 +319,8 @@ export default function EditProductPage() {
 
         <BazosPublishPanel productId={productId} defaultCategory={product.categories?.[0]?.name} />
 
+        <ChannelSalesPanel productId={productId} />
+
         <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div>
