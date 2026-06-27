@@ -88,6 +88,7 @@ export default function BazosPublishPanel({ productId }: BazosPublishPanelProps)
             <span className="rounded-lg bg-white px-3 py-1 font-semibold text-green-800 border border-green-200">
               Status: {publishStatus || 'published'}
             </span>
+          </div>
           {listingUrl && (
             <label className="mt-3 block space-y-2">
               <span className="text-xs font-semibold uppercase text-green-800">Listing URL</span>
