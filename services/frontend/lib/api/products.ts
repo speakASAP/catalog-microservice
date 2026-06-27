@@ -113,6 +113,50 @@ export interface BazosListingStatus {
 }
 
 
+export interface AllegroDraftSummary {
+  id?: string;
+  accountId?: string | null;
+  catalogProductId?: string | null;
+  allegroOfferId?: string | null;
+  title?: string | null;
+  description?: string | null;
+  categoryId?: string | null;
+  price?: number | string | null;
+  currency?: string | null;
+  quantity?: number | null;
+  stockQuantity?: number | null;
+  publicationStatus?: string | null;
+  status?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface AllegroSellActionResponse {
+  success?: boolean;
+  action?: string;
+  productId?: string;
+  authority?: 'allegro';
+  draft?: AllegroDraftSummary | null;
+  attempt?: {
+    id?: string;
+    status?: string | null;
+    blockedReasons?: Array<{ gate?: string; reason?: string }> | null;
+  } | null;
+  accountChoices?: Array<{ id: string; name?: string | null; isActive?: boolean; tokenExpiresAt?: string | null }>;
+  categoryChoice?: { selectedCategoryId?: string | null; source?: string | null } | null;
+  listingUrl?: string | null;
+  status?: string | null;
+  nextAction?: string | null;
+  message?: string | null;
+  blocked?: boolean;
+  reason?: string;
+  dependencyStatus?: number | null;
+  dependencyMessage?: string | null;
+  requiresConfirmation?: boolean;
+  canEditDraft?: boolean;
+  canConfirmPublish?: boolean;
+}
+
+
 export interface ProductSalesChannel {
   productId: string;
   channel: string;
@@ -197,8 +241,20 @@ export const productsApi = {
   },
 
 
-  async sellOnAllegro(id: string, data: { categoryId?: string; quantity?: number; forceNewDraft?: boolean } = {}) {
-    return apiClient.post(`/products/${id}/sell-on-allegro`, data);
+  async getAllegroStatus(id: string) {
+    return apiClient.get<AllegroSellActionResponse>(`/products/${id}/allegro-status`);
+  },
+
+  async sellOnAllegro(id: string, data: { categoryId?: string; quantity?: number; forceNewDraft?: boolean; title?: string; description?: string; price?: number } = {}) {
+    return apiClient.post<AllegroSellActionResponse>(`/products/${id}/sell-on-allegro`, data);
+  },
+
+  async updateAllegroDraft(id: string, data: { offerId?: string; title?: string; description?: string; categoryId?: string; price?: number; quantity?: number }) {
+    return apiClient.put<AllegroSellActionResponse>(`/products/${id}/allegro-draft`, data);
+  },
+
+  async confirmAllegroPublish(id: string) {
+    return apiClient.post<AllegroSellActionResponse>(`/products/${id}/allegro-confirm`, {});
   },
 
   async getFlipFlopStatus(id: string) {

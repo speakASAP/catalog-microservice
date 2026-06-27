@@ -157,6 +157,56 @@ export class ProductsController {
     return { success: result.success !== false, data: result };
   }
 
+  @Get(":id/allegro-status")
+  @UseGuards(CatalogAuthGuard)
+  async getAllegroStatus(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Headers("authorization") authorization?: string,
+  ) {
+    this.logger.log(`GET /api/products/${id}/allegro-status`, "ProductsController");
+    const result = await this.productsService.getAllegroStatus(id, authorization);
+    return { success: result.success !== false, data: result };
+  }
+
+  @Put(":id/allegro-draft")
+  @UseGuards(CatalogAuthGuard)
+  async updateAllegroDraft(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() data: any,
+    @Headers("authorization") authorization?: string,
+    @Req() request?: CatalogAuthenticatedRequest,
+  ) {
+    this.logger.log(`PUT /api/products/${id}/allegro-draft`, "ProductsController");
+    const result = await this.productsService.updateAllegroDraft(id, data, authorization);
+    if (request) {
+      this.logger.auditCatalogWrite(request, {
+        action: 'update_allegro_draft',
+        resourceType: 'product',
+        resourceId: id,
+      });
+    }
+    return { success: result.success !== false, data: result };
+  }
+
+  @Post(":id/allegro-confirm")
+  @UseGuards(CatalogAuthGuard)
+  async confirmAllegroPublish(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Headers("authorization") authorization?: string,
+    @Req() request?: CatalogAuthenticatedRequest,
+  ) {
+    this.logger.log(`POST /api/products/${id}/allegro-confirm`, "ProductsController");
+    const result = await this.productsService.confirmAllegroPublish(id, authorization);
+    if (request) {
+      this.logger.auditCatalogWrite(request, {
+        action: 'confirm_allegro_publish',
+        resourceType: 'product',
+        resourceId: id,
+      });
+    }
+    return { success: result.success !== false, data: result };
+  }
+
   @Get(":id/flipflop-status")
   @UseGuards(CatalogAuthGuard)
   async getFlipFlopStatus(

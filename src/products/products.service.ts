@@ -606,7 +606,7 @@ export class ProductsService {
       return this.blockedChannelAction('allegro', id, 'price_required', 'A current catalog price is required before preparing an Allegro offer.');
     }
 
-    const allegroBaseUrl = (process.env.ALLEGRO_SERVICE_URL || 'http://allegro-service:3000').replace(/\/$/, '');
+    const allegroBaseUrl = this.getAllegroBaseUrl();
     const payload = {
       catalogProductId: id,
       categoryId: data.categoryId || product.categories?.[0]?.id,
@@ -629,6 +629,93 @@ export class ProductsService {
     } catch (error: any) {
       return {
         ...this.blockedChannelAction('allegro', id, 'allegro_prepare_failed', 'Allegro offer preparation failed. Resolve the Allegro-owned dependency before retrying.'),
+        dependencyStatus: error?.response?.status ?? null,
+        dependencyMessage: error?.response?.data?.message ?? error?.message ?? null,
+      };
+    }
+  }
+
+  async getAllegroStatus(id: string, authorization?: string) {
+    await this.findOne(id);
+
+    if (!authorization) {
+      return this.blockedChannelAction('allegro', id, 'auth_required', 'Authentication is required before reading Allegro offer status.');
+    }
+
+    const allegroBaseUrl = this.getAllegroBaseUrl();
+    try {
+      const response = await axios.get(
+        `${allegroBaseUrl}/allegro/catalog-sell/products/${id}/status`,
+        { headers: { Authorization: authorization, 'Content-Type': 'application/json' } },
+      );
+      const allegroStatus = response.data?.data || response.data;
+      return this.allegroSaleResponse(id, allegroStatus);
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        return this.allegroSaleResponse(id, null);
+      }
+      return {
+        ...this.blockedChannelAction('allegro', id, 'allegro_status_failed', 'Allegro offer status is unavailable. Try again after resolving the Allegro-owned dependency.'),
+        dependencyStatus: error?.response?.status ?? null,
+        dependencyMessage: error?.response?.data?.message ?? error?.message ?? null,
+      };
+    }
+  }
+
+  async updateAllegroDraft(id: string, data: any = {}, authorization?: string) {
+    await this.findOne(id);
+
+    if (!authorization) {
+      return this.blockedChannelAction('allegro', id, 'auth_required', 'Authentication is required before editing an Allegro draft.');
+    }
+
+    const allegroBaseUrl = this.getAllegroBaseUrl();
+    const payload = {
+      catalogProductId: id,
+      offerId: data.offerId,
+      title: data.title,
+      description: data.description,
+      categoryId: data.categoryId,
+      price: data.price,
+      quantity: data.quantity,
+    };
+
+    try {
+      const response = await axios.put(
+        `${allegroBaseUrl}/allegro/catalog-sell/products/${id}/draft`,
+        payload,
+        { headers: { Authorization: authorization, 'Content-Type': 'application/json' } },
+      );
+      const allegroAction = response.data?.data || response.data;
+      return this.allegroSaleResponse(id, allegroAction);
+    } catch (error: any) {
+      return {
+        ...this.blockedChannelAction('allegro', id, 'allegro_draft_update_failed', 'Allegro draft update failed. Resolve the Allegro-owned dependency before retrying.'),
+        dependencyStatus: error?.response?.status ?? null,
+        dependencyMessage: error?.response?.data?.message ?? error?.message ?? null,
+      };
+    }
+  }
+
+  async confirmAllegroPublish(id: string, authorization?: string) {
+    await this.findOne(id);
+
+    if (!authorization) {
+      return this.blockedChannelAction('allegro', id, 'auth_required', 'Authentication is required before confirming Allegro publication.');
+    }
+
+    const allegroBaseUrl = this.getAllegroBaseUrl();
+    try {
+      const response = await axios.post(
+        `${allegroBaseUrl}/allegro/catalog-sell/products/${id}/confirm`,
+        {},
+        { headers: { Authorization: authorization, 'Content-Type': 'application/json' } },
+      );
+      const allegroAction = response.data?.data || response.data;
+      return this.allegroSaleResponse(id, allegroAction);
+    } catch (error: any) {
+      return {
+        ...this.blockedChannelAction('allegro', id, 'allegro_confirm_failed', 'Allegro publish confirmation failed. Resolve the Allegro-owned dependency before retrying.'),
         dependencyStatus: error?.response?.status ?? null,
         dependencyMessage: error?.response?.data?.message ?? error?.message ?? null,
       };
@@ -817,6 +904,10 @@ export class ProductsService {
 
   private getBazosBaseUrl(): string {
     return (process.env.BAZOS_SERVICE_URL || 'http://bazos-service:3000').replace(/\/$/, '');
+  }
+
+  private getAllegroBaseUrl(): string {
+    return (process.env.ALLEGRO_SERVICE_URL || 'http://allegro-service:3000').replace(/\/$/, '');
   }
 
   private getFlipFlopPublicUrl(): string {
@@ -1008,7 +1099,9 @@ export class ProductsService {
       listingUrl,
       categoryChoice: allegroAction?.categoryChoice ?? null,
       accountChoices: allegroAction?.accountChoices ?? [],
-      requiresConfirmation: allegroAction?.nextAction === 'confirm_publish',
+      requiresConfirmation: allegroAction?.nextAction === 'confirm_publish' || Boolean(allegroAction?.canConfirmPublish),
+      canEditDraft: Boolean(allegroAction?.canEditDraft),
+      canConfirmPublish: Boolean(allegroAction?.canConfirmPublish),
       nextAction: listingUrl ? 'view_allegro_listing' : (allegroAction?.nextAction ?? 'confirm_publish'),
       allegroAction,
     };
