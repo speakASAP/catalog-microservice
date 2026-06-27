@@ -9,7 +9,7 @@ interface BazosPublishPanelProps {
   defaultCategory?: string;
 }
 
-const BAZOS_PUBLIC_URL = (process.env.NEXT_PUBLIC_BAZOS_PUBLIC_URL || process.env.NEXT_PUBLIC_BASUS_PUBLIC_URL || "https://bazos.alfares.cz").replace(/\/$/, "");
+const BAZOS_PUBLIC_URL = (process.env.NEXT_PUBLIC_BAZOS_PUBLIC_URL || "https://bazos.alfares.cz").replace(/\/$/, "");
 
 export default function BazosPublishPanel({ productId }: BazosPublishPanelProps) {
   const [listingStatus, setListingStatus] = useState<BazosListingStatus | null>(null);
