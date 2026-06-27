@@ -100,7 +100,7 @@ export default function AdminProductsPage() {
             </p>
           </div>
           <Link
-            href="/admin/products/new"
+            href="/dashboard/products/new"
             className="bg-white text-blue-600 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 text-center"
           >
             ➕ New Product
@@ -158,7 +158,7 @@ export default function AdminProductsPage() {
                       <td className="px-6 py-4">
                         <div>
                           <Link
-                            href={`/admin/products/${product.id}`}
+                            href={`/dashboard/products/${product.id}`}
                             className="text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors"
                           >
                             {product.title}
@@ -188,7 +188,7 @@ export default function AdminProductsPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end gap-3">
                           <Link
-                            href={`/admin/products/${product.id}`}
+                            href={`/dashboard/products/${product.id}`}
                             className="text-blue-600 hover:text-blue-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-all"
                           >
                             ✏️ Edit
@@ -240,7 +240,7 @@ export default function AdminProductsPage() {
             <h2 className="text-2xl font-extrabold text-gray-800 mb-2">No products found</h2>
             <p className="text-gray-600 mb-6">Start by adding your first product</p>
             <Link
-              href="/admin/products/new"
+              href="/dashboard/products/new"
               className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
             >
               ➕ Create First Product

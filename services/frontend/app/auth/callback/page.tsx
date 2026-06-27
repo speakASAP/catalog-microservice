@@ -24,7 +24,7 @@ export default function AuthCallbackPage() {
 
     apiClient.setToken(token);
     window.history.replaceState(null, '', '/auth/callback');
-    window.location.replace('/admin');
+    window.location.replace('/dashboard');
   }, []);
 
   if (error) {

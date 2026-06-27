@@ -161,7 +161,7 @@ export default function EditProductPage() {
 
       const response = await productsApi.updateProduct(productId, productData);
       if (response.success) {
-        router.push('/admin/products');
+        router.push('/dashboard/products');
       } else {
         alert('Failed to update product');
       }
@@ -186,7 +186,7 @@ export default function EditProductPage() {
       <div className="text-center py-16">
         <h2 className="text-2xl font-extrabold text-gray-800 mb-2">Product not found</h2>
         <button
-          onClick={() => router.push('/admin/products')}
+          onClick={() => router.push('/dashboard/products')}
           className="text-blue-600 hover:text-blue-700 font-semibold"
         >
           ← Back to Products

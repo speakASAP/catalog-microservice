@@ -6,6 +6,8 @@ import {
   Headers,
   HttpCode,
   HttpStatus,
+  Query,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoggerService } from '../logger/logger.service';
@@ -99,6 +101,22 @@ export class AuthController {
       };
     }
   }
+
+  @Get('admin/users')
+  async getAdminUsers(
+    @Headers('authorization') authorization: string,
+    @Query('limit') limit = '100',
+    @Query('offset') offset = '0',
+  ) {
+    this.logger.log('GET /api/auth/admin/users', 'AuthController');
+    if (!authorization || !authorization.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Missing or invalid authorization header');
+    }
+
+    const token = authorization.substring(7);
+    return this.authService.getAdminUsers(token, limit, offset);
+  }
+
 }
 
 

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { LoggerService } from '../logger/logger.service';
@@ -95,5 +95,30 @@ export class AuthService {
       throw error;
     }
   }
+
+  async getAdminUsers(token: string, limit = '100', offset = '0') {
+    const profile = await this.getProfile(token);
+    const email = profile?.user?.email || profile?.email;
+    if (String(email || '').trim().toLowerCase() !== 'test@example.com') {
+      throw new ForbiddenException('Catalog admin access is limited to test@example.com');
+    }
+
+    const params = new URLSearchParams({
+      limit,
+      offset,
+    });
+
+    this.logger.log('Proxying admin user list request to auth-microservice', 'AuthService');
+    const response = await firstValueFrom(
+      this.httpService.get(`${this.authServiceUrl}/auth/admin/users?${params.toString()}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        timeout: 10000,
+      }),
+    );
+    return response.data;
+  }
+
 }
 

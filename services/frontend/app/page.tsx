@@ -39,7 +39,7 @@ export default function LandingPage() {
               Register
             </Link>
             <Link
-              href={isAuthenticated ? '/admin' : '/login'}
+              href={isAuthenticated ? '/dashboard' : '/login'}
               className="rounded-md bg-slate-950 px-4 py-2 text-white transition-colors hover:bg-slate-800"
             >
               {isAuthenticated ? 'Open dashboard' : 'Sign in'}

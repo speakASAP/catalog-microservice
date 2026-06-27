@@ -30,6 +30,26 @@ export interface AuthResponse {
   token: string;
 }
 
+export interface AdminUserListItem {
+  id: string;
+  email: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  phone?: string | null;
+  isActive: boolean;
+  isVerified: boolean;
+  userType?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface AdminUsersResponse {
+  users: AdminUserListItem[];
+  count: number;
+  limit: number;
+  offset: number;
+}
+
 // Get API base URL - use catalog API which proxies to auth-microservice
 const getApiBaseUrl = (): string => {
   if (typeof window === 'undefined') {
@@ -137,6 +157,34 @@ export const authApi = {
     }
 
     return { success: false, error: 'Invalid profile response' };
+  },
+
+
+  async listAdminUsers(params: { limit?: number; offset?: number } = {}) {
+    const token = apiClient.getToken();
+    if (!token) {
+      return { success: false, error: 'No token available' };
+    }
+
+    const search = new URLSearchParams({
+      limit: String(params.limit ?? 100),
+      offset: String(params.offset ?? 0),
+    });
+
+    const response = await fetch(`${API_BASE_URL}/api/auth/admin/users?${search.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      return { success: true, data: data as AdminUsersResponse };
+    }
+
+    return { success: false, error: data.message || data.error || 'Failed to load users' };
   },
 
   async updateProfile(data: Partial<User>) {

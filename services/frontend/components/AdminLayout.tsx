@@ -8,7 +8,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { hasCatalogAdminRole } from './AdminGuard';
+import { hasCatalogAdminAccess } from './AdminGuard';
 import { useState } from 'react';
 
 interface AdminLayoutProps {
@@ -20,7 +20,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const canAccessAdminSection = hasCatalogAdminRole(user?.roles);
+  const canAccessAdminSection = hasCatalogAdminAccess(user?.email);
 
   const handleLogout = () => {
     logout();
@@ -30,29 +30,29 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const menuItems = [
     {
       title: 'Dashboard',
-      href: '/admin',
+      href: '/dashboard',
       icon: '📊',
     },
     {
       title: 'Products',
-      href: '/admin/products',
+      href: '/dashboard/products',
       icon: '📦',
     },
     {
       title: 'Categories',
-      href: '/admin/categories',
+      href: '/dashboard/categories',
       icon: '📁',
     },
     {
       title: 'Attributes',
-      href: '/admin/attributes',
+      href: '/dashboard/attributes',
       icon: '🏷️',
     },
     ...(canAccessAdminSection
       ? [
           {
             title: 'Admin',
-            href: '/admin/admin',
+            href: '/dashboard/admin',
             icon: '⚙️',
           },
         ]
@@ -60,8 +60,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   ];
 
   const isActive = (href: string) => {
-    if (href === '/admin') {
-      return pathname === '/admin';
+    if (href === '/dashboard') {
+      return pathname === '/dashboard';
     }
     return pathname.startsWith(href);
   };
@@ -70,7 +70,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
       {/* Mobile sidebar toggle */}
       <div className="lg:hidden bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200 px-4 py-4 flex items-center justify-between sticky top-0 z-40">
-        <Link href="/admin" className="text-xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+        <Link href="/dashboard" className="text-xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
           Catalog Dashboard
         </Link>
         <button
@@ -103,7 +103,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <div className="h-full flex flex-col">
             {/* Logo/Header */}
             <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-indigo-600">
-              <Link href="/admin" className="flex items-center gap-2">
+              <Link href="/dashboard" className="flex items-center gap-2">
                 <span className="text-2xl font-extrabold text-white">
                   📦 Catalog Dashboard
                 </span>
@@ -137,12 +137,19 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
             {/* User info and logout */}
             <div className="p-4 border-t border-gray-200 bg-gradient-to-br from-gray-50 to-blue-50/50">
-              <div className="mb-4 p-3 bg-white rounded-xl shadow-sm border border-gray-200">
+              <button
+                type="button"
+                onClick={() => canAccessAdminSection ? router.push('/dashboard/admin') : undefined}
+                className={`mb-4 w-full p-3 bg-white rounded-xl shadow-sm border border-gray-200 text-left transition-all ${canAccessAdminSection ? 'hover:border-blue-300 hover:shadow-md cursor-pointer' : 'cursor-default'}`}
+              >
                 <p className="text-sm font-bold text-gray-900">
                   {user?.firstName || user?.email}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">{user?.email}</p>
-              </div>
+              {canAccessAdminSection && (
+                  <span className="mt-3 inline-flex text-xs font-semibold text-blue-700">Open admin section</span>
+                )}
+              </button>
               <button
                 onClick={handleLogout}
                 className="w-full px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-xl transition-all border border-red-200 hover:border-red-300"

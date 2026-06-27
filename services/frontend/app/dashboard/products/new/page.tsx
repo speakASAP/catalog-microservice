@@ -58,7 +58,7 @@ export default function CreateProductPage() {
 
       const response = await productsApi.createProduct(productData);
       if (response.success) {
-        router.push('/admin/products');
+        router.push('/dashboard/products');
       } else {
         alert('Failed to create product');
       }

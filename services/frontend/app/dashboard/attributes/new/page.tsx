@@ -1,36 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { categoriesApi, Category } from '@/lib/api/categories';
+import { attributesApi } from '@/lib/api/attributes';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
-export default function CreateCategoryPage() {
+export default function CreateAttributePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [parentCategories, setParentCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState({
     name: '',
-    slug: '',
-    parentId: '',
+    type: 'text' as 'text' | 'number' | 'select' | 'multiselect',
+    unit: '',
+    allowedValues: '',
   });
 
-  useEffect(() => {
-    loadParentCategories();
-  }, []);
-
-  const loadParentCategories = async () => {
-    try {
-      const response = await categoriesApi.getCategories();
-      if (response.success && response.data) {
-        setParentCategories(response.data);
-      }
-    } catch (error) {
-      console.error('Failed to load categories:', error);
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -43,24 +28,25 @@ export default function CreateCategoryPage() {
     setLoading(true);
 
     try {
-      const categoryData: any = {
+      const attributeData: any = {
         name: formData.name,
-        slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-'),
+        type: formData.type,
+        unit: formData.unit || undefined,
       };
 
-      if (formData.parentId) {
-        categoryData.parentId = formData.parentId;
+      if ((formData.type === 'select' || formData.type === 'multiselect') && formData.allowedValues) {
+        attributeData.allowedValues = formData.allowedValues.split(',').map((v) => v.trim()).filter(Boolean);
       }
 
-      const response = await categoriesApi.createCategory(categoryData);
+      const response = await attributesApi.createAttribute(attributeData);
       if (response.success) {
-        router.push('/admin/categories');
+        router.push('/dashboard/attributes');
       } else {
-        alert('Failed to create category');
+        alert('Failed to create attribute');
       }
     } catch (error) {
-      console.error('Failed to create category:', error);
-      alert('Failed to create category');
+      console.error('Failed to create attribute:', error);
+      alert('Failed to create attribute');
     } finally {
       setLoading(false);
     }
@@ -69,8 +55,8 @@ export default function CreateCategoryPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white">
-        <h1 className="text-4xl font-extrabold mb-2">➕ Create New Category</h1>
-        <p className="text-xl text-blue-50">Add a new category to the catalog</p>
+        <h1 className="text-4xl font-extrabold mb-2">➕ Create New Attribute</h1>
+        <p className="text-xl text-blue-50">Add a new attribute definition</p>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
@@ -85,43 +71,59 @@ export default function CreateCategoryPage() {
             value={formData.name}
             onChange={handleChange}
             className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-            placeholder="Category Name"
+            placeholder="Color, Size, Material, etc."
           />
         </div>
 
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Slug
-          </label>
-          <input
-            type="text"
-            name="slug"
-            value={formData.slug}
-            onChange={handleChange}
-            className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-            placeholder="category-slug (auto-generated if empty)"
-          />
-          <p className="text-xs text-gray-500 mt-1">Leave empty to auto-generate from name</p>
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Parent Category
+            Type <span className="text-red-500">*</span>
           </label>
           <select
-            name="parentId"
-            value={formData.parentId}
+            name="type"
+            required
+            value={formData.type}
             onChange={handleChange}
             className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
           >
-            <option value="">None (Root Category)</option>
-            {parentCategories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
+            <option value="text">Text</option>
+            <option value="number">Number</option>
+            <option value="select">Select (Single)</option>
+            <option value="multiselect">Multi-Select</option>
           </select>
         </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Unit
+          </label>
+          <input
+            type="text"
+            name="unit"
+            value={formData.unit}
+            onChange={handleChange}
+            className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            placeholder="cm, kg, etc."
+          />
+        </div>
+
+        {(formData.type === 'select' || formData.type === 'multiselect') && (
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Allowed Values <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              name="allowedValues"
+              required
+              value={formData.allowedValues}
+              onChange={handleChange}
+              rows={4}
+              className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              placeholder="Value1, Value2, Value3 (comma-separated)"
+            />
+            <p className="text-xs text-gray-500 mt-1">Enter values separated by commas</p>
+          </div>
+        )}
 
         <div className="flex gap-4 pt-6 border-t border-gray-200">
           <button
@@ -129,7 +131,7 @@ export default function CreateCategoryPage() {
             disabled={loading}
             className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? <LoadingSpinner size="sm" /> : 'Create Category'}
+            {loading ? <LoadingSpinner size="sm" /> : 'Create Attribute'}
           </button>
           <button
             type="button"

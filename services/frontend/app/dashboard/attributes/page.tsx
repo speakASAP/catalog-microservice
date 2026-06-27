@@ -52,7 +52,7 @@ export default function AdminAttributesPage() {
             <p className="text-xl text-blue-50">Manage product attributes</p>
           </div>
           <Link
-            href="/admin/attributes/new"
+            href="/dashboard/attributes/new"
             className="bg-white text-blue-600 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 text-center"
           >
             ➕ New Attribute
@@ -104,7 +104,7 @@ export default function AdminAttributesPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Link
-                        href={`/admin/attributes/${attribute.id}`}
+                        href={`/dashboard/attributes/${attribute.id}`}
                         className="text-blue-600 hover:text-blue-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-all"
                       >
                         ✏️ Edit
@@ -120,7 +120,7 @@ export default function AdminAttributesPage() {
             <div className="text-8xl mb-6">🏷️</div>
             <h2 className="text-2xl font-extrabold text-gray-800 mb-2">No attributes found</h2>
             <Link
-              href="/admin/attributes/new"
+              href="/dashboard/attributes/new"
               className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
             >
               ➕ Create First Attribute
