@@ -6,7 +6,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Catalog Admin - catalog.alfares.cz",
+  title: "Catalog Dashboard - catalog.alfares.cz",
   description: "Central product catalog management",
 };
 

@@ -1,13 +1,14 @@
 'use client';
 
 /**
- * Admin Layout Component
- * Provides sidebar navigation and layout for admin pages
+ * Dashboard Layout Component
+ * Provides sidebar navigation and layout for authenticated catalog users
  */
 
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { hasCatalogAdminRole } from './AdminGuard';
 import { useState } from 'react';
 
 interface AdminLayoutProps {
@@ -19,6 +20,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const canAccessAdminSection = hasCatalogAdminRole(user?.roles);
 
   const handleLogout = () => {
     logout();
@@ -46,6 +48,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       href: '/admin/attributes',
       icon: '🏷️',
     },
+    ...(canAccessAdminSection
+      ? [
+          {
+            title: 'Admin',
+            href: '/admin/admin',
+            icon: '⚙️',
+          },
+        ]
+      : []),
   ];
 
   const isActive = (href: string) => {
@@ -60,7 +71,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       {/* Mobile sidebar toggle */}
       <div className="lg:hidden bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200 px-4 py-4 flex items-center justify-between sticky top-0 z-40">
         <Link href="/admin" className="text-xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-          Catalog Admin
+          Catalog Dashboard
         </Link>
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -94,7 +105,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-indigo-600">
               <Link href="/admin" className="flex items-center gap-2">
                 <span className="text-2xl font-extrabold text-white">
-                  📦 Catalog Admin
+                  📦 Catalog Dashboard
                 </span>
               </Link>
               <p className="text-sm text-blue-100 mt-1">

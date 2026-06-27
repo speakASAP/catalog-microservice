@@ -1,4 +1,4 @@
-import AdminGuard from '@/components/AdminGuard';
+import AuthGuard from '@/components/AuthGuard';
 import AdminLayout from '@/components/AdminLayout';
 
 export default function AdminLayoutWrapper({
@@ -7,9 +7,8 @@ export default function AdminLayoutWrapper({
   children: React.ReactNode;
 }) {
   return (
-    <AdminGuard>
+    <AuthGuard>
       <AdminLayout>{children}</AdminLayout>
-    </AdminGuard>
+    </AuthGuard>
   );
 }
-

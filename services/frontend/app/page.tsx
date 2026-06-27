@@ -14,7 +14,7 @@ const benefits = [
   },
   {
     title: 'Price control',
-    text: 'Manage current and future prices with validity windows, sale prices, cost visibility, and margin tracking from the admin section.',
+    text: 'Manage current and future prices with validity windows, sale prices, cost visibility, and margin tracking from the customer dashboard.',
   },
   {
     title: 'Central Auth access',
@@ -42,7 +42,7 @@ export default function LandingPage() {
               href={isAuthenticated ? '/admin' : '/login'}
               className="rounded-md bg-slate-950 px-4 py-2 text-white transition-colors hover:bg-slate-800"
             >
-              {isAuthenticated ? 'Open admin' : 'Sign in'}
+              {isAuthenticated ? 'Open dashboard' : 'Sign in'}
             </Link>
           </nav>
         </div>
@@ -68,7 +68,7 @@ export default function LandingPage() {
                 href="/login"
                 className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-950 transition-colors hover:border-slate-950"
               >
-                Sign in to admin
+                Sign in to dashboard
               </Link>
             </div>
           </div>
@@ -128,7 +128,7 @@ export default function LandingPage() {
           <div>
             <h2 className="text-3xl font-extrabold tracking-normal text-slate-950">Start with central Alfares Auth</h2>
             <p className="mt-4 text-base leading-7 text-slate-600">
-              Public visitors see this landing page first. Catalog administration opens only after authentication and an approved catalog admin role.
+              Public visitors see this landing page first. The Catalog dashboard opens after authentication. Internal admin tools stay inside a separate role-protected section.
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
