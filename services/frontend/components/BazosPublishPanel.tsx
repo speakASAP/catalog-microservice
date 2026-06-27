@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { BazosAccountStatus, BazosListingStatus, BazosSellActionResponse, productsApi } from '@/lib/api/products';
+import { BazosListingStatus, productsApi } from '@/lib/api/products';
 import LoadingSpinner from './LoadingSpinner';
 
 interface BazosPublishPanelProps {
@@ -9,250 +9,129 @@ interface BazosPublishPanelProps {
   defaultCategory?: string;
 }
 
-const BAZOS_CATEGORIES = [
-  'Auto',
-  'Motorky',
-  'Dum a zahrada',
-  'Elektro',
-  'Nabytek',
-  'Obleceni',
-  'Sport',
-  'Detske zbozi',
-  'Zvirata',
-  'Ostatni',
-];
+const BASUS_PUBLIC_URL = (process.env.NEXT_PUBLIC_BASUS_PUBLIC_URL || 'https://basus.alfares.cz').replace(/\/$/, '');
 
-const LOCATIONS = [
-  'Praha',
-  'Brno',
-  'Ostrava',
-  'Plzen',
-  'Liberec',
-  'Olomouc',
-  'Ceske Budejovice',
-  'Hradec Kralove',
-  'Pardubice',
-  'Zlin',
-];
-
-const statusClass = (status?: BazosAccountStatus | null) => {
-  if (!status) return 'bg-gray-50 border-gray-200 text-gray-700';
-  if (status.canSell) return 'bg-emerald-50 border-emerald-200 text-emerald-900';
-  return 'bg-amber-50 border-amber-200 text-amber-900';
-};
-
-export default function BazosPublishPanel({ productId, defaultCategory }: BazosPublishPanelProps) {
-  const [accountStatus, setAccountStatus] = useState<BazosAccountStatus | null>(null);
+export default function BazosPublishPanel({ productId }: BazosPublishPanelProps) {
   const [listingStatus, setListingStatus] = useState<BazosListingStatus | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(true);
-  const [selectedIdentityId, setSelectedIdentityId] = useState('');
-  const [category, setCategory] = useState(defaultCategory || BAZOS_CATEGORIES[3]);
-  const [location, setLocation] = useState(LOCATIONS[0]);
-  const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<BazosSellActionResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const loadStatuses = useCallback(async () => {
+  const loadStatus = useCallback(async () => {
     setLoadingStatus(true);
     setError(null);
     try {
-      const [accountResponse, listingResponse] = await Promise.all([
-        productsApi.getBazosAccountStatus(),
-        productsApi.getBazosStatus(productId),
-      ]);
-
-      if (accountResponse.success && accountResponse.data) {
-        setAccountStatus(accountResponse.data);
-        setSelectedIdentityId(accountResponse.data.selectedIdentity?.id || '');
-        setLocation(accountResponse.data.selectedIdentity?.defaultLocation || LOCATIONS[0]);
+      const response = await productsApi.getBazosStatus(productId);
+      if (response.success && response.data) {
+        setListingStatus(response.data);
       } else {
-        setAccountStatus(null);
-        setError(accountResponse.error?.message || 'Bazos account status is unavailable.');
+        setListingStatus(null);
+        setError(response.error?.message || 'Basus listing status is unavailable.');
       }
-
-      setListingStatus(listingResponse.success && listingResponse.data ? listingResponse.data : null);
+    } catch (statusError) {
+      console.error('Failed to load Basus listing status:', statusError);
+      setListingStatus(null);
+      setError('Basus listing status is unavailable.');
     } finally {
       setLoadingStatus(false);
     }
   }, [productId]);
 
   useEffect(() => {
-    loadStatuses();
-  }, [loadStatuses]);
+    loadStatus();
+  }, [loadStatus]);
 
-  useEffect(() => {
-    if (defaultCategory) setCategory(defaultCategory);
-  }, [defaultCategory]);
-
-  const selectedIdentity = useMemo(
-    () => accountStatus?.identities.find((identity) => identity.id === selectedIdentityId) || accountStatus?.selectedIdentity || null,
-    [accountStatus, selectedIdentityId],
-  );
-  const canSubmit = Boolean(accountStatus?.canSell && selectedIdentity?.canSell && selectedIdentityId && category.trim());
   const publishedOnBasus = Boolean(listingStatus?.publishedOnBasus || listingStatus?.draft?.publishedOnBasus);
-  const listingUrl = listingStatus?.listingUrl || listingStatus?.draft?.listingUrl;
-  const publishStatus = listingStatus?.draft?.publishStatus;
-
-  const handleSell = async () => {
-    if (!canSubmit) {
-      setError(accountStatus?.message || 'Connect and verify Bazos before publishing this product.');
-      return;
-    }
-
-    setSubmitting(true);
-    setResult(null);
-    setError(null);
-    try {
-      const response = await productsApi.sellOnBazos(productId, {
-        identityId: selectedIdentityId,
-        category,
-        location,
-        useCallerBazosIdentity: true,
-      });
-      if (response.success && response.data) {
-        setResult(response.data);
-        await loadStatuses();
-      } else {
-        setError(response.error?.message || 'Bazos draft request failed.');
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const blockedReasons = selectedIdentity?.blockingReasons || [];
-  const policyFailures = result?.requiresHumanAction?.policyFailures || result?.policyStatus?.failures || [];
-  const draftCreated = Boolean(result?.draft?.id);
+  const listingUrl = listingStatus?.listingUrl || listingStatus?.draft?.listingUrl || null;
+  const publishStatus = listingStatus?.draft?.publishStatus || (publishedOnBasus ? 'published' : null);
+  const basusPublishUrl = useMemo(
+    () => `${BASUS_PUBLIC_URL}/publish?productId=${encodeURIComponent(productId)}`,
+    [productId],
+  );
 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200 space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
-          <h3 className="text-xl font-bold text-gray-900">Sell on Bazos</h3>
+          <h3 className="text-xl font-bold text-gray-900">Sell on Basus</h3>
           <p className="text-sm text-gray-600 mt-1">
-            Bazos owns account verification, policy checks and publishing. Catalog can prepare a Bazos draft for this product.
+            Basus owns account verification, listing publication and listing lifetime. Catalog only reads the saved publication result.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={handleSell}
-          disabled={loadingStatus || submitting || !canSubmit}
-          className="px-5 py-2.5 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {submitting ? <LoadingSpinner size="sm" /> : 'Publish on Bazos'}
-        </button>
+        {publishedOnBasus ? (
+          <button
+            type="button"
+            disabled
+            className="px-5 py-2.5 bg-green-600 text-white rounded-xl font-bold opacity-50 cursor-not-allowed"
+          >
+            Publish on Basus
+          </button>
+        ) : (
+          <a
+            href={basusPublishUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center px-5 py-2.5 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-all"
+          >
+            Publish on Basus
+          </a>
+        )}
       </div>
 
       {loadingStatus ? (
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
-          Checking Bazos listing status...
+          <div className="flex items-center gap-3"><LoadingSpinner size="sm" /> Checking Basus listing status...</div>
         </div>
       ) : publishedOnBasus ? (
         <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-900">
-          <p className="font-semibold">This product is already listed on Bazos.</p>
+          <p className="font-semibold">This product has an active Basus listing.</p>
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <span className="rounded-lg bg-white px-3 py-1 font-semibold text-green-800 border border-green-200">
               Status: {publishStatus || 'published'}
             </span>
-            {listingUrl && (
+            {expiresAt && (
+              <span className="rounded-lg bg-white px-3 py-1 font-semibold text-green-800 border border-green-200">
+                Expires: {new Date(expiresAt).toLocaleDateString('cs-CZ')}
+              </span>
+            )}
+          </div>
+          {listingUrl && (
+            <label className="mt-3 block space-y-2">
+              <span className="text-xs font-semibold uppercase text-green-800">Listing URL</span>
+              <input
+                type="text"
+                readOnly
+                value={listingUrl}
+                onFocus={(event) => event.currentTarget.select()}
+                className="w-full rounded-lg border border-green-300 bg-white px-3 py-2 font-mono text-xs text-green-950"
+              />
               <a
                 href={listingUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex px-4 py-2 bg-white border border-green-300 rounded-lg font-semibold text-green-900 hover:bg-green-100"
               >
-                Open Bazos listing
+                Open listing
               </a>
-            )}
-          </div>
+            </label>
+          )}
         </div>
       ) : publishStatus ? (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          <p className="font-semibold">Bazos draft exists for this product.</p>
+          <p className="font-semibold">Basus has a saved listing workflow for this product.</p>
           <p className="mt-1">Status: {publishStatus}</p>
+          <p className="mt-1">Continue publication inside Basus.</p>
         </div>
-      ) : null}
+      ) : (
+        <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+          <p className="font-semibold">This product can be published on Basus.</p>
+          <p className="mt-1">Open Basus to complete verification, category, location and publication there.</p>
+        </div>
+      )}
 
-      <div className={`rounded-xl border p-4 text-sm ${statusClass(accountStatus)}`}>
-        {loadingStatus ? (
-          <div className="flex items-center gap-3"><LoadingSpinner size="sm" /> Checking Bazos account...</div>
-        ) : (
-          <div className="space-y-2">
-            <p className="font-semibold">
-              {accountStatus?.canSell ? 'Bazos account is connected and ready.' : accountStatus?.message || error || 'Bazos account is not ready.'}
-            </p>
-            {!accountStatus?.canSell && (
-              <p>
-                Connect and verify a Bazos phone identity in Bazos settings before publishing. If Bazos asks for phone, SMS, bank, payment or manual challenge verification, complete it in Bazos first.
-              </p>
-            )}
-            {blockedReasons.length > 0 && (
-              <ul className="list-disc pl-5">
-                {blockedReasons.map((reason) => <li key={reason}>{reason}</li>)}
-              </ul>
-            )}
-          </div>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <label className="space-y-2 md:col-span-1">
-          <span className="text-sm font-semibold text-gray-700">Bazos identity</span>
-          <select
-            value={selectedIdentityId}
-            onChange={(event) => setSelectedIdentityId(event.target.value)}
-            disabled={!accountStatus?.identities.length}
-            className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 bg-white disabled:bg-gray-100"
-          >
-            {!accountStatus?.identities.length && <option value="">No connected identity</option>}
-            {accountStatus?.identities.map((identity) => (
-              <option key={identity.id} value={identity.id}>
-                {identity.displayName || identity.contactName || identity.id} - {identity.canSell ? 'ready' : identity.status || 'blocked'}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="space-y-2">
-          <span className="text-sm font-semibold text-gray-700">Bazos category</span>
-          <select
-            value={category}
-            onChange={(event) => setCategory(event.target.value)}
-            className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 bg-white"
-          >
-            {BAZOS_CATEGORIES.map((item) => <option key={item} value={item}>{item}</option>)}
-          </select>
-        </label>
-        <label className="space-y-2">
-          <span className="text-sm font-semibold text-gray-700">Location</span>
-          <select
-            value={location}
-            onChange={(event) => setLocation(event.target.value)}
-            className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 bg-white"
-          >
-            {LOCATIONS.map((item) => <option key={item} value={item}>{item}</option>)}
-          </select>
-        </label>
-      </div>
-
-      {(error || result) && (
-        <div className={`rounded-xl border p-4 text-sm ${draftCreated ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
-          <div className="space-y-2">
-            <p className="font-semibold">
-              {draftCreated
-                ? 'Bazos draft is ready for Bazos-owned confirmation.'
-                : error || result?.message || 'Bazos publishing needs one more step.'}
-            </p>
-            {result?.requiresConfirmation && (
-              <p>Review and confirm the draft in the Bazos workflow before it can be queued for publication.</p>
-            )}
-            {policyFailures.length > 0 && (
-              <ul className="list-disc pl-5">
-                {policyFailures.map((failure: any) => (
-                  <li key={failure.gate || failure.code}>{failure.message || failure.gate || failure.code}</li>
-                ))}
-              </ul>
-            )}
-          </div>
+      {error && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <p className="font-semibold">{error}</p>
+          <p className="mt-1">Open Basus to check publication details there.</p>
         </div>
       )}
     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { productsApi } from '@/lib/api/products';
 import LoadingSpinner from './LoadingSpinner';
 
@@ -9,6 +9,17 @@ interface ChannelSalesPanelProps {
 }
 
 type ChannelKey = 'allegro' | 'flipflop';
+
+type ChannelResult = {
+  success?: boolean;
+  blocked?: boolean;
+  message?: string;
+  listingUrl?: string | null;
+  status?: string | null;
+  attempt?: { status?: string | null } | null;
+  availableOnFlipFlop?: boolean;
+  [key: string]: any;
+};
 
 const CHANNELS: Array<{
   key: ChannelKey;
@@ -19,28 +30,31 @@ const CHANNELS: Array<{
   {
     key: 'allegro',
     title: 'Sell on Allegro',
-    description: 'Prepare an Allegro draft from this catalog product and continue with Allegro confirmation.',
+    description: 'Prepare an Allegro draft from this catalog product and continue in Allegro when no listing URL is known.',
     button: 'Sell on Allegro',
   },
   {
     key: 'flipflop',
     title: 'Sell on FlipFlop',
-    description: 'Check the FlipFlop storefront projection and open the product page when it is available.',
+    description: 'Check the FlipFlop storefront projection and keep the public product URL visible when it is available.',
     button: 'Sell on FlipFlop',
   },
 ];
 
+const unwrapResult = (result: any): ChannelResult | null => result?.data || result || null;
+
 export default function ChannelSalesPanel({ productId }: ChannelSalesPanelProps) {
   const [loading, setLoading] = useState<ChannelKey | null>(null);
-  const [results, setResults] = useState<Record<ChannelKey, any>>({ allegro: null, flipflop: null });
+  const [checkingFlipFlop, setCheckingFlipFlop] = useState(false);
+  const [results, setResults] = useState<Record<ChannelKey, ChannelResult | null>>({ allegro: null, flipflop: null });
 
-  const runAction = async (channel: ChannelKey) => {
+  const runAction = useCallback(async (channel: ChannelKey) => {
     setLoading(channel);
     try {
       const response = channel === 'allegro'
         ? await productsApi.sellOnAllegro(productId)
         : await productsApi.sellOnFlipFlop(productId);
-      setResults((current) => ({ ...current, [channel]: response.data || response }));
+      setResults((current) => ({ ...current, [channel]: unwrapResult(response) }));
     } catch (error) {
       setResults((current) => ({
         ...current,
@@ -52,16 +66,42 @@ export default function ChannelSalesPanel({ productId }: ChannelSalesPanelProps)
     } finally {
       setLoading(null);
     }
-  };
+  }, [productId]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadFlipFlopListing = async () => {
+      setCheckingFlipFlop(true);
+      try {
+        const response = await productsApi.getFlipFlopStatus(productId);
+        if (!cancelled) {
+          setResults((current) => ({ ...current, flipflop: unwrapResult(response) }));
+        }
+      } catch {
+        if (!cancelled) {
+          setResults((current) => ({ ...current, flipflop: null }));
+        }
+      } finally {
+        if (!cancelled) setCheckingFlipFlop(false);
+      }
+    };
+
+    loadFlipFlopListing();
+    return () => {
+      cancelled = true;
+    };
+  }, [productId]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       {CHANNELS.map((channel) => {
-        const result = results[channel.key];
-        const payload = result?.data || result;
-        const listingUrl = payload?.listingUrl;
+        const payload = results[channel.key];
+        const listingUrl = payload?.listingUrl || null;
+        const hasListing = Boolean(listingUrl && payload?.success !== false && !payload?.blocked);
         const status = payload?.status || payload?.attempt?.status || (payload?.availableOnFlipFlop ? 'available' : null);
         const blocked = payload?.success === false || payload?.blocked;
+        const buttonDisabled = loading !== null || hasListing || (channel.key === 'flipflop' && checkingFlipFlop);
 
         return (
           <div key={channel.key} className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200 space-y-4">
@@ -73,30 +113,44 @@ export default function ChannelSalesPanel({ productId }: ChannelSalesPanelProps)
               <button
                 type="button"
                 onClick={() => runAction(channel.key)}
-                disabled={loading !== null}
+                disabled={buttonDisabled}
                 className="px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading === channel.key ? <LoadingSpinner size="sm" /> : channel.button}
+                {loading === channel.key || (channel.key === 'flipflop' && checkingFlipFlop)
+                  ? <LoadingSpinner size="sm" />
+                  : channel.button}
               </button>
             </div>
 
             {payload && (
               <div className={`rounded-xl border p-4 text-sm ${blocked ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-green-50 border-green-200 text-green-900'}`}>
                 <p className="font-semibold">
-                  {blocked
-                    ? payload.message || 'Channel action needs attention.'
-                    : payload.message || 'Channel action prepared.'}
+                  {hasListing
+                    ? `This product has an active ${channel.title.replace('Sell on ', '')} listing.`
+                    : blocked
+                      ? payload.message || 'Channel action needs attention.'
+                      : payload.message || 'Channel action prepared.'}
                 </p>
                 {status && <p className="mt-1">Status: {status}</p>}
                 {listingUrl && (
-                  <a
-                    href={listingUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-3 inline-flex px-4 py-2 bg-white border border-green-300 rounded-lg font-semibold text-green-900 hover:bg-green-100"
-                  >
-                    Open listing
-                  </a>
+                  <label className="mt-3 block space-y-2">
+                    <span className="text-xs font-semibold uppercase text-green-800">Listing URL</span>
+                    <input
+                      type="text"
+                      readOnly
+                      value={listingUrl}
+                      onFocus={(event) => event.currentTarget.select()}
+                      className="w-full rounded-lg border border-green-300 bg-white px-3 py-2 font-mono text-xs text-green-950"
+                    />
+                    <a
+                      href={listingUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex px-4 py-2 bg-white border border-green-300 rounded-lg font-semibold text-green-900 hover:bg-green-100"
+                    >
+                      Open listing
+                    </a>
+                  </label>
                 )}
               </div>
             )}
