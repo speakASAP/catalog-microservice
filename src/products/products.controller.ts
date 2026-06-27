@@ -157,6 +157,16 @@ export class ProductsController {
     return { success: result.success !== false, data: result };
   }
 
+  @Get(":id/flipflop-status")
+  @UseGuards(CatalogAuthGuard)
+  async getFlipFlopStatus(
+    @Param("id", ParseUUIDPipe) id: string,
+  ) {
+    this.logger.log(`GET /api/products/${id}/flipflop-status`, "ProductsController");
+    const result = await this.productsService.prepareFlipFlopSale(id);
+    return { success: result.success !== false, data: result };
+  }
+
   @Post(":id/sell-on-flipflop")
   @UseGuards(CatalogAuthGuard)
   async sellOnFlipFlop(

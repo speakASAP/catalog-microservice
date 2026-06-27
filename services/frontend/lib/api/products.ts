@@ -91,12 +91,14 @@ export interface PaginatedResponse<T> {
 export interface BazosListingStatus {
   publishedOnBasus: boolean;
   listingUrl?: string | null;
+  expiresAt?: string | null;
   draft?: {
     id?: string;
     publishStatus?: string;
     bazosAdId?: string | null;
     listingUrl?: string | null;
     publishedOnBasus?: boolean;
+    expiresAt?: string | null;
   } | null;
   identity?: {
     displayName?: string | null;
@@ -197,6 +199,10 @@ export const productsApi = {
 
   async sellOnAllegro(id: string, data: { categoryId?: string; quantity?: number; forceNewDraft?: boolean } = {}) {
     return apiClient.post(`/products/${id}/sell-on-allegro`, data);
+  },
+
+  async getFlipFlopStatus(id: string) {
+    return apiClient.get(`/products/${id}/flipflop-status`);
   },
 
   async sellOnFlipFlop(id: string) {
