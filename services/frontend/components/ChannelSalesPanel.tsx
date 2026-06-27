@@ -74,7 +74,7 @@ export default function ChannelSalesPanel({ productId }: ChannelSalesPanelProps)
     const loadFlipFlopListing = async () => {
       setCheckingFlipFlop(true);
       try {
-        const response = await productsApi.getFlipFlopStatus(productId);
+        const response = await productsApi.sellOnFlipFlop(productId);
         if (!cancelled) {
           setResults((current) => ({ ...current, flipflop: unwrapResult(response) }));
         }
