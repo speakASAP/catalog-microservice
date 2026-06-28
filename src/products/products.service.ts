@@ -1373,7 +1373,9 @@ export class ProductsService {
       listingUrl,
       categoryChoice: allegroAction?.categoryChoice ?? null,
       accountChoices: allegroAction?.accountChoices ?? [],
-      requiresConfirmation: allegroAction?.nextAction === 'confirm_publish',
+      requiresConfirmation: allegroAction?.nextAction === 'confirm_publish' || Boolean(allegroAction?.canConfirmPublish),
+      canEditDraft: Boolean(allegroAction?.canEditDraft),
+      canConfirmPublish: Boolean(allegroAction?.canConfirmPublish),
       nextAction: listingUrl ? 'view_allegro_listing' : (allegroAction?.nextAction ?? 'confirm_publish'),
       allegroAction,
     };
