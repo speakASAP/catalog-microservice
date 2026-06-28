@@ -8,7 +8,7 @@ interface ChannelSalesPanelProps {
   productId: string;
 }
 
-type ChannelKey = 'allegro' | 'flipflop';
+type ChannelKey = 'flipflop';
 
 type ChannelResult = {
   success?: boolean;
@@ -28,12 +28,6 @@ const CHANNELS: Array<{
   button: string;
 }> = [
   {
-    key: 'allegro',
-    title: 'Sell on Allegro',
-    description: 'Prepare an Allegro draft from this catalog product and continue in Allegro when no listing URL is known.',
-    button: 'Sell on Allegro',
-  },
-  {
     key: 'flipflop',
     title: 'Sell on FlipFlop',
     description: 'Check the FlipFlop storefront projection and keep the public product URL visible when it is available.',
@@ -46,14 +40,12 @@ const unwrapResult = (result: any): ChannelResult | null => result?.data || resu
 export default function ChannelSalesPanel({ productId }: ChannelSalesPanelProps) {
   const [loading, setLoading] = useState<ChannelKey | null>(null);
   const [checkingFlipFlop, setCheckingFlipFlop] = useState(false);
-  const [results, setResults] = useState<Record<ChannelKey, ChannelResult | null>>({ allegro: null, flipflop: null });
+  const [results, setResults] = useState<Record<ChannelKey, ChannelResult | null>>({ flipflop: null });
 
   const runAction = useCallback(async (channel: ChannelKey) => {
     setLoading(channel);
     try {
-      const response = channel === 'allegro'
-        ? await productsApi.sellOnAllegro(productId)
-        : await productsApi.sellOnFlipFlop(productId);
+      const response = await productsApi.sellOnFlipFlop(productId);
       setResults((current) => ({ ...current, [channel]: unwrapResult(response) }));
     } catch (error) {
       setResults((current) => ({

@@ -64,6 +64,26 @@ export type BazosAccountStatus = {
   dependencyMessage?: string | null;
 };
 
+export type AukroAccountSummary = {
+  id: string;
+  username?: string | null;
+  accountName?: string | null;
+  isActive?: boolean | null;
+};
+
+export type AukroAccountStatus = {
+  connected: boolean;
+  active: boolean;
+  canSell: boolean;
+  authority: 'aukro';
+  message: string;
+  selectedAccount: AukroAccountSummary | null;
+  accounts: AukroAccountSummary[];
+  nextAction: string;
+  dependencyStatus?: number | null;
+  dependencyMessage?: string | null;
+};
+
 export type ProductIdentifierAudit = {
   missingEan: Array<{ id: string; sku: string; title: string }>;
   duplicateSkus: Array<{ sku: string; count: number }>;
@@ -590,6 +610,126 @@ export class ProductsService {
     return this.requestBazosDraft(id, data, authorization);
   }
 
+  async getAukroStatus(id: string, authorization?: string) {
+    await this.findOne(id);
+
+    if (!authorization && !this.getAukroServiceToken()) {
+      return this.blockedAukroDraft(id, 'auth_required', 'Authentication is required before reading Aukro draft status.');
+    }
+
+    const accountStatus = await this.getAukroAccountStatus(authorization);
+    const selectedAccount = accountStatus.selectedAccount;
+    if (!selectedAccount) {
+      return {
+        ...this.blockedAukroDraft(id, 'account_required', accountStatus.message),
+        dependencyStatus: accountStatus.dependencyStatus ?? null,
+        dependencyMessage: accountStatus.dependencyMessage ?? null,
+      };
+    }
+
+    try {
+      const response = await axios.get(
+        `${this.getAukroBaseUrl()}/offers?accountId=${encodeURIComponent(selectedAccount.id)}`,
+        { headers: this.aukroHeaders(authorization) },
+      );
+      const offers = Array.isArray(response.data?.data)
+        ? response.data.data
+        : Array.isArray(response.data)
+          ? response.data
+          : [];
+      const offer = offers.find((candidate: any) => String(candidate?.productId) === id) ?? null;
+      return this.aukroStatusResponse(id, selectedAccount, offer);
+    } catch (error: any) {
+      return {
+        ...this.blockedAukroDraft(id, 'aukro_status_request_failed', 'Aukro draft status check failed. Resolve the Aukro-owned dependency before retrying.'),
+        account: selectedAccount,
+        dependencyStatus: error?.response?.status ?? null,
+        dependencyMessage: error?.response?.data?.message ?? error?.message ?? null,
+      };
+    }
+  }
+
+  async getAukroAccountStatus(authorization?: string): Promise<AukroAccountStatus> {
+    if (!authorization && !this.getAukroServiceToken()) {
+      return this.blockedAukroAccountStatus('Catalog login is required before checking Aukro account status.', 'login_to_catalog');
+    }
+
+    try {
+      const response = await axios.get(`${this.getAukroBaseUrl()}/accounts`, {
+        headers: this.aukroHeaders(authorization),
+      });
+      const rawAccounts = Array.isArray(response.data?.data)
+        ? response.data.data
+        : Array.isArray(response.data)
+          ? response.data
+          : [];
+      const accounts = rawAccounts.map((account: any) => this.summarizeAukroAccount(account));
+      const selectedAccount = accounts.find((account) => account.isActive !== false) || accounts[0] || null;
+
+      return {
+        connected: accounts.length > 0,
+        active: Boolean(selectedAccount && selectedAccount.isActive !== false),
+        canSell: Boolean(selectedAccount && selectedAccount.isActive !== false),
+        authority: 'aukro',
+        message: selectedAccount
+          ? 'Aukro account is connected and ready for catalog draft preparation.'
+          : 'No Aukro account is connected. Connect an Aukro account before preparing a draft.',
+        selectedAccount,
+        accounts,
+        nextAction: selectedAccount ? 'create_aukro_draft' : 'connect_aukro_account',
+      };
+    } catch (error: any) {
+      return {
+        ...this.blockedAukroAccountStatus('Aukro account status is unavailable. Sign in to Catalog again or reconnect Aukro.', 'aukro_status_unavailable'),
+        dependencyStatus: error?.response?.status ?? null,
+        dependencyMessage: error?.response?.data?.message ?? error?.message ?? null,
+      };
+    }
+  }
+
+  async requestAukroDraft(id: string, data: any = {}, authorization?: string) {
+    const product = await this.findOne(id);
+
+    if (!product.isActive) {
+      return this.blockedAukroDraft(id, 'inactive_product', 'Only active catalog products can be sent to Aukro draft review.');
+    }
+
+    if (!authorization && !this.getAukroServiceToken()) {
+      return this.blockedAukroDraft(id, 'auth_required', 'Authentication is required before requesting an Aukro draft.');
+    }
+
+    const accountStatus = await this.getAukroAccountStatus(authorization);
+    const accountId = String(data.accountId || accountStatus.selectedAccount?.id || '').trim();
+    if (!accountId) {
+      return this.blockedAukroDraft(id, 'account_required', accountStatus.message);
+    }
+
+    try {
+      const response = await axios.post(
+        `${this.getAukroBaseUrl()}/offers/from-catalog`,
+        {
+          accountId,
+          productId: id,
+          requestedBy: data.requestedBy || 'catalog-dashboard',
+          policyEvidence: data.policyEvidence,
+        },
+        { headers: this.aukroHeaders(authorization) },
+      );
+      const aukroAction = response.data?.data || response.data;
+      return this.aukroDraftResponse(id, aukroAction, accountStatus.accounts.find((account) => account.id === accountId) || null);
+    } catch (error: any) {
+      return {
+        ...this.blockedAukroDraft(id, 'aukro_draft_request_failed', 'Aukro draft request failed. Resolve the Aukro-owned action reason before retrying.'),
+        dependencyStatus: error?.response?.status ?? null,
+        dependencyMessage: error?.response?.data?.message ?? error?.message ?? null,
+      };
+    }
+  }
+
+  async sellOnAukro(id: string, data: any = {}, authorization?: string) {
+    return this.requestAukroDraft(id, data, authorization);
+  }
+
   async prepareAllegroSale(id: string, data: any = {}, authorization?: string) {
     const product = await this.findOne(id);
 
@@ -606,7 +746,7 @@ export class ProductsService {
       return this.blockedChannelAction('allegro', id, 'price_required', 'A current catalog price is required before preparing an Allegro offer.');
     }
 
-    const allegroBaseUrl = (process.env.ALLEGRO_SERVICE_URL || 'http://allegro-service:3000').replace(/\/$/, '');
+    const allegroBaseUrl = this.getAllegroBaseUrl();
     const payload = {
       catalogProductId: id,
       categoryId: data.categoryId || product.categories?.[0]?.id,
@@ -629,6 +769,93 @@ export class ProductsService {
     } catch (error: any) {
       return {
         ...this.blockedChannelAction('allegro', id, 'allegro_prepare_failed', 'Allegro offer preparation failed. Resolve the Allegro-owned dependency before retrying.'),
+        dependencyStatus: error?.response?.status ?? null,
+        dependencyMessage: error?.response?.data?.message ?? error?.message ?? null,
+      };
+    }
+  }
+
+  async getAllegroStatus(id: string, authorization?: string) {
+    await this.findOne(id);
+
+    if (!authorization) {
+      return this.blockedChannelAction('allegro', id, 'auth_required', 'Authentication is required before reading Allegro offer status.');
+    }
+
+    const allegroBaseUrl = this.getAllegroBaseUrl();
+    try {
+      const response = await axios.get(
+        `${allegroBaseUrl}/allegro/catalog-sell/products/${id}/status`,
+        { headers: { Authorization: authorization, 'Content-Type': 'application/json' } },
+      );
+      const allegroStatus = response.data?.data || response.data;
+      return this.allegroSaleResponse(id, allegroStatus);
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        return this.allegroSaleResponse(id, null);
+      }
+      return {
+        ...this.blockedChannelAction('allegro', id, 'allegro_status_failed', 'Allegro offer status is unavailable. Try again after resolving the Allegro-owned dependency.'),
+        dependencyStatus: error?.response?.status ?? null,
+        dependencyMessage: error?.response?.data?.message ?? error?.message ?? null,
+      };
+    }
+  }
+
+  async updateAllegroDraft(id: string, data: any = {}, authorization?: string) {
+    await this.findOne(id);
+
+    if (!authorization) {
+      return this.blockedChannelAction('allegro', id, 'auth_required', 'Authentication is required before editing an Allegro draft.');
+    }
+
+    const allegroBaseUrl = this.getAllegroBaseUrl();
+    const payload = {
+      catalogProductId: id,
+      offerId: data.offerId,
+      title: data.title,
+      description: data.description,
+      categoryId: data.categoryId,
+      price: data.price,
+      quantity: data.quantity,
+    };
+
+    try {
+      const response = await axios.put(
+        `${allegroBaseUrl}/allegro/catalog-sell/products/${id}/draft`,
+        payload,
+        { headers: { Authorization: authorization, 'Content-Type': 'application/json' } },
+      );
+      const allegroAction = response.data?.data || response.data;
+      return this.allegroSaleResponse(id, allegroAction);
+    } catch (error: any) {
+      return {
+        ...this.blockedChannelAction('allegro', id, 'allegro_draft_update_failed', 'Allegro draft update failed. Resolve the Allegro-owned dependency before retrying.'),
+        dependencyStatus: error?.response?.status ?? null,
+        dependencyMessage: error?.response?.data?.message ?? error?.message ?? null,
+      };
+    }
+  }
+
+  async confirmAllegroPublish(id: string, authorization?: string) {
+    await this.findOne(id);
+
+    if (!authorization) {
+      return this.blockedChannelAction('allegro', id, 'auth_required', 'Authentication is required before confirming Allegro publication.');
+    }
+
+    const allegroBaseUrl = this.getAllegroBaseUrl();
+    try {
+      const response = await axios.post(
+        `${allegroBaseUrl}/allegro/catalog-sell/products/${id}/confirm`,
+        {},
+        { headers: { Authorization: authorization, 'Content-Type': 'application/json' } },
+      );
+      const allegroAction = response.data?.data || response.data;
+      return this.allegroSaleResponse(id, allegroAction);
+    } catch (error: any) {
+      return {
+        ...this.blockedChannelAction('allegro', id, 'allegro_confirm_failed', 'Allegro publish confirmation failed. Resolve the Allegro-owned dependency before retrying.'),
         dependencyStatus: error?.response?.status ?? null,
         dependencyMessage: error?.response?.data?.message ?? error?.message ?? null,
       };
@@ -819,6 +1046,34 @@ export class ProductsService {
     return (process.env.BAZOS_SERVICE_URL || 'http://bazos-service:3000').replace(/\/$/, '');
   }
 
+  private getAllegroBaseUrl(): string {
+    return (process.env.ALLEGRO_SERVICE_URL || 'http://allegro-service:3000').replace(/\/$/, '');
+  }
+
+  private getAukroBaseUrl(): string {
+    return (process.env.AUKRO_SERVICE_URL || 'http://aukro-service:3700').replace(/\/$/, '');
+  }
+
+  private getAukroServiceToken(): string | null {
+    const token = process.env.AUKRO_SERVICE_TOKEN || process.env.AUKRO_INTERNAL_SERVICE_TOKEN;
+    return token?.trim() || null;
+  }
+
+  private resolveAukroAuthorization(callerAuthorization?: string): string {
+    const token = this.getAukroServiceToken();
+    if (token) {
+      return token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+    }
+    return callerAuthorization || '';
+  }
+
+  private aukroHeaders(callerAuthorization?: string): Record<string, string> {
+    const authorization = this.resolveAukroAuthorization(callerAuthorization);
+    return authorization
+      ? { Authorization: authorization, 'Content-Type': 'application/json' }
+      : { 'Content-Type': 'application/json' };
+  }
+
   private getFlipFlopPublicUrl(): string {
     return (process.env.FLIPFLOP_PUBLIC_URL || 'https://flipflop.alfares.cz').replace(/\/$/, '');
   }
@@ -990,6 +1245,116 @@ export class ProductsService {
       },
       nextAction: bazosAction?.nextAction ?? 'resolve_policy_failures',
       bazosAction,
+    };
+  }
+
+  private blockedAukroAccountStatus(message: string, nextAction: string): AukroAccountStatus {
+    return {
+      connected: false,
+      active: false,
+      canSell: false,
+      authority: 'aukro',
+      message,
+      selectedAccount: null,
+      accounts: [],
+      nextAction,
+    };
+  }
+
+  private summarizeAukroAccount(account: any): AukroAccountSummary {
+    return {
+      id: String(account.id),
+      username: account.username ?? null,
+      accountName: account.accountName ?? account.name ?? account.displayName ?? null,
+      isActive: account.isActive ?? null,
+    };
+  }
+
+  private blockedAukroDraft(productId: string, reason: string, message: string) {
+    return {
+      success: false,
+      action: 'create_aukro_draft',
+      productId,
+      blocked: true,
+      reason,
+      message,
+      authority: 'aukro',
+      policyAuthority: 'aukro',
+      publishAuthority: 'aukro',
+      requiresHumanAction: {
+        required: true,
+        reason,
+        policyFailures: [],
+        error: message,
+      },
+      nextAction: 'resolve_aukro_draft_requirements',
+    };
+  }
+
+  private aukroStatusResponse(productId: string, account: AukroAccountSummary, offer: any) {
+    const rawData = offer?.rawData ?? {};
+    const draft = rawData?.draft ?? null;
+    const draftStatus = draft?.draftStatus ?? null;
+    const offerId = offer?.id ?? null;
+
+    return {
+      success: true,
+      action: 'read_aukro_draft_status',
+      productId,
+      authority: 'aukro',
+      policyAuthority: 'aukro',
+      publishAuthority: 'aukro',
+      account,
+      offer,
+      draft,
+      draftStatus,
+      offerId,
+      blockers: Array.isArray(draft?.policyReasonCodes) ? draft.policyReasonCodes : [],
+      compliancePolicy: offer?.compliancePolicy ?? null,
+      requiresConfirmation: draftStatus === 'ready_for_review',
+      requiresHumanAction: {
+        required: draftStatus === 'blocked',
+        reason: draftStatus === 'blocked' ? 'policy_blocked' : null,
+        policyFailures: Array.isArray(draft?.policyReasonCodes) ? draft.policyReasonCodes : [],
+        error: null,
+      },
+      nextAction: offerId
+        ? (draftStatus === 'ready_for_review' ? 'review_aukro_draft' : 'resolve_aukro_policy_blockers')
+        : 'create_aukro_draft',
+    };
+  }
+
+  private aukroDraftResponse(productId: string, aukroAction: any, account: AukroAccountSummary | null) {
+    const offer = aukroAction?.offer ?? null;
+    const draft = offer?.rawData?.draft ?? null;
+    const draftStatus = aukroAction?.draftStatus ?? draft?.draftStatus ?? null;
+    const blockers = Array.isArray(aukroAction?.blockers) ? aukroAction.blockers : [];
+
+    return {
+      success: aukroAction?.success !== false,
+      action: 'create_aukro_draft',
+      productId,
+      authority: 'aukro',
+      policyAuthority: 'aukro',
+      publishAuthority: 'aukro',
+      account,
+      offer,
+      offerId: offer?.id ?? null,
+      draft,
+      draftStatus,
+      sourceSnapshot: aukroAction?.sourceSnapshot ?? draft?.sourceSnapshot ?? null,
+      compliancePolicy: aukroAction?.compliancePolicy ?? null,
+      blockers,
+      requiresConfirmation: draftStatus === 'ready_for_review',
+      canQueueAfterConfirmation: draftStatus === 'ready_for_review',
+      requiresHumanAction: {
+        required: draftStatus === 'blocked' || blockers.length > 0,
+        reason: blockers.length > 0 ? 'policy_blocked' : null,
+        policyFailures: blockers,
+        error: null,
+      },
+      nextAction: draftStatus === 'ready_for_review' ? 'review_aukro_draft' : 'resolve_aukro_policy_blockers',
+      aukroAction,
     };
   }
 

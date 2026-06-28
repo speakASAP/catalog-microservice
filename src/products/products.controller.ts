@@ -116,6 +116,20 @@ export class ProductsController {
   }
 
   /**
+   * Get Aukro account status for the current Catalog user
+   * GET /api/products/aukro/account-status
+   */
+  @Get("aukro/account-status")
+  @UseGuards(CatalogAuthGuard)
+  async getAukroAccountStatus(
+    @Headers("authorization") authorization?: string,
+  ) {
+    this.logger.log("GET /api/products/aukro/account-status", "ProductsController");
+    const status = await this.productsService.getAukroAccountStatus(authorization);
+    return { success: true, data: status };
+  }
+
+  /**
    * Get readiness diagnostics for a product
    * GET /api/products/:id/readiness
    */
@@ -137,6 +151,49 @@ export class ProductsController {
     return { success: result.success !== false, data: result };
   }
 
+  @Get(":id/aukro-status")
+  @UseGuards(CatalogAuthGuard)
+  async getAukroStatus(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Headers("authorization") authorization?: string,
+  ) {
+    this.logger.log(`GET /api/products/${id}/aukro-status`, "ProductsController");
+    const result = await this.productsService.getAukroStatus(id, authorization);
+    return { success: result.success !== false, data: result };
+  }
+
+  @Post(":id/aukro-draft")
+  @UseGuards(CatalogAuthGuard)
+  async requestAukroDraft(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() data: any,
+    @Headers("authorization") authorization?: string,
+    @Req() request?: CatalogAuthenticatedRequest,
+  ) {
+    this.logger.log(`POST /api/products/${id}/aukro-draft`, "ProductsController");
+    const result = await this.productsService.requestAukroDraft(id, data, authorization);
+    if (request) {
+      this.logger.auditCatalogWrite(request, {
+        action: 'request_aukro_draft',
+        resourceType: 'product',
+        resourceId: id,
+      });
+    }
+    return { success: result.success !== false, data: result };
+  }
+
+  @Post(":id/sell-on-aukro")
+  @UseGuards(CatalogAuthGuard)
+  async sellOnAukro(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() data: any,
+    @Headers("authorization") authorization?: string,
+    @Req() request?: CatalogAuthenticatedRequest,
+  ) {
+    this.logger.log(`POST /api/products/${id}/sell-on-aukro`, "ProductsController");
+    return this.requestAukroDraft(id, data, authorization, request);
+  }
+
   @Post(":id/sell-on-allegro")
   @UseGuards(CatalogAuthGuard)
   async sellOnAllegro(
@@ -150,6 +207,56 @@ export class ProductsController {
     if (request) {
       this.logger.auditCatalogWrite(request, {
         action: 'prepare_allegro_sale',
+        resourceType: 'product',
+        resourceId: id,
+      });
+    }
+    return { success: result.success !== false, data: result };
+  }
+
+  @Get(":id/allegro-status")
+  @UseGuards(CatalogAuthGuard)
+  async getAllegroStatus(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Headers("authorization") authorization?: string,
+  ) {
+    this.logger.log(`GET /api/products/${id}/allegro-status`, "ProductsController");
+    const result = await this.productsService.getAllegroStatus(id, authorization);
+    return { success: result.success !== false, data: result };
+  }
+
+  @Put(":id/allegro-draft")
+  @UseGuards(CatalogAuthGuard)
+  async updateAllegroDraft(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() data: any,
+    @Headers("authorization") authorization?: string,
+    @Req() request?: CatalogAuthenticatedRequest,
+  ) {
+    this.logger.log(`PUT /api/products/${id}/allegro-draft`, "ProductsController");
+    const result = await this.productsService.updateAllegroDraft(id, data, authorization);
+    if (request) {
+      this.logger.auditCatalogWrite(request, {
+        action: 'update_allegro_draft',
+        resourceType: 'product',
+        resourceId: id,
+      });
+    }
+    return { success: result.success !== false, data: result };
+  }
+
+  @Post(":id/allegro-confirm")
+  @UseGuards(CatalogAuthGuard)
+  async confirmAllegroPublish(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Headers("authorization") authorization?: string,
+    @Req() request?: CatalogAuthenticatedRequest,
+  ) {
+    this.logger.log(`POST /api/products/${id}/allegro-confirm`, "ProductsController");
+    const result = await this.productsService.confirmAllegroPublish(id, authorization);
+    if (request) {
+      this.logger.auditCatalogWrite(request, {
+        action: 'confirm_allegro_publish',
         resourceType: 'product',
         resourceId: id,
       });

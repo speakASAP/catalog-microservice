@@ -539,3 +539,121 @@ describe("ProductsService sales statistics bridge", () => {
     expect(serialized).not.toContain("provider-secret");
   });
 });
+
+
+describe("ProductsService Aukro draft action", () => {
+  const logger = {
+    log: jest.fn(),
+    warn: jest.fn(),
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    delete process.env.AUKRO_SERVICE_TOKEN;
+  });
+
+  const readyProduct = {
+    id: "11111111-1111-4111-8111-111111111111",
+    sku: "SKU-AUKRO-001",
+    title: "Aukro draft product",
+    description: "Synthetic Aukro description.",
+    isActive: true,
+    lifecycle: "active",
+    categories: [{ id: "category-1", name: "marketplace" }],
+    media: [{ url: "https://cdn.example.test/aukro.png" }],
+    pricing: [],
+  } as unknown as Product;
+
+  it("creates an Aukro catalog draft through aukro-service from the selected account", async () => {
+    const repository = {
+      findOne: jest.fn(async () => readyProduct),
+      count: jest.fn(async () => 1),
+    };
+    const mockedAxios = axios as jest.Mocked<typeof axios>;
+    mockedAxios.get.mockResolvedValueOnce({
+      data: [{ id: "aukro-account-1", username: "seller@example.test", isActive: true }],
+    } as any);
+    mockedAxios.post.mockResolvedValueOnce({
+      data: {
+        success: true,
+        action: "created",
+        draftStatus: "ready_for_review",
+        offer: {
+          id: "aukro-offer-1",
+          productId: readyProduct.id,
+          rawData: { draft: { draftStatus: "ready_for_review", policyReasonCodes: [] } },
+        },
+        blockers: [],
+      },
+    } as any);
+    const service = new ProductsService(repository as any, logger as any);
+
+    const result = await service.requestAukroDraft(readyProduct.id, {}, "Bearer user-token");
+
+    expect(mockedAxios.get).toHaveBeenCalledWith(
+      "http://aukro-service:3700/accounts",
+      { headers: { Authorization: "Bearer user-token", "Content-Type": "application/json" } },
+    );
+    expect(mockedAxios.post).toHaveBeenCalledWith(
+      "http://aukro-service:3700/offers/from-catalog",
+      {
+        accountId: "aukro-account-1",
+        productId: readyProduct.id,
+        requestedBy: "catalog-dashboard",
+        policyEvidence: undefined,
+      },
+      { headers: { Authorization: "Bearer user-token", "Content-Type": "application/json" } },
+    );
+    expect(result).toMatchObject({
+      success: true,
+      action: "create_aukro_draft",
+      authority: "aukro",
+      draftStatus: "ready_for_review",
+      offerId: "aukro-offer-1",
+      nextAction: "review_aukro_draft",
+    });
+  });
+
+  it("reads Aukro draft status by account and catalog product", async () => {
+    const repository = {
+      findOne: jest.fn(async () => readyProduct),
+      count: jest.fn(async () => 1),
+    };
+    const mockedAxios = axios as jest.Mocked<typeof axios>;
+    mockedAxios.get
+      .mockResolvedValueOnce({
+        data: [{ id: "aukro-account-1", username: "seller@example.test", isActive: true }],
+      } as any)
+      .mockResolvedValueOnce({
+        data: [
+          {
+            id: "other-offer",
+            productId: "22222222-2222-4222-8222-222222222222",
+            rawData: {},
+          },
+          {
+            id: "aukro-offer-1",
+            productId: readyProduct.id,
+            rawData: { draft: { draftStatus: "blocked", policyReasonCodes: ["MEDIA_READINESS_MISSING"] } },
+          },
+        ],
+      } as any);
+    const service = new ProductsService(repository as any, logger as any);
+
+    const result = await service.getAukroStatus(readyProduct.id, "Bearer user-token");
+
+    expect(mockedAxios.get.mock.calls[1]).toEqual([
+      "http://aukro-service:3700/offers?accountId=aukro-account-1",
+      { headers: { Authorization: "Bearer user-token", "Content-Type": "application/json" } },
+    ]);
+    expect(result).toMatchObject({
+      success: true,
+      action: "read_aukro_draft_status",
+      authority: "aukro",
+      draftStatus: "blocked",
+      offerId: "aukro-offer-1",
+      blockers: ["MEDIA_READINESS_MISSING"],
+      nextAction: "resolve_aukro_policy_blockers",
+    });
+  });
+});

@@ -71,6 +71,57 @@ export interface BazosSellActionResponse {
   reason?: string;
 }
 
+export interface AukroAccountSummary {
+  id: string;
+  username?: string | null;
+  accountName?: string | null;
+  isActive?: boolean | null;
+}
+
+export interface AukroAccountStatus {
+  connected: boolean;
+  active: boolean;
+  canSell: boolean;
+  authority: 'aukro';
+  message: string;
+  selectedAccount: AukroAccountSummary | null;
+  accounts: AukroAccountSummary[];
+  nextAction: string;
+  dependencyStatus?: number | null;
+  dependencyMessage?: string | null;
+}
+
+export interface AukroDraftStatus {
+  success: boolean;
+  action: string;
+  productId: string;
+  authority: 'aukro';
+  policyAuthority?: 'aukro';
+  publishAuthority?: 'aukro';
+  account?: AukroAccountSummary | null;
+  offer?: any;
+  offerId?: string | null;
+  draft?: any;
+  draftStatus?: string | null;
+  blockers?: string[];
+  compliancePolicy?: any;
+  sourceSnapshot?: any;
+  requiresConfirmation?: boolean;
+  canQueueAfterConfirmation?: boolean;
+  requiresHumanAction?: {
+    required?: boolean;
+    reason?: string | null;
+    policyFailures?: string[];
+    error?: string | null;
+  };
+  nextAction?: string;
+  message?: string;
+  reason?: string;
+  blocked?: boolean;
+  dependencyStatus?: number | null;
+  dependencyMessage?: string | null;
+}
+
 export interface ProductQuery {
   page?: number;
   limit?: number;
@@ -110,6 +161,50 @@ export interface BazosListingStatus {
     reason?: string | null;
   };
   nextAction?: string;
+}
+
+
+export interface AllegroDraftSummary {
+  id?: string;
+  accountId?: string | null;
+  catalogProductId?: string | null;
+  allegroOfferId?: string | null;
+  title?: string | null;
+  description?: string | null;
+  categoryId?: string | null;
+  price?: number | string | null;
+  currency?: string | null;
+  quantity?: number | null;
+  stockQuantity?: number | null;
+  publicationStatus?: string | null;
+  status?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface AllegroSellActionResponse {
+  success?: boolean;
+  action?: string;
+  productId?: string;
+  authority?: 'allegro';
+  draft?: AllegroDraftSummary | null;
+  attempt?: {
+    id?: string;
+    status?: string | null;
+    blockedReasons?: Array<{ gate?: string; reason?: string }> | null;
+  } | null;
+  accountChoices?: Array<{ id: string; name?: string | null; isActive?: boolean; tokenExpiresAt?: string | null }>;
+  categoryChoice?: { selectedCategoryId?: string | null; source?: string | null } | null;
+  listingUrl?: string | null;
+  status?: string | null;
+  nextAction?: string | null;
+  message?: string | null;
+  blocked?: boolean;
+  reason?: string;
+  dependencyStatus?: number | null;
+  dependencyMessage?: string | null;
+  requiresConfirmation?: boolean;
+  canEditDraft?: boolean;
+  canConfirmPublish?: boolean;
 }
 
 
@@ -192,13 +287,37 @@ export const productsApi = {
     return apiClient.get<BazosAccountStatus>('/products/bazos/account-status');
   },
 
+  async getAukroStatus(id: string) {
+    return apiClient.get<AukroDraftStatus>(`/products/${id}/aukro-status`);
+  },
+
+  async getAukroAccountStatus() {
+    return apiClient.get<AukroAccountStatus>('/products/aukro/account-status');
+  },
+
+  async sellOnAukro(id: string, data: { accountId?: string; requestedBy?: string; policyEvidence?: any } = {}) {
+    return apiClient.post<AukroDraftStatus>(`/products/${id}/sell-on-aukro`, data);
+  },
+
   async sellOnBazos(id: string, data: { identityId: string; category: string; location?: string; useCallerBazosIdentity?: boolean }) {
     return apiClient.post<BazosSellActionResponse>(`/products/${id}/sell-on-bazos`, data);
   },
 
 
-  async sellOnAllegro(id: string, data: { categoryId?: string; quantity?: number; forceNewDraft?: boolean } = {}) {
-    return apiClient.post(`/products/${id}/sell-on-allegro`, data);
+  async getAllegroStatus(id: string) {
+    return apiClient.get<AllegroSellActionResponse>(`/products/${id}/allegro-status`);
+  },
+
+  async sellOnAllegro(id: string, data: { categoryId?: string; quantity?: number; forceNewDraft?: boolean; title?: string; description?: string; price?: number } = {}) {
+    return apiClient.post<AllegroSellActionResponse>(`/products/${id}/sell-on-allegro`, data);
+  },
+
+  async updateAllegroDraft(id: string, data: { offerId?: string; title?: string; description?: string; categoryId?: string; price?: number; quantity?: number }) {
+    return apiClient.put<AllegroSellActionResponse>(`/products/${id}/allegro-draft`, data);
+  },
+
+  async confirmAllegroPublish(id: string) {
+    return apiClient.post<AllegroSellActionResponse>(`/products/${id}/allegro-confirm`, {});
   },
 
   async getFlipFlopStatus(id: string) {

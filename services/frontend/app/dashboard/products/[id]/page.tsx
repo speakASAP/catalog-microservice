@@ -7,6 +7,8 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import MediaManagement from '@/components/MediaManagement';
 import PricingManagement from '@/components/PricingManagement';
 import BazosPublishPanel from '@/components/BazosPublishPanel';
+import AukroPublishPanel from '@/components/AukroPublishPanel';
+import AllegroPublishPanel from '@/components/AllegroPublishPanel';
 import ChannelSalesPanel from '@/components/ChannelSalesPanel';
 
 
@@ -369,6 +371,10 @@ export default function EditProductPage() {
         <PricingManagement productId={productId} />
 
         <BazosPublishPanel productId={productId} defaultCategory={product.categories?.[0]?.name} />
+
+        <AllegroPublishPanel productId={productId} defaultTitle={product.title} defaultDescription={product.description || ''} />
+
+        <AukroPublishPanel productId={productId} />
 
         <ChannelSalesPanel productId={productId} />
 
