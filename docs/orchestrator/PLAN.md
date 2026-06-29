@@ -1,5 +1,15 @@
 # Catalog Implementation Plan
 
+## 2026-06-29 - TASK-STOCK-004 Warehouse Stock Propagation Active Goal
+
+Active goal: Warehouse-backed product stock amounts and oversell prevention across Catalog and sales channels.
+
+Saved plan: `docs/orchestrator/TASK-STOCK-004-warehouse-stock-propagation-plan.md`.
+
+Current execution state: channel and Orders gates are deployed; Heureka deployment evidence is complete; physical stock beyond visible Allegro stock is blocked on `[MISSING: authoritative BizBox/current stock export or real supplier source]`.
+
+Parallel next work: Lane A Allegro Imports public BizBox CSV upload is ready now; Lane B BizBox source discovery is ready now; Lane C approved Warehouse import is dependency-gated; Lane D Suppliers real-source onboarding is dependency-gated; Lane E final validation is final integration.
+
 ## Execution Rule
 
 Work one goal chunk at a time. Prefer a complete, verifiable chunk over starting multiple tracks.
