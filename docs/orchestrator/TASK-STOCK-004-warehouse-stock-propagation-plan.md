@@ -16,9 +16,9 @@ Execution Plan: deploy reservation gate first, deploy channel gates second, impo
 
 Coding Prompt: keep Warehouse as source of truth; no Catalog stock persistence; fail closed when Warehouse route/reservation evidence is missing; use service credentials without printing secrets; mark unavailable source facts as `[MISSING: ...]`.
 
-Code: deployed cross-repo changes recorded in `docs/orchestrator/STATUS.md`; remaining code lane is Allegro Imports public CSV upload/gateway support if BizBox CSV is confirmed as the next stock source.
+Code: deployed cross-repo changes recorded in `docs/orchestrator/STATUS.md`; the Allegro Imports public CSV upload/gateway lane is deployed at `allegro-service@4e9400c`.
 
-Validation: current product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` shows Warehouse quantity `60`, reserved `0`, available `60`; Heureka image `localhost:5000/heureka-service:056e975` is deployed and healthy; Allegro imports image `localhost:5000/allegro-imports:2db3841` is live but has zero import jobs.
+Validation: current product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` shows Warehouse quantity `60`, reserved `0`, available `60`; Heureka image `localhost:5000/heureka-service:056e975` is deployed and healthy; Allegro image tag `4e9400c` is deployed for service, API gateway, frontend, settings, and imports; imports had zero jobs before any approved BizBox/current stock file was provided.
 
 ## Current State
 
@@ -50,15 +50,15 @@ Expected output: committed/pushed Allegro change with focused gateway/frontend v
 
 Dependencies: none for code; actual import still depends on source file approval.
 
-Blockers: `[MISSING: sample BizBox CSV file for end-to-end upload test]`; use synthetic fixture only for automated test.
+Blockers: `[MISSING: owner-approved BizBox/current stock export]`; no authenticated upload was run because the endpoint mutates Warehouse stock.
 
-Validation evidence: `git diff --check`, focused gateway/frontend build/tests, live authenticated `GET /api/import/jobs` still works, upload route accepts a synthetic fixture without leaking file content.
+Validation evidence: `git diff --check`, API gateway build, frontend build, deployment rollout for API gateway/frontend/imports, and unauthenticated upload rejection. Authenticated upload is deferred until stock mutation is approved.
 
 Handoff notes: do not run real stock mutation import without owner-approved real file and mapping.
 
 ### Lane B - BizBox Source Discovery
 
-Status: ready now.
+Status: completed read-only; no source found.
 
 Owner role: orchestration/data-discovery agent.
 
@@ -68,7 +68,7 @@ Allowed scope: read-only remote repo/host search, operator documentation, existi
 
 Forbidden scope: no destructive file search, no unapproved database mutation, no speculative supplier credential creation.
 
-Expected output: exact approved file path or `[MISSING: owner must provide BizBox export]`.
+Expected output: exact approved file path or `[MISSING: owner must provide BizBox export]`. Completed result: `[MISSING: owner must provide BizBox/current stock export]`.
 
 Dependencies: none.
 
