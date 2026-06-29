@@ -1,5 +1,17 @@
 # Catalog Orchestrator Status
 
+## 2026-06-29 - TASK-STOCK-004 Catalog Aukro Route Prefix Fix
+
+Result: fixed and deployed Catalog's Aukro client route construction. The live Aukro service sets global prefix `/aukro`, so Catalog now calls `/aukro/accounts`, `/aukro/offers`, and `/aukro/offers/from-catalog` instead of unprefixed paths that returned false `404 Cannot GET ...` responses. Catalog is committed and pushed at `catalog-microservice@269e844` (`fix: use Aukro service route prefix`).
+
+Validation evidence: focused `npm test -- --runInBand src/products/products.service.spec.ts` passed with `16` tests; `npm run build` passed; `git diff --check` passed. Deploy built and pushed `localhost:5000/catalog-microservice:269e844` with digest `sha256:5bafda521b9be658e086843e410e08d90265051a84bdf1e0c2c6d56acf1f69cd`, applied manifests, and Kubernetes rollout completed. The deploy script exited nonzero only in its final health phase because it selected a completed `catalog-contract-monitor` pod; direct running-pod health returned HTTP `200`. From the running Catalog pod, old Aukro paths `/accounts` and `/offers` returned `404`, while new paths `/aukro/accounts` and `/aukro/offers` reached real protected Aukro routes and returned `403` without a valid user token.
+
+Live target status evidence: internal Catalog probe for product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` returned FlipFlop HTTP `200`, `success=true`, `nextAction=view_flipflop_listing`, and `projectionStockQuantity=60`. The same internal-service probe for Aukro, Bazos, and Allegro returned `auth_required`, which means those user-owned channel status paths still require a valid hosted-Auth user token or channel-specific valid service token before full status validation. Bazos runtime token checks remain invalid against Bazos/Auth (`401 Invalid token`) for both the Bazos pod `JWT_TOKEN` and Catalog `BAZOS_SERVICE_TOKEN`. Catalog has no `AUKRO_SERVICE_TOKEN` configured.
+
+Boundary decision: no channel draft/publish mutation and no Warehouse stock mutation was run. Allegro service has a separate dirty order-line normalization patch from the data-structure lane; this orchestrator did not edit Allegro. Complete physical stock remains gated on `[MISSING: owner-approved BizBox/current physical stock export]`, `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`, or `[MISSING: correctly authorized additional seller account exposing current full offers]`.
+
+Next action: provide or mint a valid hosted-Auth operator/user token for channel status validation, rotate stale Bazos/Catalog channel tokens if service validation is desired, and continue only with owner-approved current physical stock source for Warehouse import.
+
 ## 2026-06-29 - TASK-STOCK-004 FlipFlop Warehouse Stock Projection Fixed
 
 Result: fixed and deployed the FlipFlop Warehouse client authentication path so product projections can read Warehouse availability instead of silently falling back to zero. FlipFlop is committed and pushed at `flipflop-service@94ecd7c` (`fix: authenticate warehouse stock client`). The deployed shared client now sends a bearer token from `WAREHOUSE_SERVICE_TOKEN`, `JWT_TOKEN`, or `SERVICE_TOKEN` for Warehouse stock reads, reservations, and stock writes. FlipFlop Vault/Kubernetes secret material was refreshed with a Warehouse-valid service token without printing token values.
