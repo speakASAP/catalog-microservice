@@ -1,5 +1,17 @@
 # Catalog Orchestrator Status
 
+## 2026-06-29 - TASK-STOCK-004 Heureka Readiness Stock Amount Validated
+
+Result: fixed and deployed Heureka feed readiness so a missing local `heureka_settings` table no longer prevents read-only Catalog/Warehouse readiness checks. Heureka was deployed in two commits: `heureka-service@5afc3c1` keeps readiness available without the settings table, and `heureka-service@147da72` additively exposes `availableStock` and `settingsActive` on readiness items. Feed generation still requires active settings; only the read-only readiness endpoint tolerates the missing table and reports it as a blocker.
+
+Validation evidence: `git diff --check` passed; `npx ts-node --skip-ignore --compiler-options '{"types":["node"]}' services/heureka-service/src/heureka/feed/feed-readiness.self-test.ts` passed; `LOGGING_SERVICE_URL=http://logging-microservice:3367 npx ts-node --skip-ignore --compiler-options '{"types":["node"]}' services/heureka-service/src/heureka/feed/feed-readiness-settings.self-test.ts` passed; `npm --prefix services/heureka-service run build` passed; `npm --prefix shared run build` passed; `npm run verify:heureka-order-ingestion` passed. The `147da72` deploy script timed out during an intermediate ContainerCreating/runtime stall, but after deleting the stuck pending pod Kubernetes recreated it, and explicit `kubectl -n statex-apps rollout status deployment/heureka-service --timeout=30s` reported success. Live deployment image is `localhost:5000/heureka-service:147da72`; pod-local `/health` returned HTTP `200`.
+
+Live target evidence: pod-local `GET /heureka/feed/readiness/products/884c1c5e-fe94-46c7-aab1-78bcc424e7ee` returned HTTP `200`, `success=true`, contract `catalog-feed-readiness.v1`, `feedType=heureka_cz`, `availableStock=60`, `settingsActive=false`, `readiness=blocked`, and blockers `MISSING_CATEGORY` plus `SETTINGS_INACTIVE`. This proves Heureka can read the Warehouse amount for the target product; it is not feed-eligible until category/settings are repaired.
+
+Boundary decision: no Heureka order ingestion, reservation, feed publication, settings-table migration, Warehouse import, or stock mutation was run. Complete physical stock remains gated on `[MISSING: owner-approved BizBox/current physical stock export]`, `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`, or `[MISSING: correctly authorized additional seller account exposing current full offers]`.
+
+Next action: repair Heureka feed metadata/settings only after owner approves the Heureka feed configuration path; continue physical-stock-source acquisition before final import.
+
 ## 2026-06-29 - TASK-STOCK-004 Hosted-Auth Channel Status Validation And Bazos Status Fix
 
 Result: used the Auth-owned configured test credentials inside the Auth pod to obtain a hosted-Auth user token without printing token material, then ran a read-only Catalog channel-status smoke for product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee`. The Auth token validated successfully with roles including Allegro admin/user, Bazos admin, Catalog internal admin, and global superadmin. Initial smoke proved Catalog accepted hosted-Auth and returned HTTP `200` for Warehouse, FlipFlop, Allegro, Aukro, Bazos account, and Aukro account status. Bazos product status returned a Bazos-owned dependency `500` because the no-draft read-only status path threw `NotFoundException`.
