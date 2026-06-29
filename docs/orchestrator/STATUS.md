@@ -1,5 +1,19 @@
 # Catalog Orchestrator Status
 
+## 2026-06-29 - TASK-STOCK-004 Catalog Multi-Product Channel Status Smoke Deployed
+
+Result: deployed Catalog commit `2362f8b` (`refactor: enhance authorized channel status checks for multi-product support`). The smoke now checks read-only channel status per configured product instead of overwriting evidence by channel name, stores `stockEvidence.channelStatuses` by `channel:productId`, and compares each reported channel stock quantity to that product's Warehouse `totalAvailable`.
+
+Validation evidence before deploy: remote `npm run build` passed. A pre-deploy in-pod read-only smoke copied the patched script into the previously deployed Catalog pod and passed with `50` passed, `1` skipped, `0` failed. It checked `9` products, `38` per-product channel status envelopes, and all `38` channel checks passed: FlipFlop `9`, Allegro `9`, Bazos `9`, Aukro `9`, plus `2` account/status checks.
+
+Deployment evidence: `./scripts/deploy.sh` built and pushed image `localhost:5000/catalog-microservice:2362f8b` with digest `sha256:1ee8fc8a602b121d2bb5d7cf71c8d76b9ba7ecdcf1c371d52558ac487ae056ca`, rolled out successfully, and returned healthy status from the new pod.
+
+Post-deploy smoke evidence: the deployed `2362f8b` image ran `scripts/catalog-smoke.js` with `CATALOG_SMOKE_AUTHORIZED=true`, `CATALOG_SMOKE_ASSERT_STOCK=true`, `CATALOG_SMOKE_ENABLE_CHANNEL_STATUS=true`, and the 9 currently Allegro-authoritative product IDs. Result: `50` passed, `1` skipped, `0` failed; `checkedProductCount=9`; `checkedChannelStatuses=38`; `stockEvidenceProducts=9`; `stockEvidenceChannelStatuses=38`; all channel status checks passed with no mismatches.
+
+Boundary decision: this was a read-only validation harness deployment and smoke. No Warehouse import, stock mutation, reservation, channel draft, publish, queue, confirmation, or external marketplace mutation was run. It proves Catalog can validate Warehouse-to-channel read projections for all 9 currently mapped Allegro-authoritative products, but complete physical stock remains gated on `[MISSING: owner-approved BizBox/current physical stock export]`, `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`, or `[MISSING: correctly authorized additional seller account exposing additional current full offers]`.
+
+Next action: obtain/provide the missing complete physical stock source or additional seller authorization, then rerun Allegro Warehouse verifier plus Catalog multi-product stock/channel smoke as final acceptance gates.
+
 ## 2026-06-29 - TASK-STOCK-004 Catalog Multi-Product Stock Smoke Deployed
 
 Result: extended Catalog smoke to accept comma-separated `CATALOG_SMOKE_PRODUCT_IDS` for read-only batch Warehouse and FlipFlop projection checks. The existing single-product behavior remains compatible; default public smoke still passed. The new batch mode records per-product Warehouse quantity/reserved/available and FlipFlop projected stock, then fails if any product projection differs from Warehouse `totalAvailable`.
