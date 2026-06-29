@@ -130,30 +130,38 @@ function summarizeChannelStatusPayload(data) {
 }
 
 async function checkAuthorizedChannelStatus(channel, path, expectedAuthority, headers, productId) {
-  await check(`authorized-${channel}-status`, async () => {
+  const contract = productId ? `authorized-${channel}-status:${productId}` : `authorized-${channel}-status`;
+  await check(contract, async () => {
     if (!productId) {
-      record(`authorized-${channel}-status`, "skip", { reason: `No product ID available for authorized ${channel} status check.` });
+      record(contract, "skip", { reason: `No product ID available for authorized ${channel} status check.` });
       return;
     }
     const response = await request(path, { headers });
-    assert(response.ok, `authorized-${channel}-status`, `Authorized ${channel} status endpoint did not return 2xx`, {
+    assert(response.ok, contract, `Authorized ${channel} status endpoint did not return 2xx`, {
       statusCode: response.status,
       productId,
     });
     const data = response.body?.data || response.body;
-    assert(data?.authority === expectedAuthority, `authorized-${channel}-status`, `${channel} status response did not preserve channel authority`, {
+    assert(data?.authority === expectedAuthority, contract, `${channel} status response did not preserve channel authority`, {
       statusCode: response.status,
       productId,
       authority: data?.authority || null,
     });
     const summary = summarizeChannelStatusPayload(data);
-    stockEvidence.channelStatuses[channel] = summary;
-    record(`authorized-${channel}-status`, "pass", {
+    stockEvidence.channelStatuses[`${channel}:${productId}`] = { productId, channel, ...summary };
+    record(contract, "pass", {
       statusCode: response.status,
       productId,
       ...summary,
     });
   });
+}
+
+async function checkAuthorizedProductChannelStatuses(productId, headers) {
+  await checkAuthorizedChannelStatus("flipflop", `/api/products/${encodeURIComponent(productId)}/flipflop-status`, "flipflop", headers, productId);
+  await checkAuthorizedChannelStatus("allegro", `/api/products/${encodeURIComponent(productId)}/allegro-status`, "allegro", headers, productId);
+  await checkAuthorizedChannelStatus("bazos", `/api/products/${encodeURIComponent(productId)}/bazos-status`, "bazos", headers, productId);
+  await checkAuthorizedChannelStatus("aukro", `/api/products/${encodeURIComponent(productId)}/aukro-status`, "aukro", headers, productId);
 }
 
 function firstProductFromList(body) {
@@ -433,10 +441,9 @@ async function main() {
     if (!authorizedChannelStatusSmokeEnabled) {
       record("authorized-channel-status", "skip", { reason: "Set CATALOG_SMOKE_ENABLE_CHANNEL_STATUS=true to run read-only channel status checks." });
     } else {
-      await checkAuthorizedChannelStatus("flipflop", `/api/products/${encodeURIComponent(productId)}/flipflop-status`, "flipflop", authorizedHeaders, productId);
-      await checkAuthorizedChannelStatus("allegro", `/api/products/${encodeURIComponent(productId)}/allegro-status`, "allegro", authorizedHeaders, productId);
-      await checkAuthorizedChannelStatus("bazos", `/api/products/${encodeURIComponent(productId)}/bazos-status`, "bazos", authorizedHeaders, productId);
-      await checkAuthorizedChannelStatus("aukro", `/api/products/${encodeURIComponent(productId)}/aukro-status`, "aukro", authorizedHeaders, productId);
+      for (const statusProductId of productIdsForAuthorizedChecks(productId)) {
+        await checkAuthorizedProductChannelStatuses(statusProductId, authorizedHeaders);
+      }
       await checkAuthorizedChannelStatus("bazos-account", "/api/products/bazos/account-status", "bazos", authorizedHeaders, productId);
       await checkAuthorizedChannelStatus("aukro-account", "/api/products/aukro/account-status", "aukro", authorizedHeaders, productId);
     }
@@ -457,8 +464,18 @@ async function main() {
 
         const mismatchedChannels = Object.entries(stockEvidence.channelStatuses)
           .filter(([, summary]) => summary.stockQuantity !== null && summary.stockQuantity !== undefined)
-          .filter(([, summary]) => !stockQuantitiesMatch(stockEvidence.warehouseAvailable, summary.stockQuantity))
-          .map(([channel, summary]) => ({ channel, stockQuantity: summary.stockQuantity }));
+          .filter(([, summary]) => {
+            const productEvidence = summary.productId ? stockEvidence.products[summary.productId] : null;
+            const warehouseAvailable = productEvidence?.warehouseAvailable ?? stockEvidence.warehouseAvailable;
+            return !stockQuantitiesMatch(warehouseAvailable, summary.stockQuantity);
+          })
+          .map(([key, summary]) => ({
+            key,
+            channel: summary.channel,
+            productId: summary.productId,
+            warehouseAvailable: (summary.productId ? stockEvidence.products[summary.productId]?.warehouseAvailable : stockEvidence.warehouseAvailable) ?? null,
+            stockQuantity: summary.stockQuantity,
+          }));
         assert(mismatchedChannels.length === 0, "authorized-stock-consistency", "A channel status reported stock different from Warehouse totalAvailable", {
           productId,
           warehouseAvailable: stockEvidence.warehouseAvailable,
