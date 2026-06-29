@@ -175,3 +175,10 @@ Parallel execution:
 - Dependency-gated: adding new products beyond the 9 current Allegro-authoritative items. Blocker: `[MISSING: complete physical stock authority source beyond current Allegro product-offers]`.
 - Blocked: automatic sales-channel stock push for products absent from Warehouse. Blocker: `[MISSING: source data and owner-approved import for remaining physical stock]`.
 - Final integration: rerun the gate after every stock import/deploy and before enabling publish/sellable actions for a new product set.
+
+Continuation lanes:
+
+- Ready with explicit owner approval: Warehouse machine-auth receiver lane. Objective: accept Catalog as a service actor for Warehouse read-only availability/logistics calls using the approved machine-identity contract, then rerun `npm run verify:stock-acceptance:gates`. Forbidden without approval: broad admin bypass, accepting static tokens for mutations, or treating machine tokens as human Auth users.
+- Ready with valid runtime config: Catalog credential lane. Objective: provision a Warehouse/Auth-compatible Catalog token so the existing Catalog fallback can call Warehouse without receiver code changes. Forbidden: printing token values, copying arbitrary service tokens into docs, or using user JWTs as machine credentials.
+- Ready with explicit read approval: Suppliers source audit lane. Objective: read sanitized supplier/import metadata to determine whether a real BizBox/current-stock/supplier source exists. Forbidden: running imports, applying Warehouse stock, reading decoded supplier credentials, or dumping production payloads.
+- Dependency-gated: supplier/BizBox import implementation. Objective: map an owner-approved source payload into Suppliers/Warehouse stock candidates and apply only after validation and explicit mutation approval. Blocker: `[MISSING: real source contract and approval]`.

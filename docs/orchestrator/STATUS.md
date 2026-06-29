@@ -1210,3 +1210,28 @@ Intent chain:
 Boundary decision: this does not solve the remaining physical stock source gap. The configured Allegro accounts still expose only the current 9 stock-authoritative offers totaling 496 pieces; the 1000+ expected physical stock source remains `[MISSING: owner-provided BizBox/current export, additional seller authorization, or explicit authority confirmation]`.
 
 Current blocker: Catalog now tries `WAREHOUSE_SERVICE_TOKEN`, `WAREHOUSE_INTERNAL_SERVICE_TOKEN`, `JWT_TOKEN`, `CATALOG_INTERNAL_SERVICE_TOKEN`, and `INTERNAL_SERVICE_TOKEN` for Warehouse calls, but the live Catalog pod's configured candidates are rejected by Warehouse/Auth. Warehouse currently accepts Allegro `JWT_TOKEN` for verification but rejects Catalog `WAREHOUSE_SERVICE_TOKEN`, Catalog `JWT_TOKEN`, and `CATALOG_INTERNAL_SERVICE_TOKEN`. Passing final acceptance requires either a valid Auth-issued Warehouse-compatible Catalog token in runtime config or an owner-approved machine-identity receiver contract in Warehouse; no Warehouse auth bypass was added.
+
+## 2026-06-29 - Stock Goal Continuation: Auth And Source Evidence
+
+Change: continued the cross-repo stock goal from the acceptance-gate blocker without adding a Warehouse static-token bypass. The current deployed state remains:
+- Catalog `localhost:5000/catalog-microservice:67c29f8`, ready `1/1`.
+- Warehouse `localhost:5000/warehouse-microservice:8a66b27`, ready `1/1`.
+- Allegro `localhost:5000/allegro-service:50b5858`, ready `1/1`.
+- Auth `localhost:5000/auth-microservice:9a309b0-20260629000608`, ready `1/1`.
+
+Auth/receiver evidence:
+- Auth `/auth/validate` currently validates user JWTs by verifying the token and loading an active user by `payload.sub`; it does not validate static machine tokens as service actors.
+- Warehouse uses Auth `/auth/validate` through `JwtRolesGuard` for protected routes.
+- Catalog-to-Warehouse candidate credentials are rejected by Warehouse/Auth in runtime; Allegro `JWT_TOKEN` remains accepted for the Allegro Warehouse verifier.
+- A broad Warehouse guard bypass and a route-scoped static-token read guard were not implemented because they change Warehouse's persistent machine-auth model and require explicit owner approval.
+
+Remaining stock-source evidence:
+- Repo search found `suppliers-microservice` has a generic REST/JSON stock candidate contract and validation-first Warehouse reconciliation path with `supplierSku`, `productId`, `warehouseId`, and `stockQuantity`.
+- Suppliers docs still mark real supplier/BizBox payload facts as missing; the generic adapter does not identify a real physical stock source by itself.
+- A read-only Suppliers API metadata probe was attempted through the live pod with its own `JWT_TOKEN`; the service returned `401 Invalid token`, so no supplier/import metadata was read through that route.
+- No production supplier import, Warehouse mutation, stock reservation, DB query, or secret value print was performed.
+
+Current blockers:
+- `[MISSING: owner-approved machine-auth receiver contract or valid Auth-compatible Catalog Warehouse token]` for passing the Catalog propagation leg of the stock acceptance gate.
+- `[MISSING: owner-provided BizBox/current export, real supplier API contract, additional seller authorization, or explicit authority confirmation]` for stock beyond the 9 current Allegro-authoritative offers totaling 496 pieces.
+- `[MISSING: explicit approval for read-only Suppliers DB/API metadata inspection if service JWT remains invalid]`.
