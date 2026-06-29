@@ -1,5 +1,17 @@
 # Catalog Orchestrator Status
 
+## 2026-06-29 - TASK-STOCK-004 Bazos And Aukro Warehouse Client Auth Fixed
+
+Result: fixed and deployed authenticated Warehouse stock reads for Bazos and Aukro channel gates. Bazos is committed and deployed at `bazos-service@8d02855` (`fix: authenticate warehouse stock client`). Aukro is committed and deployed at `aukro-service@b2efe33` for the Warehouse client auth and `aukro-service@bd94bf8` for deploy-script/image rollout repair plus the `WAREHOUSE_SERVICE_TOKEN` pod env mapping. Both services now use `WAREHOUSE_SERVICE_TOKEN`, falling back to `JWT_TOKEN` or `SERVICE_TOKEN`, when calling Warehouse stock read/reservation endpoints.
+
+Validation evidence: Bazos `git diff --check`, `npm --prefix shared run build`, and focused Bazos stock policy/publisher tests passed (`2` suites, `51` tests). Aukro `git diff --check`, `npm --prefix shared run build`, and Aukro service stock/offers test command passed. Bazos deploy built/pushed immutable image `localhost:5000/bazos-service:8d02855` with digest `sha256:f7d6c84642c17b792a70831d7113d8d81d26d666f3ef9f66ec5da6f101fbc2b9` and rolled out. Aukro deploy script was repaired to build/push/set immutable images, then built/pushed `localhost:5000/aukro-service:bd94bf8` with digest `sha256:1e39acee4ea91b681af485d0071244e7aed67b138113f2bb2acecb2ff3097b13` and rolled out.
+
+Live stock evidence: running Bazos pod `bazos-service-7c79d6d5db-vp9wp` and running Aukro pod `aukro-service-668f77fd44-gt8fr` both expose `WAREHOUSE_SERVICE_TOKEN` without printing token material. Deployed client smoke proved `clientAddsAuthorization=true` in both pods. Direct pod-local Warehouse read for product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` returned HTTP `200`, `success=true`, and `totalAvailable=60` from both services.
+
+Boundary decision: no Bazos/Aukro draft, publish, queue, reservation, stock mutation, or Warehouse stock import was run. This change makes the existing fail-closed stock gates able to read Warehouse availability; it does not bypass user-owned channel authentication. Complete physical stock remains gated on `[MISSING: owner-approved BizBox/current physical stock export]`, `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`, or `[MISSING: correctly authorized additional seller account exposing current full offers]`.
+
+Next action: continue authenticated user/operator channel-status validation and obtain the owner-approved complete physical stock source before any Warehouse import.
+
 ## 2026-06-29 - TASK-STOCK-004 Catalog Aukro Route Prefix Fix
 
 Result: fixed and deployed Catalog's Aukro client route construction. The live Aukro service sets global prefix `/aukro`, so Catalog now calls `/aukro/accounts`, `/aukro/offers`, and `/aukro/offers/from-catalog` instead of unprefixed paths that returned false `404 Cannot GET ...` responses. Catalog is committed and pushed at `catalog-microservice@269e844` (`fix: use Aukro service route prefix`).

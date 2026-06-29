@@ -16,7 +16,7 @@ Execution Plan: deploy reservation gate first, deploy channel gates second, impo
 
 Coding Prompt: keep Warehouse as source of truth; no Catalog stock persistence; fail closed when Warehouse route/reservation evidence is missing; use service credentials without printing secrets; mark unavailable source facts as `[MISSING: ...]`.
 
-Code: deployed cross-repo changes recorded in `docs/orchestrator/STATUS.md`; the Allegro Imports public CSV upload/gateway lane, non-mutating preview, confirmation-guarded mutation, and preview-token file binding are deployed at `allegro-service@d434150`; FlipFlop Warehouse client authentication is deployed at `flipflop-service@94ecd7c`; Catalog Aukro route-prefix fix is deployed at `catalog-microservice@269e844`.
+Code: deployed cross-repo changes recorded in `docs/orchestrator/STATUS.md`; the Allegro Imports public CSV upload/gateway lane, non-mutating preview, confirmation-guarded mutation, and preview-token file binding are deployed at `allegro-service@d434150`; FlipFlop Warehouse client authentication is deployed at `flipflop-service@94ecd7c`; Catalog Aukro route-prefix fix is deployed at `catalog-microservice@269e844`; Bazos and Aukro Warehouse client authentication is deployed at `bazos-service@8d02855` and `aukro-service@bd94bf8`.
 
 Validation: current product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` shows Warehouse quantity `60`, reserved `0`, available `60`; FlipFlop public product API now exposes Warehouse-backed `stockQuantity=60` with `warehouse.source=warehouse-microservice`; Heureka image `localhost:5000/heureka-service:056e975` is deployed and healthy; Allegro image tag `d434150` is deployed for service, API gateway, frontend, settings, and imports; current-pod bad-token smoke rejects mutation with `STOCK_IMPORT_PREVIEW_TOKEN_INVALID`. Full `FlipFlop` active-offer backfill imported 9 stock-authoritative offers totaling Allegro stock `496`; Warehouse and Catalog availability both read back total available `496` with zero mismatches. One synthetic rollout-window import artifact was created during old-behavior smoke and then cleaned up in Catalog; no real BizBox/current stock file was imported.
 
@@ -29,6 +29,7 @@ Validation: current product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` shows Warehou
 - Completed: Aukro, Bazos, FlipFlop, Heureka channel gates deployed.
 - Completed: FlipFlop Warehouse client auth fix deployed at `flipflop-service@94ecd7c`; public product API for the target product now returns Warehouse-backed `stockQuantity=60`.
 - Completed: Catalog Aukro route-prefix fix deployed at `catalog-microservice@269e844`; Catalog now calls live Aukro `/aukro/...` routes instead of unprefixed paths that return false 404s.
+- Completed: Bazos and Aukro Warehouse clients now authenticate to Warehouse and live pods read target product `totalAvailable=60` from Warehouse.
 - Completed: Heureka deploy script repaired to build immutable image tags before rollout.
 - Completed read-only: Suppliers currently has synthetic/test suppliers only and is not a proven real physical-stock source.
 - Completed read-only: Allegro Imports has BizBox CSV-to-Warehouse code but no jobs and no source file found.
@@ -118,7 +119,7 @@ Objective: prove target Catalog product and all channel flows read or enforce Wa
 
 Dependencies: Lane C or D complete.
 
-Validation evidence: Catalog availability batch returns target totalAvailable `60`; FlipFlop pod-local Warehouse probe returns `totalAvailable=60`; public FlipFlop product API returns `stockQuantity=60` and Warehouse source metadata; Catalog internal probe returns FlipFlop `projectionStockQuantity=60`; live Catalog-to-Aukro route check proves `/aukro/accounts` and `/aukro/offers` are real protected routes while old unprefixed paths return 404. Remaining: valid hosted-Auth/user-token Catalog UI/channel status evidence, Bazos token rotation or user-auth validation, Orders over-reservation evidence after full source import, and Allegro/Aukro/Bazos/Heureka channel fail-closed/positive paths where applicable.
+Validation evidence: Catalog availability batch returns target totalAvailable `60`; FlipFlop pod-local Warehouse probe returns `totalAvailable=60`; public FlipFlop product API returns `stockQuantity=60` and Warehouse source metadata; Catalog internal probe returns FlipFlop `projectionStockQuantity=60`; live Catalog-to-Aukro route check proves `/aukro/accounts` and `/aukro/offers` are real protected routes while old unprefixed paths return 404; Bazos and Aukro deployed clients add Warehouse Authorization and both live pods read target `totalAvailable=60`. Remaining: valid hosted-Auth/user-token Catalog UI/channel status evidence, Orders over-reservation evidence after full source import, and Allegro/Bazos/Aukro/Heureka positive paths where applicable.
 
 ## Merge Order
 
