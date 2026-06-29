@@ -7,10 +7,13 @@ const configuredProductIds = parseProductIds(process.env.CATALOG_SMOKE_PRODUCT_I
 const authorizedSmokeEnabled = isEnabled(process.env.CATALOG_SMOKE_AUTHORIZED);
 const authorizedBazosSmokeEnabled = isEnabled(process.env.CATALOG_SMOKE_ENABLE_BAZOS_AUTHORIZED);
 const authorizedChannelStatusSmokeEnabled = isEnabled(process.env.CATALOG_SMOKE_ENABLE_CHANNEL_STATUS);
+const heurekaReadinessSmokeEnabled = isEnabled(process.env.CATALOG_SMOKE_ENABLE_HEUREKA_READINESS);
 const stockConsistencySmokeEnabled = isEnabled(process.env.CATALOG_SMOKE_ASSERT_STOCK);
 const internalServiceToken = process.env.CATALOG_SMOKE_INTERNAL_SERVICE_TOKEN || "";
 const authToken = process.env.CATALOG_SMOKE_AUTH_TOKEN || (internalServiceToken ? "" : process.env.JWT_TOKEN || "");
 const smokeServiceName = process.env.CATALOG_SMOKE_SERVICE_NAME || "catalog-authorized-smoke";
+const heurekaBaseUrl = (process.env.CATALOG_SMOKE_HEUREKA_BASE_URL || "https://heureka.alfares.cz").replace(/\/+$/, "");
+const heurekaFeedType = process.env.CATALOG_SMOKE_HEUREKA_FEED_TYPE || "heureka_cz";
 const bazosProductId = process.env.CATALOG_SMOKE_BAZOS_PRODUCT_ID || "";
 const bazosIdentityId = process.env.CATALOG_SMOKE_BAZOS_IDENTITY_ID || "";
 const bazosCategory = process.env.CATALOG_SMOKE_BAZOS_CATEGORY || "";
@@ -27,6 +30,7 @@ const stockEvidence = {
   flipflopStockQuantity: null,
   products: {},
   channelStatuses: {},
+  heurekaReadiness: {},
 };
 
 function record(contract, status, detail = {}) {
@@ -64,7 +68,7 @@ function sleep(ms) {
 }
 
 async function request(path, options = {}) {
-  const url = `${baseUrl}${path}`;
+  const url = /^https?:\/\//.test(path) ? path : `${baseUrl}${path}`;
   const attempts = Number.isFinite(requestRetries) && requestRetries > 0 ? requestRetries + 1 : 1;
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
@@ -129,6 +133,25 @@ function summarizeChannelStatusPayload(data) {
   };
 }
 
+function summarizeHeurekaReadinessPayload(data, productId) {
+  const items = data?.data?.items || data?.items || [];
+  const item = items.find((entry) => entry?.productId === productId) || items[0] || null;
+  if (!item) {
+    return {
+      productId,
+      readinessAvailable: null,
+      readiness: null,
+      blockerCodes: [],
+    };
+  }
+  return {
+    productId: item.productId || productId,
+    readinessAvailable: numberOrNull(item.availableStock),
+    readiness: item.readiness || null,
+    blockerCodes: Array.isArray(item.blockers) ? item.blockers.map((blocker) => blocker.code).filter(Boolean) : [],
+  };
+}
+
 async function checkAuthorizedChannelStatus(channel, path, expectedAuthority, headers, productId) {
   const contract = productId ? `authorized-${channel}-status:${productId}` : `authorized-${channel}-status`;
   await check(contract, async () => {
@@ -162,6 +185,29 @@ async function checkAuthorizedProductChannelStatuses(productId, headers) {
   await checkAuthorizedChannelStatus("allegro", `/api/products/${encodeURIComponent(productId)}/allegro-status`, "allegro", headers, productId);
   await checkAuthorizedChannelStatus("bazos", `/api/products/${encodeURIComponent(productId)}/bazos-status`, "bazos", headers, productId);
   await checkAuthorizedChannelStatus("aukro", `/api/products/${encodeURIComponent(productId)}/aukro-status`, "aukro", headers, productId);
+}
+
+async function checkHeurekaReadiness(productId) {
+  const contract = `authorized-heureka-readiness:${productId}`;
+  await check(contract, async () => {
+    const response = await request(`${heurekaBaseUrl}/heureka/feed/readiness/products/${encodeURIComponent(productId)}?feedType=${encodeURIComponent(heurekaFeedType)}`);
+    assert(response.ok, contract, "Heureka readiness endpoint did not return 2xx", {
+      statusCode: response.status,
+      productId,
+    });
+    const summary = summarizeHeurekaReadinessPayload(response.body, productId);
+    assert(summary.productId === productId, contract, "Heureka readiness returned a different product ID", {
+      statusCode: response.status,
+      productId,
+      returnedProductId: summary.productId,
+    });
+    stockEvidence.heurekaReadiness[productId] = summary;
+    record(contract, "pass", {
+      statusCode: response.status,
+      feedType: heurekaFeedType,
+      ...summary,
+    });
+  });
 }
 
 function firstProductFromList(body) {
@@ -448,6 +494,14 @@ async function main() {
       await checkAuthorizedChannelStatus("aukro-account", "/api/products/aukro/account-status", "aukro", authorizedHeaders, productId);
     }
 
+    if (!heurekaReadinessSmokeEnabled) {
+      record("authorized-heureka-readiness", "skip", { reason: "Set CATALOG_SMOKE_ENABLE_HEUREKA_READINESS=true to run read-only Heureka readiness checks." });
+    } else {
+      for (const heurekaProductId of productIdsForAuthorizedChecks(productId)) {
+        await checkHeurekaReadiness(heurekaProductId);
+      }
+    }
+
     if (!stockConsistencySmokeEnabled) {
       record("authorized-stock-consistency", "skip", { reason: "Set CATALOG_SMOKE_ASSERT_STOCK=true to compare Warehouse and channel stock quantities." });
     } else {
@@ -496,12 +550,45 @@ async function main() {
           checkedProductCount: Object.keys(stockEvidence.products).length,
         });
 
+        const heurekaStockMismatches = Object.entries(stockEvidence.heurekaReadiness)
+          .filter(([, readiness]) => readiness.readinessAvailable !== null && readiness.readinessAvailable !== undefined)
+          .filter(([checkedProductId, readiness]) => {
+            const evidence = stockEvidence.products[checkedProductId];
+            return !stockQuantitiesMatch(evidence?.warehouseAvailable, readiness.readinessAvailable);
+          })
+          .map(([checkedProductId, readiness]) => ({
+            productId: checkedProductId,
+            warehouseAvailable: stockEvidence.products[checkedProductId]?.warehouseAvailable ?? null,
+            heurekaAvailableStock: readiness.readinessAvailable,
+            readiness: readiness.readiness,
+            blockerCodes: readiness.blockerCodes,
+          }));
+        assert(heurekaStockMismatches.length === 0, "authorized-stock-consistency", "Heureka readiness stock does not match Warehouse totalAvailable", {
+          productId,
+          heurekaStockMismatches,
+          checkedHeurekaReadiness: Object.keys(stockEvidence.heurekaReadiness).length,
+        });
+
+        const positiveWarehouseHeurekaStockBlockers = Object.entries(stockEvidence.heurekaReadiness)
+          .filter(([checkedProductId]) => Number(stockEvidence.products[checkedProductId]?.warehouseAvailable) > 0)
+          .filter(([, readiness]) => readiness.blockerCodes.includes("STOCK_UNKNOWN") || readiness.blockerCodes.includes("ZERO_STOCK"))
+          .map(([checkedProductId, readiness]) => ({
+            productId: checkedProductId,
+            warehouseAvailable: stockEvidence.products[checkedProductId]?.warehouseAvailable ?? null,
+            blockerCodes: readiness.blockerCodes,
+          }));
+        assert(positiveWarehouseHeurekaStockBlockers.length === 0, "authorized-stock-consistency", "Heureka readiness reports stock blockers for products with positive Warehouse availability", {
+          productId,
+          positiveWarehouseHeurekaStockBlockers,
+        });
+
         record("authorized-stock-consistency", "pass", {
           productId,
           warehouseAvailable: stockEvidence.warehouseAvailable,
           flipflopStockQuantity: stockEvidence.flipflopStockQuantity,
           checkedProductCount: Object.keys(stockEvidence.products).length,
           checkedChannelStatuses: Object.keys(stockEvidence.channelStatuses).length,
+          checkedHeurekaReadiness: Object.keys(stockEvidence.heurekaReadiness).length,
         });
       });
     }
