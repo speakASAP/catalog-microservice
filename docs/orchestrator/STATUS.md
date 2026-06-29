@@ -1,3 +1,13 @@
+## 2026-06-29 - TASK-STOCK-004 Auth Service Principal Projection Deployed
+
+Change: deployed Auth commit `97ea521` (`feat: prepare catalog warehouse service token provisioning`) so `/auth/validate` can expose service actor fields for approved `userType=service` principals and Auth has an approval-gated helper for Catalog-to-Warehouse service token provisioning.
+
+Validation evidence: Auth deploy ran `npm run test:auth-contract` with 16 passing tests, built and pushed backend image `localhost:5000/auth-microservice:97ea521-20260629180327` and web image `localhost:5000/auth-microservice-web:97ea521-20260629180327`, rolled out both deployments ready `1/1`, public Auth `/health` returned `success=true,status=ok`, and running compiled backend code contains `resolveServiceIdentity`, `serviceIdentity`, and `auth-service-jwt`.
+
+Boundary decision: no Auth helper execution, DB mutation, service-principal creation, role assignment, token issuance, Vault/Kubernetes secret value change, Catalog runtime config change, Warehouse import, stock mutation, reservation, or channel publish was performed. The Catalog acceptance credential preflight will still fail until an owner-approved Catalog service principal/token is provisioned and mounted.
+
+Next action: with explicit owner approval, run Auth `scripts/provision-catalog-warehouse-service-token.ts --apply` using the guarded confirmations, store the token through approved runtime secret management, refresh Catalog runtime config, and rerun `npm run verify:stock-acceptance:gates`.
+
 ## 2026-06-29 - TASK-STOCK-004 Catalog Warehouse Credential Preflight Added
 
 Change: extended `scripts/run-stock-acceptance-gates.sh` with a read-only Catalog Warehouse credential preflight. The gate now checks the deployed Catalog pod's configured Warehouse credential candidates by environment variable name only (`WAREHOUSE_SERVICE_TOKEN`, `WAREHOUSE_INTERNAL_SERVICE_TOKEN`, `JWT_TOKEN`, `CATALOG_INTERNAL_SERVICE_TOKEN`, `INTERNAL_SERVICE_TOKEN`), validates each candidate against Auth `/auth/validate` and Warehouse `POST /api/stock/availability/batch`, and includes a redacted `catalogWarehouseCredential` section in `stock-acceptance-gates.v1`.
