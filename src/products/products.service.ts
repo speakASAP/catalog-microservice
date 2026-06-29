@@ -629,7 +629,7 @@ export class ProductsService {
 
     try {
       const response = await axios.get(
-        `${this.getAukroBaseUrl()}/offers?accountId=${encodeURIComponent(selectedAccount.id)}`,
+        `${this.getAukroBaseUrl()}/aukro/offers?accountId=${encodeURIComponent(selectedAccount.id)}`,
         { headers: this.aukroHeaders(authorization) },
       );
       const offers = Array.isArray(response.data?.data)
@@ -655,7 +655,7 @@ export class ProductsService {
     }
 
     try {
-      const response = await axios.get(`${this.getAukroBaseUrl()}/accounts`, {
+      const response = await axios.get(`${this.getAukroBaseUrl()}/aukro/accounts`, {
         headers: this.aukroHeaders(authorization),
       });
       const rawAccounts = Array.isArray(response.data?.data)
@@ -706,7 +706,7 @@ export class ProductsService {
 
     try {
       const response = await axios.post(
-        `${this.getAukroBaseUrl()}/offers/from-catalog`,
+        `${this.getAukroBaseUrl()}/aukro/offers/from-catalog`,
         {
           accountId,
           productId: id,

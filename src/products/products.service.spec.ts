@@ -591,11 +591,11 @@ describe("ProductsService Aukro draft action", () => {
     const result = await service.requestAukroDraft(readyProduct.id, {}, "Bearer user-token");
 
     expect(mockedAxios.get).toHaveBeenCalledWith(
-      "http://aukro-service:3700/accounts",
+      "http://aukro-service:3700/aukro/accounts",
       { headers: { Authorization: "Bearer user-token", "Content-Type": "application/json" } },
     );
     expect(mockedAxios.post).toHaveBeenCalledWith(
-      "http://aukro-service:3700/offers/from-catalog",
+      "http://aukro-service:3700/aukro/offers/from-catalog",
       {
         accountId: "aukro-account-1",
         productId: readyProduct.id,
@@ -643,7 +643,7 @@ describe("ProductsService Aukro draft action", () => {
     const result = await service.getAukroStatus(readyProduct.id, "Bearer user-token");
 
     expect(mockedAxios.get.mock.calls[1]).toEqual([
-      "http://aukro-service:3700/offers?accountId=aukro-account-1",
+      "http://aukro-service:3700/aukro/offers?accountId=aukro-account-1",
       { headers: { Authorization: "Bearer user-token", "Content-Type": "application/json" } },
     ]);
     expect(result).toMatchObject({
