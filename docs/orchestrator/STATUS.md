@@ -14,6 +14,17 @@ Parallel execution state: Orders reservation gate is deployed first and remains 
 
 Next action: implement the Allegro Imports public CSV upload lane or obtain the owner-approved BizBox/current stock export file, then run the import through Warehouse and revalidate Catalog plus all channel gates.
 
+
+## 2026-06-29 - TASK-STOCK-004 Lane B BizBox Source Discovery Result
+
+Result: read-only discovery found no current BizBox/current physical stock export in the allowed obvious locations. Searches under `/home/ssf/Documents/Github` found docs/code references only; bounded data-file search for CSV/TSV/XLS/XLSX/ZIP/7Z/RAR found only unrelated SpeakASAP lesson/dictionary CSVs; shallow `/home/ssf` metadata scan for BizBox/stock/sklad/warehouse/import/export filenames found no candidates; Kubernetes object-name scan found Warehouse/Allegro/Suppliers config and job names but no BizBox export/import job/config object.
+
+Code evidence: Allegro Imports supports BizBox stock fields in code: `services/imports/src/import/import.service.ts` calculates stock from `stock:minimumRequiredLevel:${STOCK_PRIMARY_WAREHOUSE}` or sums all `stock:minimumRequiredLevel:*` fields; `field-mapper.service.ts` maps `stock:minimumRequiredLevel:sklad-internet`, `Obchod-Ledec`, `Sklad-Vilemovice`, `pocenice`, and `vlci-doly` to `stockQuantity`. This proves import support, not source authority.
+
+Blocker: `[MISSING: owner must provide BizBox/current physical stock export]` and `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are the authoritative Warehouse physical stock source for this import]`.
+
+Next action: continue Lane A Allegro upload/gateway implementation while waiting for owner-provided source file or path.
+
 ## 2026-06-29 - TASK-STOCK-002 Catalog Warehouse Stock Visibility
 
 Change: added a Catalog frontend Warehouse stock section to `/dashboard/products/:id` using the existing `POST /api/products/availability/batch` contract. The section keeps Warehouse as stock authority, shows total/reserved/available amounts, per-warehouse rows, and route/sellability status without adding Catalog stock persistence or schema changes.
