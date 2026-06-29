@@ -19,6 +19,19 @@ Next action: obtain the owner-approved BizBox/current stock export file and auth
 
 
 
+
+## 2026-06-29 - TASK-STOCK-004 Full Active Allegro Stock Backfill
+
+Result: reran the deployed Allegro active-offer backfill through `allegro-service@d434150` for account `FlipFlop` / `8443b77b-59d3-4530-9c8e-3934e7d8f69d` after the Warehouse-auth token path was fixed. The deployed entrypoint `node dist/scripts/import-allegro-offers-to-catalog.js --account-id 8443b77b-59d3-4530-9c8e-3934e7d8f69d --all` completed with `totalImported=9`.
+
+Validation evidence: live Allegro DB and Warehouse readback for the 9 active `ALLEGRO_API` offers returned `offerCount=9`, `productCount=9`, `warehouseStatus=201`, Allegro stock total `496`, Warehouse available total `496`, `missingCatalog=0`, and `mismatches=0`. Per-offer Warehouse quantities matched Allegro `stock.available`: `18106037370=124`, `18106190486=87`, `18106229125=50`, `18106300892=25`, `18106436117=110`, `18106496345=60`, `18106529080=10`, `18106938601=3`, `18231907833=27`. Catalog availability batch returned HTTP `200`, `success=true`, `returned=9`, total available `496`, and `mismatches=0`; target product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` returned `totalQuantity=60`, `totalReserved=0`, `totalAvailable=60`.
+
+Boundary decision: the separate Allegro account/data-structure thread stayed read-only for stock mutations and reported that `statexcz` order history has `117` checkout forms, `125` line items, and `26` unique offer IDs, but only `3/26` still expose current `/sale/product-offers/{offerId}` stock payloads. The other `23/26` are order-history-only recoveries and are not stock-authoritative. Order-line quantities must not be imported as current physical Warehouse stock.
+
+Remaining gap: the current saved OAuth accounts expose only 9 active stock-authoritative offers totaling `496`; the expected 1000+ physical stock still needs `[MISSING: owner-approved BizBox/current physical stock export]`, `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`, or a correctly authorized separate `flipflopcz`/other Allegro account that exposes additional current full offers.
+
+Next action: obtain the owner-approved current physical stock source or correctly authorize the missing seller account, then preview/import only current stock-authoritative quantities.
+
 ## 2026-06-29 - TASK-STOCK-004 Allegro Preview Token Guard And Cleanup
 
 Result: hardened the BizBox CSV mutation path again so the confirmation-gated upload must now be bound to the exact previewed file. Allegro is deployed at `allegro-service@d434150` (`Bind BizBox stock import to previewed file`). The imports preview response includes a server-computed `previewToken`; the mutating upload requires both `x-stock-import-confirmation: previewed-and-approved` and matching `x-stock-import-preview-token`.
