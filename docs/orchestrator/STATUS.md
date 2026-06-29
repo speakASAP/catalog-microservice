@@ -1,3 +1,13 @@
+## 2026-06-29 - TASK-STOCK-004 Current Acceptance Snapshot After Allegro c0d4953
+
+Change: reran the central read-only `npm run verify:stock-acceptance:gates` after Allegro advanced to `allegro-service@c0d4953` / image `localhost:5000/allegro-service:c0d4953`.
+
+Validation evidence: the gate failed safely with exit `1` for the same Catalog credential blocker, while current Warehouse and Allegro evidence still passed. Deployment images: Auth `localhost:5000/auth-microservice:97ea521-20260629180327`, Catalog `localhost:5000/catalog-microservice:67c29f8`, Warehouse `localhost:5000/warehouse-microservice:8a66b27`, Allegro `localhost:5000/allegro-service:c0d4953`. Command statuses: `catalogStockCredentialWiring=1`, `warehouse=0`, `allegro=0`, `catalogWarehouseCredential=1`, `catalog=1`. Warehouse checked `9` products with `totalQuantity=496`, `totalReserved=0`, `totalAvailable=496`, and `expectedTotalsChecked=9`. Allegro checked `3` accounts and still reported `warehouseMatches=9`, `warehouseMismatches=0`, `warehouseVerifyFailed=0`. Catalog stock credential wiring still fails only because current `WAREHOUSE_SERVICE_TOKEN` source is `secret/prod/catalog-microservice#WAREHOUSE_SERVICE_TOKEN` while the post-approval target is `secret/prod/auth-microservice#CATALOG_WAREHOUSE_SERVICE_TOKEN`; Catalog Warehouse credential preflight still has `acceptedCandidate=null`.
+
+Boundary decision: read-only validation only. No Auth helper execution, DB mutation, token issuance, Vault/Kubernetes secret mutation, ExternalSecret remap, deploy, stock import, reservation, or channel mutation was performed.
+
+Next action: runtime execution remains owner-approval-gated via `docs/orchestrator/TASK-STOCK-004-catalog-warehouse-token-runbook.md`; complete physical stock beyond the 9 current Allegro-authoritative offers remains source-gated.
+
 ## 2026-06-29 - TASK-STOCK-004 Catalog Warehouse Token Mount Runbook
 
 Change: added `docs/orchestrator/TASK-STOCK-004-catalog-warehouse-token-runbook.md`, a concrete approval-gated operator runbook for the remaining Catalog-to-Warehouse credential lane. It records the Auth helper command, target Auth-owned Vault property, Catalog ExternalSecret remap, deploy/force-sync sequence, and final `verify:stock-credential:wiring` plus `verify:stock-acceptance:gates` validation without exposing token values.
