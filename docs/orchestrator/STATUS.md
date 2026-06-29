@@ -1,5 +1,19 @@
 # Catalog Orchestrator Status
 
+## 2026-06-29 - TASK-STOCK-004 Heureka Stock Readiness Live Verifier Deployed
+
+Result: added and deployed a read-only Heureka live verifier at `heureka-service@92c0bb0` (`build: package Heureka verification scripts`, following `482f425 test: verify Heureka stock readiness live`). The verifier compares Heureka feed readiness `availableStock` with Warehouse `GET /api/stock/:productId/total`, defaults to product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee`, supports comma-separated `HEUREKA_VERIFY_PRODUCT_IDS`, and fails if Heureka reports `STOCK_UNKNOWN` or `ZERO_STOCK` while Warehouse has positive stock.
+
+Validation evidence before deploy: `git diff --check`, `node --check scripts/verify_heureka_stock_readiness_live.js`, `npm run verify:heureka-order-ingestion`, `npm --prefix shared run build`, and `npm --prefix services/heureka-service run build` all passed. Pre-deploy in-pod verifier copied into the old pod passed with Warehouse total available `60`, Heureka readiness available stock `60`, readiness `blocked`, and blockers `MISSING_CATEGORY` plus `SETTINGS_INACTIVE`.
+
+Deployment evidence: Heureka deploy built and pushed `localhost:5000/heureka-service:92c0bb0` with digest `sha256:f9b18c2c2389fd91efc5d24583c3bfe7fd0904e1fd481cf76f9d5690370101e9`, applied manifests, rolled out successfully, and left the new pod ready `1/1`.
+
+Post-deploy evidence: running packaged `npm run verify:heureka-stock-readiness-live` inside the `92c0bb0` pod returned contract `heureka-stock-readiness-live.v1`, checked product count `1`, Warehouse total available `60`, Heureka readiness available stock `60`, readiness `blocked`, and blockers `MISSING_CATEGORY` and `SETTINGS_INACTIVE`. This closes the live Heureka stock-readiness evidence for the target product; the remaining Heureka blockers are feed metadata/settings blockers, not stock propagation blockers.
+
+Boundary decision: verifier is read-only. No Heureka order ingestion, feed regeneration, Warehouse stock import/mutation, reservation, channel draft, publish, or external marketplace mutation was run. Complete physical stock beyond the 9 current Allegro-authoritative products remains gated on `[MISSING: owner-approved BizBox/current physical stock export]`, `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`, or `[MISSING: correctly authorized additional seller account exposing additional current full offers]`.
+
+Next action: obtain/provide the missing complete physical stock source or additional seller authorization, then rerun Allegro Warehouse verifier plus Catalog multi-product stock/channel smoke and Heureka stock-readiness verifier as final acceptance gates.
+
 ## 2026-06-29 - TASK-STOCK-004 Catalog Multi-Product Channel Status Smoke Deployed
 
 Result: deployed Catalog commit `2362f8b` (`refactor: enhance authorized channel status checks for multi-product support`). The smoke now checks read-only channel status per configured product instead of overwriting evidence by channel name, stores `stockEvidence.channelStatuses` by `channel:productId`, and compares each reported channel stock quantity to that product's Warehouse `totalAvailable`.
