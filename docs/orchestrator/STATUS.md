@@ -1,3 +1,13 @@
+## 2026-06-29 - TASK-STOCK-004 Auth-Compatible Catalog Warehouse Token Path Prepared
+
+Change: continued the Catalog propagation acceptance blocker through the safe Auth-compatible path. Read-only subagents confirmed Warehouse already supports the preferred receiver contract through Auth-validated bearer tokens and service actor fields, while Auth had no existing service-JWT provisioning endpoint or runbook for `catalog-microservice` with `internal:warehouse-microservice:admin`. Added and pushed Auth commit `212f719` (`chore: support internal role assignment dry runs`) so `scripts/assign-role-by-email.ts` can parse `internal:<service>:<role>` and run `--dry-run` for the future role shape `internal:warehouse-microservice:admin`.
+
+Validation evidence: Auth helper compile command passed, shell wrapper `bash -n` passed, `git diff --check` passed, and Auth `npm run build` passed. The Auth commit is pushed to `origin/main`.
+
+Boundary decision: no Auth DB mutation, role assignment, service principal creation, token issuance, Vault/Kubernetes secret mutation, Warehouse receiver bypass, Catalog runtime config change, deployment, decoded secret/JWT inspection, Warehouse import, stock mutation, reservation, or channel publish was performed. The stock acceptance gate is still blocked until an owner-approved Auth-compatible Catalog Warehouse credential is provisioned and mounted into Catalog runtime config.
+
+Next action: with explicit owner approval, create or identify the Catalog service principal, assign `internal:warehouse-microservice:admin`, issue/rotate an Auth-compatible runtime token without printing it, update Catalog runtime config, then rerun `npm run verify:stock-acceptance:gates`.
+
 # Catalog Orchestrator Status
 
 ## 2026-06-29 - TASK-STOCK-004 Warehouse Stock Authority Verifier Deployed
