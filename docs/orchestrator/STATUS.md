@@ -1,3 +1,13 @@
+## 2026-06-29 - TASK-STOCK-004 Catalog Warehouse Token Mount Runbook
+
+Change: added `docs/orchestrator/TASK-STOCK-004-catalog-warehouse-token-runbook.md`, a concrete approval-gated operator runbook for the remaining Catalog-to-Warehouse credential lane. It records the Auth helper command, target Auth-owned Vault property, Catalog ExternalSecret remap, deploy/force-sync sequence, and final `verify:stock-credential:wiring` plus `verify:stock-acceptance:gates` validation without exposing token values.
+
+Validation evidence: `git diff --check` passed; `bash -n scripts/check-stock-credential-wiring.sh` passed; `bash -n scripts/run-stock-acceptance-gates.sh` passed; `npm run build` passed.
+
+Boundary decision: documentation only. No Auth helper execution, DB mutation, token issuance, Vault/Kubernetes secret mutation, ExternalSecret remap, deploy, stock import, reservation, or channel mutation was performed.
+
+Next action: runtime execution remains owner-approval-gated; use this runbook only after explicit approval for Auth DB/token issuance, Vault secret mutation, Catalog ExternalSecret remap, and Catalog deploy.
+
 ## 2026-06-29 - TASK-STOCK-004 Acceptance Gate Includes Credential Wiring
 
 Change: integrated `npm run verify:stock-credential:wiring` into the central `npm run verify:stock-acceptance:gates` runner. The final `stock-acceptance-gates.v1` summary now reports the Catalog ExternalSecret source-path/property readiness for the future Auth-owned Warehouse token before the Warehouse, Allegro, Catalog credential, and channel propagation legs.
