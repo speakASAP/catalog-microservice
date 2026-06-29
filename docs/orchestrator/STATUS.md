@@ -1,5 +1,17 @@
 # Catalog Orchestrator Status
 
+## 2026-06-29 - TASK-STOCK-004 Allegro Stock Import Apply Confirmation Guard Deployed
+
+Result: hardened the guarded Allegro current-stock Warehouse import command at `allegro-service@276ac21` (`fix: require confirmation for Allegro stock apply`). Warehouse mutation mode now requires both `--apply` and the exact phrase `--confirm-apply ALLEGRO_CURRENT_STOCK_IMPORT`; otherwise the command fails before Warehouse id resolution or any `POST /api/stock/set` call. Dry-run remains the default.
+
+Validation evidence: `npm --prefix services/allegro-service run build` passed during deploy; `npx prisma validate --schema prisma/schema.prisma` passed; `git diff --check` passed; service-working-directory negative guard test returned status error `Refusing to apply without --confirm-apply ALLEGRO_CURRENT_STOCK_IMPORT`. Deployed images for Allegro service, API gateway, imports, settings, and frontend are all tag `276ac21` and ready `1/1`; public `https://allegro.alfares.cz/` returned HTTP `200`.
+
+Deployed runtime validation: running `node dist/scripts/import-current-allegro-stock-to-warehouse.js --all-accounts --apply` in the new pod failed with the confirmation error and exit code 1. Running `--all-accounts --dry-run --detail-limit 20` in the new pod remained read-only with `mutatesWarehouse=false`, `mutatesLocalAllegroOffer=false`, `uniqueStockAuthoritativeOffers=9`, `stockAuthoritativeTotal=496`, `wouldSet=9`, and target offer `18106496345` mapped to product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` at stock `60`.
+
+Boundary decision: no confirmed `--apply` was run, no Warehouse stock was mutated, no local Allegro rows were updated, no account/token/offer write operation was run. The mutation lane is now explicitly owner-approval-gated in code and runtime.
+
+Next action: only after explicit owner approval, run `npm run import:current-stock:warehouse -- --all-accounts --dry-run`, record the plan totals, then run `--apply --confirm-apply ALLEGRO_CURRENT_STOCK_IMPORT` for the 9 currently authoritative offers or provide the missing complete-stock source for the broader import.
+
 ## 2026-06-29 - TASK-STOCK-004 Guarded Allegro Current Stock Warehouse Import Deployed
 
 Result: added, pushed, and deployed a guarded Allegro current-stock-to-Warehouse import command at `allegro-service@c90c55e` (`feat: add guarded Allegro current stock Warehouse import`). The command is `npm run import:current-stock:warehouse -- --all-accounts --dry-run` by default; `--apply` is required before it calls Warehouse. It reads Allegro `/sale/offers` only to discover offer ids, treats only `/sale/product-offers/{offerId}.stock.available` as current stock-authoritative, deduplicates repeated accounts by Allegro offer id, requires local `AllegroOffer.catalogProductId` mapping, and records Warehouse audit intent with reason `ALLEGRO_CURRENT_STOCK_IMPORT`. Apply mode writes Warehouse `POST /api/stock/set` only; local AllegroOffer rows remain read-only.
