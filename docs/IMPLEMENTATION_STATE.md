@@ -34,9 +34,11 @@ To start a specific goal:
 CATALOG ORCHESTRATOR: implement goal number 1
 ```
 
+2026-06-29: Goal 18 marketplace field profiles source implementation completed. Added Catalog-owned product_marketplace_profiles SQL migration, TypeORM entity, protected product-scoped marketplace-fields API, alias-aware service, frontend Marketplace fields panel with Allegro/Bazos/Aukro/FlipFlop tabs, and focused tests. Catalog remains the product truth: canonical alias edits update Product fields, while marketplace-only values are stored as profile overrides/external refs/source data. Validation passed: git diff --check; focused marketplace-fields Jest 2 tests; npm run build; full npm test -- --runInBand 8 suites/60 tests; frontend tsc --noEmit; frontend npm run build with existing multiple-lockfile warning only. Migration and production deploy not yet applied.
+
 ## Current Status
 
-- Active goal: none.
+- Active goal: Goal 18 marketplace field profiles source complete; runtime migration/deploy pending.
 - Active chunk: Goal 16 completed; next goal selection pending.
 - Current wave: Wave 6 - End-To-End Smoke Tests.
 - Completed chunks: Goal 1.1 Intent Preservation Docs, Goal 1.2 Protected Mutation Endpoints, Goal 1.3 Hard Delete Approval Gate, Goal 1.4 Write Audit Context, Goal 1.5 Unauthorized And Authorized Write Verification, Goal 1 production deployment and runtime audit-log proof, Goal 2 lifecycle migration, deployment, and runtime API verification, Goal 3 pricing integrity deployment and runtime API verification, Goal 4 channel readiness deployment and runtime API verification.

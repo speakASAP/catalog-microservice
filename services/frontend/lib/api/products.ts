@@ -208,6 +208,47 @@ export interface AllegroSellActionResponse {
 }
 
 
+export type MarketplaceFieldSource = 'canonical' | 'override' | 'externalRef' | 'sourceData';
+
+export interface MarketplaceField {
+  key: string;
+  label: string;
+  type: 'text' | 'number' | 'boolean' | 'json';
+  source: MarketplaceFieldSource;
+  canonicalPath?: string;
+  marketplacePath?: string;
+  aliases?: string[];
+  editable?: boolean;
+  description?: string;
+  value?: any;
+}
+
+export interface MarketplaceFieldsResponse {
+  product: Product;
+  marketplace: { marketplace: string; label: string; description: string };
+  profile: {
+    id: string | null;
+    productId: string;
+    marketplace: string;
+    status: string;
+    canonicalAliases: Record<string, any>;
+    overrides: Record<string, any>;
+    externalRefs: Record<string, any>;
+    sourceData: Record<string, any> | null;
+    updatedAt?: string | null;
+  };
+  fields: MarketplaceField[];
+}
+
+export interface UpdateMarketplaceFieldsPayload {
+  canonical?: Record<string, any>;
+  overrides?: Record<string, any>;
+  externalRefs?: Record<string, any>;
+  sourceData?: Record<string, any> | null;
+  status?: string;
+}
+
+
 export interface ProductSalesChannel {
   productId: string;
   channel: string;
@@ -272,6 +313,15 @@ export const productsApi = {
 
   async updateProduct(id: string, data: Partial<Product>) {
     return apiClient.put<Product>(`/products/${id}`, data);
+  },
+
+
+  async getMarketplaceFields(id: string, marketplace: string) {
+    return apiClient.get<MarketplaceFieldsResponse>(`/products/${id}/marketplace-fields/${marketplace}`);
+  },
+
+  async updateMarketplaceFields(id: string, marketplace: string, data: UpdateMarketplaceFieldsPayload) {
+    return apiClient.put<MarketplaceFieldsResponse>(`/products/${id}/marketplace-fields/${marketplace}`, data);
   },
 
 

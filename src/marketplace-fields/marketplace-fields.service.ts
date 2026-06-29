@@ -1,0 +1,417 @@
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { LoggerService } from '../logger/logger.service';
+import { Product } from '../products/product.entity';
+import { ProductMarketplaceProfile } from './marketplace-profile.entity';
+
+type FieldSource = 'canonical' | 'override' | 'externalRef' | 'sourceData';
+
+type MarketplaceFieldDefinition = {
+  key: string;
+  label: string;
+  type: 'text' | 'number' | 'boolean' | 'json';
+  source: FieldSource;
+  canonicalPath?: string;
+  marketplacePath?: string;
+  aliases?: string[];
+  editable?: boolean;
+  description?: string;
+};
+
+type MarketplaceDefinition = {
+  marketplace: string;
+  label: string;
+  description: string;
+  fields: MarketplaceFieldDefinition[];
+};
+
+type UpdateMarketplaceFieldsInput = {
+  canonical?: Record<string, unknown>;
+  overrides?: Record<string, unknown>;
+  externalRefs?: Record<string, unknown>;
+  sourceData?: Record<string, unknown> | null;
+  status?: string;
+};
+
+const COMMON_CANONICAL_FIELDS: MarketplaceFieldDefinition[] = [
+  {
+    key: 'title',
+    label: 'Product name',
+    type: 'text',
+    source: 'canonical',
+    canonicalPath: 'title',
+    aliases: ['name', 'productName', 'product', 'název', 'название'],
+    editable: true,
+  },
+  {
+    key: 'description',
+    label: 'Description',
+    type: 'text',
+    source: 'canonical',
+    canonicalPath: 'description',
+    aliases: ['description', 'longDescription', 'popis', 'описание'],
+    editable: true,
+  },
+  {
+    key: 'brand',
+    label: 'Brand',
+    type: 'text',
+    source: 'canonical',
+    canonicalPath: 'brand',
+    aliases: ['brand', 'značka', 'марка'],
+    editable: true,
+  },
+  {
+    key: 'manufacturer',
+    label: 'Manufacturer',
+    type: 'text',
+    source: 'canonical',
+    canonicalPath: 'manufacturer',
+    aliases: ['manufacturer', 'manufacturerCode', 'výrobce', 'производитель'],
+    editable: true,
+  },
+  {
+    key: 'ean',
+    label: 'EAN / GTIN',
+    type: 'text',
+    source: 'canonical',
+    canonicalPath: 'ean',
+    aliases: ['ean', 'gtin', 'EAN (GTIN)', 'barcode'],
+    editable: true,
+  },
+  {
+    key: 'sku',
+    label: 'SKU',
+    type: 'text',
+    source: 'canonical',
+    canonicalPath: 'sku',
+    aliases: ['sku', 'code', 'product_code', 'catalogCode'],
+    editable: false,
+  },
+];
+
+const MARKETPLACE_DEFINITIONS: MarketplaceDefinition[] = [
+  {
+    marketplace: 'allegro',
+    label: 'Allegro',
+    description: 'Allegro-specific offer, productSet, parameter and policy fields. Canonical product text stays in Catalog.',
+    fields: [
+      ...COMMON_CANONICAL_FIELDS,
+      {
+        key: 'categoryId',
+        label: 'Allegro category ID',
+        type: 'text',
+        source: 'override',
+        marketplacePath: 'category.id',
+        aliases: ['allegroCategoryId', 'categoryId', 'category.id'],
+        editable: true,
+      },
+      {
+        key: 'parameters',
+        label: 'Allegro parameters',
+        type: 'json',
+        source: 'override',
+        marketplacePath: 'parameters',
+        aliases: ['attributes', 'product.parameters', 'productSet.product.parameters'],
+        editable: true,
+      },
+      {
+        key: 'delivery',
+        label: 'Delivery options',
+        type: 'json',
+        source: 'override',
+        marketplacePath: 'delivery',
+        aliases: ['deliveryOptions', 'shipping'],
+        editable: true,
+      },
+      {
+        key: 'payments',
+        label: 'Payment options',
+        type: 'json',
+        source: 'override',
+        marketplacePath: 'payments',
+        aliases: ['paymentOptions', 'sellingMode.payments'],
+        editable: true,
+      },
+      {
+        key: 'location',
+        label: 'Offer location',
+        type: 'json',
+        source: 'override',
+        marketplacePath: 'location',
+        aliases: ['location', 'pickupLocation'],
+        editable: true,
+      },
+      {
+        key: 'responsibleProducer',
+        label: 'Responsible producer',
+        type: 'json',
+        source: 'override',
+        marketplacePath: 'productSet[0].responsibleProducer',
+        aliases: ['responsibleProducer', 'gpsrProducer'],
+        editable: true,
+      },
+      {
+        key: 'publication',
+        label: 'Publication settings',
+        type: 'json',
+        source: 'override',
+        marketplacePath: 'publication',
+        aliases: ['publication', 'publication.status'],
+        editable: true,
+      },
+      {
+        key: 'afterSalesServices',
+        label: 'After-sales services',
+        type: 'json',
+        source: 'override',
+        marketplacePath: 'afterSalesServices',
+        aliases: ['impliedWarranty', 'returnPolicy', 'warranty'],
+        editable: true,
+      },
+      {
+        key: 'taxSettings',
+        label: 'Tax settings',
+        type: 'json',
+        source: 'override',
+        marketplacePath: 'taxSettings',
+        aliases: ['tax', 'vat'],
+        editable: true,
+      },
+      {
+        key: 'external',
+        label: 'External refs',
+        type: 'json',
+        source: 'externalRef',
+        marketplacePath: 'external',
+        aliases: ['allegroOfferId', 'listingUrl', 'publicUrl'],
+        editable: true,
+      },
+    ],
+  },
+  {
+    marketplace: 'bazos',
+    label: 'Bazoš',
+    description: 'Bazoš keeps identity, compliance and publishing authority. Catalog stores only reusable draft preferences.',
+    fields: [
+      ...COMMON_CANONICAL_FIELDS,
+      { key: 'rubric', label: 'Rubric', type: 'text', source: 'override', aliases: ['bazosRubric', 'category'], editable: true },
+      { key: 'priceOption', label: 'Price option', type: 'text', source: 'override', aliases: ['priceOption', 'priceType'], editable: true },
+      { key: 'location', label: 'Location', type: 'json', source: 'override', aliases: ['defaultLocation', 'region'], editable: true },
+      { key: 'identityId', label: 'Bazoš identity', type: 'text', source: 'externalRef', aliases: ['identityId', 'sellerIdentity'], editable: true },
+    ],
+  },
+  {
+    marketplace: 'aukro',
+    label: 'Aukro',
+    description: 'Aukro-specific draft, category and policy evidence fields for product publication.',
+    fields: [
+      ...COMMON_CANONICAL_FIELDS,
+      { key: 'categoryId', label: 'Aukro category ID', type: 'text', source: 'override', aliases: ['aukroCategoryId', 'categoryId'], editable: true },
+      { key: 'parameters', label: 'Aukro parameters', type: 'json', source: 'override', aliases: ['requiredParameters', 'attributes'], editable: true },
+      { key: 'shipping', label: 'Shipping', type: 'json', source: 'override', aliases: ['delivery', 'transport'], editable: true },
+      { key: 'accountId', label: 'Aukro account', type: 'text', source: 'externalRef', aliases: ['accountId', 'sellerAccount'], editable: true },
+    ],
+  },
+  {
+    marketplace: 'flipflop',
+    label: 'FlipFlop',
+    description: 'FlipFlop consumes Catalog projection and owns storefront UX. Keep storefront-only hints here.',
+    fields: [
+      ...COMMON_CANONICAL_FIELDS,
+      { key: 'storefrontSlug', label: 'Storefront slug', type: 'text', source: 'override', aliases: ['slug', 'seoSlug'], editable: true },
+      { key: 'merchandisingTags', label: 'Merchandising tags', type: 'json', source: 'override', aliases: ['tags', 'badges'], editable: true },
+      { key: 'projectionFlags', label: 'Projection flags', type: 'json', source: 'override', aliases: ['storefrontFlags'], editable: true },
+    ],
+  },
+];
+
+const EDITABLE_CANONICAL_FIELDS = new Set(['title', 'description', 'brand', 'manufacturer', 'ean']);
+
+@Injectable()
+export class MarketplaceFieldsService {
+  constructor(
+    @InjectRepository(Product)
+    private readonly productRepository: Repository<Product>,
+    @InjectRepository(ProductMarketplaceProfile)
+    private readonly profileRepository: Repository<ProductMarketplaceProfile>,
+    private readonly logger: LoggerService,
+  ) {}
+
+  getSupportedMarketplaces() {
+    return MARKETPLACE_DEFINITIONS.map(({ marketplace, label, description }) => ({ marketplace, label, description }));
+  }
+
+  async getProductMarketplaceFields(productId: string, marketplace: string) {
+    const definition = this.getDefinition(marketplace);
+    const product = await this.loadProduct(productId);
+    const profile = await this.findProfile(productId, definition.marketplace);
+
+    return this.toResponse(product, definition, profile);
+  }
+
+  async updateProductMarketplaceFields(productId: string, marketplace: string, input: UpdateMarketplaceFieldsInput) {
+    const definition = this.getDefinition(marketplace);
+    const product = await this.loadProduct(productId);
+
+    const canonicalPatch = this.sanitizeCanonicalPatch(input?.canonical || {});
+    if (Object.keys(canonicalPatch).length > 0) {
+      Object.assign(product, canonicalPatch);
+      await this.productRepository.save(product);
+    }
+
+    let profile = await this.findProfile(productId, definition.marketplace);
+    if (!profile) {
+      profile = this.profileRepository.create({
+        productId,
+        marketplace: definition.marketplace,
+        canonicalAliases: this.buildCanonicalAliases(definition),
+        overrides: {},
+        externalRefs: {},
+        sourceData: null,
+        status: 'draft',
+      });
+    }
+
+    profile.canonicalAliases = this.buildCanonicalAliases(definition);
+    profile.overrides = this.mergeJson(profile.overrides, input?.overrides);
+    profile.externalRefs = this.mergeJson(profile.externalRefs, input?.externalRefs);
+    if (input?.sourceData !== undefined) {
+      profile.sourceData = input.sourceData;
+    }
+    if (typeof input?.status === 'string' && input.status.trim()) {
+      profile.status = input.status.trim();
+    }
+
+    const savedProfile = await this.profileRepository.save(profile);
+    const savedProduct = Object.keys(canonicalPatch).length > 0 ? await this.loadProduct(productId) : product;
+
+    this.logger.log(`Marketplace fields updated for ${definition.marketplace}: ${productId}`, 'MarketplaceFieldsService');
+    return this.toResponse(savedProduct, definition, savedProfile);
+  }
+
+  private getDefinition(marketplace: string): MarketplaceDefinition {
+    const normalized = String(marketplace || '').trim().toLowerCase();
+    const definition = MARKETPLACE_DEFINITIONS.find((item) => item.marketplace === normalized);
+    if (!definition) {
+      throw new BadRequestException(`Unsupported marketplace: ${marketplace}`);
+    }
+    return definition;
+  }
+
+  private async loadProduct(productId: string): Promise<Product> {
+    const product = await this.productRepository.findOne({
+      where: { id: productId },
+      relations: ['categories', 'media', 'pricing'],
+    });
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${productId} not found`);
+    }
+    return product;
+  }
+
+  private findProfile(productId: string, marketplace: string): Promise<ProductMarketplaceProfile | null> {
+    return this.profileRepository.findOne({ where: { productId, marketplace } });
+  }
+
+  private sanitizeCanonicalPatch(input: Record<string, unknown>): Partial<Product> {
+    const patch: Partial<Product> = {};
+    for (const [key, value] of Object.entries(input || {})) {
+      if (!EDITABLE_CANONICAL_FIELDS.has(key)) {
+        continue;
+      }
+      if (value === null || value === undefined) {
+        (patch as any)[key] = null;
+      } else {
+        (patch as any)[key] = String(value);
+      }
+    }
+    return patch;
+  }
+
+  private mergeJson(current: Record<string, unknown> | null | undefined, next: Record<string, unknown> | null | undefined) {
+    if (!next || typeof next !== 'object' || Array.isArray(next)) {
+      return current || {};
+    }
+    return {
+      ...(current || {}),
+      ...next,
+    };
+  }
+
+  private toResponse(product: Product, definition: MarketplaceDefinition, profile: ProductMarketplaceProfile | null) {
+    const profileData = {
+      id: profile?.id || null,
+      productId: product.id,
+      marketplace: definition.marketplace,
+      status: profile?.status || 'draft',
+      canonicalAliases: profile?.canonicalAliases || this.buildCanonicalAliases(definition),
+      overrides: profile?.overrides || {},
+      externalRefs: profile?.externalRefs || {},
+      sourceData: profile?.sourceData || null,
+      updatedAt: profile?.updatedAt || null,
+    };
+
+    return {
+      product: this.toProductSummary(product),
+      marketplace: {
+        marketplace: definition.marketplace,
+        label: definition.label,
+        description: definition.description,
+      },
+      profile: profileData,
+      fields: definition.fields.map((field) => ({
+        ...field,
+        editable: field.editable !== false,
+        value: this.resolveFieldValue(product, profileData, field),
+      })),
+    };
+  }
+
+  private toProductSummary(product: Product) {
+    return {
+      id: product.id,
+      sku: product.sku,
+      title: product.title,
+      description: product.description,
+      brand: product.brand,
+      manufacturer: product.manufacturer,
+      ean: product.ean,
+      lifecycle: product.lifecycle,
+      isActive: product.isActive,
+      categories: (product.categories || []).map((category) => ({ id: category.id, name: category.name })),
+      mediaCount: product.media?.length || 0,
+      pricingCount: product.pricing?.length || 0,
+      updatedAt: product.updatedAt,
+    };
+  }
+
+  private resolveFieldValue(product: Product, profile: any, field: MarketplaceFieldDefinition) {
+    if (field.source === 'canonical' && field.canonicalPath) {
+      return (product as any)[field.canonicalPath] ?? null;
+    }
+    if (field.source === 'override') {
+      return profile.overrides?.[field.key] ?? null;
+    }
+    if (field.source === 'externalRef') {
+      return profile.externalRefs?.[field.key] ?? null;
+    }
+    if (field.source === 'sourceData') {
+      return profile.sourceData?.[field.key] ?? null;
+    }
+    return null;
+  }
+
+  private buildCanonicalAliases(definition: MarketplaceDefinition) {
+    return definition.fields
+      .filter((field) => field.source === 'canonical' && field.canonicalPath)
+      .reduce((aliases, field) => ({
+        ...aliases,
+        [field.key]: {
+          canonicalPath: field.canonicalPath,
+          aliases: field.aliases || [],
+        },
+      }), {} as Record<string, unknown>);
+  }
+}

@@ -13,6 +13,7 @@ import { ChannelReadinessModule } from './channel-readiness/channel-readiness.mo
 import { WarehouseAvailabilityModule } from './warehouse-availability/warehouse-availability.module';
 import { FlipFlopProjectionModule } from "./flipflop-projection/flipflop-projection.module";
 import { ImportReconciliationModule } from "./import-reconciliation/import-reconciliation.module";
+import { MarketplaceFieldsModule } from "./marketplace-fields/marketplace-fields.module";
 
 /**
  * Main application module for Catalog Microservice
@@ -52,6 +53,7 @@ import { ImportReconciliationModule } from "./import-reconciliation/import-recon
     WarehouseAvailabilityModule,
     FlipFlopProjectionModule,
     ImportReconciliationModule,
+    MarketplaceFieldsModule,
   ],
 })
 export class AppModule {}
