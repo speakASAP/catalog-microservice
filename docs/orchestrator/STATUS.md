@@ -1,3 +1,13 @@
+## 2026-06-29 - TASK-STOCK-004 Acceptance Gate Records Auth Deployment Evidence
+
+Change: extended `scripts/run-stock-acceptance-gates.sh` so the `stock-acceptance-gates.v1` summary records the deployed `auth-microservice` image next to Warehouse, Allegro, and Catalog images. This ties the Catalog Warehouse credential preflight to the live Auth build expected to expose service actor projection for approved Catalog service principals.
+
+Validation evidence: `bash -n scripts/run-stock-acceptance-gates.sh` passed; `git diff --check` passed; `npm run build` passed. Live read-only `npm run verify:stock-acceptance:gates` failed safely with exit `1` and emitted deployment images for Warehouse `localhost:5000/warehouse-microservice:8a66b27`, Allegro `localhost:5000/allegro-service:50b5858`, Catalog `localhost:5000/catalog-microservice:67c29f8`, and Auth `localhost:5000/auth-microservice:97ea521-20260629180327`. Warehouse verifier status was `0` for `9` products with `failedProductCount=0`; Allegro dry-run status was `0` with `warehouseMatches=9`, `warehouseMismatches=0`, and `warehouseVerifyFailed=0`; `catalogWarehouseCredential` status was `1` with `acceptedCandidate=null`; Catalog smoke status was `1` because no Catalog Warehouse credential candidate was accepted by Warehouse.
+
+Boundary decision: this only adds read-only deployment evidence to the acceptance summary. It does not run the Auth provisioning helper, issue or print tokens, alter Vault/Kubernetes secrets, bypass Warehouse auth, import stock, mutate reservations, or publish channel listings.
+
+Next action: with explicit owner approval, run the Auth service-principal/token provisioning lane, mount the resulting token through approved runtime secret management, roll Catalog, and rerun `npm run verify:stock-acceptance:gates`.
+
 ## 2026-06-29 - TASK-STOCK-004 Auth Service Principal Projection Deployed
 
 Change: deployed Auth commit `97ea521` (`feat: prepare catalog warehouse service token provisioning`) so `/auth/validate` can expose service actor fields for approved `userType=service` principals and Auth has an approval-gated helper for Catalog-to-Warehouse service token provisioning.

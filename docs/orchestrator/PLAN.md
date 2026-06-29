@@ -161,13 +161,13 @@ Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding P
 - Vision: prevent selling more units than Warehouse can fulfill while keeping Warehouse as stock authority.
 - Goal Impact: give the orchestrator one repeatable read-only gate that proves Allegro current-stock import evidence, Warehouse stock authority rows, and Catalog/channel propagation agree before any stock-sensitive release.
 - System: `catalog-microservice` owns the central ops runner; `warehouse-microservice`, `allegro-service`, Catalog, FlipFlop/Bazos/Aukro/Heureka projections remain the validated systems under test.
-- Feature: `scripts/run-stock-acceptance-gates.sh` runs the already-deployed verifiers in their live pods and emits `stock-acceptance-gates.v1`.
+- Feature: `scripts/run-stock-acceptance-gates.sh` runs the already-deployed verifiers in their live pods and emits `stock-acceptance-gates.v1`, including Auth/Warehouse/Allegro/Catalog deployment image evidence.
 - Task: default the gate to the 9 current Allegro-authoritative product IDs and their expected Warehouse totals: `124,87,50,25,110,60,10,3,27`.
 - Execution Plan: select only running pods matching the current deployment image, run Warehouse authority verifier, run Allegro current-stock dry-run with `--verify-warehouse`, run Catalog authorized stock/channel/Heureka smoke, then parse each JSON result and fail closed on mismatches.
 - Coding Prompt: add a read-only ops script plus `npm run verify:stock-acceptance:gates`; do not add stock mutations, DB writes, deploy manifests, schema changes, or secret printing.
 - Code: `scripts/run-stock-acceptance-gates.sh`; `package.json` script entry.
 - Validation: `bash -n`, `git diff --check`, focused Catalog Warehouse availability spec, `npm run build`, and Catalog deploy passed. Live read-only acceptance gate currently fails at the Catalog propagation leg because Warehouse rejects all configured Catalog Warehouse credentials. Warehouse authority and Allegro-vs-Warehouse verification pass for the 9-product set.
-- Current follow-up: add a read-only Catalog Warehouse credential preflight to the gate so the `stock-acceptance-gates.v1` summary reports Auth/Warehouse acceptance by runtime environment key name without printing token values. This does not replace the owner-approved service-principal/token provisioning lane.
+- Current follow-up: the gate includes a read-only Catalog Warehouse credential preflight and Auth deployment image evidence so the `stock-acceptance-gates.v1` summary reports Auth/Warehouse acceptance by runtime environment key name without printing token values. This does not replace the owner-approved service-principal/token provisioning lane.
 
 Parallel execution:
 

@@ -96,6 +96,7 @@ run_and_capture() {
 warehouse_image="$(deployment_image warehouse-microservice)"
 allegro_image="$(deployment_image allegro-service)"
 catalog_image="$(deployment_image catalog-microservice)"
+auth_image="$(deployment_image auth-microservice)"
 
 warehouse_pod="$(running_pod_for_image warehouse-microservice "$warehouse_image")"
 allegro_pod="$(running_pod_for_image allegro-service "$allegro_image")"
@@ -240,7 +241,7 @@ extract_json "$credential_out" > "$credential_json"
 extract_json "$catalog_out" > "$catalog_json"
 
 print_section "Acceptance summary"
-WAREHOUSE_IMAGE="$warehouse_image" ALLEGRO_IMAGE="$allegro_image" CATALOG_IMAGE="$catalog_image" \
+WAREHOUSE_IMAGE="$warehouse_image" ALLEGRO_IMAGE="$allegro_image" CATALOG_IMAGE="$catalog_image" AUTH_IMAGE="$auth_image" \
 node - "$warehouse_json" "$allegro_json" "$credential_json" "$catalog_json" "$PRODUCT_IDS" "$EXPECTED_TOTALS" "$warehouse_status" "$allegro_status" "$credential_status" "$catalog_status" <<'NODE'
 const fs = require("fs");
 const [warehouseFile, allegroFile, credentialFile, catalogFile, productIdsCsv, expectedTotalsCsv, warehouseStatus, allegroStatus, credentialStatus, catalogStatus] = process.argv.slice(2);
@@ -303,6 +304,7 @@ const summary = {
     warehouse: process.env.WAREHOUSE_IMAGE || null,
     allegro: process.env.ALLEGRO_IMAGE || null,
     catalog: process.env.CATALOG_IMAGE || null,
+    auth: process.env.AUTH_IMAGE || null,
   },
   commandStatuses: {
     warehouse: Number(warehouseStatus),
