@@ -1,5 +1,20 @@
 # Catalog Orchestrator Status
 
+## 2026-06-29 - TASK-STOCK-004 Allegro Current Stock Source Audit Deployed
+
+Result: added and deployed a read-only Allegro current stock source audit at `allegro-service@8614ea9` (`test: add Allegro current stock source audit`). The command `npm run audit:current-stock-source -- --all-accounts --detail-limit 500` lists configured Allegro accounts, reads `/sale/offers` across `ACTIVE`, `INACTIVE`, `ENDED`, and `ACTIVATING`, then checks `/sale/product-offers/{offerId}` details. It does not import offers, activate accounts, refresh tokens, write Warehouse stock, or mutate local rows. Only successful `product-offers.stock.available` is treated as current stock-authoritative evidence.
+
+Deployment evidence: Allegro service, API gateway, imports, settings, and frontend all rolled out at image tag `8614ea9` and are ready `1/1`; public `https://allegro.alfares.cz/` returned HTTP `200`.
+
+Live audit evidence from the deployed Allegro pod: `accountCount=3`; `listedOffers=27`; `detailChecked=27`; `detailOk=27`; `detail404=0`; `detailErrors=0`; account-summed `stockAuthoritativeOffers=27`, `stockAuthoritativeTotal=1488`; but unique by Allegro offer id is only `uniqueStockAuthoritativeOffers=9`, `uniqueStockAuthoritativeTotal=496`, with `duplicateStockAuthoritativeAppearances=18`. Unique current-stock offer ids are `18106037370`, `18106190486`, `18106229125`, `18106300892`, `18106436117`, `18106496345`, `18106529080`, `18106938601`, and `18231907833`. The target offer `18106496345` remains current-stock-authoritative at `60`.
+
+Source conclusion: the currently configured Allegro OAuth accounts all expose the same 9 active stock-authoritative offers totaling 496 unique units. The 23 local order-history-only/statex rows remain non-authoritative for current physical stock. This confirms the expected 1000+ stock cannot be obtained from current configured Allegro accounts alone; final import still requires `[MISSING: owner-approved BizBox/current physical stock export]`, `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`, or `[MISSING: correctly authorized additional seller account exposing additional current full offers]`.
+
+Boundary decision: no Allegro import, Catalog write, Warehouse import, reservation, order mutation, draft preparation, publish, token refresh, or account activation was run.
+
+Next action: obtain the owner-approved complete physical stock source or authorize the missing seller account that exposes additional current full offers, then preview/import and rerun the final stock consistency/reservation validation.
+
+
 ## 2026-06-29 - TASK-STOCK-004 Stock Consistency Smoke Added And Validated
 
 Result: strengthened the read-only Catalog smoke with opt-in `CATALOG_SMOKE_ASSERT_STOCK=true` stock consistency assertions. The smoke now records Warehouse `totalQuantity`, `totalReserved`, and `totalAvailable`, records FlipFlop projection `stockQuantity`, records any stock quantity present in read-only channel status envelopes, and fails if FlipFlop or any reported channel stock differs from Warehouse `totalAvailable`.
