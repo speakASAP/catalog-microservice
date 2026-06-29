@@ -881,10 +881,8 @@ export class ProductsService {
       };
     }
 
-    const flipflopBaseUrl = this.getFlipFlopPublicUrl();
     try {
-      const response = await axios.get(`${flipflopBaseUrl}/api/products/${encodeURIComponent(id)}?includeWarehouse=true`);
-      const productProjection = response.data?.data || response.data;
+      const productProjection = await this.getFlipFlopCatalogProjection(id);
       return {
         success: true,
         action: 'prepare_flipflop_sale',
@@ -892,7 +890,7 @@ export class ProductsService {
         authority: 'flipflop',
         listingUrl,
         availableOnFlipFlop: true,
-        message: 'Product is available through the FlipFlop storefront projection.',
+        message: 'Product is available through the Catalog Warehouse-backed FlipFlop projection.',
         nextAction: 'view_flipflop_listing',
         productProjection,
       };
@@ -917,6 +915,36 @@ export class ProductsService {
       process.env.ORDERS_INTERNAL_SERVICE_TOKEN ||
       process.env.CATALOG_INTERNAL_SERVICE_TOKEN ||
       process.env.INTERNAL_SERVICE_TOKEN;
+    return token?.trim() || null;
+  }
+
+  private async getFlipFlopCatalogProjection(productId: string): Promise<any> {
+    const catalogInternalToken = this.getCatalogInternalServiceToken();
+    if (!catalogInternalToken) {
+      throw new Error('[MISSING: Catalog internal service token; configure CATALOG_INTERNAL_SERVICE_TOKEN or INTERNAL_SERVICE_TOKEN]');
+    }
+
+    const response = await axios.post(
+      `${this.getCatalogInternalBaseUrl()}/api/products/projections/flipflop/batch`,
+      { productIds: [productId], includeUnavailable: true },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'x-internal-service-token': catalogInternalToken,
+          'x-service-name': 'catalog-microservice',
+        },
+      },
+    );
+    const items = response.data?.data?.items || response.data?.items || [];
+    return items.find((item: any) => item?.id === productId || item?.productId === productId) || items[0] || null;
+  }
+
+  private getCatalogInternalBaseUrl(): string {
+    return (process.env.CATALOG_SERVICE_URL || process.env.CATALOG_BASE_URL || 'http://catalog-microservice:3200').replace(/\/$/, '');
+  }
+
+  private getCatalogInternalServiceToken(): string | null {
+    const token = process.env.CATALOG_INTERNAL_SERVICE_TOKEN || process.env.INTERNAL_SERVICE_TOKEN;
     return token?.trim() || null;
   }
 

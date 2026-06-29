@@ -335,6 +335,90 @@ describe("ProductsService Bazos draft action", () => {
   });
 });
 
+describe("ProductsService FlipFlop status action", () => {
+  const logger = {
+    log: jest.fn(),
+    warn: jest.fn(),
+  };
+
+  const product = {
+    id: "884c1c5e-fe94-46c7-aab1-78bcc424e7ee",
+    sku: "SKU-FLIPFLOP-001",
+    title: "Warehouse backed FlipFlop product",
+    description: "Synthetic description.",
+    isActive: true,
+    lifecycle: "active",
+    categories: [{ id: "category-1", name: "winter" }],
+    media: [{ url: "https://cdn.example.test/product.png" }],
+    pricing: [],
+  } as unknown as Product;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    delete process.env.CATALOG_SERVICE_URL;
+    delete process.env.CATALOG_BASE_URL;
+    delete process.env.CATALOG_INTERNAL_SERVICE_TOKEN;
+    delete process.env.INTERNAL_SERVICE_TOKEN;
+  });
+
+  it("uses the Catalog Warehouse-backed FlipFlop projection for channel status stock", async () => {
+    process.env.CATALOG_SERVICE_URL = "http://catalog-microservice:3200";
+    process.env.CATALOG_INTERNAL_SERVICE_TOKEN = "catalog-internal-token";
+    const repository = {
+      findOne: jest.fn(async () => product),
+      count: jest.fn(async () => 1),
+    };
+    const pricingService = {
+      getCurrentPrice: jest.fn(async () => ({ productId: product.id, basePrice: 1000, salePrice: 900, currency: "CZK" })),
+    };
+    const mockedAxios = axios as jest.Mocked<typeof axios>;
+    mockedAxios.post.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: {
+          items: [{
+            id: product.id,
+            productId: product.id,
+            stockQuantity: 60,
+            availability: {
+              source: "warehouse",
+              totalAvailable: 60,
+            },
+          }],
+        },
+      },
+    } as any);
+    const service = new ProductsService(repository as any, logger as any, pricingService as any);
+
+    const result = await service.prepareFlipFlopSale(product.id);
+
+    expect(mockedAxios.post).toHaveBeenCalledWith(
+      "http://catalog-microservice:3200/api/products/projections/flipflop/batch",
+      { productIds: [product.id], includeUnavailable: true },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-service-token": "catalog-internal-token",
+          "x-service-name": "catalog-microservice",
+        },
+      },
+    );
+    expect(mockedAxios.get).not.toHaveBeenCalledWith(expect.stringContaining("flipflop.alfares.cz/api/products"));
+    expect(result).toMatchObject({
+      success: true,
+      authority: "flipflop",
+      productProjection: {
+        productId: product.id,
+        stockQuantity: 60,
+        availability: {
+          source: "warehouse",
+          totalAvailable: 60,
+        },
+      },
+    });
+  });
+});
+
 
 describe("ProductsService sales statistics bridge", () => {
   const logger = {
