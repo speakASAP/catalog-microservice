@@ -1,5 +1,17 @@
 # Catalog Orchestrator Status
 
+## 2026-06-29 - TASK-STOCK-004 Allegro Warehouse Stock Verifier Deployed
+
+Result: extended the guarded Allegro current-stock command at `allegro-service@50b5858` (`feat: verify Allegro stock against Warehouse`) with read-only `--verify-warehouse` mode. The verifier reuses the same authoritative Allegro source rules, then reads Warehouse `GET /api/stock/:productId/total` for each mapped Catalog product and reports `warehouseMatchesAllegro` per offer plus aggregate match/mismatch counts. It does not require `--apply`, does not write Warehouse, and does not update local Allegro rows.
+
+Validation evidence: `npm --prefix services/allegro-service run build` passed; `npx prisma validate --schema prisma/schema.prisma` passed; `git diff --check` passed; the negative `--apply` guard still failed without `--confirm-apply ALLEGRO_CURRENT_STOCK_IMPORT`. Deploy completed successfully for Allegro service, API gateway, imports, settings, and frontend at image tag `50b5858`, all ready `1/1`; public `https://allegro.alfares.cz/` returned HTTP `200`.
+
+Deployed verifier evidence: `node dist/scripts/import-current-allegro-stock-to-warehouse.js --all-accounts --dry-run --verify-warehouse --detail-limit 20` returned `mutatesWarehouse=false`, `mutatesLocalAllegroOffer=false`, `verifiesWarehouse=true`, `uniqueStockAuthoritativeOffers=9`, `stockAuthoritativeTotal=496`, `warehouseMatches=9`, `warehouseMismatches=0`, and `warehouseVerifyFailed=0`. Target offer `18106496345` / product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` had Allegro stock `60`, Warehouse total available `60`, and `warehouseMatchesAllegro=true`.
+
+Boundary decision: no confirmed `--apply` was run and no Warehouse, local Allegro, account, token, offer, or channel mutation was performed. The verifier proves the 9 currently visible Allegro-authoritative offers are already in Warehouse and matching; it does not resolve stock beyond the configured Allegro accounts.
+
+Next action: provide/authorize the missing complete physical stock source or additional seller account for stock beyond the 9 matching offers, then use the verifier as the post-import acceptance gate before final Catalog/channel validation.
+
 ## 2026-06-29 - TASK-STOCK-004 Allegro Stock Import Apply Confirmation Guard Deployed
 
 Result: hardened the guarded Allegro current-stock Warehouse import command at `allegro-service@276ac21` (`fix: require confirmation for Allegro stock apply`). Warehouse mutation mode now requires both `--apply` and the exact phrase `--confirm-apply ALLEGRO_CURRENT_STOCK_IMPORT`; otherwise the command fails before Warehouse id resolution or any `POST /api/stock/set` call. Dry-run remains the default.
