@@ -1,5 +1,19 @@
 # Catalog Orchestrator Status
 
+## 2026-06-29 - TASK-STOCK-004 Catalog Central Stock Smoke Includes Heureka
+
+Result: deployed Catalog commit `5844e8a` (`test: include Heureka readiness in stock smoke`). The central `scripts/catalog-smoke.js` now has opt-in `CATALOG_SMOKE_ENABLE_HEUREKA_READINESS=true`, reads Heureka feed readiness per configured product, records `stockEvidence.heurekaReadiness`, compares Heureka `availableStock` against Warehouse `totalAvailable`, and fails if Heureka reports `STOCK_UNKNOWN` or `ZERO_STOCK` while Warehouse has positive availability.
+
+Validation evidence before deploy: `git diff --check`, `node --check scripts/catalog-smoke.js`, `npm run build`, and default `npm run smoke:e2e` passed (`9` passed, `2` skipped, `0` failed). A pre-deploy in-pod read-only smoke copied the patched script into the previous Catalog pod and passed with `59` passed, `1` skipped, `0` failed; it checked `9` products, `38` per-product channel statuses, and `9` Heureka readiness rows.
+
+Deployment evidence: `./scripts/deploy.sh` built and pushed image `localhost:5000/catalog-microservice:5844e8a` with digest `sha256:e4f82109d2f277f0bf6b89f21662146c30d78870a867e9c50e772fd8d32443d4`, rolled out successfully, and returned healthy status from the new pod.
+
+Post-deploy smoke evidence: running deployed `scripts/catalog-smoke.js` inside the `5844e8a` pod with `CATALOG_SMOKE_AUTHORIZED=true`, `CATALOG_SMOKE_ASSERT_STOCK=true`, `CATALOG_SMOKE_ENABLE_CHANNEL_STATUS=true`, `CATALOG_SMOKE_ENABLE_HEUREKA_READINESS=true`, internal Catalog service token, internal Heureka base URL, and the 9 current Allegro-authoritative product IDs passed with `59` passed, `1` skipped, `0` failed. It checked product count `9`, channel statuses `38`, Heureka readiness rows `9`, and matched Heureka quantities `124`, `87`, `50`, `25`, `110`, `60`, `10`, `3`, and `27` against Warehouse.
+
+Boundary decision: this was a read-only validation harness deployment and smoke. No Warehouse import, stock mutation, reservation, Heureka feed regeneration, order ingestion, channel draft, publish, queue, confirmation, or external marketplace mutation was run. Complete physical stock beyond the 9 current Allegro-authoritative products remains gated on `[MISSING: owner-approved BizBox/current physical stock export]`, `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`, or `[MISSING: correctly authorized additional seller account exposing additional current full offers]`.
+
+Next action: obtain/provide the missing complete physical stock source or additional seller authorization, then rerun Allegro Warehouse verifier plus the single Catalog central stock/channel/Heureka smoke as final acceptance gates.
+
 ## 2026-06-29 - TASK-STOCK-004 Heureka Stock Readiness Live Verifier Deployed
 
 Result: added and deployed a read-only Heureka live verifier at `heureka-service@92c0bb0` (`build: package Heureka verification scripts`, following `482f425 test: verify Heureka stock readiness live`). The verifier compares Heureka feed readiness `availableStock` with Warehouse `GET /api/stock/:productId/total`, defaults to product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee`, supports comma-separated `HEUREKA_VERIFY_PRODUCT_IDS`, and fails if Heureka reports `STOCK_UNKNOWN` or `ZERO_STOCK` while Warehouse has positive stock.
