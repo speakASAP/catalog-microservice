@@ -31,7 +31,19 @@ preflight_service_health() {
     echo -e "${RED}kubectl cannot reach cluster${NC}"
     exit 1
   fi
-  BAD_PODS=$(kubectl get pods -n "$NAMESPACE" -l app="$SERVICE_NAME" --no-headers 2>/dev/null | awk '$3 ~ /Error|CrashLoopBackOff|ImagePullBackOff|CreateContainerConfigError|CreateContainerError|ErrImagePull/ {print $1}')
+  BAD_PODS=$(kubectl get pods -n "$NAMESPACE" -l app="$SERVICE_NAME" -o json 2>/dev/null | node -e '
+const fs = require("fs");
+const badWaitingReasons = new Set(["CrashLoopBackOff", "ImagePullBackOff", "CreateContainerConfigError", "CreateContainerError", "ErrImagePull", "Error"]);
+const data = JSON.parse(fs.readFileSync(0, "utf8"));
+const badPods = (data.items || []).filter((pod) => {
+  const owners = pod.metadata?.ownerReferences || [];
+  if (owners.some((owner) => owner.kind === "Job")) return false;
+  const phase = pod.status?.phase;
+  if (phase === "Failed" || phase === "Unknown") return true;
+  return (pod.status?.containerStatuses || []).some((status) => badWaitingReasons.has(status.state?.waiting?.reason));
+}).map((pod) => pod.metadata.name);
+process.stdout.write(badPods.join("\n"));
+')
   if [ -n "$BAD_PODS" ]; then
     echo -e "${RED}Service has unhealthy pods before deploy:${NC}"
     kubectl get pods -n "$NAMESPACE" -l app="$SERVICE_NAME" -o wide || true
