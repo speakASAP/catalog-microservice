@@ -1,5 +1,15 @@
 # Catalog Orchestrator Status
 
+## 2026-06-29 - TASK-STOCK-004 Warehouse Stock Authority Verifier Deployed
+
+Result: added and deployed a read-only Warehouse live verifier at `warehouse-microservice@8a66b27`, with packaged command `npm run verify:stock-authority-live`. The verifier checks Warehouse DB stock rows, stock invariants, optional expected totals, latest movement evidence, stock-event outbox evidence, and active reservation totals without calling mutation endpoints.
+
+Validation evidence: pre-deploy and post-deploy verifier runs against the 9 current Allegro-authoritative product IDs both passed with `checkedProductCount=9`, `failedProductCount=0`, `totalQuantity=496`, `totalReserved=0`, `totalAvailable=496`, expected totals checked for all 9, quantities `124`, `87`, `50`, `25`, `110`, `60`, `10`, `3`, and `27`, outbox status `published`, movement reason `ALLEGRO_OFFER_STOCK_IMPORT`, and no product issues. Deploy built/pushed `localhost:5000/warehouse-microservice:8a66b27`, ran migrations with no pending migrations, rolled out successfully, and health returned database/RabbitMQ up.
+
+Boundary decision: verifier is read-only. No Warehouse import, stock mutation, reservation, order ingestion, channel draft, publish, queue, confirmation, or external marketplace mutation was run. This gives a Warehouse-side authority gate that complements the Allegro Warehouse verifier and Catalog central stock/channel/Heureka smoke. Complete physical stock beyond the 9 current Allegro-authoritative products remains gated on `[MISSING: owner-approved BizBox/current physical stock export]`, `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`, or `[MISSING: correctly authorized additional seller account exposing additional current full offers]`.
+
+Next action: obtain/provide the missing complete physical stock source or additional seller authorization, then rerun Warehouse stock authority verifier, Allegro Warehouse verifier, and the single Catalog central stock/channel/Heureka smoke as final acceptance gates.
+
 ## 2026-06-29 - TASK-STOCK-004 Catalog Central Stock Smoke Includes Heureka
 
 Result: deployed Catalog commit `5844e8a` (`test: include Heureka readiness in stock smoke`). The central `scripts/catalog-smoke.js` now has opt-in `CATALOG_SMOKE_ENABLE_HEUREKA_READINESS=true`, reads Heureka feed readiness per configured product, records `stockEvidence.heurekaReadiness`, compares Heureka `availableStock` against Warehouse `totalAvailable`, and fails if Heureka reports `STOCK_UNKNOWN` or `ZERO_STOCK` while Warehouse has positive availability.
