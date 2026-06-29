@@ -29,13 +29,14 @@ Validation: current product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` shows Warehou
 - Completed: Heureka deploy script repaired to build immutable image tags before rollout.
 - Completed read-only: Suppliers currently has synthetic/test suppliers only and is not a proven real physical-stock source.
 - Completed read-only: Allegro Imports has BizBox CSV-to-Warehouse code but no jobs and no source file found.
+- Completed: Allegro public authenticated BizBox CSV upload/gateway lane deployed at `allegro-service@4e9400c`.
 - Blocked: complete physical stock import beyond visible Allegro stock is `[MISSING: authoritative BizBox/current stock export or real supplier source]`.
 
 ## Parallel Execution
 
 ### Lane A - Allegro Imports Public BizBox Upload
 
-Status: ready now.
+Status: completed and deployed at `allegro-service@4e9400c`.
 
 Owner role: Allegro service implementation agent.
 
@@ -45,7 +46,7 @@ Allowed files: `allegro-service/services/api-gateway/**`, `allegro-service/servi
 
 Forbidden files: Warehouse mutation logic, Catalog product schema, Orders reservation contract, unrelated channel service code.
 
-Expected output: committed/pushed Allegro change with focused gateway/frontend validation and deployment evidence.
+Expected output: committed/pushed Allegro change with focused gateway/frontend validation and deployment evidence. Completed by `4e9400c Enable BizBox stock CSV upload`.
 
 Dependencies: none for code; actual import still depends on source file approval.
 

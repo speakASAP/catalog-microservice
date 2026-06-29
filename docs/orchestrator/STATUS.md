@@ -15,6 +15,21 @@ Parallel execution state: Orders reservation gate is deployed first and remains 
 Next action: implement the Allegro Imports public CSV upload lane or obtain the owner-approved BizBox/current stock export file, then run the import through Warehouse and revalidate Catalog plus all channel gates.
 
 
+
+## 2026-06-29 - TASK-STOCK-004 Lane A Allegro BizBox Upload Deployed
+
+Result: Allegro Lane A is implemented, pushed, and deployed as `allegro-service@4e9400c` (`Enable BizBox stock CSV upload`). The change adds authenticated `POST /api/import/csv` multipart forwarding in the API gateway, frontend FormData handling, and a BizBox Stock CSV Import control on the Allegro import page.
+
+Changed files: `services/api-gateway/package.json`, `services/api-gateway/package-lock.json`, `services/api-gateway/src/gateway/gateway.controller.ts`, `services/api-gateway/src/gateway/gateway.service.ts`, `services/frontend/src/pages/ImportJobsPage.tsx`, and `services/frontend/src/services/api.ts`.
+
+Validation evidence: remote worktree clean at `main...origin/main`; `git diff --check` passed; `npm --prefix services/api-gateway run build` passed; `npm --prefix services/frontend run build` passed with existing Vite/Browserslist freshness warnings only. Worker-reported `./scripts/deploy.sh` succeeded. Live Kubernetes deployments are ready with image tag `4e9400c` for `allegro-api-gateway`, `allegro-frontend`, and `allegro-imports`; rollout status completed for all three. Worker-reported non-mutating live checks: `https://allegro.alfares.cz/` returned HTTP `200`; unauthenticated `POST /api/import/csv` returned `401 No token provided`.
+
+Boundary decision: no authenticated CSV upload was run because the import endpoint mutates Warehouse stock. A controlled upload requires an owner-approved real BizBox/current stock export or an explicitly approved isolated synthetic Warehouse mutation test.
+
+Remaining blocker: `[MISSING: owner-approved BizBox/current physical stock export]` and `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`.
+
+Next action: obtain the approved stock export/path and authority confirmation, then run the import through the deployed Allegro upload path and revalidate Warehouse, Catalog product detail, and channel gates.
+
 ## 2026-06-29 - TASK-STOCK-004 Lane B BizBox Source Discovery Result
 
 Result: read-only discovery found no current BizBox/current physical stock export in the allowed obvious locations. Searches under `/home/ssf/Documents/Github` found docs/code references only; bounded data-file search for CSV/TSV/XLS/XLSX/ZIP/7Z/RAR found only unrelated SpeakASAP lesson/dictionary CSVs; shallow `/home/ssf` metadata scan for BizBox/stock/sklad/warehouse/import/export filenames found no candidates; Kubernetes object-name scan found Warehouse/Allegro/Suppliers config and job names but no BizBox export/import job/config object.
