@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { productsApi, Product, ProductSalesChannel, ProductSalesStatistics } from '@/lib/api/products';
+import { productsApi, Product, ProductSalesChannel, ProductSalesStatistics, ProductWarehouseAvailabilityItem, ProductWarehouseLogisticsOption } from '@/lib/api/products';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import MediaManagement from '@/components/MediaManagement';
 import PricingManagement from '@/components/PricingManagement';
@@ -48,6 +48,38 @@ const formatGrossSales = (totals: Array<{ currency: string; amount: number }> = 
     .join(' / ');
 };
 
+const formatQuantity = (value: number | null | undefined) => Number(value ?? 0).toLocaleString("cs-CZ");
+
+const isReservableRoute = (route: ProductWarehouseLogisticsOption) => {
+  if (!route.canReserveFromWarehouse || Number(route.available ?? 0) <= 0) {
+    return false;
+  }
+
+  if (route.routeType === "supplier_replenishment" || route.routeType === "supplier_dropship") {
+    return Boolean(route.supplierId);
+  }
+
+  return route.routeType === "local_fulfillment";
+};
+
+const getWarehouseRouteStatus = (availability: ProductWarehouseAvailabilityItem | null) => {
+  if (!availability) {
+    return { label: "Unavailable", tone: "bg-amber-100 text-amber-800", detail: "Warehouse availability is not loaded." };
+  }
+
+  const totalAvailable = Number(availability.totalAvailable ?? 0);
+  if (totalAvailable <= 0) {
+    return { label: "Out of stock", tone: "bg-gray-200 text-gray-700", detail: "Warehouse reports no available quantity." };
+  }
+
+  const routes = availability.logistics?.options ?? [];
+  if (routes.some(isReservableRoute)) {
+    return { label: "Sellable", tone: "bg-emerald-100 text-emerald-800", detail: "Warehouse has available stock on a reservable route." };
+  }
+
+  return { label: "Route needed", tone: "bg-amber-100 text-amber-800", detail: "Warehouse has stock, but no reservable logistics route is confirmed." };
+};
+
 export default function EditProductPage() {
   const router = useRouter();
   const params = useParams();
@@ -58,6 +90,9 @@ export default function EditProductPage() {
   const [salesStats, setSalesStats] = useState<ProductSalesStatistics | null>(null);
   const [salesStatsLoading, setSalesStatsLoading] = useState(false);
   const [salesStatsError, setSalesStatsError] = useState<string | null>(null);
+  const [warehouseAvailability, setWarehouseAvailability] = useState<ProductWarehouseAvailabilityItem | null>(null);
+  const [warehouseAvailabilityLoading, setWarehouseAvailabilityLoading] = useState(false);
+  const [warehouseAvailabilityError, setWarehouseAvailabilityError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     sku: '',
     title: '',
@@ -94,6 +129,31 @@ export default function EditProductPage() {
     }
   }, [productId]);
 
+
+  const loadWarehouseAvailability = useCallback(async () => {
+    setWarehouseAvailabilityLoading(true);
+    setWarehouseAvailabilityError(null);
+
+    try {
+      const response = await productsApi.getAvailabilityBatch([productId]);
+      if (response.success && response.data) {
+        setWarehouseAvailability(response.data.items?.[0] ?? null);
+        if (response.data.invalidProductIds?.includes(productId)) {
+          setWarehouseAvailabilityError("Warehouse availability rejected this product id.");
+        }
+      } else {
+        setWarehouseAvailability(null);
+        setWarehouseAvailabilityError(response.error?.message || "Warehouse availability is unavailable.");
+      }
+    } catch (error) {
+      console.error("Failed to load warehouse availability:", error);
+      setWarehouseAvailability(null);
+      setWarehouseAvailabilityError("Warehouse availability is unavailable.");
+    } finally {
+      setWarehouseAvailabilityLoading(false);
+    }
+  }, [productId]);
+
   const loadProduct = useCallback(async () => {
     try {
       const response = await productsApi.getProduct(productId);
@@ -125,8 +185,9 @@ export default function EditProductPage() {
     if (productId) {
       loadProduct();
       loadSalesStats();
+      loadWarehouseAvailability();
     }
-  }, [productId, loadProduct, loadSalesStats]);
+  }, [productId, loadProduct, loadSalesStats, loadWarehouseAvailability]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -205,6 +266,9 @@ export default function EditProductPage() {
     ? salesStats.channels
     : buildFallbackSalesChannels(productId, salesUnavailableReason ? 'unavailable' : 'zero', salesUnavailableReason);
   const recentSalesHistory = salesStats?.recentHistory ?? [];
+  const warehouseRouteStatus = getWarehouseRouteStatus(warehouseAvailability);
+  const warehouseRows = warehouseAvailability?.warehouses ?? [];
+  const warehouseRoutes = warehouseAvailability?.logistics?.options ?? [];
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -380,6 +444,107 @@ export default function EditProductPage() {
         <AukroPublishPanel productId={productId} />
 
         <ChannelSalesPanel productId={productId} />
+
+
+        <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Warehouse stock</h2>
+              <p className="text-sm text-gray-600">Source of truth: Warehouse availability.</p>
+              {warehouseAvailabilityError && (
+                <p className="mt-2 text-sm text-amber-700">{warehouseAvailabilityError}</p>
+              )}
+            </div>
+            <span className={`w-fit rounded-full px-3 py-1 text-sm font-semibold ${warehouseRouteStatus.tone}`}>
+              {warehouseAvailabilityLoading ? "Loading" : warehouseRouteStatus.label}
+            </span>
+          </div>
+
+          {warehouseAvailabilityLoading ? (
+            <div className="mt-5 flex min-h-[120px] items-center justify-center rounded-xl border border-gray-200 bg-gray-50">
+              <LoadingSpinner size="sm" />
+            </div>
+          ) : (
+            <>
+              <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                  <div className="text-xs font-semibold uppercase text-gray-500">Total</div>
+                  <div className="text-3xl font-extrabold text-gray-900">{formatQuantity(warehouseAvailability?.totalQuantity)}</div>
+                </div>
+                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                  <div className="text-xs font-semibold uppercase text-gray-500">Reserved</div>
+                  <div className="text-3xl font-extrabold text-gray-900">{formatQuantity(warehouseAvailability?.totalReserved)}</div>
+                </div>
+                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                  <div className="text-xs font-semibold uppercase text-gray-500">Available</div>
+                  <div className="text-3xl font-extrabold text-gray-900">{formatQuantity(warehouseAvailability?.totalAvailable)}</div>
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
+                {warehouseRouteStatus.detail}
+                {warehouseAvailability?.logistics?.preferredRoute && (
+                  <span> Preferred route: {warehouseAvailability.logistics.preferredRoute.replace(/_/g, " ")}.</span>
+                )}
+              </div>
+
+              <div className="mt-5">
+                <h3 className="font-bold text-gray-900">Warehouse rows</h3>
+                {warehouseRows.length === 0 ? (
+                  <div className="mt-3 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">No Warehouse rows returned for this product.</div>
+                ) : (
+                  <div className="mt-3 overflow-hidden rounded-xl border border-gray-200">
+                    <div className="grid grid-cols-4 bg-gray-100 px-4 py-2 text-xs font-semibold uppercase text-gray-500">
+                      <div>Warehouse</div>
+                      <div className="text-right">Total</div>
+                      <div className="text-right">Reserved</div>
+                      <div className="text-right">Available</div>
+                    </div>
+                    {warehouseRows.map((row) => (
+                      <div key={row.warehouseId} className="grid grid-cols-4 border-t border-gray-200 px-4 py-3 text-sm">
+                        <div className="min-w-0">
+                          <div className="truncate font-semibold text-gray-900">{row.warehouseName || row.warehouseCode || row.warehouseId}</div>
+                          <div className="truncate text-xs text-gray-500">{row.warehouseType || "warehouse"}{row.supplierId ? ` / supplier ${row.supplierId}` : ""}</div>
+                        </div>
+                        <div className="text-right font-semibold text-gray-900">{formatQuantity(row.quantity)}</div>
+                        <div className="text-right text-gray-700">{formatQuantity(row.reserved)}</div>
+                        <div className="text-right font-semibold text-emerald-700">{formatQuantity(row.available)}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-5">
+                <h3 className="font-bold text-gray-900">Route status</h3>
+                {warehouseRoutes.length === 0 ? (
+                  <div className="mt-3 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">No reservable logistics routes returned.</div>
+                ) : (
+                  <div className="mt-3 grid grid-cols-1 gap-3">
+                    {warehouseRoutes.map((route) => (
+                      <div key={`${route.warehouseId}-${route.routeType}-${route.priority}`} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <div className="font-semibold text-gray-900">{route.routeLabel || route.routeType.replace(/_/g, " ")}</div>
+                            <div className="text-xs text-gray-500">{route.warehouseName || route.warehouseCode} / {route.routeType.replace(/_/g, " ")}</div>
+                          </div>
+                          <span className={`w-fit rounded-full px-2.5 py-1 text-xs font-semibold ${isReservableRoute(route) ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
+                            {isReservableRoute(route) ? "Reservable" : "Not reservable"}
+                          </span>
+                        </div>
+                        <div className="mt-3 grid grid-cols-3 gap-3 text-sm">
+                          <div><span className="text-gray-500">Total</span> <span className="font-semibold text-gray-900">{formatQuantity(route.quantity)}</span></div>
+                          <div><span className="text-gray-500">Reserved</span> <span className="font-semibold text-gray-900">{formatQuantity(route.reserved)}</span></div>
+                          <div><span className="text-gray-500">Available</span> <span className="font-semibold text-gray-900">{formatQuantity(route.available)}</span></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </section>
 
         <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">

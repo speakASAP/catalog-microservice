@@ -1,3 +1,11 @@
+## 2026-06-29 - TASK-STOCK-002 Catalog Warehouse Stock Visibility
+
+Change: added a Catalog frontend Warehouse stock section to `/dashboard/products/:id` using the existing `POST /api/products/availability/batch` contract. The section keeps Warehouse as stock authority, shows total/reserved/available amounts, per-warehouse rows, and route/sellability status without adding Catalog stock persistence or schema changes.
+
+Intent Preservation chain: Vision: Alfares channels must not oversell fulfillable stock. Goal Impact: operators can see Warehouse-backed stock on Catalog product details. System: Warehouse remains stock authority; Catalog displays Warehouse availability. Feature: Warehouse-backed inventory propagation. Task: TASK-STOCK-002. Execution Plan: reuse Catalog availability batch endpoint in frontend only. Coding Prompt: add typed API client and product detail card. Code: `services/frontend/lib/api/products.ts`, `services/frontend/app/dashboard/products/[id]/page.tsx`. Validation: `git diff --check` passed; root `npm run build` passed; focused frontend `cd services/frontend && npm run build` passed with the existing Next.js multiple-lockfile workspace-root warning only. Focused frontend tests are [MISSING: no existing frontend test pattern found under services/frontend].
+
+Next action: deploy decision is ready if the integration owner accepts the intended dirty files and runtime token availability for the protected availability endpoint is confirmed.
+
 ## 2026-06-27 - Auth-Owned Catalog Service Token Source Applied
 
 Change: switched Catalog `CATALOG_INTERNAL_SERVICE_TOKEN` ExternalSecret source to Auth-owned Vault property `secret/prod/auth-microservice#CATALOG_INTERNAL_SERVICE_TOKEN`. Bazos-owned `BAZOS_SERVICE_TOKEN` remains only for Bazos integration and is distinct from the Catalog-to-Orders credential.
