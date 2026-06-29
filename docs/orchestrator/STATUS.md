@@ -815,3 +815,35 @@ Change: tightened Catalog channel readiness so FlipFlop readiness now requires s
 Validation evidence: focused src/channel-readiness/channel-readiness.service.spec.ts and src/flipflop-projection/flipflop-projection.service.spec.ts passed, npm run build passed, and git diff --check passed. Added focused coverage for Warehouse stock without a reservable route blocking FlipFlop readiness and for injected Warehouse coverage facts.
 
 Boundary decision: no deployment, runtime token inspection, production product mutation, Warehouse stock mutation, or supplier import was performed. Runtime completion remains pending owner-approved cross-service evidence regeneration.
+
+## 2026-06-29 - Warehouse Stock Propagation Cross-Repo Execution
+
+Change: completed the first cross-repo implementation pass for Warehouse-backed stock amounts and sellability gates. Catalog product detail now displays Warehouse availability for `/dashboard/products/:id`; Allegro imports `stock.available` into Warehouse; Orders fails closed when sellable-channel orders lack a successful Warehouse reservation; Bazos, Aukro, and FlipFlop now gate sellable paths on Warehouse authority; Heureka order ingestion now derives or validates `warehouseId` before forwarding to Orders.
+
+Runtime evidence:
+- Target product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` has Warehouse row `quantity=60`, `reserved=0`, `available=60` in warehouse `c0de0000-0000-4000-8000-000000000013`.
+- Warehouse movement evidence: `reason=ALLEGRO_OFFER_STOCK_IMPORT`, `reference=18106496345`, `createdBy=service:allegro-service`; outbox `stock.updated` was published.
+- Allegro account `FlipFlop` backfill imported 9 visible offers: Allegro total `stock.available=496`; Warehouse readback `totalAvailable=496`; mismatches `0`; target product remained `60`.
+- Catalog frontend was deployed from `8acf820 feat: show warehouse stock on product detail`; public product route returned HTTP 200.
+- Orders reservation gate was deployed from `dba03dc fix: fail closed on missing warehouse reservation`.
+- Allegro import/backfill was deployed from `2db3841 Import Allegro offer stock into Warehouse`.
+- Aukro publish stock gate was deployed from `e466338 fix: gate Aukro publish on warehouse stock`.
+- Bazos publish stock gate was deployed from `555983e fix: gate Bazos publish on warehouse stock`; health returned `{"status":"ok","service":"bazos-service"}`.
+- FlipFlop checkout/order authority fix was deployed, validated live with all six FlipFlop deployments `1/1`, homepage HTTP 200, product API GET HTTP 200, and then committed/pushed as `f85f64f fix: enforce warehouse authority in checkout orders`.
+- Heureka order route derivation was validated, committed, and pushed as `31688fb fix: require warehouse route for Heureka orders`, but not deployed because `scripts/deploy.sh` only reapplies manifests/restarts Kubernetes and no image build/publish release path was identified in the handoff.
+
+Validation evidence:
+- Catalog: `git diff --check`, root `npm run build`, and `cd services/frontend && npm run build` passed; deploy rollout succeeded, with an existing deploy-script health-selector caveat for completed monitor pods.
+- Orders: `git diff --check`, `npm run build`, `npm run verify:order-reservation-gate`, `npm run verify:warehouse-handoff`, and `npm test` passed before deploy.
+- Bazos: focused policy spec, `git diff --check`, shared build/test, and root tests passed before deploy.
+- Aukro: focused offer spec, `git diff --check`, `npm test`, and `npm run build` passed before deploy.
+- Heureka: focused orders spec with `LOGGING_SERVICE_URL`, contract verifier, shared build, service build, and `git diff --check` passed.
+- FlipFlop: pre-coding gate, strict doc audit, `git diff --check`, `npm run verify:orders-hub-integration`, shared build, order-service build, deployment readiness gate, deploy, and post-deploy HTTP GET checks passed.
+
+Boundary decisions:
+- Warehouse remains stock and reservation authority; Catalog displays availability and does not persist stock truth.
+- Allegro is the initial import source only. The user clarified the expected 1000+ refers to pieces, not product records; current Allegro `FlipFlop` account evidence explains 496 pieces across 9 offers, so the remaining physical inventory source is `[UNKNOWN: manual warehouse system, Bizbox export, another Allegro account, CSV source, or other inventory feed]`.
+- Heureka source is committed but not live until an image-building release path is identified and run.
+- No raw secret values or direct DB stock edits were committed.
+
+Next action: discover/import the remaining physical stock source beyond the 496 Allegro units, then release the committed Heureka image path once identified.
