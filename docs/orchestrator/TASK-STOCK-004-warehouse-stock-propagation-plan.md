@@ -16,9 +16,9 @@ Execution Plan: deploy reservation gate first, deploy channel gates second, impo
 
 Coding Prompt: keep Warehouse as source of truth; no Catalog stock persistence; fail closed when Warehouse route/reservation evidence is missing; use service credentials without printing secrets; mark unavailable source facts as `[MISSING: ...]`.
 
-Code: deployed cross-repo changes recorded in `docs/orchestrator/STATUS.md`; the Allegro Imports public CSV upload/gateway lane is deployed at `allegro-service@4e9400c`.
+Code: deployed cross-repo changes recorded in `docs/orchestrator/STATUS.md`; the Allegro Imports public CSV upload/gateway lane and non-mutating preview are deployed at `allegro-service@0e753bf`.
 
-Validation: current product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` shows Warehouse quantity `60`, reserved `0`, available `60`; Heureka image `localhost:5000/heureka-service:056e975` is deployed and healthy; Allegro image tag `4e9400c` is deployed for service, API gateway, frontend, settings, and imports; imports had zero jobs before any approved BizBox/current stock file was provided.
+Validation: current product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` shows Warehouse quantity `60`, reserved `0`, available `60`; Heureka image `localhost:5000/heureka-service:056e975` is deployed and healthy; Allegro image tag `0e753bf` is deployed for service, API gateway, frontend, settings, and imports; imports had zero jobs before any approved BizBox/current stock file was provided.
 
 ## Current State
 
@@ -29,14 +29,14 @@ Validation: current product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` shows Warehou
 - Completed: Heureka deploy script repaired to build immutable image tags before rollout.
 - Completed read-only: Suppliers currently has synthetic/test suppliers only and is not a proven real physical-stock source.
 - Completed read-only: Allegro Imports has BizBox CSV-to-Warehouse code but no jobs and no source file found.
-- Completed: Allegro public authenticated BizBox CSV upload/gateway lane deployed at `allegro-service@4e9400c`.
+- Completed: Allegro public authenticated BizBox CSV upload/gateway lane and non-mutating preview deployed at `allegro-service@0e753bf`.
 - Blocked: complete physical stock import beyond visible Allegro stock is `[MISSING: authoritative BizBox/current stock export or real supplier source]`.
 
 ## Parallel Execution
 
 ### Lane A - Allegro Imports Public BizBox Upload
 
-Status: completed and deployed at `allegro-service@4e9400c`.
+Status: completed and deployed at `allegro-service@0e753bf`.
 
 Owner role: Allegro service implementation agent.
 
@@ -46,13 +46,13 @@ Allowed files: `allegro-service/services/api-gateway/**`, `allegro-service/servi
 
 Forbidden files: Warehouse mutation logic, Catalog product schema, Orders reservation contract, unrelated channel service code.
 
-Expected output: committed/pushed Allegro change with focused gateway/frontend validation and deployment evidence. Completed by `4e9400c Enable BizBox stock CSV upload`.
+Expected output: committed/pushed Allegro change with focused gateway/frontend validation and deployment evidence. Completed by `4e9400c Enable BizBox stock CSV upload` and hardened by `ccf16a1 Add BizBox stock CSV preview`.
 
 Dependencies: none for code; actual import still depends on source file approval.
 
-Blockers: `[MISSING: owner-approved BizBox/current stock export]`; no authenticated upload was run because the endpoint mutates Warehouse stock.
+Blockers: `[MISSING: owner-approved BizBox/current stock export]`; no authenticated mutating upload was run because it changes Warehouse stock. The preview endpoint is available for safe preflight.
 
-Validation evidence: `git diff --check`, API gateway build, frontend build, deployment rollout for API gateway/frontend/imports, and unauthenticated upload rejection. Authenticated upload is deferred until stock mutation is approved.
+Validation evidence: `git diff --check`, imports/API gateway/frontend builds, deployment rollout for all Allegro services, unauthenticated preview rejection, and live preview-only smoke with import job count unchanged. Authenticated mutating upload is deferred until stock mutation is approved.
 
 Handoff notes: do not run real stock mutation import without owner-approved real file and mapping.
 
@@ -82,15 +82,15 @@ Status: dependency-gated.
 
 Owner role: Allegro/Warehouse integration agent.
 
-Objective: run the confirmed BizBox/current-stock import through Warehouse so Warehouse contains full physical quantities and emits stock update events.
+Objective: preview the confirmed BizBox/current-stock file, then run the approved import through Warehouse so Warehouse contains full physical quantities and emits stock update events.
 
 Allowed files: none required if existing import path works; minimal Allegro/Warehouse fixes only if validation exposes a bug.
 
 Forbidden actions: do not import real file or overwrite stock until owner confirms source authority and mapping.
 
-Dependencies: Lane B source/mapping approval; Lane A if public operator upload is required.
+Dependencies: Lane B source/mapping approval. Lane A preview/upload tooling is complete.
 
-Validation evidence: import job completed, Warehouse stock rows/movements/outbox for target products, Catalog product detail shows expected available amount, channel gates receive updated availability.
+Validation evidence: preview totals accepted by owner, import job completed, Warehouse stock rows/movements/outbox for target products, Catalog product detail shows expected available amount, channel gates receive updated availability.
 
 ### Lane D - Suppliers Real Source Onboarding
 
