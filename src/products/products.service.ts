@@ -129,6 +129,13 @@ export type ProductSalesStatistics = {
   unavailableReason?: string;
 };
 
+type CatalogStockPreflight = {
+  sellable: boolean;
+  quantity: number;
+  availability: any | null;
+  projection: any | null;
+};
+
 const DEFAULT_SALES_CHANNELS = ['flipflop', 'allegro', 'aukro', 'bazos', 'heureka'];
 
 @Injectable()
@@ -746,14 +753,20 @@ export class ProductsService {
       return this.blockedChannelAction('allegro', id, 'price_required', 'A current catalog price is required before preparing an Allegro offer.');
     }
 
+    const stockPreflight = await this.getCatalogStockPreflight(id);
+    if (!stockPreflight.sellable) {
+      return this.blockedChannelAction('allegro', id, 'warehouse_stock_unavailable', 'Warehouse has no sellable stock for this product. Import or reconcile physical stock before preparing an Allegro offer.');
+    }
+
     const allegroBaseUrl = this.getAllegroBaseUrl();
+    const requestedQuantity = this.toPositiveInteger(data.quantity);
     const payload = {
       catalogProductId: id,
       categoryId: data.categoryId || product.categories?.[0]?.id,
       title: data.title || product.title,
       description: data.description ?? product.description ?? undefined,
       price: data.price ?? currentPrice,
-      quantity: data.quantity ?? 0,
+      quantity: requestedQuantity ? Math.min(requestedQuantity, stockPreflight.quantity) : stockPreflight.quantity,
       idempotencyKey: data.idempotencyKey || `catalog:${id}:allegro`,
       forceNewDraft: Boolean(data.forceNewDraft),
     };
@@ -883,6 +896,14 @@ export class ProductsService {
 
     try {
       const productProjection = await this.getFlipFlopCatalogProjection(id);
+      const stockPreflight = this.stockPreflightFromProjection(productProjection);
+      if (!stockPreflight.sellable) {
+        return {
+          ...this.blockedChannelAction('flipflop', id, 'warehouse_stock_unavailable', 'Warehouse has no sellable stock for this product. Import or reconcile physical stock before showing it on FlipFlop.'),
+          listingUrl,
+          productProjection,
+        };
+      }
       return {
         success: true,
         action: 'prepare_flipflop_sale',
@@ -937,6 +958,31 @@ export class ProductsService {
     );
     const items = response.data?.data?.items || response.data?.items || [];
     return items.find((item: any) => item?.id === productId || item?.productId === productId) || items[0] || null;
+  }
+
+  private async getCatalogStockPreflight(productId: string): Promise<CatalogStockPreflight> {
+    const projection = await this.getFlipFlopCatalogProjection(productId);
+    return this.stockPreflightFromProjection(projection);
+  }
+
+  private stockPreflightFromProjection(projection: any): CatalogStockPreflight {
+    const availability = projection?.availability ?? projection?.warehouse ?? null;
+    const quantity = this.toPositiveInteger(
+      projection?.stockQuantity ?? availability?.totalAvailable ?? availability?.available,
+    );
+    const hasWarehouses = Array.isArray(availability?.warehouses)
+      ? availability.warehouses.length > 0
+      : Array.isArray(projection?.warehouses)
+        ? projection.warehouses.length > 0
+        : quantity > 0;
+    const source = String(availability?.source ?? projection?.warehouse?.source ?? '').toLowerCase();
+
+    return {
+      sellable: quantity > 0 && hasWarehouses && (!source || source === 'warehouse'),
+      quantity,
+      availability,
+      projection: projection ?? null,
+    };
   }
 
   private getCatalogInternalBaseUrl(): string {
@@ -1068,6 +1114,11 @@ export class ProductsService {
   private toNonNegativeNumber(value: unknown): number {
     const numeric = Number(value ?? 0);
     return Number.isFinite(numeric) && numeric > 0 ? numeric : 0;
+  }
+
+  private toPositiveInteger(value: unknown): number {
+    const numeric = Number(value ?? 0);
+    return Number.isFinite(numeric) && numeric > 0 ? Math.floor(numeric) : 0;
   }
 
   private getBazosBaseUrl(): string {

@@ -417,6 +417,167 @@ describe("ProductsService FlipFlop status action", () => {
       },
     });
   });
+
+  it("blocks FlipFlop preparation when the Warehouse-backed projection has no sellable stock", async () => {
+    process.env.CATALOG_SERVICE_URL = "http://catalog-microservice:3200";
+    process.env.CATALOG_INTERNAL_SERVICE_TOKEN = "catalog-internal-token";
+    const repository = {
+      findOne: jest.fn(async () => product),
+      count: jest.fn(async () => 1),
+    };
+    const pricingService = {
+      getCurrentPrice: jest.fn(async () => ({ productId: product.id, basePrice: 1000, currency: "CZK" })),
+    };
+    const mockedAxios = axios as jest.Mocked<typeof axios>;
+    mockedAxios.post.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: {
+          items: [{
+            id: product.id,
+            productId: product.id,
+            stockQuantity: 0,
+            availability: {
+              source: "warehouse",
+              totalAvailable: 0,
+              warehouses: [],
+            },
+          }],
+        },
+      },
+    } as any);
+    const service = new ProductsService(repository as any, logger as any, pricingService as any);
+
+    const result = await service.prepareFlipFlopSale(product.id);
+
+    expect(result).toMatchObject({
+      success: false,
+      blocked: true,
+      reason: "warehouse_stock_unavailable",
+      authority: "flipflop",
+      productProjection: {
+        productId: product.id,
+        stockQuantity: 0,
+      },
+    });
+  });
+});
+
+describe("ProductsService Allegro stock preflight", () => {
+  const logger = {
+    log: jest.fn(),
+    warn: jest.fn(),
+  };
+  const product = {
+    id: "884c1c5e-fe94-46c7-aab1-78bcc424e7ee",
+    sku: "ALLEGRO-OFFER-18106496345",
+    title: "Warehouse backed Allegro product",
+    description: "Synthetic description.",
+    isActive: true,
+    lifecycle: "active",
+    categories: [{ id: "category-1", name: "winter" }],
+    media: [{ url: "https://cdn.example.test/product.png" }],
+    pricing: [],
+  } as unknown as Product;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    delete process.env.CATALOG_SERVICE_URL;
+    delete process.env.CATALOG_INTERNAL_SERVICE_TOKEN;
+    delete process.env.ALLEGRO_SERVICE_URL;
+  });
+
+  it("blocks Allegro preparation when Warehouse availability is missing", async () => {
+    process.env.CATALOG_SERVICE_URL = "http://catalog-microservice:3200";
+    process.env.CATALOG_INTERNAL_SERVICE_TOKEN = "catalog-internal-token";
+    const repository = {
+      findOne: jest.fn(async () => product),
+      count: jest.fn(async () => 1),
+    };
+    const pricingService = {
+      getCurrentPrice: jest.fn(async () => ({ productId: product.id, basePrice: 1000, currency: "CZK" })),
+    };
+    const mockedAxios = axios as jest.Mocked<typeof axios>;
+    mockedAxios.post.mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: {
+          items: [{
+            id: product.id,
+            productId: product.id,
+            stockQuantity: 0,
+            availability: { source: "warehouse", totalAvailable: 0, warehouses: [] },
+          }],
+        },
+      },
+    } as any);
+    const service = new ProductsService(repository as any, logger as any, pricingService as any);
+
+    const result = await service.prepareAllegroSale(product.id, {}, "Bearer user-token");
+
+    expect(mockedAxios.post).toHaveBeenCalledTimes(1);
+    expect(mockedAxios.post.mock.calls[0][0]).toBe("http://catalog-microservice:3200/api/products/projections/flipflop/batch");
+    expect(JSON.stringify(mockedAxios.post.mock.calls)).not.toContain("/allegro/catalog-sell/prepare");
+    expect(result).toMatchObject({
+      success: false,
+      blocked: true,
+      reason: "warehouse_stock_unavailable",
+      authority: "allegro",
+    });
+  });
+
+  it("caps Allegro requested quantity to Warehouse sellable stock", async () => {
+    process.env.CATALOG_SERVICE_URL = "http://catalog-microservice:3200";
+    process.env.CATALOG_INTERNAL_SERVICE_TOKEN = "catalog-internal-token";
+    process.env.ALLEGRO_SERVICE_URL = "http://allegro-service:3000";
+    const repository = {
+      findOne: jest.fn(async () => product),
+      count: jest.fn(async () => 1),
+    };
+    const pricingService = {
+      getCurrentPrice: jest.fn(async () => ({ productId: product.id, basePrice: 1000, currency: "CZK" })),
+    };
+    const mockedAxios = axios as jest.Mocked<typeof axios>;
+    mockedAxios.post
+      .mockResolvedValueOnce({
+        data: {
+          success: true,
+          data: {
+            items: [{
+              id: product.id,
+              productId: product.id,
+              stockQuantity: 60,
+              availability: {
+                source: "warehouse",
+                totalAvailable: 60,
+                warehouses: [{ warehouseId: "warehouse-1", available: 60 }],
+              },
+            }],
+          },
+        },
+      } as any)
+      .mockResolvedValueOnce({
+        data: {
+          success: true,
+          draft: { catalogProductId: product.id, quantity: 60 },
+          nextAction: "confirm_publish",
+        },
+      } as any);
+    const service = new ProductsService(repository as any, logger as any, pricingService as any);
+
+    const result = await service.prepareAllegroSale(product.id, { quantity: 999 }, "Bearer user-token");
+
+    expect(mockedAxios.post.mock.calls[1]).toEqual([
+      "http://allegro-service:3000/allegro/catalog-sell/prepare",
+      expect.objectContaining({ catalogProductId: product.id, quantity: 60 }),
+      { headers: { Authorization: "Bearer user-token", "Content-Type": "application/json" } },
+    ]);
+    expect(result).toMatchObject({
+      success: true,
+      authority: "allegro",
+      draft: { quantity: 60 },
+    });
+  });
 });
 
 
