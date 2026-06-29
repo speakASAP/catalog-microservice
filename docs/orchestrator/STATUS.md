@@ -1,5 +1,16 @@
 # Catalog Orchestrator Status
 
+## 2026-06-29 - TASK-STOCK-004 Orders Insufficient Stock Reservation Coverage
+
+Result: strengthened Orders reservation-gate evidence for the explicit oversell case. Orders commit `1272309` (`test: cover insufficient stock reservation failure`) adds verifier coverage where Warehouse rejects `POST /api/reservations/reserve` with an insufficient-stock style response (`409`, `INSUFFICIENT_STOCK`, available/requested details). Orders now has focused verification that this remains a bounded failed handoff: `status=failed`, `reservedCount=0`, `failedCount=1`, `failureCode=warehouse_request_failed`, and no Warehouse response body, available quantity, requested quantity, or raw error text leaks into Orders handoff metadata.
+
+Validation evidence: in `orders-microservice`, `npm run build` passed; `npm run verify:warehouse-handoff` passed; `npm run verify:order-reservation-gate` passed; `git diff --check` passed before commit. The Orders warehouse handoff contract doc now explicitly states that insufficient available stock causes sellable order creation to fail closed before `orders.order.created.v1` and does not make Orders the stock authority.
+
+Boundary decision: this was verifier/docs-only. No Orders deployment was required and no live order, reservation, Warehouse stock, payment, or channel mutation was run. Runtime Orders deployment remains the previously deployed reservation gate; this change adds durable regression evidence for the oversell rejection path.
+
+Next action: obtain the owner-approved complete physical stock source or authorize the missing seller account that exposes additional current full offers, then preview/import and rerun final stock consistency plus live reservation validation.
+
+
 ## 2026-06-29 - TASK-STOCK-004 Allegro Current Stock Source Audit Deployed
 
 Result: added and deployed a read-only Allegro current stock source audit at `allegro-service@8614ea9` (`test: add Allegro current stock source audit`). The command `npm run audit:current-stock-source -- --all-accounts --detail-limit 500` lists configured Allegro accounts, reads `/sale/offers` across `ACTIVE`, `INACTIVE`, `ENDED`, and `ACTIVATING`, then checks `/sale/product-offers/{offerId}` details. It does not import offers, activate accounts, refresh tokens, write Warehouse stock, or mutate local rows. Only successful `product-offers.stock.available` is treated as current stock-authoritative evidence.
