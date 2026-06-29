@@ -1,5 +1,17 @@
 # Catalog Orchestrator Status
 
+## 2026-06-29 - TASK-STOCK-004 Product Detail And Allegro Draft Quantity Cap Validated
+
+Result: verified the original Catalog product-detail requirement and closed an Allegro oversell gap. The live Catalog product page bundle for `/dashboard/products/884c1c5e-fe94-46c7-aab1-78bcc424e7ee` contains the Warehouse stock panel and calls `POST /products/availability/batch`. Running-pod Catalog backend evidence returned `totalQuantity=60`, `totalReserved=0`, `totalAvailable=60`, warehouse code `CODEX-OWN-011`, warehouse type `own`. Catalog frontend source also passed `npm --prefix services/frontend run build` with only the existing Next.js multiple-lockfile warning.
+
+Allegro change: deployed `allegro-service@10009cb` (`fix: cap Allegro draft stock to Warehouse availability`). `CatalogSellActionService` now injects `WarehouseClientService`, enriches Catalog products with current Warehouse availability, caps explicit requested draft quantity and Allegro marketplace override quantity to Warehouse `totalAvailable`, and also reduces reused local drafts before publish preparation if their stored quantity is above Warehouse availability. Create/reuse draft metadata records `warehouseStock.source=warehouse-microservice`, `totalAvailable`, `requestedQuantity`, and whether the quantity was capped. No external Allegro publish call is made by prepare.
+
+Validation evidence: Allegro `git diff --check` passed; focused `npx ts-node --skip-ignore --compiler-options '{"types":["node"]}' services/allegro-service/src/allegro/catalog-sell-action/catalog-sell-action.spec.ts` passed; `npm --prefix services/allegro-service run build` passed; `npm --prefix shared run build` passed. Deploy built/pushed and rolled out tag `10009cb` for `allegro-service`, `allegro-api-gateway`, `allegro-settings`, `allegro-imports`, and `allegro-frontend`. Live deployment image is `localhost:5000/allegro-service:10009cb`; public `https://allegro.alfares.cz/` returned HTTP `200`. Running-pod compiled artifact contains `capQuantityToWarehouse`, `getWarehouseAvailable`, `warehouse-microservice` stock evidence, and `Math.min` cap logic.
+
+Boundary decision: no Allegro draft prepare/confirm, external publish, Warehouse import, reservation, order mutation, or stock mutation was run. This closes the local Allegro draft quantity path so it cannot prepare a quantity above Warehouse availability, but the complete physical stock source remains gated on `[MISSING: owner-approved BizBox/current physical stock export]`, `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`, or `[MISSING: correctly authorized additional seller account exposing current full offers]`.
+
+Next action: obtain the owner-approved complete physical stock source, preview it through Allegro Imports, then run approved Warehouse import and final over-reservation/channel propagation validation.
+
 ## 2026-06-29 - TASK-STOCK-004 Heureka Readiness Stock Amount Validated
 
 Result: fixed and deployed Heureka feed readiness so a missing local `heureka_settings` table no longer prevents read-only Catalog/Warehouse readiness checks. Heureka was deployed in two commits: `heureka-service@5afc3c1` keeps readiness available without the settings table, and `heureka-service@147da72` additively exposes `availableStock` and `settingsActive` on readiness items. Feed generation still requires active settings; only the read-only readiness endpoint tolerates the missing table and reports it as a blocker.
