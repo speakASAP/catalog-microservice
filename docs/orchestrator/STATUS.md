@@ -8,14 +8,25 @@ Validation evidence: Heureka build/test gates passed before deploy: `git diff --
 
 Source-of-truth discovery: Allegro offer import/backfill is deployed and has already imported visible Allegro stock into Warehouse, but current visible Allegro stock totals only `496` units. Suppliers service was checked read-only and currently contains only synthetic/test suppliers with no real production supplier credentials; its `STATE.json` still gates real supplier onboarding on owner-supplied metadata, endpoint, auth refs, payload samples, mapping facts, and explicit Warehouse mutation approval. Allegro has a BizBox CSV parser/import path that calculates Warehouse stock from `stock:minimumRequiredLevel:*` fields and writes Warehouse movements with reason `BIZBOX_CSV_STOCK_IMPORT`, but no CSV/XLS source file was found in the remote Allegro repo and no import jobs have run.
 
-Blockers and gaps: `[MISSING: BizBox/current physical stock export file or approved source path]`; `[MISSING: owner-confirmed mapping for whether BizBox stock fields are the authoritative physical stock source for the expected 1000+ units]`; `[RESOLVED: public operator upload and preview paths for BizBox CSV deployed at allegro-service@0e753bf]`;  `[MISSING: real supplier production contract/credentials/payloads]` if physical stock must come from Suppliers instead of BizBox.
+Blockers and gaps: `[MISSING: BizBox/current physical stock export file or approved source path]`; `[MISSING: owner-confirmed mapping for whether BizBox stock fields are the authoritative physical stock source for the expected 1000+ units]`; `[RESOLVED: public operator upload and preview paths plus confirmation guard for BizBox CSV deployed at allegro-service@4d1cb99]`;  `[MISSING: real supplier production contract/credentials/payloads]` if physical stock must come from Suppliers instead of BizBox.
 
-Parallel execution state: Orders reservation gate is deployed first and remains the contract base. Allegro, Aukro, Bazos, FlipFlop, and Heureka channel gates are deployed. Lane A Allegro Imports UX/API gateway multipart support for BizBox CSV upload and non-mutating preview is deployed. Lane B read-only discovery found no current BizBox export in obvious remote locations. Dependency-gated lane C is executing an approved BizBox import into Warehouse after source file and mapping are confirmed. Dependency-gated lane D is Suppliers real-source onboarding only if BizBox is not authoritative. Final integration lane is Catalog product-detail and channel propagation validation after Warehouse has the complete physical stock rows.
+Parallel execution state: Orders reservation gate is deployed first and remains the contract base. Allegro, Aukro, Bazos, FlipFlop, and Heureka channel gates are deployed. Lane A Allegro Imports UX/API gateway multipart support for BizBox CSV upload, non-mutating preview, and confirmation-guarded mutation is deployed. Lane B read-only discovery found no current BizBox export in obvious remote locations. Dependency-gated lane C is executing an approved BizBox import into Warehouse after source file and mapping are confirmed. Dependency-gated lane D is Suppliers real-source onboarding only if BizBox is not authoritative. Final integration lane is Catalog product-detail and channel propagation validation after Warehouse has the complete physical stock rows.
 
 Next action: obtain the owner-approved BizBox/current stock export file and authority confirmation, preview it, then run the import through Warehouse and revalidate Catalog plus all channel gates.
 
 
 
+
+
+## 2026-06-29 - TASK-STOCK-004 Allegro Stock Import Confirmation Guard
+
+Result: hardened the mutating BizBox stock import path so authenticated direct CSV upload now requires explicit confirmation header `x-stock-import-confirmation: previewed-and-approved`. The frontend sends this header only from the preview-gated upload flow. Allegro is deployed at `allegro-service@4d1cb99` (`Require confirmation for BizBox stock import`).
+
+Validation evidence: `git diff --check` passed; `npm --prefix services/imports run build` passed; `npm --prefix services/frontend run build` passed with existing Vite/Browserslist freshness warnings only. Deploy completed successfully. Live deployments are ready at image tag `4d1cb99` for `allegro-service`, `allegro-api-gateway`, `allegro-frontend`, `allegro-settings`, and `allegro-imports`. Live pod smoke showed preview returned HTTP `201` with `mutatesWarehouse=false`, direct mutating upload without confirmation returned HTTP `428` with code `STOCK_IMPORT_CONFIRMATION_REQUIRED`, and import job count stayed `0` before and after.
+
+Boundary decision: the confirmation header is a safety gate, not final stock-source approval. No real BizBox/current stock file was imported. Complete physical stock import remains gated on `[MISSING: owner-approved BizBox/current physical stock export]` and `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`.
+
+Next action: run preview on the owner-approved export, compare totals to expected physical stock, then run the confirmed mutating import only after explicit approval.
 
 ## 2026-06-29 - TASK-STOCK-004 Allegro Preview And Current-Head Deploy
 
