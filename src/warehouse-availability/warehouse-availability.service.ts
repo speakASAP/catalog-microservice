@@ -232,71 +232,87 @@ export class WarehouseAvailabilityService {
     productIds: string[],
     warehouseIds?: string[],
   ): Promise<WarehouseAvailabilityRow[]> {
-    const token = process.env.WAREHOUSE_SERVICE_TOKEN || process.env.WAREHOUSE_INTERNAL_SERVICE_TOKEN;
-    if (!token) {
-      throw new ServiceUnavailableException('Warehouse availability service token is not configured');
-    }
-
-    const baseUrl = (process.env.WAREHOUSE_SERVICE_URL || process.env.WAREHOUSE_BASE_URL || 'http://warehouse-microservice:3000').replace(/\/$/, '');
-
-    try {
-      const response = await axios.post(
-        `${baseUrl}/api/stock/availability/batch`,
-        { productIds, ...(warehouseIds ? { warehouseIds } : {}) },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          timeout: Number(process.env.WAREHOUSE_AVAILABILITY_TIMEOUT_MS || 5000),
-        },
-      );
-
-      const data = response.data?.data;
-      return Array.isArray(data) ? data : [];
-    } catch (error) {
-      const axiosError = error as AxiosError;
-      const status = axiosError.response?.status;
-      this.logger.warn(`Warehouse availability request failed${status ? ` with status ${status}` : ''}`, 'WarehouseAvailabilityService');
-      if (status === 401 || status === 403) {
-        throw new ServiceUnavailableException('Warehouse availability dependency rejected catalog service credentials');
-      }
-      throw new ServiceUnavailableException('Warehouse availability dependency is unavailable');
-    }
+    const data = await this.postWarehouseData(
+      '/api/stock/availability/batch',
+      { productIds, ...(warehouseIds ? { warehouseIds } : {}) },
+      'Warehouse availability dependency rejected catalog service credentials',
+      'Warehouse availability dependency is unavailable',
+      'Warehouse availability service token is not configured',
+      'Warehouse availability request failed',
+    );
+    return Array.isArray(data) ? data : [];
   }
 
   private async fetchWarehouseLogistics(productIds: string[]): Promise<WarehouseProductLogisticsPlan[]> {
-    const token = process.env.WAREHOUSE_SERVICE_TOKEN || process.env.WAREHOUSE_INTERNAL_SERVICE_TOKEN;
-    if (!token) {
-      throw new ServiceUnavailableException('Warehouse logistics service token is not configured');
+    const data = await this.postWarehouseData(
+      '/api/warehouses/logistics/batch',
+      { productIds },
+      'Warehouse logistics dependency rejected catalog service credentials',
+      'Warehouse logistics dependency is unavailable',
+      'Warehouse logistics service token is not configured',
+      'Warehouse logistics request failed',
+    );
+    return Array.isArray(data) ? data : [];
+  }
+
+  private async postWarehouseData(
+    path: string,
+    body: Record<string, unknown>,
+    rejectedCredentialsMessage: string,
+    unavailableMessage: string,
+    missingTokenMessage: string,
+    logPrefix: string,
+  ): Promise<unknown> {
+    const tokens = this.getWarehouseServiceTokens();
+    if (tokens.length === 0) {
+      throw new ServiceUnavailableException(missingTokenMessage);
     }
 
     const baseUrl = (process.env.WAREHOUSE_SERVICE_URL || process.env.WAREHOUSE_BASE_URL || 'http://warehouse-microservice:3000').replace(/\/$/, '');
+    let sawRejectedCredential = false;
 
-    try {
-      const response = await axios.post(
-        `${baseUrl}/api/warehouses/logistics/batch`,
-        { productIds },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+    for (const token of tokens) {
+      try {
+        const response = await axios.post(
+          `${baseUrl}${path}`,
+          body,
+          {
+            headers: {
+              Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: Number(process.env.WAREHOUSE_AVAILABILITY_TIMEOUT_MS || 5000),
           },
-          timeout: Number(process.env.WAREHOUSE_AVAILABILITY_TIMEOUT_MS || 5000),
-        },
-      );
+        );
 
-      const data = response.data?.data;
-      return Array.isArray(data) ? data : [];
-    } catch (error) {
-      const axiosError = error as AxiosError;
-      const status = axiosError.response?.status;
-      this.logger.warn(`Warehouse logistics request failed${status ? ` with status ${status}` : ''}`, 'WarehouseAvailabilityService');
-      if (status === 401 || status === 403) {
-        throw new ServiceUnavailableException('Warehouse logistics dependency rejected catalog service credentials');
+        return response.data?.data;
+      } catch (error) {
+        const axiosError = error as AxiosError;
+        const status = axiosError.response?.status;
+        this.logger.warn(`${logPrefix}${status ? ` with status ${status}` : ''}`, 'WarehouseAvailabilityService');
+        if (status === 401 || status === 403) {
+          sawRejectedCredential = true;
+          continue;
+        }
+        throw new ServiceUnavailableException(unavailableMessage);
       }
-      throw new ServiceUnavailableException('Warehouse logistics dependency is unavailable');
     }
+
+    if (sawRejectedCredential) {
+      throw new ServiceUnavailableException(rejectedCredentialsMessage);
+    }
+
+    throw new ServiceUnavailableException(unavailableMessage);
+  }
+
+  private getWarehouseServiceTokens(): string[] {
+    return Array.from(new Set([
+      process.env.WAREHOUSE_SERVICE_TOKEN,
+      process.env.WAREHOUSE_INTERNAL_SERVICE_TOKEN,
+      process.env.JWT_TOKEN,
+      process.env.CATALOG_INTERNAL_SERVICE_TOKEN,
+      process.env.INTERNAL_SERVICE_TOKEN,
+    ].map((token) => token?.trim()).filter((token): token is string => Boolean(token))));
   }
 
   private async fetchOptionalWarehouseLogistics(productIds: string[]): Promise<WarehouseProductLogisticsPlan[]> {

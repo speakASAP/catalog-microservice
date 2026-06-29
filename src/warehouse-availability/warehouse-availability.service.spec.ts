@@ -1,5 +1,9 @@
 import { BadRequestException, ServiceUnavailableException } from '@nestjs/common';
+import axios from 'axios';
 import { WarehouseAvailabilityService } from './warehouse-availability.service';
+
+jest.mock('axios');
+const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 const logger = {
   log: jest.fn(),
@@ -9,6 +13,13 @@ const logger = {
 describe('WarehouseAvailabilityService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    delete process.env.WAREHOUSE_SERVICE_TOKEN;
+    delete process.env.WAREHOUSE_INTERNAL_SERVICE_TOKEN;
+    delete process.env.JWT_TOKEN;
+    delete process.env.CATALOG_INTERNAL_SERVICE_TOKEN;
+    delete process.env.INTERNAL_SERVICE_TOKEN;
+    delete process.env.WAREHOUSE_SERVICE_URL;
+    delete process.env.WAREHOUSE_BASE_URL;
   });
 
   it('rejects unknown catalog product IDs before calling warehouse', async () => {
@@ -160,6 +171,36 @@ describe('WarehouseAvailabilityService', () => {
 
     await expect(service.getBatchAvailability({ productIds: ['product-1'] }))
       .rejects.toThrow(ServiceUnavailableException);
+  });
+
+  it('falls back to the runtime JWT token when the dedicated Warehouse token is rejected', async () => {
+    process.env.WAREHOUSE_SERVICE_TOKEN = 'stale-warehouse-token';
+    process.env.JWT_TOKEN = 'valid-runtime-jwt';
+    process.env.WAREHOUSE_SERVICE_URL = 'http://warehouse-microservice:3201';
+    mockedAxios.post
+      .mockRejectedValueOnce({ response: { status: 401 } })
+      .mockResolvedValueOnce({ data: { data: [{ productId: 'product-1', totalQuantity: 2, totalReserved: 0, totalAvailable: 2, warehouses: [] }] } });
+    const service = new WarehouseAvailabilityService({ findIdentitiesByIds: jest.fn() } as any, logger as any);
+
+    const rows = await (service as any).fetchWarehouseAvailability(['product-1']);
+
+    expect(rows).toEqual([expect.objectContaining({ productId: 'product-1', totalAvailable: 2 })]);
+    expect(mockedAxios.post).toHaveBeenCalledTimes(2);
+    expect(mockedAxios.post.mock.calls[0][2]?.headers).toMatchObject({ Authorization: 'Bearer stale-warehouse-token' });
+    expect(mockedAxios.post.mock.calls[1][2]?.headers).toMatchObject({ Authorization: 'Bearer valid-runtime-jwt' });
+  });
+
+  it('rejects Warehouse availability only after every configured credential is rejected', async () => {
+    process.env.WAREHOUSE_SERVICE_TOKEN = 'stale-warehouse-token';
+    process.env.JWT_TOKEN = 'invalid-runtime-jwt';
+    mockedAxios.post
+      .mockRejectedValueOnce({ response: { status: 403 } })
+      .mockRejectedValueOnce({ response: { status: 401 } });
+    const service = new WarehouseAvailabilityService({ findIdentitiesByIds: jest.fn() } as any, logger as any);
+
+    await expect((service as any).fetchWarehouseAvailability(['product-1']))
+      .rejects.toThrow('Warehouse availability dependency rejected catalog service credentials');
+    expect(mockedAxios.post).toHaveBeenCalledTimes(2);
   });
 
   it('does not attach stale Warehouse logistics when route totals differ from availability totals', async () => {

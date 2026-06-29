@@ -40,14 +40,39 @@ extract_json() {
 const fs = require("fs");
 const file = process.argv[2];
 const raw = fs.readFileSync(file, "utf8");
-for (let index = 0; index < raw.length; index += 1) {
-  if (raw[index] !== "{") continue;
-  try {
-    const parsed = JSON.parse(raw.slice(index));
-    process.stdout.write(JSON.stringify(parsed));
-    process.exit(0);
-  } catch {
-    continue;
+for (let start = 0; start < raw.length; start += 1) {
+  if (raw[start] !== "{") continue;
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let index = start; index < raw.length; index += 1) {
+    const char = raw[index];
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (char === "\\") {
+        escaped = true;
+      } else if (char === "\"") {
+        inString = false;
+      }
+      continue;
+    }
+    if (char === "\"") {
+      inString = true;
+    } else if (char === "{") {
+      depth += 1;
+    } else if (char === "}") {
+      depth -= 1;
+      if (depth === 0) {
+        try {
+          const parsed = JSON.parse(raw.slice(start, index + 1));
+          process.stdout.write(JSON.stringify(parsed));
+          process.exit(0);
+        } catch {
+          break;
+        }
+      }
+    }
   }
 }
 throw new Error(`No JSON object found in ${file}`);
@@ -56,6 +81,16 @@ NODE
 
 print_section() {
   printf '\n== %s ==\n' "$1"
+}
+
+run_and_capture() {
+  local output_file="$1"
+  shift
+  set +e
+  "$@" 2>&1 | tee "$output_file"
+  local status="${PIPESTATUS[0]}"
+  set -e
+  return "$status"
 }
 
 warehouse_image="$(deployment_image warehouse-microservice)"
@@ -75,19 +110,22 @@ allegro_out="$tmpdir/allegro.json"
 catalog_out="$tmpdir/catalog.json"
 
 print_section "Warehouse stock authority"
-kubectl exec -n "$NAMESPACE" "$warehouse_pod" -- sh -lc \
+warehouse_status=0
+run_and_capture "$warehouse_out" kubectl exec -n "$NAMESPACE" "$warehouse_pod" -- sh -lc \
   "WAREHOUSE_VERIFY_PRODUCT_IDS='$PRODUCT_IDS' WAREHOUSE_VERIFY_EXPECTED_TOTALS='$EXPECTED_TOTALS' npm run verify:stock-authority-live" \
-  | tee "$warehouse_out"
+  || warehouse_status="$?"
 
 print_section "Allegro current stock against Warehouse"
-kubectl exec -n "$NAMESPACE" "$allegro_pod" -- sh -lc \
+allegro_status=0
+run_and_capture "$allegro_out" kubectl exec -n "$NAMESPACE" "$allegro_pod" -- sh -lc \
   "npm run import:current-stock:warehouse -- --all-accounts --dry-run --verify-warehouse --detail-limit '$ALLEGRO_DETAIL_LIMIT'" \
-  | tee "$allegro_out"
+  || allegro_status="$?"
 
 print_section "Catalog channel propagation smoke"
-kubectl exec -n "$NAMESPACE" "$catalog_pod" -- sh -lc \
+catalog_status=0
+run_and_capture "$catalog_out" kubectl exec -n "$NAMESPACE" "$catalog_pod" -- sh -lc \
   "CATALOG_SMOKE_BASE_URL=http://127.0.0.1:3200 CATALOG_SMOKE_AUTHORIZED=true CATALOG_SMOKE_ASSERT_STOCK=true CATALOG_SMOKE_ENABLE_CHANNEL_STATUS=true CATALOG_SMOKE_ENABLE_HEUREKA_READINESS=true CATALOG_SMOKE_HEUREKA_BASE_URL=http://heureka-service:3800 CATALOG_SMOKE_PRODUCT_IDS='$PRODUCT_IDS' CATALOG_SMOKE_INTERNAL_SERVICE_TOKEN=\"\$CATALOG_INTERNAL_SERVICE_TOKEN\" CATALOG_SMOKE_SERVICE_NAME=catalog-microservice node scripts/catalog-smoke.js" \
-  | tee "$catalog_out"
+  || catalog_status="$?"
 
 warehouse_json="$tmpdir/warehouse.parsed.json"
 allegro_json="$tmpdir/allegro.parsed.json"
@@ -98,9 +136,9 @@ extract_json "$catalog_out" > "$catalog_json"
 
 print_section "Acceptance summary"
 WAREHOUSE_IMAGE="$warehouse_image" ALLEGRO_IMAGE="$allegro_image" CATALOG_IMAGE="$catalog_image" \
-node - "$warehouse_json" "$allegro_json" "$catalog_json" "$PRODUCT_IDS" "$EXPECTED_TOTALS" <<'NODE'
+node - "$warehouse_json" "$allegro_json" "$catalog_json" "$PRODUCT_IDS" "$EXPECTED_TOTALS" "$warehouse_status" "$allegro_status" "$catalog_status" <<'NODE'
 const fs = require("fs");
-const [warehouseFile, allegroFile, catalogFile, productIdsCsv, expectedTotalsCsv] = process.argv.slice(2);
+const [warehouseFile, allegroFile, catalogFile, productIdsCsv, expectedTotalsCsv, warehouseStatus, allegroStatus, catalogStatus] = process.argv.slice(2);
 const warehouse = JSON.parse(fs.readFileSync(warehouseFile, "utf8"));
 const allegro = JSON.parse(fs.readFileSync(allegroFile, "utf8"));
 const catalog = JSON.parse(fs.readFileSync(catalogFile, "utf8"));
@@ -111,6 +149,9 @@ const expectedTotals = Object.fromEntries(expectedTotalsCsv.split(",").filter(Bo
 }));
 
 const issues = [];
+if (Number(warehouseStatus) !== 0) issues.push(`Warehouse verifier exited ${warehouseStatus}`);
+if (Number(allegroStatus) !== 0) issues.push(`Allegro verifier exited ${allegroStatus}`);
+if (Number(catalogStatus) !== 0) issues.push(`Catalog smoke exited ${catalogStatus}`);
 if (warehouse.contract !== "warehouse-stock-authority-live.v1") issues.push("Warehouse verifier contract mismatch");
 if (warehouse.mutatesWarehouse !== false) issues.push("Warehouse verifier is not read-only");
 if (warehouse.failedProductCount !== 0) issues.push(`Warehouse verifier reported ${warehouse.failedProductCount} failed products`);
@@ -151,6 +192,11 @@ const summary = {
     warehouse: process.env.WAREHOUSE_IMAGE || null,
     allegro: process.env.ALLEGRO_IMAGE || null,
     catalog: process.env.CATALOG_IMAGE || null,
+  },
+  commandStatuses: {
+    warehouse: Number(warehouseStatus),
+    allegro: Number(allegroStatus),
+    catalog: Number(catalogStatus),
   },
   warehouse: {
     checkedProductCount: warehouse.checkedProductCount,
