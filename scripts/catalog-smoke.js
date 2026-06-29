@@ -3,6 +3,7 @@
 const DEFAULT_BASE_URL = "https://catalog.alfares.cz";
 const baseUrl = (process.env.CATALOG_SMOKE_BASE_URL || DEFAULT_BASE_URL).replace(/\/+$/, "");
 const configuredProductId = process.env.CATALOG_SMOKE_PRODUCT_ID || "";
+const configuredProductIds = parseProductIds(process.env.CATALOG_SMOKE_PRODUCT_IDS || configuredProductId);
 const authorizedSmokeEnabled = isEnabled(process.env.CATALOG_SMOKE_AUTHORIZED);
 const authorizedBazosSmokeEnabled = isEnabled(process.env.CATALOG_SMOKE_ENABLE_BAZOS_AUTHORIZED);
 const authorizedChannelStatusSmokeEnabled = isEnabled(process.env.CATALOG_SMOKE_ENABLE_CHANNEL_STATUS);
@@ -24,6 +25,7 @@ const stockEvidence = {
   warehouseQuantity: null,
   warehouseReserved: null,
   flipflopStockQuantity: null,
+  products: {},
   channelStatuses: {},
 };
 
@@ -33,6 +35,13 @@ function record(contract, status, detail = {}) {
 
 function isEnabled(value) {
   return value === "1" || value === "true" || value === "yes";
+}
+
+function parseProductIds(value) {
+  return Array.from(new Set(String(value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)));
 }
 
 function getAuthorizedHeaders() {
@@ -173,6 +182,26 @@ function stockQuantitiesMatch(left, right) {
   return numberOrNull(left) !== null && numberOrNull(left) === numberOrNull(right);
 }
 
+function productIdsForAuthorizedChecks(productId) {
+  if (configuredProductIds.length > 0) {
+    return configuredProductIds;
+  }
+  return productId ? [productId] : [];
+}
+
+function ensureProductEvidence(productId) {
+  if (!stockEvidence.products[productId]) {
+    stockEvidence.products[productId] = {
+      warehouseAvailable: null,
+      warehouseQuantity: null,
+      warehouseReserved: null,
+      flipflopStockQuantity: null,
+      warehouseSource: null,
+    };
+  }
+  return stockEvidence.products[productId];
+}
+
 async function check(contract, fn) {
   try {
     await fn();
@@ -185,7 +214,7 @@ async function check(contract, fn) {
 }
 
 async function main() {
-  let productId = configuredProductId;
+  let productId = configuredProductIds[0] || configuredProductId;
 
   await check("health", async () => {
     const response = await request("/health");
@@ -323,30 +352,39 @@ async function main() {
     });
   } else {
     await check("authorized-warehouse-availability", async () => {
-      if (!productId) {
+      const productIds = productIdsForAuthorizedChecks(productId);
+      if (productIds.length === 0) {
         record("authorized-warehouse-availability", "skip", { reason: "No product ID available for authorized Warehouse check." });
         return;
       }
       const response = await request("/api/products/availability/batch", {
         method: "POST",
         headers: authorizedHeaders,
-        body: JSON.stringify({ productIds: [productId] }),
+        body: JSON.stringify({ productIds }),
       });
       assert(response.ok, "authorized-warehouse-availability", "Authorized Warehouse availability contract did not return 2xx", {
         statusCode: response.status,
-        productId,
+        productIds,
       });
       assert(response.body?.success === true && Array.isArray(response.body?.data?.items), "authorized-warehouse-availability", "Warehouse availability response did not use the expected envelope", {
         statusCode: response.status,
-        productId,
+        productIds,
       });
       const item = firstAvailabilityItem(response.body, productId);
       stockEvidence.warehouseAvailable = numberOrNull(item?.totalAvailable);
       stockEvidence.warehouseQuantity = numberOrNull(item?.totalQuantity);
       stockEvidence.warehouseReserved = numberOrNull(item?.totalReserved);
+      for (const availabilityItem of response.body.data.items) {
+        if (!availabilityItem?.productId) continue;
+        const evidence = ensureProductEvidence(availabilityItem.productId);
+        evidence.warehouseAvailable = numberOrNull(availabilityItem.totalAvailable);
+        evidence.warehouseQuantity = numberOrNull(availabilityItem.totalQuantity);
+        evidence.warehouseReserved = numberOrNull(availabilityItem.totalReserved);
+      }
       record("authorized-warehouse-availability", "pass", {
         statusCode: response.status,
         productId,
+        productIds,
         itemCount: response.body.data.items.length,
         totalQuantity: stockEvidence.warehouseQuantity,
         totalReserved: stockEvidence.warehouseReserved,
@@ -355,28 +393,37 @@ async function main() {
     });
 
     await check("authorized-flipflop-projection", async () => {
-      if (!productId) {
+      const productIds = productIdsForAuthorizedChecks(productId);
+      if (productIds.length === 0) {
         record("authorized-flipflop-projection", "skip", { reason: "No product ID available for authorized FlipFlop projection check." });
         return;
       }
       const response = await request("/api/products/projections/flipflop/batch", {
         method: "POST",
         headers: authorizedHeaders,
-        body: JSON.stringify({ productIds: [productId], includeUnavailable: true }),
+        body: JSON.stringify({ productIds, includeUnavailable: true }),
       });
       assert(response.ok, "authorized-flipflop-projection", "Authorized FlipFlop projection contract did not return 2xx", {
         statusCode: response.status,
-        productId,
+        productIds,
       });
       assert(response.body?.success === true && Array.isArray(response.body?.data?.items), "authorized-flipflop-projection", "FlipFlop projection response did not use the expected envelope", {
         statusCode: response.status,
-        productId,
+        productIds,
       });
       const item = firstProjectionItem(response.body, productId);
       stockEvidence.flipflopStockQuantity = numberOrNull(item?.stockQuantity ?? item?.warehouse?.totalAvailable ?? item?.availability?.totalAvailable);
+      for (const projectionItem of response.body.data.items) {
+        const projectionProductId = projectionItem?.id || projectionItem?.productId;
+        if (!projectionProductId) continue;
+        const evidence = ensureProductEvidence(projectionProductId);
+        evidence.flipflopStockQuantity = numberOrNull(projectionItem?.stockQuantity ?? projectionItem?.warehouse?.totalAvailable ?? projectionItem?.availability?.totalAvailable);
+        evidence.warehouseSource = projectionItem?.warehouse?.source || projectionItem?.availability?.source || null;
+      }
       record("authorized-flipflop-projection", "pass", {
         statusCode: response.status,
         productId,
+        productIds,
         itemCount: response.body.data.items.length,
         stockQuantity: stockEvidence.flipflopStockQuantity,
         warehouseSource: item?.warehouse?.source || item?.availability?.source || null,
@@ -418,10 +465,25 @@ async function main() {
           mismatchedChannels,
         });
 
+        const productStockMismatches = Object.entries(stockEvidence.products)
+          .filter(([, evidence]) => evidence.warehouseAvailable !== null || evidence.flipflopStockQuantity !== null)
+          .filter(([, evidence]) => !stockQuantitiesMatch(evidence.warehouseAvailable, evidence.flipflopStockQuantity))
+          .map(([checkedProductId, evidence]) => ({
+            productId: checkedProductId,
+            warehouseAvailable: evidence.warehouseAvailable,
+            flipflopStockQuantity: evidence.flipflopStockQuantity,
+          }));
+        assert(productStockMismatches.length === 0, "authorized-stock-consistency", "One or more FlipFlop product projections do not match Warehouse totalAvailable", {
+          productId,
+          productStockMismatches,
+          checkedProductCount: Object.keys(stockEvidence.products).length,
+        });
+
         record("authorized-stock-consistency", "pass", {
           productId,
           warehouseAvailable: stockEvidence.warehouseAvailable,
           flipflopStockQuantity: stockEvidence.flipflopStockQuantity,
+          checkedProductCount: Object.keys(stockEvidence.products).length,
           checkedChannelStatuses: Object.keys(stockEvidence.channelStatuses).length,
         });
       });
