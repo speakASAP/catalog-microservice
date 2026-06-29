@@ -1,3 +1,23 @@
+## 2026-06-29 - TASK-STOCK-004 Catalog Warehouse Credential Preflight Added
+
+Change: extended `scripts/run-stock-acceptance-gates.sh` with a read-only Catalog Warehouse credential preflight. The gate now checks the deployed Catalog pod's configured Warehouse credential candidates by environment variable name only (`WAREHOUSE_SERVICE_TOKEN`, `WAREHOUSE_INTERNAL_SERVICE_TOKEN`, `JWT_TOKEN`, `CATALOG_INTERNAL_SERVICE_TOKEN`, `INTERNAL_SERVICE_TOKEN`), validates each candidate against Auth `/auth/validate` and Warehouse `POST /api/stock/availability/batch`, and includes a redacted `catalogWarehouseCredential` section in `stock-acceptance-gates.v1`.
+
+Validation evidence: `bash -n scripts/run-stock-acceptance-gates.sh` passed; `git diff --check` passed; `npm run build` passed. Live read-only `npm run verify:stock-acceptance:gates` ran the updated script and failed safely with Warehouse status `0`, Allegro status `0`, Catalog Warehouse credential preflight status `1`, and Catalog smoke status `1`. The preflight reported `WAREHOUSE_SERVICE_TOKEN`, `JWT_TOKEN`, and `CATALOG_INTERNAL_SERVICE_TOKEN` present but rejected by Auth and Warehouse with HTTP `401`; `WAREHOUSE_INTERNAL_SERVICE_TOKEN` and `INTERNAL_SERVICE_TOKEN` were missing; `acceptedCandidate=null`. Warehouse authority still checked 9 products with `totalAvailable=496`, and Allegro dry-run still reported `warehouseMatches=9`, `warehouseMismatches=0`, and `warehouseVerifyFailed=0`.
+
+Boundary decision: the preflight does not print token values and does not mutate Warehouse. It does not provision a credential, assign Auth roles, create a service principal, alter Vault/Kubernetes secrets, bypass Warehouse auth, import stock, reserve stock, or publish any channel listing. It makes the existing acceptance blocker machine-readable before the broader Catalog smoke fails.
+
+Next action: validate, deploy the updated Catalog ops image if approved by source gates, rerun `npm run verify:stock-acceptance:gates`, and use the credential preflight result to confirm the remaining owner-approved runtime credential work.
+
+## 2026-06-29 - TASK-STOCK-004 Supplier Source Recheck
+
+Change: inspected current `suppliers-microservice@407b76f` source/docs after its current-head stock traceability closure. The generic REST/JSON adapter and synthetic traceability runtime evidence remain source/runtime complete for approved synthetic proof, but real physical stock onboarding is still data-gated.
+
+Evidence: Suppliers docs state real supplier onboarding remains blocked until owner supplies supplier metadata, endpoint/runtime reference plan, credential refs, payload examples, mapping facts, and explicit runtime/import approvals. `TASK-002_DERIVED_REST_JSON_DETAILS.md` still lists `[MISSING: real supplier display name...]`, `[MISSING: private endpoint...]`, `[MISSING: authentication shape...]`, `[MISSING: sanitized examples...]`, and `[MISSING: warehouse/location mapping...]`.
+
+Boundary decision: no Suppliers DB/API query, supplier import, credential read, production payload read, Catalog write, Warehouse mutation, or deployment was performed.
+
+Next action: keep complete physical stock import blocked on owner-provided BizBox/current export, real supplier API contract, additional seller authorization, or explicit authority confirmation.
+
 ## 2026-06-29 - TASK-STOCK-004 Auth-Compatible Catalog Warehouse Token Path Prepared
 
 Change: continued the Catalog propagation acceptance blocker through the safe Auth-compatible path. Read-only subagents confirmed Warehouse already supports the preferred receiver contract through Auth-validated bearer tokens and service actor fields, while Auth had no existing service-JWT provisioning endpoint or runbook for `catalog-microservice` with `internal:warehouse-microservice:admin`. Added and pushed Auth commit `212f719` (`chore: support internal role assignment dry runs`) so `scripts/assign-role-by-email.ts` can parse `internal:<service>:<role>` and run `--dry-run` for the future role shape `internal:warehouse-microservice:admin`.

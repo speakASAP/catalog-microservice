@@ -167,6 +167,7 @@ Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding P
 - Coding Prompt: add a read-only ops script plus `npm run verify:stock-acceptance:gates`; do not add stock mutations, DB writes, deploy manifests, schema changes, or secret printing.
 - Code: `scripts/run-stock-acceptance-gates.sh`; `package.json` script entry.
 - Validation: `bash -n`, `git diff --check`, focused Catalog Warehouse availability spec, `npm run build`, and Catalog deploy passed. Live read-only acceptance gate currently fails at the Catalog propagation leg because Warehouse rejects all configured Catalog Warehouse credentials. Warehouse authority and Allegro-vs-Warehouse verification pass for the 9-product set.
+- Current follow-up: add a read-only Catalog Warehouse credential preflight to the gate so the `stock-acceptance-gates.v1` summary reports Auth/Warehouse acceptance by runtime environment key name without printing token values. This does not replace the owner-approved service-principal/token provisioning lane.
 
 Parallel execution:
 

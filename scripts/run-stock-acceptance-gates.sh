@@ -107,6 +107,7 @@ catalog_pod="$(running_pod_for_image catalog-microservice "$catalog_image")"
 
 warehouse_out="$tmpdir/warehouse.json"
 allegro_out="$tmpdir/allegro.json"
+credential_out="$tmpdir/catalog-warehouse-credential.json"
 catalog_out="$tmpdir/catalog.json"
 
 print_section "Warehouse stock authority"
@@ -121,6 +122,108 @@ run_and_capture "$allegro_out" kubectl exec -n "$NAMESPACE" "$allegro_pod" -- sh
   "npm run import:current-stock:warehouse -- --all-accounts --dry-run --verify-warehouse --detail-limit '$ALLEGRO_DETAIL_LIMIT'" \
   || allegro_status="$?"
 
+print_section "Catalog Warehouse credential preflight"
+credential_status=0
+run_and_capture "$credential_out" kubectl exec -n "$NAMESPACE" "$catalog_pod" -- sh -lc \
+  "STOCK_ACCEPTANCE_PRODUCT_IDS='$PRODUCT_IDS' node - <<'NODE'
+const productIds = (process.env.STOCK_ACCEPTANCE_PRODUCT_IDS || '').split(',').map((item) => item.trim()).filter(Boolean);
+const authBaseUrl = (process.env.AUTH_SERVICE_URL || 'http://auth-microservice:3370').replace(/\\/+$/, '');
+const warehouseBaseUrl = (process.env.WAREHOUSE_SERVICE_URL || process.env.WAREHOUSE_BASE_URL || 'http://warehouse-microservice:3000').replace(/\\/+$/, '');
+const candidates = [
+  'WAREHOUSE_SERVICE_TOKEN',
+  'WAREHOUSE_INTERNAL_SERVICE_TOKEN',
+  'JWT_TOKEN',
+  'CATALOG_INTERNAL_SERVICE_TOKEN',
+  'INTERNAL_SERVICE_TOKEN',
+];
+
+async function postJson(url, body, headers = {}) {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', ...headers },
+    body: JSON.stringify(body),
+  });
+  let json = null;
+  try {
+    json = await response.json();
+  } catch {
+    json = null;
+  }
+  return { status: response.status, ok: response.ok, json };
+}
+
+async function checkCandidate(name) {
+  const token = process.env[name];
+  if (!token) return { name, present: false, status: 'missing' };
+  const result = { name, present: true, status: 'failed' };
+
+  try {
+    const auth = await postJson(authBaseUrl + '/auth/validate', { token });
+    result.auth = {
+      status: auth.status,
+      valid: auth.json?.valid === true,
+      roleCount: Array.isArray(auth.json?.user?.roles) ? auth.json.user.roles.length : 0,
+      hasWarehouseAdminRole: Array.isArray(auth.json?.user?.roles)
+        ? auth.json.user.roles.includes('internal:warehouse-microservice:admin') || auth.json.user.roles.includes('global:superadmin')
+        : false,
+      serviceNamePresent: Boolean(auth.json?.user?.serviceName || auth.json?.user?.service || auth.json?.user?.clientId || auth.json?.user?.client_id),
+    };
+  } catch (error) {
+    result.auth = { status: 0, valid: false, error: error?.name || 'AuthRequestError' };
+  }
+
+  try {
+    const warehouse = await postJson(
+      warehouseBaseUrl + '/api/stock/availability/batch',
+      { productIds },
+      { authorization: 'Bearer ' + token },
+    );
+    result.warehouse = {
+      status: warehouse.status,
+      success: warehouse.json?.success === true,
+      itemCount: Array.isArray(warehouse.json?.data) ? warehouse.json.data.length : 0,
+    };
+    if (warehouse.ok && warehouse.json?.success === true) {
+      result.status = 'ok';
+    }
+  } catch (error) {
+    result.warehouse = { status: 0, success: false, error: error?.name || 'WarehouseRequestError' };
+  }
+
+  return result;
+}
+
+(async () => {
+  const results = [];
+  for (const name of candidates) {
+    results.push(await checkCandidate(name));
+  }
+  const accepted = results.find((item) => item.status === 'ok') || null;
+  const summary = {
+    contract: 'catalog-warehouse-credential-preflight.v1',
+    mutatesWarehouse: false,
+    checkedProductCount: productIds.length,
+    authServiceUrlConfigured: Boolean(process.env.AUTH_SERVICE_URL),
+    warehouseServiceUrlConfigured: Boolean(process.env.WAREHOUSE_SERVICE_URL || process.env.WAREHOUSE_BASE_URL),
+    candidateResults: results,
+    acceptedCandidate: accepted?.name || null,
+    status: accepted ? 'ok' : 'failed',
+    issues: accepted ? [] : ['No configured Catalog credential was accepted by Warehouse availability batch'],
+  };
+  console.log(JSON.stringify(summary, null, 2));
+  process.exit(accepted ? 0 : 1);
+})().catch((error) => {
+  console.log(JSON.stringify({
+    contract: 'catalog-warehouse-credential-preflight.v1',
+    mutatesWarehouse: false,
+    status: 'failed',
+    issues: [error?.message || 'Catalog Warehouse credential preflight failed'],
+  }, null, 2));
+  process.exit(1);
+});
+NODE" \
+  || credential_status="$?"
+
 print_section "Catalog channel propagation smoke"
 catalog_status=0
 run_and_capture "$catalog_out" kubectl exec -n "$NAMESPACE" "$catalog_pod" -- sh -lc \
@@ -129,18 +232,21 @@ run_and_capture "$catalog_out" kubectl exec -n "$NAMESPACE" "$catalog_pod" -- sh
 
 warehouse_json="$tmpdir/warehouse.parsed.json"
 allegro_json="$tmpdir/allegro.parsed.json"
+credential_json="$tmpdir/catalog-warehouse-credential.parsed.json"
 catalog_json="$tmpdir/catalog.parsed.json"
 extract_json "$warehouse_out" > "$warehouse_json"
 extract_json "$allegro_out" > "$allegro_json"
+extract_json "$credential_out" > "$credential_json"
 extract_json "$catalog_out" > "$catalog_json"
 
 print_section "Acceptance summary"
 WAREHOUSE_IMAGE="$warehouse_image" ALLEGRO_IMAGE="$allegro_image" CATALOG_IMAGE="$catalog_image" \
-node - "$warehouse_json" "$allegro_json" "$catalog_json" "$PRODUCT_IDS" "$EXPECTED_TOTALS" "$warehouse_status" "$allegro_status" "$catalog_status" <<'NODE'
+node - "$warehouse_json" "$allegro_json" "$credential_json" "$catalog_json" "$PRODUCT_IDS" "$EXPECTED_TOTALS" "$warehouse_status" "$allegro_status" "$credential_status" "$catalog_status" <<'NODE'
 const fs = require("fs");
-const [warehouseFile, allegroFile, catalogFile, productIdsCsv, expectedTotalsCsv, warehouseStatus, allegroStatus, catalogStatus] = process.argv.slice(2);
+const [warehouseFile, allegroFile, credentialFile, catalogFile, productIdsCsv, expectedTotalsCsv, warehouseStatus, allegroStatus, credentialStatus, catalogStatus] = process.argv.slice(2);
 const warehouse = JSON.parse(fs.readFileSync(warehouseFile, "utf8"));
 const allegro = JSON.parse(fs.readFileSync(allegroFile, "utf8"));
+const credentialPreflight = JSON.parse(fs.readFileSync(credentialFile, "utf8"));
 const catalog = JSON.parse(fs.readFileSync(catalogFile, "utf8"));
 const productIds = productIdsCsv.split(",").filter(Boolean);
 const expectedTotals = Object.fromEntries(expectedTotalsCsv.split(",").filter(Boolean).map((entry) => {
@@ -151,6 +257,7 @@ const expectedTotals = Object.fromEntries(expectedTotalsCsv.split(",").filter(Bo
 const issues = [];
 if (Number(warehouseStatus) !== 0) issues.push(`Warehouse verifier exited ${warehouseStatus}`);
 if (Number(allegroStatus) !== 0) issues.push(`Allegro verifier exited ${allegroStatus}`);
+if (Number(credentialStatus) !== 0) issues.push(`Catalog Warehouse credential preflight exited ${credentialStatus}`);
 if (Number(catalogStatus) !== 0) issues.push(`Catalog smoke exited ${catalogStatus}`);
 if (warehouse.contract !== "warehouse-stock-authority-live.v1") issues.push("Warehouse verifier contract mismatch");
 if (warehouse.mutatesWarehouse !== false) issues.push("Warehouse verifier is not read-only");
@@ -164,6 +271,10 @@ if (allegro.mutatesWarehouse !== false) issues.push("Allegro verifier would muta
 if (allegro.verifiesWarehouse !== true) issues.push("Allegro verifier did not verify Warehouse");
 if ((allegro.totals?.warehouseMismatches || 0) !== 0) issues.push(`Allegro verifier reported ${allegro.totals.warehouseMismatches} Warehouse mismatches`);
 if ((allegro.totals?.warehouseVerifyFailed || 0) !== 0) issues.push(`Allegro verifier reported ${allegro.totals.warehouseVerifyFailed} Warehouse verification failures`);
+
+if (credentialPreflight.contract !== "catalog-warehouse-credential-preflight.v1") issues.push("Catalog Warehouse credential preflight contract mismatch");
+if (credentialPreflight.mutatesWarehouse !== false) issues.push("Catalog Warehouse credential preflight is not read-only");
+if (credentialPreflight.status !== "ok") issues.push("No Catalog Warehouse credential candidate was accepted by Warehouse");
 
 if ((catalog.failed || 0) !== 0) issues.push(`Catalog smoke reported ${catalog.failed} failed checks`);
 if (catalog.stockEvidence) {
@@ -196,6 +307,7 @@ const summary = {
   commandStatuses: {
     warehouse: Number(warehouseStatus),
     allegro: Number(allegroStatus),
+    catalogWarehouseCredential: Number(credentialStatus),
     catalog: Number(catalogStatus),
   },
   warehouse: {
@@ -212,6 +324,20 @@ const summary = {
     verifiesWarehouse: allegro.verifiesWarehouse,
     accountCount: allegro.accountCount,
     totals: allegro.totals,
+  },
+  catalogWarehouseCredential: {
+    status: credentialPreflight.status,
+    acceptedCandidate: credentialPreflight.acceptedCandidate,
+    candidates: (credentialPreflight.candidateResults || []).map((candidate) => ({
+      name: candidate.name,
+      present: candidate.present,
+      status: candidate.status,
+      authStatus: candidate.auth?.status,
+      authValid: candidate.auth?.valid,
+      hasWarehouseAdminRole: candidate.auth?.hasWarehouseAdminRole,
+      warehouseStatus: candidate.warehouse?.status,
+      warehouseSuccess: candidate.warehouse?.success,
+    })),
   },
   catalog: {
     passed: catalog.passed,
