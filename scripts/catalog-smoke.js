@@ -6,6 +6,7 @@ const configuredProductId = process.env.CATALOG_SMOKE_PRODUCT_ID || "";
 const authorizedSmokeEnabled = isEnabled(process.env.CATALOG_SMOKE_AUTHORIZED);
 const authorizedBazosSmokeEnabled = isEnabled(process.env.CATALOG_SMOKE_ENABLE_BAZOS_AUTHORIZED);
 const authorizedChannelStatusSmokeEnabled = isEnabled(process.env.CATALOG_SMOKE_ENABLE_CHANNEL_STATUS);
+const stockConsistencySmokeEnabled = isEnabled(process.env.CATALOG_SMOKE_ASSERT_STOCK);
 const internalServiceToken = process.env.CATALOG_SMOKE_INTERNAL_SERVICE_TOKEN || "";
 const authToken = process.env.CATALOG_SMOKE_AUTH_TOKEN || (internalServiceToken ? "" : process.env.JWT_TOKEN || "");
 const smokeServiceName = process.env.CATALOG_SMOKE_SERVICE_NAME || "catalog-authorized-smoke";
@@ -18,6 +19,13 @@ const requestRetryDelayMs = Number(process.env.CATALOG_SMOKE_RETRY_DELAY_MS || 7
 const transientStatusCodes = new Set([502, 503, 504]);
 
 const results = [];
+const stockEvidence = {
+  warehouseAvailable: null,
+  warehouseQuantity: null,
+  warehouseReserved: null,
+  flipflopStockQuantity: null,
+  channelStatuses: {},
+};
 
 function record(contract, status, detail = {}) {
   results.push({ contract, status, ...detail });
@@ -129,10 +137,12 @@ async function checkAuthorizedChannelStatus(channel, path, expectedAuthority, he
       productId,
       authority: data?.authority || null,
     });
+    const summary = summarizeChannelStatusPayload(data);
+    stockEvidence.channelStatuses[channel] = summary;
     record(`authorized-${channel}-status`, "pass", {
       statusCode: response.status,
       productId,
-      ...summarizeChannelStatusPayload(data),
+      ...summary,
     });
   });
 }
@@ -142,6 +152,25 @@ function firstProductFromList(body) {
     return null;
   }
   return body.data[0];
+}
+
+function numberOrNull(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function firstAvailabilityItem(body, productId) {
+  const items = Array.isArray(body?.data?.items) ? body.data.items : [];
+  return items.find((item) => item?.productId === productId) || items[0] || null;
+}
+
+function firstProjectionItem(body, productId) {
+  const items = Array.isArray(body?.data?.items) ? body.data.items : [];
+  return items.find((item) => item?.id === productId || item?.productId === productId) || items[0] || null;
+}
+
+function stockQuantitiesMatch(left, right) {
+  return numberOrNull(left) !== null && numberOrNull(left) === numberOrNull(right);
 }
 
 async function check(contract, fn) {
@@ -311,10 +340,17 @@ async function main() {
         statusCode: response.status,
         productId,
       });
+      const item = firstAvailabilityItem(response.body, productId);
+      stockEvidence.warehouseAvailable = numberOrNull(item?.totalAvailable);
+      stockEvidence.warehouseQuantity = numberOrNull(item?.totalQuantity);
+      stockEvidence.warehouseReserved = numberOrNull(item?.totalReserved);
       record("authorized-warehouse-availability", "pass", {
         statusCode: response.status,
         productId,
         itemCount: response.body.data.items.length,
+        totalQuantity: stockEvidence.warehouseQuantity,
+        totalReserved: stockEvidence.warehouseReserved,
+        totalAvailable: stockEvidence.warehouseAvailable,
       });
     });
 
@@ -336,10 +372,14 @@ async function main() {
         statusCode: response.status,
         productId,
       });
+      const item = firstProjectionItem(response.body, productId);
+      stockEvidence.flipflopStockQuantity = numberOrNull(item?.stockQuantity ?? item?.warehouse?.totalAvailable ?? item?.availability?.totalAvailable);
       record("authorized-flipflop-projection", "pass", {
         statusCode: response.status,
         productId,
         itemCount: response.body.data.items.length,
+        stockQuantity: stockEvidence.flipflopStockQuantity,
+        warehouseSource: item?.warehouse?.source || item?.availability?.source || null,
       });
     });
 
@@ -352,6 +392,39 @@ async function main() {
       await checkAuthorizedChannelStatus("aukro", `/api/products/${encodeURIComponent(productId)}/aukro-status`, "aukro", authorizedHeaders, productId);
       await checkAuthorizedChannelStatus("bazos-account", "/api/products/bazos/account-status", "bazos", authorizedHeaders, productId);
       await checkAuthorizedChannelStatus("aukro-account", "/api/products/aukro/account-status", "aukro", authorizedHeaders, productId);
+    }
+
+    if (!stockConsistencySmokeEnabled) {
+      record("authorized-stock-consistency", "skip", { reason: "Set CATALOG_SMOKE_ASSERT_STOCK=true to compare Warehouse and channel stock quantities." });
+    } else {
+      await check("authorized-stock-consistency", async () => {
+        assert(stockEvidence.warehouseAvailable !== null, "authorized-stock-consistency", "Warehouse availability did not expose totalAvailable", {
+          productId,
+          stockEvidence,
+        });
+        assert(stockQuantitiesMatch(stockEvidence.warehouseAvailable, stockEvidence.flipflopStockQuantity), "authorized-stock-consistency", "FlipFlop stock projection does not match Warehouse totalAvailable", {
+          productId,
+          warehouseAvailable: stockEvidence.warehouseAvailable,
+          flipflopStockQuantity: stockEvidence.flipflopStockQuantity,
+        });
+
+        const mismatchedChannels = Object.entries(stockEvidence.channelStatuses)
+          .filter(([, summary]) => summary.stockQuantity !== null && summary.stockQuantity !== undefined)
+          .filter(([, summary]) => !stockQuantitiesMatch(stockEvidence.warehouseAvailable, summary.stockQuantity))
+          .map(([channel, summary]) => ({ channel, stockQuantity: summary.stockQuantity }));
+        assert(mismatchedChannels.length === 0, "authorized-stock-consistency", "A channel status reported stock different from Warehouse totalAvailable", {
+          productId,
+          warehouseAvailable: stockEvidence.warehouseAvailable,
+          mismatchedChannels,
+        });
+
+        record("authorized-stock-consistency", "pass", {
+          productId,
+          warehouseAvailable: stockEvidence.warehouseAvailable,
+          flipflopStockQuantity: stockEvidence.flipflopStockQuantity,
+          checkedChannelStatuses: Object.keys(stockEvidence.channelStatuses).length,
+        });
+      });
     }
   }
 
@@ -417,6 +490,7 @@ async function main() {
     passed: results.filter((result) => result.status === "pass").length,
     skipped: results.filter((result) => result.status === "skip").length,
     failed: failed.length,
+    stockEvidence: stockConsistencySmokeEnabled ? stockEvidence : undefined,
     results,
   };
 
