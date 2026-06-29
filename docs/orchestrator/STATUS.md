@@ -1,5 +1,18 @@
 # Catalog Orchestrator Status
 
+## 2026-06-29 - TASK-STOCK-004 Bazos Draft Quantity Cap Validated
+
+Result: closed the Bazos catalog sell-action oversell gap. Bazos catalog-origin draft preparation now reads Warehouse availability through `WarehouseClientService`, stores the local draft `stockQuantity` as `min(requestedQuantity, Warehouse totalAvailable)`, defaults missing requested quantity to Warehouse availability, and records `draftOptions.warehouseStock` with `source=warehouse-microservice`, `totalAvailable`, `requestedQuantity`, `quantity`, and `capped`. Reused local Bazos drafts are capped before returning to the confirmation path, and the sell-action response now includes the stored draft `stockQuantity`.
+
+Aukro inspection result: no patch was required in this pass. Aukro `OffersService` already uses `warehouseClient.getTotalAvailable(productId)` for create-from-catalog, sync-from-catalog, draft policy evidence, and publish policy evidence. Publish remains gated by Warehouse stock availability and other policy checks.
+
+Validation evidence: Bazos `npm --prefix shared test -- bazos-catalog-sell-action.service.spec.ts --runInBand` passed (`10` tests); `git diff --check` passed; `npm --prefix shared run build` passed; `npm --prefix services/aukro-service run build` passed. Commit `b15681c` (`fix: cap Bazos catalog stock to Warehouse availability`) was pushed and deployed. Live deployment image is `localhost:5000/bazos-service:b15681c`, readiness is `1/1` in namespace `statex-apps`, public `https://bazos.alfares.cz/` returned HTTP `200`, and the running pod compiled artifact contains `resolveWarehouseStock`, `warehouseStock`, and `warehouse-microservice` cap evidence.
+
+Boundary decision: no Bazos draft prepare/confirm, publish queue, external Bazos submission, reservation, Warehouse import, or stock mutation was run. This closes another local channel quantity path, but final physical stock remains gated on `[MISSING: owner-approved BizBox/current physical stock export]`, `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`, or `[MISSING: correctly authorized additional seller account exposing current full offers]`.
+
+Next action: obtain the owner-approved complete physical stock source, preview it through Allegro Imports, then run approved Warehouse import and final over-reservation/channel propagation validation.
+
+
 ## 2026-06-29 - TASK-STOCK-004 Product Detail And Allegro Draft Quantity Cap Validated
 
 Result: verified the original Catalog product-detail requirement and closed an Allegro oversell gap. The live Catalog product page bundle for `/dashboard/products/884c1c5e-fe94-46c7-aab1-78bcc424e7ee` contains the Warehouse stock panel and calls `POST /products/availability/batch`. Running-pod Catalog backend evidence returned `totalQuantity=60`, `totalReserved=0`, `totalAvailable=60`, warehouse code `CODEX-OWN-011`, warehouse type `own`. Catalog frontend source also passed `npm --prefix services/frontend run build` with only the existing Next.js multiple-lockfile warning.

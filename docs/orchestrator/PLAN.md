@@ -6,9 +6,9 @@ Active goal: Warehouse-backed product stock amounts and oversell prevention acro
 
 Saved plan: `docs/orchestrator/TASK-STOCK-004-warehouse-stock-propagation-plan.md`.
 
-Current execution state: Catalog product detail and live availability endpoint show Warehouse `60/0/60` for the target product; channel and Orders gates are deployed; Allegro local draft quantity is capped to Warehouse availability at prepare/edit/reuse time; Heureka readiness exposes Warehouse `availableStock=60` while correctly blocking feed eligibility on missing category/settings; physical stock beyond visible Allegro stock is blocked on `[MISSING: authoritative BizBox/current stock export or real supplier source]`.
+Current execution state: Catalog product detail and live availability endpoint show Warehouse `60/0/60` for the target product; Orders reservation gate is deployed; Allegro local draft quantity is capped to Warehouse availability at prepare/edit/reuse time; Bazos catalog-origin draft quantity is capped to Warehouse availability at prepare/reuse time and deployed at `bazos-service@b15681c`; Aukro create/sync/publish policy paths already read Warehouse availability; Heureka readiness exposes Warehouse `availableStock=60` while correctly blocking feed eligibility on missing category/settings; physical stock beyond visible Allegro stock is blocked on `[MISSING: authoritative BizBox/current stock export or real supplier source]`.
 
-Parallel next work: Lane A Allegro Imports public BizBox CSV upload is ready now; Lane B BizBox source discovery is ready now; Lane C approved Warehouse import is dependency-gated; Lane D Suppliers real-source onboarding is dependency-gated; Lane E final validation is final integration.
+Parallel next work: Lane A Allegro Imports public BizBox CSV upload/preview is deployed; Lane B BizBox source discovery found no source file; Lane C approved Warehouse import is dependency-gated on owner-provided current stock source and authority confirmation; Lane D Suppliers real-source onboarding is dependency-gated; Lane E final validation is final integration after import.
 
 ## Execution Rule
 
