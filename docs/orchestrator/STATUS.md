@@ -1,5 +1,17 @@
 # Catalog Orchestrator Status
 
+## 2026-06-29 - TASK-STOCK-004 FlipFlop Warehouse Stock Projection Fixed
+
+Result: fixed and deployed the FlipFlop Warehouse client authentication path so product projections can read Warehouse availability instead of silently falling back to zero. FlipFlop is committed and pushed at `flipflop-service@94ecd7c` (`fix: authenticate warehouse stock client`). The deployed shared client now sends a bearer token from `WAREHOUSE_SERVICE_TOKEN`, `JWT_TOKEN`, or `SERVICE_TOKEN` for Warehouse stock reads, reservations, and stock writes. FlipFlop Vault/Kubernetes secret material was refreshed with a Warehouse-valid service token without printing token values.
+
+Validation evidence: `npm --prefix shared run build` passed; `npm run verify:orders-hub-integration` passed; `git diff --check` passed before commit. `./scripts/deploy.sh` built and pushed all FlipFlop images and applied manifests, then exited nonzero only because its rollout wait timed out while an old API pod was terminating; direct `kubectl rollout status` immediately after reported successful rollout for `flipflop-service`, `flipflop-product-service`, `flipflop-cart-service`, `flipflop-order-service`, and `flipflop-frontend`. Pod-local FlipFlop product-service Warehouse probe returned HTTP `200` with target `totalAvailable=60`. Public `https://flipflop.alfares.cz/api/products/884c1c5e-fe94-46c7-aab1-78bcc424e7ee?includeWarehouse=true` returned `success=true`, product name `Nafukovací kluzák 83 cm Drive (model KOMFORT). Sáně a sáňky. Snowtubing.`, `stockQuantity=60`, and `warehouse={stockQuantity:60, trackInventory:true, availability:"in_stock", source:"warehouse-microservice"}`.
+
+Channel validation status: FlipFlop projection is now Warehouse-backed for the target product. Catalog public channel status endpoints remain auth-protected; an in-pod Catalog `JWT_TOKEN` is not accepted by that controller, so Catalog-to-channel status validation still needs the correct authenticated operator/service credential. Aukro status remains blocked by its account endpoint returning `404 Cannot GET /accounts`; Bazos status remains blocked by `401 Invalid token`; Allegro status is reachable and returns draft preparation state.
+
+Boundary decision: no stock quantity mutation was performed in FlipFlop. The token refresh changed only service authentication for Warehouse reads/reservations. Complete physical stock remains gated on `[MISSING: owner-approved BizBox/current physical stock export]`, `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`, or `[MISSING: correctly authorized additional seller account exposing current full offers]`.
+
+Next action: run authenticated Catalog/channel validation with the correct Catalog operator/service credential, then continue only after the owner-approved full physical stock source is available.
+
 ## 2026-06-29 - TASK-STOCK-004 Warehouse Stock Propagation Runtime Update
 
 Change: continued cross-repo Warehouse stock authority rollout after the audit thread handed coordination back to this orchestrator. Heureka's committed warehouse-route gate is now deployed from `heureka-service@056e975` after repairing its deploy script to build and push immutable images before rollout. Catalog product detail stock remains Warehouse-backed through `POST /api/products/availability/batch`; product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` resolves to Warehouse quantity `60`, reserved `0`, available `60` in warehouse `c0de0000-0000-4000-8000-000000000013`.
