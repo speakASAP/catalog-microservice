@@ -79,10 +79,15 @@ class ApiClient {
         headers,
       });
 
-      const data = await response.json();
+      if (response.status === 204) {
+        return { success: true } as ApiResponse<T>;
+      }
+
+      const text = await response.text();
+      const data = text ? JSON.parse(text) : { success: response.ok };
 
       if (!response.ok) {
-        throw new Error(data.error?.message || 'Request failed');
+        throw new Error(data.error?.message || data.message || 'Request failed');
       }
 
       return data;

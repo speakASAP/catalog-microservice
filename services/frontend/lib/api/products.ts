@@ -19,6 +19,7 @@ export interface Product {
     height?: number;
   };
   isActive: boolean;
+  lifecycle?: 'draft' | 'active' | 'archived' | 'needs_review';
   createdAt: string;
   updatedAt: string;
   categories?: Array<{ id: string; name: string }>;
@@ -127,6 +128,7 @@ export interface ProductQuery {
   limit?: number;
   search?: string;
   isActive?: boolean;
+  lifecycle?: 'draft' | 'active' | 'archived' | 'needs_review';
 }
 
 export interface PaginatedResponse<T> {
@@ -365,6 +367,7 @@ export const productsApi = {
     if (query?.limit) params.append('limit', query.limit.toString());
     if (query?.search) params.append('search', query.search);
     if (query?.isActive !== undefined) params.append('isActive', query.isActive.toString());
+    if (query?.lifecycle) params.append('lifecycle', query.lifecycle);
 
     const queryString = params.toString();
     return apiClient.get<Product[] | PaginatedResponse<Product>>(`/products${queryString ? `?${queryString}` : ''}`);
