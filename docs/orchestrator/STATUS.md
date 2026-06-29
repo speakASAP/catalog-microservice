@@ -1,5 +1,19 @@
 # Catalog Orchestrator Status
 
+## 2026-06-29 - TASK-STOCK-004 Catalog Multi-Product Stock Smoke Deployed
+
+Result: extended Catalog smoke to accept comma-separated `CATALOG_SMOKE_PRODUCT_IDS` for read-only batch Warehouse and FlipFlop projection checks. The existing single-product behavior remains compatible; default public smoke still passed. The new batch mode records per-product Warehouse quantity/reserved/available and FlipFlop projected stock, then fails if any product projection differs from Warehouse `totalAvailable`.
+
+Validation evidence before deploy: `node --check scripts/catalog-smoke.js` passed; `git diff --check` passed; `npm run build` passed; default `npm run smoke:e2e` passed with `9` passed, `2` skipped, `0` failed. A pre-deploy in-pod read-only batch smoke using the Catalog internal service token passed for the 9 Allegro-authoritative product IDs with `12` passed, `2` skipped, `0` failed.
+
+Deployment evidence: Catalog commit `9df5df2` (`test: support multi-product stock smoke`) was pushed and deployed. Live deployment image is `localhost:5000/catalog-microservice:9df5df2`; deploy health returned healthy. The new deployed pod `catalog-microservice-7dc7456d96-mgpvf` passed the same read-only 9-product stock smoke with `12` passed, `2` skipped, `0` failed.
+
+Deployed smoke stock evidence: checked product count `9`; all 9 Warehouse totals matched FlipFlop projected stock. Per-product Warehouse/FlipFlop quantities were `124`, `87`, `50`, `25`, `110`, `60`, `10`, `3`, and `27`. Target product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` remained `warehouseAvailable=60`, `warehouseQuantity=60`, `warehouseReserved=0`, and `flipflopStockQuantity=60`.
+
+Boundary decision: smoke was read-only. No Warehouse stock import, order reservation, channel draft, publish, confirmation, or external sales-channel mutation was run. This expands Catalog/FlipFlop propagation validation from the single target product to all 9 currently Allegro-authoritative products, but complete physical stock beyond those products remains gated on the missing source or additional seller authorization.
+
+Next action: provide/authorize the missing complete physical stock source or additional Allegro seller account, then rerun Allegro Warehouse verifier plus Catalog multi-product smoke as acceptance gates.
+
 ## 2026-06-29 - TASK-STOCK-004 Allegro Warehouse Stock Verifier Deployed
 
 Result: extended the guarded Allegro current-stock command at `allegro-service@50b5858` (`feat: verify Allegro stock against Warehouse`) with read-only `--verify-warehouse` mode. The verifier reuses the same authoritative Allegro source rules, then reads Warehouse `GET /api/stock/:productId/total` for each mapped Catalog product and reports `warehouseMatchesAllegro` per offer plus aggregate match/mismatch counts. It does not require `--apply`, does not write Warehouse, and does not update local Allegro rows.
