@@ -1,5 +1,17 @@
 # Catalog Orchestrator Status
 
+## 2026-06-29 - TASK-STOCK-004 Hosted-Auth Channel Status Validation And Bazos Status Fix
+
+Result: used the Auth-owned configured test credentials inside the Auth pod to obtain a hosted-Auth user token without printing token material, then ran a read-only Catalog channel-status smoke for product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee`. The Auth token validated successfully with roles including Allegro admin/user, Bazos admin, Catalog internal admin, and global superadmin. Initial smoke proved Catalog accepted hosted-Auth and returned HTTP `200` for Warehouse, FlipFlop, Allegro, Aukro, Bazos account, and Aukro account status. Bazos product status returned a Bazos-owned dependency `500` because the no-draft read-only status path threw `NotFoundException`.
+
+Fix: patched `bazos-service@804bf75` so `GET /api/bazos/catalog/products/:productId/sell-action/status` returns an empty read-only status envelope when no draft exists for the product, instead of surfacing an unhandled server error. Prepare/confirm mutation paths remain unchanged. Validation passed: `git diff --check`, focused Bazos catalog sell-action and publish-policy specs (`46` tests), and `npm --prefix shared run build`. Deploy built/pushed `localhost:5000/bazos-service:804bf75` with digest `sha256:c19fbf7df52fe3e348f24cd470ee4c6a9063c8dc45da6d9960678b9388cb62cb` and rolled out successfully.
+
+Final hosted-Auth smoke evidence: Auth login returned a token and Auth validate returned `valid=true` without printing token material. Catalog channel status results for the target product all returned HTTP `200`: Warehouse `success=true`; FlipFlop `success=true`, `nextAction=view_flipflop_listing`, `stockQuantity=60`, `warehouseSource=warehouse-microservice`; Allegro `success=true`, `nextAction=prepare_draft`; Bazos `success=true`, `action=read_bazos_listing_status`, `nextAction=create_bazos_draft`; Aukro `success=true`, `action=read_aukro_draft_status`, `nextAction=create_aukro_draft`; Bazos account `connected=true`, `active=true`, `canSell=true`; Aukro account `connected=true`, `active=true`, `canSell=true`.
+
+Boundary decision: the smoke was read-only. No Bazos draft, Aukro draft, Allegro draft, publish, queue, confirmation, reservation, Warehouse import, or stock mutation was run. Complete physical stock remains gated on `[MISSING: owner-approved BizBox/current physical stock export]`, `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`, or `[MISSING: correctly authorized additional seller account exposing current full offers]`.
+
+Next action: obtain the owner-approved complete physical stock source, preview it through Allegro Imports, then run approved Warehouse import and final over-reservation/channel propagation validation.
+
 ## 2026-06-29 - TASK-STOCK-004 Catalog Channel Status Smoke Added
 
 Result: added an opt-in read-only Catalog channel-status smoke mode at `npm run smoke:e2e:channel-status`. The smoke now records Warehouse availability, FlipFlop projection, FlipFlop status, Allegro status, Bazos status, Aukro status, and Bazos/Aukro account-status envelopes without requesting drafts, publishing, queuing, confirming, or mutating Warehouse stock. The smoke also prefers an explicitly supplied `CATALOG_SMOKE_INTERNAL_SERVICE_TOKEN` over ambient pod `JWT_TOKEN`, so internal machine-auth checks are not accidentally shadowed by stale runtime JWT material.
