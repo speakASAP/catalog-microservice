@@ -10,6 +10,8 @@ Boundary decision: this is a validation-harness change only. No channel draft, p
 
 Next action: deploy the smoke harness, then run the same channel-status smoke from the deployed image and continue with a real hosted-Auth operator token plus the owner-approved physical stock source.
 
+Deploy follow-up: the first deploy built and pushed `localhost:5000/catalog-microservice:5d448f6` with digest `sha256:164e53cdc05493fe715bf8b8e28944570f34ee6d77f408f2c014545f6a599165`, but the existing deploy script set the workload back to `latest` and selected a completed monitor pod in its health phase. The live deployment was manually corrected to immutable image `localhost:5000/catalog-microservice:5d448f6`; post-deploy smoke from the deployed image passed with `17` passed, `1` skipped, `0` failed. The deploy script is now being repaired to use `$IMAGE` and running-pod health selection.
+
 ## 2026-06-29 - TASK-STOCK-004 Heureka Warehouse Client Auth Fixed
 
 Result: fixed and deployed authenticated Warehouse stock reads for Heureka feed/order gates. Heureka is committed and deployed at `heureka-service@7554c17` (`fix: authenticate warehouse stock client`). The shared Warehouse client now sends a bearer token from `WAREHOUSE_SERVICE_TOKEN`, falling back to `JWT_TOKEN` or `SERVICE_TOKEN`, and the deployment exposes a dedicated `WAREHOUSE_SERVICE_TOKEN` sourced from Vault via ExternalSecret.
