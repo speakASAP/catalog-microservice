@@ -1,5 +1,17 @@
 # Catalog Orchestrator Status
 
+## 2026-06-29 - TASK-STOCK-004 Guarded Allegro Current Stock Warehouse Import Deployed
+
+Result: added, pushed, and deployed a guarded Allegro current-stock-to-Warehouse import command at `allegro-service@c90c55e` (`feat: add guarded Allegro current stock Warehouse import`). The command is `npm run import:current-stock:warehouse -- --all-accounts --dry-run` by default; `--apply` is required before it calls Warehouse. It reads Allegro `/sale/offers` only to discover offer ids, treats only `/sale/product-offers/{offerId}.stock.available` as current stock-authoritative, deduplicates repeated accounts by Allegro offer id, requires local `AllegroOffer.catalogProductId` mapping, and records Warehouse audit intent with reason `ALLEGRO_CURRENT_STOCK_IMPORT`. Apply mode writes Warehouse `POST /api/stock/set` only; local AllegroOffer rows remain read-only.
+
+Validation evidence: `npm --prefix services/allegro-service run build` passed; `npx prisma validate --schema prisma/schema.prisma` passed; `git diff --check` passed; pre-deploy in-pod dry-run passed with `mutatesWarehouse=false` and `mutatesLocalAllegroOffer=false`. Deploy completed successfully for Allegro service, API gateway, imports, settings, and frontend at image tag `c90c55e`, all ready `1/1`; public `https://allegro.alfares.cz/` returned HTTP `200`.
+
+Deployed dry-run evidence from the new Allegro pod: `accountCount=3`; `stockAuthoritativeAppearances=27`; `uniqueStockAuthoritativeOffers=9`; `duplicateStockAuthoritativeAppearances=18`; `stockAuthoritativeTotal=496`; `wouldSet=9`; `applied=0`; `missingLocalOffer=0`; `missingCatalogMapping=0`; `applyFailed=0`. Target offer `18106496345` maps to Catalog product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` with Allegro current stock `60` and action `would_set_warehouse_stock`.
+
+Boundary decision: no `--apply` run was performed, no Warehouse stock was mutated, no local Allegro rows were updated, no offers were imported, no account activation/token refresh was run, and no Allegro write API was called. This creates the approved-command lane for the currently authoritative 9 Allegro offers, but it does not solve the complete physical-stock source gap beyond 496 units.
+
+Next action: obtain explicit owner approval to run `--apply` for the 9 current-stock-authoritative offers, or provide/authorize the missing complete physical stock source for the broader import; then rerun Warehouse/Catalog/channel consistency validation after the mutation.
+
 ## 2026-06-29 - TASK-STOCK-004 Orders Insufficient Stock Reservation Coverage
 
 Result: strengthened Orders reservation-gate evidence for the explicit oversell case. Orders commit `1272309` (`test: cover insufficient stock reservation failure`) adds verifier coverage where Warehouse rejects `POST /api/reservations/reserve` with an insufficient-stock style response (`409`, `INSUFFICIENT_STOCK`, available/requested details). Orders now has focused verification that this remains a bounded failed handoff: `status=failed`, `reservedCount=0`, `failedCount=1`, `failureCode=warehouse_request_failed`, and no Warehouse response body, available quantity, requested quantity, or raw error text leaks into Orders handoff metadata.
