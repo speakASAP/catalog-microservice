@@ -1,5 +1,15 @@
 # Catalog Orchestrator Status
 
+## 2026-06-29 - TASK-STOCK-004 Catalog Channel Status Smoke Added
+
+Result: added an opt-in read-only Catalog channel-status smoke mode at `npm run smoke:e2e:channel-status`. The smoke now records Warehouse availability, FlipFlop projection, FlipFlop status, Allegro status, Bazos status, Aukro status, and Bazos/Aukro account-status envelopes without requesting drafts, publishing, queuing, confirming, or mutating Warehouse stock. The smoke also prefers an explicitly supplied `CATALOG_SMOKE_INTERNAL_SERVICE_TOKEN` over ambient pod `JWT_TOKEN`, so internal machine-auth checks are not accidentally shadowed by stale runtime JWT material.
+
+Validation evidence: `node --check scripts/catalog-smoke.js` passed; `git diff --check` passed; default `npm run smoke:e2e` passed with `9` passed, `2` skipped, `0` failed; focused `npm test -- --runInBand src/products/products.service.spec.ts` passed (`16` tests); `npm run build` passed. A pre-deploy in-pod smoke copied the changed script to `/tmp` and ran against `http://127.0.0.1:3200` with `CATALOG_INTERNAL_SERVICE_TOKEN` only; it passed with `17` passed, `1` skipped, `0` failed. Target product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` returned authorized Warehouse availability item count `1`, authorized FlipFlop projection item count `1`, and authorized FlipFlop status `success=true`, `nextAction=view_flipflop_listing`, `stockQuantity=60`, `warehouseSource=warehouse-microservice`. Allegro, Bazos, and Aukro read-only status envelopes preserved channel authority and returned `auth_required`/`login_to_catalog` under machine-auth, proving the remaining positive-path validation still needs a real hosted-Auth user/operator token.
+
+Boundary decision: this is a validation-harness change only. No channel draft, publish, queue, confirmation, reservation, Warehouse import, or stock mutation was run. Complete physical stock remains gated on `[MISSING: owner-approved BizBox/current physical stock export]`, `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`, or `[MISSING: correctly authorized additional seller account exposing current full offers]`.
+
+Next action: deploy the smoke harness, then run the same channel-status smoke from the deployed image and continue with a real hosted-Auth operator token plus the owner-approved physical stock source.
+
 ## 2026-06-29 - TASK-STOCK-004 Heureka Warehouse Client Auth Fixed
 
 Result: fixed and deployed authenticated Warehouse stock reads for Heureka feed/order gates. Heureka is committed and deployed at `heureka-service@7554c17` (`fix: authenticate warehouse stock client`). The shared Warehouse client now sends a bearer token from `WAREHOUSE_SERVICE_TOKEN`, falling back to `JWT_TOKEN` or `SERVICE_TOKEN`, and the deployment exposes a dedicated `WAREHOUSE_SERVICE_TOKEN` sourced from Vault via ExternalSecret.

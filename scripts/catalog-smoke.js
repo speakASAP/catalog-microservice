@@ -5,8 +5,9 @@ const baseUrl = (process.env.CATALOG_SMOKE_BASE_URL || DEFAULT_BASE_URL).replace
 const configuredProductId = process.env.CATALOG_SMOKE_PRODUCT_ID || "";
 const authorizedSmokeEnabled = isEnabled(process.env.CATALOG_SMOKE_AUTHORIZED);
 const authorizedBazosSmokeEnabled = isEnabled(process.env.CATALOG_SMOKE_ENABLE_BAZOS_AUTHORIZED);
-const authToken = process.env.CATALOG_SMOKE_AUTH_TOKEN || process.env.JWT_TOKEN || "";
+const authorizedChannelStatusSmokeEnabled = isEnabled(process.env.CATALOG_SMOKE_ENABLE_CHANNEL_STATUS);
 const internalServiceToken = process.env.CATALOG_SMOKE_INTERNAL_SERVICE_TOKEN || "";
+const authToken = process.env.CATALOG_SMOKE_AUTH_TOKEN || (internalServiceToken ? "" : process.env.JWT_TOKEN || "");
 const smokeServiceName = process.env.CATALOG_SMOKE_SERVICE_NAME || "catalog-authorized-smoke";
 const bazosProductId = process.env.CATALOG_SMOKE_BAZOS_PRODUCT_ID || "";
 const bazosIdentityId = process.env.CATALOG_SMOKE_BAZOS_IDENTITY_ID || "";
@@ -88,6 +89,52 @@ function assert(condition, contract, message, detail = {}) {
   if (!condition) {
     throw Object.assign(new Error(message), { contract, detail });
   }
+}
+
+function summarizeChannelStatusPayload(data) {
+  if (!data || typeof data !== "object") {
+    return {};
+  }
+  const projection = data.productProjection || {};
+  return {
+    authority: data.authority || null,
+    action: data.action || null,
+    success: data.success ?? null,
+    blocked: data.blocked ?? null,
+    reason: data.reason || null,
+    nextAction: data.nextAction || null,
+    dependencyStatus: data.dependencyStatus ?? null,
+    listingUrl: data.listingUrl || null,
+    offerId: data.offerId || data.draft?.offerId || data.draft?.id || null,
+    draftStatus: data.draftStatus || data.draft?.publicationStatus || data.draft?.publishStatus || null,
+    stockQuantity: projection.stockQuantity ?? projection.warehouse?.totalAvailable ?? null,
+    warehouseSource: projection.warehouse?.source || projection.availability?.source || null,
+  };
+}
+
+async function checkAuthorizedChannelStatus(channel, path, expectedAuthority, headers, productId) {
+  await check(`authorized-${channel}-status`, async () => {
+    if (!productId) {
+      record(`authorized-${channel}-status`, "skip", { reason: `No product ID available for authorized ${channel} status check.` });
+      return;
+    }
+    const response = await request(path, { headers });
+    assert(response.ok, `authorized-${channel}-status`, `Authorized ${channel} status endpoint did not return 2xx`, {
+      statusCode: response.status,
+      productId,
+    });
+    const data = response.body?.data || response.body;
+    assert(data?.authority === expectedAuthority, `authorized-${channel}-status`, `${channel} status response did not preserve channel authority`, {
+      statusCode: response.status,
+      productId,
+      authority: data?.authority || null,
+    });
+    record(`authorized-${channel}-status`, "pass", {
+      statusCode: response.status,
+      productId,
+      ...summarizeChannelStatusPayload(data),
+    });
+  });
 }
 
 function firstProductFromList(body) {
@@ -295,6 +342,17 @@ async function main() {
         itemCount: response.body.data.items.length,
       });
     });
+
+    if (!authorizedChannelStatusSmokeEnabled) {
+      record("authorized-channel-status", "skip", { reason: "Set CATALOG_SMOKE_ENABLE_CHANNEL_STATUS=true to run read-only channel status checks." });
+    } else {
+      await checkAuthorizedChannelStatus("flipflop", `/api/products/${encodeURIComponent(productId)}/flipflop-status`, "flipflop", authorizedHeaders, productId);
+      await checkAuthorizedChannelStatus("allegro", `/api/products/${encodeURIComponent(productId)}/allegro-status`, "allegro", authorizedHeaders, productId);
+      await checkAuthorizedChannelStatus("bazos", `/api/products/${encodeURIComponent(productId)}/bazos-status`, "bazos", authorizedHeaders, productId);
+      await checkAuthorizedChannelStatus("aukro", `/api/products/${encodeURIComponent(productId)}/aukro-status`, "aukro", authorizedHeaders, productId);
+      await checkAuthorizedChannelStatus("bazos-account", "/api/products/bazos/account-status", "bazos", authorizedHeaders, productId);
+      await checkAuthorizedChannelStatus("aukro-account", "/api/products/aukro/account-status", "aukro", authorizedHeaders, productId);
+    }
   }
 
   if (!authorizedBazosSmokeEnabled) {
