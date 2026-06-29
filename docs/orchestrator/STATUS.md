@@ -1191,3 +1191,20 @@ Boundary decisions:
 - No raw secret values or direct DB stock edits were committed.
 
 Next action: discover/import the remaining physical stock source beyond the 496 Allegro units, then release the committed Heureka image path once identified.
+
+## 2026-06-29 - Central Stock Acceptance Gate Runner
+
+Change: added a Catalog-owned read-only ops runner for final stock acceptance. The runner selects only running pods matching the current deployment image, runs the Warehouse stock authority verifier, runs the Allegro current-stock import script in dry-run Warehouse-verify mode, and runs the Catalog authorized smoke with stock, channel status, and Heureka readiness enabled.
+
+Intent chain:
+- Vision: prevent overselling by making Warehouse availability the checked authority before sales-channel propagation.
+- Goal Impact: collapse the current multi-command manual acceptance process into one repeatable gate.
+- System: Catalog orchestrates the gate; Warehouse, Allegro, Catalog, FlipFlop/Bazos/Aukro/Heureka projections provide evidence.
+- Feature: `npm run verify:stock-acceptance:gates`.
+- Task: verify the 9 current Allegro-authoritative product IDs against expected totals `124,87,50,25,110,60,10,3,27`.
+- Execution Plan: execute live read-only verifiers, parse JSON evidence, fail closed on any Warehouse issue, Allegro mismatch, mutating Allegro mode, or Catalog/channel stock mismatch.
+- Coding Prompt: add an ops script only; do not mutate Warehouse, apply Allegro imports, change schemas, or print secrets.
+- Code: `scripts/run-stock-acceptance-gates.sh` and `package.json`.
+- Validation: `[PENDING: live acceptance gate run]`.
+
+Boundary decision: this does not solve the remaining physical stock source gap. The configured Allegro accounts still expose only the current 9 stock-authoritative offers totaling 496 pieces; the 1000+ expected physical stock source remains `[MISSING: owner-provided BizBox/current export, additional seller authorization, or explicit authority confirmation]`.

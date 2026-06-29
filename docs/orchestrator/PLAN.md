@@ -153,3 +153,24 @@ Verification:
 ## Next Goal Selection
 
 No numbered goal remains pending. Next valid work is owner review, scheduled monitor observation, or creating the next owner-approved goal.
+
+## 2026-06-29 - Final Stock Acceptance Gate Runner
+
+Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation
+
+- Vision: prevent selling more units than Warehouse can fulfill while keeping Warehouse as stock authority.
+- Goal Impact: give the orchestrator one repeatable read-only gate that proves Allegro current-stock import evidence, Warehouse stock authority rows, and Catalog/channel propagation agree before any stock-sensitive release.
+- System: `catalog-microservice` owns the central ops runner; `warehouse-microservice`, `allegro-service`, Catalog, FlipFlop/Bazos/Aukro/Heureka projections remain the validated systems under test.
+- Feature: `scripts/run-stock-acceptance-gates.sh` runs the already-deployed verifiers in their live pods and emits `stock-acceptance-gates.v1`.
+- Task: default the gate to the 9 current Allegro-authoritative product IDs and their expected Warehouse totals: `124,87,50,25,110,60,10,3,27`.
+- Execution Plan: select only running pods matching the current deployment image, run Warehouse authority verifier, run Allegro current-stock dry-run with `--verify-warehouse`, run Catalog authorized stock/channel/Heureka smoke, then parse each JSON result and fail closed on mismatches.
+- Coding Prompt: add a read-only ops script plus `npm run verify:stock-acceptance:gates`; do not add stock mutations, DB writes, deploy manifests, schema changes, or secret printing.
+- Code: `scripts/run-stock-acceptance-gates.sh`; `package.json` script entry.
+- Validation: `[PENDING: bash -n, git diff --check, live read-only acceptance gate run]`.
+
+Parallel execution:
+
+- Ready now: central acceptance gate validation in Catalog ops script. Owner role: orchestrator/integration. Allowed files: `scripts/run-stock-acceptance-gates.sh`, `package.json`, `docs/orchestrator/PLAN.md`, `docs/orchestrator/STATUS.md`.
+- Dependency-gated: adding new products beyond the 9 current Allegro-authoritative items. Blocker: `[MISSING: complete physical stock authority source beyond current Allegro product-offers]`.
+- Blocked: automatic sales-channel stock push for products absent from Warehouse. Blocker: `[MISSING: source data and owner-approved import for remaining physical stock]`.
+- Final integration: rerun the gate after every stock import/deploy and before enabling publish/sellable actions for a new product set.
