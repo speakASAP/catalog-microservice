@@ -1,3 +1,13 @@
+## 2026-06-29 - TASK-STOCK-004 Catalog Stock Credential Wiring Preflight
+
+Change: added a read-only Catalog preflight for the approval-gated Catalog-to-Warehouse credential lane. `npm run verify:stock-credential:wiring` checks the `WAREHOUSE_SERVICE_TOKEN` ExternalSecret source path/property, confirms the existing Auth-owned `CATALOG_INTERNAL_SERVICE_TOKEN` pattern, reports runtime Kubernetes Secret key names only, and records Auth/Catalog/Warehouse deployment images without reading token values.
+
+Validation evidence: `bash -n scripts/check-stock-credential-wiring.sh` passed; `git diff --check` passed; `npm run build` passed. Live read-only `npm run verify:stock-credential:wiring` failed safely with status `failed` only on the expected source checks: `WAREHOUSE_SERVICE_TOKEN` is currently mapped from `secret/prod/catalog-microservice#WAREHOUSE_SERVICE_TOKEN`, while the post-approval target is `secret/prod/auth-microservice#CATALOG_WAREHOUSE_SERVICE_TOKEN`. The same run passed `catalogInternalTokenAlreadyAuthOwned`, `runtimeSecretHasWarehouseServiceTokenKey`, `runtimeSecretHasCatalogInternalServiceTokenKey`, `externalSecretSynced`, and Auth/Catalog/Warehouse deployment readiness checks with images `localhost:5000/auth-microservice:97ea521-20260629180327`, `localhost:5000/catalog-microservice:67c29f8`, and `localhost:5000/warehouse-microservice:8a66b27`.
+
+Boundary decision: this is a verifier only. It does not run the Auth provisioning helper, read or print secret values, alter Vault/Kubernetes secrets, roll deployments, bypass Warehouse auth, import stock, reserve stock, or publish channel listings.
+
+Next action: use this preflight as the pre/post check around the owner-approved token provisioning lane; do not change the ExternalSecret mapping until the Auth-owned token property exists.
+
 ## 2026-06-29 - TASK-STOCK-004 Acceptance Gate Records Auth Deployment Evidence
 
 Change: extended `scripts/run-stock-acceptance-gates.sh` so the `stock-acceptance-gates.v1` summary records the deployed `auth-microservice` image next to Warehouse, Allegro, and Catalog images. This ties the Catalog Warehouse credential preflight to the live Auth build expected to expose service actor projection for approved Catalog service principals.
