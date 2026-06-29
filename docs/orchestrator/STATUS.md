@@ -18,6 +18,19 @@ Next action: obtain the owner-approved BizBox/current stock export file and auth
 
 
 
+
+## 2026-06-29 - TASK-STOCK-004 Allegro Preview Token Guard And Cleanup
+
+Result: hardened the BizBox CSV mutation path again so the confirmation-gated upload must now be bound to the exact previewed file. Allegro is deployed at `allegro-service@d434150` (`Bind BizBox stock import to previewed file`). The imports preview response includes a server-computed `previewToken`; the mutating upload requires both `x-stock-import-confirmation: previewed-and-approved` and matching `x-stock-import-preview-token`.
+
+Validation evidence: before deploy, `git diff --check`, `npm --prefix services/imports run build`, and `npm --prefix services/frontend run build` passed. Deploy completed successfully and live deployments are ready at image tag `d434150` for `allegro-service`, `allegro-api-gateway`, `allegro-frontend`, `allegro-settings`, and `allegro-imports`. A first smoke during rollout hit old behavior and created one synthetic import artifact; the current running imports pod was then rechecked and returned preview HTTP `201` with a `sha256:` preview token, bad-token mutating upload HTTP `428` with code `STOCK_IMPORT_PREVIEW_TOKEN_INVALID`, and import job count unchanged during that current-pod check.
+
+Cleanup evidence: the rollout-window synthetic Catalog product `CODEX-PREVIEW-TOKEN` / `218d24c9-a0cb-4f9f-b71d-1087b4c277ba` was soft-deleted through Catalog's service API and now reads `isActive=false`, `lifecycle=archived`. Warehouse authenticated readback for the same synthetic product returned zero stock rows, so no Warehouse stock reset was needed. The historical synthetic Allegro import job remains as audit history; no real BizBox/current stock file was imported. The real target Warehouse row for `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` still reads quantity `60`, reserved `0`, available `60` in warehouse `c0de0000-0000-4000-8000-000000000013`.
+
+Boundary decision: preview-token binding is still a safety guard, not stock-source approval. Complete physical stock import remains gated on `[MISSING: owner-approved BizBox/current physical stock export]` and `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`.
+
+Next action: run preview on the owner-approved export, compare totals to expected physical stock, then run the confirmed mutating import only after explicit approval.
+
 ## 2026-06-29 - TASK-STOCK-004 Allegro Stock Import Confirmation Guard
 
 Result: hardened the mutating BizBox stock import path so authenticated direct CSV upload now requires explicit confirmation header `x-stock-import-confirmation: previewed-and-approved`. The frontend sends this header only from the preview-gated upload flow. Allegro is deployed at `allegro-service@4d1cb99` (`Require confirmation for BizBox stock import`).
