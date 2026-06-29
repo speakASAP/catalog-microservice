@@ -1,3 +1,13 @@
+## 2026-06-29 - TASK-STOCK-004 Acceptance Gate Includes Credential Wiring
+
+Change: integrated `npm run verify:stock-credential:wiring` into the central `npm run verify:stock-acceptance:gates` runner. The final `stock-acceptance-gates.v1` summary now reports the Catalog ExternalSecret source-path/property readiness for the future Auth-owned Warehouse token before the Warehouse, Allegro, Catalog credential, and channel propagation legs.
+
+Validation evidence: `bash -n scripts/run-stock-acceptance-gates.sh` passed; `git diff --check` passed; `npm run build` passed. Live read-only `npm run verify:stock-acceptance:gates` failed safely with exit `1` and now reports `commandStatuses.catalogStockCredentialWiring=1`, `warehouse=0`, `allegro=0`, `catalogWarehouseCredential=1`, and `catalog=1`. The new `catalogStockCredentialWiring` summary failed only on the expected source checks: current `WAREHOUSE_SERVICE_TOKEN` source is `secret/prod/catalog-microservice#WAREHOUSE_SERVICE_TOKEN`, while the post-approval target is `secret/prod/auth-microservice#CATALOG_WAREHOUSE_SERVICE_TOKEN`. Warehouse still passed for `9` products with `totalQuantity=496`, `totalReserved=0`, `totalAvailable=496`, and `expectedTotalsChecked=9`; Allegro dry-run still reported `warehouseMatches=9`, `warehouseMismatches=0`, and `warehouseVerifyFailed=0`; Catalog Warehouse credential preflight still had `acceptedCandidate=null`.
+
+Boundary decision: read-only gate integration only. It does not run the Auth provisioning helper, read or print secret values, alter Vault/Kubernetes secrets, deploy, import stock, mutate reservations, or publish channel listings.
+
+Next action: after owner-approved Auth token provisioning and Catalog secret remap, rerun this single acceptance gate to prove credential wiring, Warehouse authority, Allegro import evidence, and Catalog/channel propagation together.
+
 ## 2026-06-29 - TASK-STOCK-004 Catalog Stock Credential Wiring Preflight
 
 Change: added a read-only Catalog preflight for the approval-gated Catalog-to-Warehouse credential lane. `npm run verify:stock-credential:wiring` checks the `WAREHOUSE_SERVICE_TOKEN` ExternalSecret source path/property, confirms the existing Auth-owned `CATALOG_INTERNAL_SERVICE_TOKEN` pattern, reports runtime Kubernetes Secret key names only, and records Auth/Catalog/Warehouse deployment images without reading token values.

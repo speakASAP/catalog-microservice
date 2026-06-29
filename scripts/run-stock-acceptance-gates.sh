@@ -106,10 +106,16 @@ catalog_pod="$(running_pod_for_image catalog-microservice "$catalog_image")"
 [[ -n "$allegro_pod" ]] || fail "no running allegro-service pod for image $allegro_image"
 [[ -n "$catalog_pod" ]] || fail "no running catalog-microservice pod for image $catalog_image"
 
+wiring_out="$tmpdir/catalog-stock-credential-wiring.json"
 warehouse_out="$tmpdir/warehouse.json"
 allegro_out="$tmpdir/allegro.json"
 credential_out="$tmpdir/catalog-warehouse-credential.json"
 catalog_out="$tmpdir/catalog.json"
+
+print_section "Catalog stock credential wiring"
+wiring_status=0
+run_and_capture "$wiring_out" bash scripts/check-stock-credential-wiring.sh \
+  || wiring_status="$?"
 
 print_section "Warehouse stock authority"
 warehouse_status=0
@@ -231,10 +237,12 @@ run_and_capture "$catalog_out" kubectl exec -n "$NAMESPACE" "$catalog_pod" -- sh
   "CATALOG_SMOKE_BASE_URL=http://127.0.0.1:3200 CATALOG_SMOKE_AUTHORIZED=true CATALOG_SMOKE_ASSERT_STOCK=true CATALOG_SMOKE_ENABLE_CHANNEL_STATUS=true CATALOG_SMOKE_ENABLE_HEUREKA_READINESS=true CATALOG_SMOKE_HEUREKA_BASE_URL=http://heureka-service:3800 CATALOG_SMOKE_PRODUCT_IDS='$PRODUCT_IDS' CATALOG_SMOKE_INTERNAL_SERVICE_TOKEN=\"\$CATALOG_INTERNAL_SERVICE_TOKEN\" CATALOG_SMOKE_SERVICE_NAME=catalog-microservice node scripts/catalog-smoke.js" \
   || catalog_status="$?"
 
+wiring_json="$tmpdir/catalog-stock-credential-wiring.parsed.json"
 warehouse_json="$tmpdir/warehouse.parsed.json"
 allegro_json="$tmpdir/allegro.parsed.json"
 credential_json="$tmpdir/catalog-warehouse-credential.parsed.json"
 catalog_json="$tmpdir/catalog.parsed.json"
+extract_json "$wiring_out" > "$wiring_json"
 extract_json "$warehouse_out" > "$warehouse_json"
 extract_json "$allegro_out" > "$allegro_json"
 extract_json "$credential_out" > "$credential_json"
@@ -242,9 +250,10 @@ extract_json "$catalog_out" > "$catalog_json"
 
 print_section "Acceptance summary"
 WAREHOUSE_IMAGE="$warehouse_image" ALLEGRO_IMAGE="$allegro_image" CATALOG_IMAGE="$catalog_image" AUTH_IMAGE="$auth_image" \
-node - "$warehouse_json" "$allegro_json" "$credential_json" "$catalog_json" "$PRODUCT_IDS" "$EXPECTED_TOTALS" "$warehouse_status" "$allegro_status" "$credential_status" "$catalog_status" <<'NODE'
+node - "$wiring_json" "$warehouse_json" "$allegro_json" "$credential_json" "$catalog_json" "$PRODUCT_IDS" "$EXPECTED_TOTALS" "$wiring_status" "$warehouse_status" "$allegro_status" "$credential_status" "$catalog_status" <<'NODE'
 const fs = require("fs");
-const [warehouseFile, allegroFile, credentialFile, catalogFile, productIdsCsv, expectedTotalsCsv, warehouseStatus, allegroStatus, credentialStatus, catalogStatus] = process.argv.slice(2);
+const [wiringFile, warehouseFile, allegroFile, credentialFile, catalogFile, productIdsCsv, expectedTotalsCsv, wiringStatus, warehouseStatus, allegroStatus, credentialStatus, catalogStatus] = process.argv.slice(2);
+const stockCredentialWiring = JSON.parse(fs.readFileSync(wiringFile, "utf8"));
 const warehouse = JSON.parse(fs.readFileSync(warehouseFile, "utf8"));
 const allegro = JSON.parse(fs.readFileSync(allegroFile, "utf8"));
 const credentialPreflight = JSON.parse(fs.readFileSync(credentialFile, "utf8"));
@@ -256,6 +265,12 @@ const expectedTotals = Object.fromEntries(expectedTotalsCsv.split(",").filter(Bo
 }));
 
 const issues = [];
+if (Number(wiringStatus) !== 0) issues.push(`Catalog stock credential wiring exited ${wiringStatus}`);
+if (stockCredentialWiring.contract !== "catalog-stock-credential-wiring.v1") issues.push("Catalog stock credential wiring contract mismatch");
+if (stockCredentialWiring.mutatesSecrets !== false) issues.push("Catalog stock credential wiring may mutate secrets");
+if (stockCredentialWiring.mutatesKubernetes !== false) issues.push("Catalog stock credential wiring may mutate Kubernetes");
+if (stockCredentialWiring.readsSecretValues !== false) issues.push("Catalog stock credential wiring may read secret values");
+if (stockCredentialWiring.status !== "passed") issues.push("Catalog stock credential wiring is not ready for approved Warehouse token mount");
 if (Number(warehouseStatus) !== 0) issues.push(`Warehouse verifier exited ${warehouseStatus}`);
 if (Number(allegroStatus) !== 0) issues.push(`Allegro verifier exited ${allegroStatus}`);
 if (Number(credentialStatus) !== 0) issues.push(`Catalog Warehouse credential preflight exited ${credentialStatus}`);
@@ -307,10 +322,22 @@ const summary = {
     auth: process.env.AUTH_IMAGE || null,
   },
   commandStatuses: {
+    catalogStockCredentialWiring: Number(wiringStatus),
     warehouse: Number(warehouseStatus),
     allegro: Number(allegroStatus),
     catalogWarehouseCredential: Number(credentialStatus),
     catalog: Number(catalogStatus),
+  },
+  catalogStockCredentialWiring: {
+    status: stockCredentialWiring.status,
+    expectedWarehouseTokenSource: stockCredentialWiring.expectedWarehouseTokenSource,
+    failedChecks: (stockCredentialWiring.checks || [])
+      .filter((check) => check.pass !== true)
+      .map((check) => ({
+        name: check.name,
+        actual: check.actual || check.path || check.status || check.ready || null,
+        expected: check.expected || null,
+      })),
   },
   warehouse: {
     checkedProductCount: warehouse.checkedProductCount,
