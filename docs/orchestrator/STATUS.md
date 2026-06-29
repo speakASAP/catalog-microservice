@@ -1,5 +1,17 @@
 # Catalog Orchestrator Status
 
+## 2026-06-29 - TASK-STOCK-004 Heureka Warehouse Client Auth Fixed
+
+Result: fixed and deployed authenticated Warehouse stock reads for Heureka feed/order gates. Heureka is committed and deployed at `heureka-service@7554c17` (`fix: authenticate warehouse stock client`). The shared Warehouse client now sends a bearer token from `WAREHOUSE_SERVICE_TOKEN`, falling back to `JWT_TOKEN` or `SERVICE_TOKEN`, and the deployment exposes a dedicated `WAREHOUSE_SERVICE_TOKEN` sourced from Vault via ExternalSecret.
+
+Validation evidence: `git diff --check` passed; `npm --prefix shared run build` passed; `npm --prefix services/heureka-service run build` passed; `npm run verify:heureka-order-ingestion` passed; direct `LOGGING_SERVICE_URL=http://logging-microservice:3367 npx ts-node --skip-ignore --compiler-options '{"types":["node"]}' services/heureka-service/src/heureka/orders/orders.service.spec.ts` passed; `bash -n scripts/deploy.sh` passed. Deploy built and pushed `localhost:5000/heureka-service:7554c17` with digest `sha256:d29adb99fc4ed388212cc9b9256243fba9aa4cf4b30ea785ece845d99439ec47`, applied manifests, and rolled out successfully.
+
+Live stock evidence: newest running Heureka pod `heureka-service-9fff88f7c-vj5k9` exposes `WAREHOUSE_SERVICE_TOKEN` without printing token material. Deployed client smoke proved `clientAddsAuthorization=true`. Direct pod-local Warehouse read for product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` returned HTTP `200`, `success=true`, and `totalAvailable=60`.
+
+Boundary decision: no Heureka order ingestion, reservation, stock mutation, or Warehouse stock import was run. This change makes the existing Heureka fail-closed warehouse route/order gate able to read Warehouse availability. Complete physical stock remains gated on `[MISSING: owner-approved BizBox/current physical stock export]`, `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`, or `[MISSING: correctly authorized additional seller account exposing current full offers]`.
+
+Next action: continue authenticated user/operator channel-status validation and obtain the owner-approved complete physical stock source before any Warehouse import.
+
 ## 2026-06-29 - TASK-STOCK-004 Bazos And Aukro Warehouse Client Auth Fixed
 
 Result: fixed and deployed authenticated Warehouse stock reads for Bazos and Aukro channel gates. Bazos is committed and deployed at `bazos-service@8d02855` (`fix: authenticate warehouse stock client`). Aukro is committed and deployed at `aukro-service@b2efe33` for the Warehouse client auth and `aukro-service@bd94bf8` for deploy-script/image rollout repair plus the `WAREHOUSE_SERVICE_TOKEN` pod env mapping. Both services now use `WAREHOUSE_SERVICE_TOKEN`, falling back to `JWT_TOKEN` or `SERVICE_TOKEN`, when calling Warehouse stock read/reservation endpoints.
