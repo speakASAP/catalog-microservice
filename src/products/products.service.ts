@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, ILike, In } from 'typeorm';
 import { Product, ProductLifecycle } from "./product.entity";
@@ -6,6 +6,13 @@ import { LoggerService } from '../logger/logger.service';
 import { PricingService } from '../pricing/pricing.service';
 import { CreateProductDto, UpdateProductDto, ProductQueryDto } from './dto';
 import axios from "axios";
+import { ContentRendererService } from '../content-connectors/content-renderer.service';
+import {
+  cleanPlainText,
+  descriptionDocumentFromText,
+  descriptionDocumentToPlainText,
+  normalizeDescriptionDocument,
+} from '../content-connectors/content-document';
 
 type ProductQualitySeverity = "blocking" | "warning";
 
@@ -145,6 +152,8 @@ export class ProductsService {
     private readonly productRepository: Repository<Product>,
     private readonly logger: LoggerService,
     private readonly pricingService?: PricingService,
+    @Optional()
+    private readonly contentRendererService?: ContentRendererService,
   ) {}
 
   /**
@@ -153,7 +162,7 @@ export class ProductsService {
   async create(createProductDto: CreateProductDto): Promise<Product> {
     this.logger.log(`Creating product with SKU: ${createProductDto.sku}`, 'ProductsService');
 
-    const product = this.productRepository.create(this.withLifecycleDefaults(createProductDto));
+    const product = this.productRepository.create(this.withLifecycleDefaults(this.withCanonicalContentDefaults(createProductDto)));
     const saved = await this.productRepository.save(product);
 
     this.logger.log(`Product created: ${saved.id}`, 'ProductsService');
@@ -316,7 +325,7 @@ export class ProductsService {
     this.logger.log(`Updating product: ${id}`, 'ProductsService');
 
     const product = await this.findOne(id);
-    Object.assign(product, this.withLifecycleDefaults(updateProductDto, product));
+    Object.assign(product, this.withLifecycleDefaults(this.withCanonicalContentDefaults(updateProductDto, product), product));
 
     const updated = await this.productRepository.save(product);
     this.logger.log(`Product updated: ${id}`, 'ProductsService');
@@ -388,6 +397,55 @@ export class ProductsService {
     }
 
     return next;
+  }
+
+  private withCanonicalContentDefaults<T extends Partial<Product>>(data: T, current?: Product): T {
+    const next = { ...data } as any;
+    const hasDescriptionRich = Object.prototype.hasOwnProperty.call(next, 'descriptionRich');
+    const hasDescription = Object.prototype.hasOwnProperty.call(next, 'description');
+
+    if (hasDescriptionRich) {
+      const normalized = normalizeDescriptionDocument(next.descriptionRich, next.description ?? current?.description);
+      next.descriptionRich = normalized;
+      if (!hasDescription && normalized) {
+        next.description = descriptionDocumentToPlainText(normalized) || undefined;
+      } else if (hasDescription) {
+        next.description = cleanPlainText(next.description);
+      }
+      return next;
+    }
+
+    if (hasDescription) {
+      next.description = cleanPlainText(next.description);
+      if (!current?.descriptionRich && next.description) {
+        next.descriptionRich = descriptionDocumentFromText(next.description);
+      }
+    }
+
+    return next;
+  }
+
+  private async renderMarketplaceDescription(
+    product: Product,
+    marketplace: 'allegro' | 'bazos' | 'aukro' | 'flipflop',
+  ): Promise<string | null> {
+    if (!this.contentRendererService) {
+      return product.description ? cleanPlainText(product.description) : null;
+    }
+
+    try {
+      const preview = await this.contentRendererService.renderProductContent(product, marketplace);
+      if (marketplace === 'allegro') {
+        return preview.content.html || preview.content.plainText || null;
+      }
+      return preview.content.plainText || null;
+    } catch (error: any) {
+      this.logger.warn(
+        `Marketplace description rendering failed for ${marketplace}/${product.id}: ${error?.message ?? 'unknown error'}`,
+        'ProductsService',
+      );
+      return product.description ? cleanPlainText(product.description) : null;
+    }
   }
 
   private resolveLifecycle(product: Product): ProductLifecycle {
@@ -586,10 +644,11 @@ export class ProductsService {
 
     const bazosBaseUrl = this.getBazosBaseUrl();
     const bazosAuthorization = this.resolveBazosAuthorization(authorization, data.useCallerBazosIdentity === true);
+    const renderedDescription = await this.renderMarketplaceDescription(product, 'bazos');
     const draftPayload = {
       identityId,
       title: data.title || product.title,
-      description: data.description ?? product.description ?? undefined,
+      description: data.description ?? renderedDescription ?? product.description ?? undefined,
       price: currentPrice,
       category,
       location: data.location,
@@ -760,11 +819,12 @@ export class ProductsService {
 
     const allegroBaseUrl = this.getAllegroBaseUrl();
     const requestedQuantity = this.toPositiveInteger(data.quantity);
+    const renderedDescription = await this.renderMarketplaceDescription(product, 'allegro');
     const payload = {
       catalogProductId: id,
       categoryId: data.categoryId || product.categories?.[0]?.id,
       title: data.title || product.title,
-      description: data.description ?? product.description ?? undefined,
+      description: data.description ?? renderedDescription ?? product.description ?? undefined,
       price: data.price ?? currentPrice,
       quantity: requestedQuantity ? Math.min(requestedQuantity, stockPreflight.quantity) : stockPreflight.quantity,
       idempotencyKey: data.idempotencyKey || `catalog:${id}:allegro`,
@@ -816,18 +876,21 @@ export class ProductsService {
   }
 
   async updateAllegroDraft(id: string, data: any = {}, authorization?: string) {
-    await this.findOne(id);
+    const product = await this.findOne(id);
 
     if (!authorization) {
       return this.blockedChannelAction('allegro', id, 'auth_required', 'Authentication is required before editing an Allegro draft.');
     }
 
     const allegroBaseUrl = this.getAllegroBaseUrl();
+    const renderedDescription = data.description === undefined
+      ? await this.renderMarketplaceDescription(product, 'allegro')
+      : null;
     const payload = {
       catalogProductId: id,
       offerId: data.offerId,
       title: data.title,
-      description: data.description,
+      description: data.description ?? renderedDescription ?? undefined,
       categoryId: data.categoryId,
       price: data.price,
       quantity: data.quantity,

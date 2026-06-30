@@ -1,6 +1,7 @@
 import { IsString, IsOptional, IsBoolean, IsNumber, IsArray, IsObject, IsUUID, IsIn, Min, Max } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import type { ProductLifecycle } from "../product.entity";
+import type { ProductContentDocument } from "../../content-connectors/content-document";
 
 /**
  * DTO for creating a new product
@@ -15,6 +16,10 @@ export class CreateProductDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @IsObject()
+  @IsOptional()
+  descriptionRich?: ProductContentDocument | null;
 
   @IsString()
   @IsOptional()
@@ -78,6 +83,10 @@ export class UpdateProductDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @IsObject()
+  @IsOptional()
+  descriptionRich?: ProductContentDocument | null;
 
   @IsString()
   @IsOptional()
@@ -161,4 +170,3 @@ export class ProductQueryDto {
   @IsUUID()
   categoryId?: string;
 }
-

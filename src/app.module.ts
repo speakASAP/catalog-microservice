@@ -14,6 +14,7 @@ import { WarehouseAvailabilityModule } from './warehouse-availability/warehouse-
 import { FlipFlopProjectionModule } from "./flipflop-projection/flipflop-projection.module";
 import { ImportReconciliationModule } from "./import-reconciliation/import-reconciliation.module";
 import { MarketplaceFieldsModule } from "./marketplace-fields/marketplace-fields.module";
+import { ContentConnectorsModule } from "./content-connectors/content-connectors.module";
 
 /**
  * Main application module for Catalog Microservice
@@ -54,6 +55,7 @@ import { MarketplaceFieldsModule } from "./marketplace-fields/marketplace-fields
     FlipFlopProjectionModule,
     ImportReconciliationModule,
     MarketplaceFieldsModule,
+    ContentConnectorsModule,
   ],
 })
 export class AppModule {}

@@ -257,3 +257,19 @@ Acceptance criteria:
 - Authorized Warehouse and FlipFlop checks run only when explicitly enabled with an approved token.
 - Bazos authorized draft smoke requires separate explicit opt-in and Bazos-owned inputs.
 - No secrets or raw production payloads are printed.
+
+## Goal 19 - Canonical Content Connectors
+
+Status: source complete across Catalog and channel services; runtime deployment pending clean isolation
+
+Intent: Catalog stores one canonical structured product description and connector renderers generate marketplace-specific outputs without letting any channel redefine product truth.
+
+Acceptance criteria:
+
+- `products.description` remains a backward-compatible clean plain-text field.
+- `products.descriptionRich` stores canonical structured JSON content.
+- Protected Catalog preview endpoints render Allegro, Bazos, Aukro, and FlipFlop connector outputs.
+- Catalog product detail shows canonical and channel-specific previews.
+- Bazos/Allegro draft preparation uses generated connector output when no explicit channel override is supplied.
+- Channel services expose local previews through their existing draft/import flows without taking over Catalog product truth.
+- Raw imported marketplace HTML remains source evidence, not canonical truth.

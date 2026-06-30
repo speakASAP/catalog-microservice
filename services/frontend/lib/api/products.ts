@@ -9,6 +9,7 @@ export interface Product {
   sku: string;
   title: string;
   description?: string;
+  descriptionRich?: ProductContentDocument | null;
   brand?: string;
   manufacturer?: string;
   ean?: string;
@@ -23,6 +24,20 @@ export interface Product {
   createdAt: string;
   updatedAt: string;
   categories?: Array<{ id: string; name: string }>;
+}
+
+export type ProductContentBlock =
+  | { type: 'heading'; level?: number; text?: string }
+  | { type: 'paragraph'; text?: string }
+  | { type: 'bulleted_list'; items?: string[] }
+  | { type: 'numbered_list'; items?: string[] }
+  | { type: 'table'; rows?: string[][] }
+  | { type: 'callout'; text?: string; tone?: string };
+
+export interface ProductContentDocument {
+  version: 1;
+  locale?: string;
+  blocks: ProductContentBlock[];
 }
 
 export interface BazosIdentitySummary {
@@ -250,6 +265,40 @@ export interface UpdateMarketplaceFieldsPayload {
   status?: string;
 }
 
+export type MarketplaceContentKey = 'allegro' | 'bazos' | 'aukro' | 'flipflop';
+
+export interface MarketplaceContentPreview {
+  marketplace: MarketplaceContentKey;
+  label: string;
+  format: 'html' | 'plain_text' | 'structured_blocks';
+  product: {
+    id: string;
+    sku: string;
+    title: string;
+  };
+  content: {
+    title: string;
+    plainText: string;
+    html?: string;
+    blocks?: ProductContentBlock[];
+    sections?: Array<{ title?: string; body: string }>;
+  };
+  source: {
+    canonicalDocumentVersion: number;
+    legacyDescriptionFallback: boolean;
+    sourceHash: string;
+    generatedAt: string;
+  };
+  overridesApplied: string[];
+  warnings: string[];
+}
+
+export interface ProductContentPreviewsResponse {
+  productId: string;
+  supportedMarketplaces: Array<{ marketplace: MarketplaceContentKey; label: string; format: MarketplaceContentPreview['format'] }>;
+  previews: MarketplaceContentPreview[];
+}
+
 
 export interface ProductSalesChannel {
   productId: string;
@@ -396,6 +445,14 @@ export const productsApi = {
 
   async updateMarketplaceFields(id: string, marketplace: string, data: UpdateMarketplaceFieldsPayload) {
     return apiClient.put<MarketplaceFieldsResponse>(`/products/${id}/marketplace-fields/${marketplace}`, data);
+  },
+
+  async getContentPreviews(id: string) {
+    return apiClient.get<ProductContentPreviewsResponse>(`/products/${id}/content-previews`);
+  },
+
+  async getContentPreview(id: string, marketplace: MarketplaceContentKey) {
+    return apiClient.get<MarketplaceContentPreview>(`/products/${id}/content-previews/${marketplace}`);
   },
 
 

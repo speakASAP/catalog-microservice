@@ -32,6 +32,30 @@ describe("ProductsService product readiness", () => {
     expect(product.isActive).toBe(true);
   });
 
+  it("normalizes legacy HTML descriptions into plain text and canonical JSON fallback", async () => {
+    const repository = {
+      create: jest.fn((data) => data),
+      save: jest.fn(async (data) => ({ id: "product-html", ...data })),
+    };
+    const service = new ProductsService(repository as any, logger as any);
+
+    await service.create({
+      sku: "SKU-HTML",
+      title: "HTML product",
+      description: "<p>Strong &amp; clean</p><ul><li>Size M</li></ul>",
+    });
+
+    expect(repository.create).toHaveBeenCalledWith(expect.objectContaining({
+      description: "Strong & clean\nSize M",
+      descriptionRich: expect.objectContaining({
+        version: 1,
+        blocks: expect.arrayContaining([
+          expect.objectContaining({ type: "paragraph", text: "Strong & clean\nSize M" }),
+        ]),
+      }),
+    }));
+  });
+
   it("returns blocking and warning diagnostics for incomplete products", async () => {
     const product = {
       id: "product-2",

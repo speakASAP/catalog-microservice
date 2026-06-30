@@ -125,3 +125,6 @@ production deployment without owner approval
 14. `GOAL-14-authorized-runtime-contract-smoke.md` - Opt-in authorized runtime contract smoke for protected Warehouse, FlipFlop, and separately gated Bazos paths.
 15. `GOAL-15-bazos-authorized-draft-runtime-smoke.md` - Bazos authorized draft runtime smoke with explicit runtime inputs and no publishing.
 16. `GOAL-16-production-contract-monitoring-drift-audit.md` - Scheduled production contract monitor and drift audit.
+17. `GOAL-17-product-marketplace-sales-statistics.md` - Orders-backed product marketplace sales statistics.
+18. `GOAL-18-marketplace-field-profiles.md` - Marketplace-specific product profile fields and overrides.
+19. `GOAL-19-canonical-content-connectors.md` - Canonical JSON product descriptions, connector renderers, and previews.

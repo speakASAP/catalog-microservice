@@ -1,5 +1,28 @@
 # Catalog Implementation Plan
 
+## 2026-06-30 - Goal 19 Canonical Content Connectors
+
+Active goal: canonical JSON product descriptions with marketplace connector renderers and previews across Catalog plus channel services.
+
+Saved plan: `implementation-goals/GOAL-19-execution-plan.md`.
+
+Current execution state: Catalog core source is implemented on `feature/catalog-goal-19-canonical-content-connectors`. It adds `products.description_rich`, canonical content document normalization, connector renderers, protected content preview endpoints, Catalog product-detail preview UI, and generated description use for Bazos/Allegro draft preparation when no explicit override is supplied. Channel service source integrations are also implemented for Allegro, Bazos, Aukro, and FlipFlop so each channel can request the Catalog canonical preview and show channel-local preview evidence before draft/publish actions.
+
+Parallel execution:
+
+- Lane A Catalog schema/renderers/UI: source complete, validation passed.
+- Lane B Allegro local preview/draft rendering: source complete, validation passed in worker `019f1a1e-f607-7063-98ac-58475ad1c2a3`.
+- Lane C Bazos local preview/draft rendering: source complete, validation passed in worker `019f1a1f-21a9-7991-8f5a-37bbd6cb1715`.
+- Lane D Aukro local preview/draft rendering: source complete, validation passed in worker `019f1a1f-939e-7e41-a5e2-036f9902597a`.
+- Lane E FlipFlop product-service/admin preview: source complete, validation passed in worker `019f1a1f-c418-70c3-8cf0-4dd270a273c4`.
+- Lane F final integration/deploy readiness: isolated Catalog deploy candidate created at `/home/ssf/Documents/Github/catalog-goal19-deploy` on `codex/catalog-goal-19-deploy`; validation passed and runtime migration/deploy is next.
+
+Validation evidence for Catalog core: `git diff --check` passed; focused renderer/product tests passed 2 suites/24 tests; full Jest passed 9 suites/70 tests; backend `npm run build` passed; frontend `./node_modules/.bin/tsc --noEmit` passed after Next build regenerated `.next/types`; frontend `npm run build` passed with existing multiple-lockfile warning only.
+
+Channel validation evidence: Allegro passed `git diff --check`, IPS audit, IPS pre-coding gate, catalog sell-action spec, service build, and frontend build. Bazos passed `git diff --check`, shared build, Bazos/Aukro service build, and focused Bazos catalog sell-action tests. Aukro passed shared build, service tests, service build, strict IPS doc audit, pre-coding gate, deployment-readiness gate, and `git diff --check`. FlipFlop passed pre-coding gate, strict IPS doc audit, `git diff --check`, product-service build, and frontend build.
+
+Current blockers: runtime Catalog migration/deploy not yet run; original Catalog worktree still contains unrelated or concurrent changes outside Goal 19 (`services/frontend/app/dashboard/admin/page.tsx`, `src/auth/auth.service.ts`, and Goal 20 bulk marketplace publication files), so deployments must use the isolated Goal 19 worktree. Aukro worktree also contains concurrent TASK-013 bulk publish candidate docs outside the Goal 19/TASK-012 lane.
+
 ## 2026-06-29 - TASK-STOCK-004 Warehouse Stock Propagation Active Goal
 
 Active goal: Warehouse-backed product stock amounts and oversell prevention across Catalog and sales channels.

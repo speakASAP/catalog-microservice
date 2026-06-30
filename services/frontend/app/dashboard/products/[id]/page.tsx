@@ -11,6 +11,7 @@ import AukroPublishPanel from '@/components/AukroPublishPanel';
 import AllegroPublishPanel from '@/components/AllegroPublishPanel';
 import ChannelSalesPanel from '@/components/ChannelSalesPanel';
 import MarketplaceFieldsPanel from '@/components/MarketplaceFieldsPanel';
+import ProductContentPreviewPanel from '@/components/ProductContentPreviewPanel';
 
 
 const channelLabels: Record<string, string> = {
@@ -435,6 +436,8 @@ export default function EditProductPage() {
         {/* Pricing Management */}
         <PricingManagement productId={productId} />
 
+        <ProductContentPreviewPanel product={product} />
+
         <MarketplaceFieldsPanel product={product} onProductUpdated={(updatedProduct) => setProduct(updatedProduct)} />
 
         <BazosPublishPanel productId={productId} defaultCategory={product.categories?.[0]?.name} />
@@ -641,4 +644,3 @@ export default function EditProductPage() {
     </div>
   );
 }
-
