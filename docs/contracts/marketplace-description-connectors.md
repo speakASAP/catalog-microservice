@@ -2,7 +2,7 @@
 
 ```yaml
 id: CATALOG-MARKETPLACE-DESCRIPTION-CONNECTORS
-status: draft
+status: active
 owner: catalog orchestrator
 created: 2026-06-30
 source_goal: implementation-goals/GOAL-19-canonical-content-connectors.md

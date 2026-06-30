@@ -1,3 +1,13 @@
+## 2026-06-30 - Goal 19 Runtime Deployment And Preview Smoke
+
+Change: deployed Goal 19 from isolated Catalog and Aukro worktrees to avoid unrelated dirty Goal 20/admin/auth changes. Catalog commit `03e3e6e` is live after applying additive `products.description_rich` migration and verifying the GIN index. Allegro commit `df078df`, Bazos commit `10514ac`, Aukro isolated commit `5fc56aa`, and FlipFlop commits `1580942` + `0c199ce` are deployed.
+
+Runtime evidence: Catalog in-pod content preview smoke for product `9715929e-cd7c-4c5e-be15-c08179127ec7` returned HTTP 200, `success=true`, and four previews: Allegro `html`, Bazos `plain_text`, Aukro `plain_text`, and FlipFlop `structured_blocks` with 32 blocks. FlipFlop deployment completed successfully after repairing gateway CMD layout and product-service Prisma client packaging; public `/` and `/api/products?limit=1` returned HTTP 200. Channel preview surfaces are deployed behind existing login/JWT guards; anonymous checks returned Allegro gateway 401, Bazos 401, Aukro 403, and FlipFlop preview route mapped with missing-token shared guard currently surfacing as 500.
+
+Boundary decision: no raw legacy HTML cleanup, channel publish, Allegro confirmation, Bazos queueing, Aukro publication, FlipFlop storefront/checkout ownership change, stock mutation, price mutation, customer data read, or secret/token printing was performed.
+
+Next action: Goal 19 is closed. Optional follow-up: normalize FlipFlop shared guard missing/invalid token errors to HTTP 401 instead of 500.
+
 ## 2026-06-30 - Goal 19 Canonical Content Connectors Catalog Core
 
 Change: implemented the Catalog-owned canonical content connector core on `feature/catalog-goal-19-canonical-content-connectors`. Added additive `products.description_rich` migration, `descriptionRich` entity/DTO support, content document normalization, `src/content-connectors` renderer/controller/module, protected `GET /api/products/:productId/content-previews` and `GET /api/products/:productId/content-previews/:marketplace`, Catalog product detail content preview panel, and generated connector descriptions for Bazos/Allegro draft preparation when no explicit description override is provided.
