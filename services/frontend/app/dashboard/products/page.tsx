@@ -7,6 +7,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { productsApi, Product, ProductQuery, PaginatedResponse } from '@/lib/api/products';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
@@ -25,6 +26,7 @@ function formatLifecycle(value?: Product['lifecycle']) {
 }
 
 export default function AdminProductsPage() {
+  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -183,6 +185,32 @@ export default function AdminProductsPage() {
     }
   };
 
+  const handleBulkPublish = async () => {
+    if (selectedCount === 0 || bulkBusy) return;
+
+    setBulkBusy(true);
+    setBulkStatus('Preparing publication selection...');
+
+    try {
+      const ids = allFilteredSelected ? await fetchFilteredProductIds() : Array.from(selectedIds);
+      if (ids.length === 0) {
+        setBulkStatus('No products matched the current selection.');
+        return;
+      }
+
+      sessionStorage.setItem('catalog:bulkPublishSelection', JSON.stringify({
+        productIds: ids,
+        createdAt: new Date().toISOString(),
+      }));
+      router.push('/dashboard/products/publish');
+    } catch (error) {
+      console.error('Failed to prepare bulk publication:', error);
+      setBulkStatus(null);
+      alert(error instanceof Error ? error.message : 'Failed to prepare bulk publication');
+      setBulkBusy(false);
+    }
+  };
+
   const handleBulkDelete = async () => {
     if (selectedCount === 0 || bulkBusy) return;
 
@@ -338,6 +366,14 @@ export default function AdminProductsPage() {
               className="px-4 py-2 bg-white border-2 border-blue-200 text-blue-700 rounded-xl font-semibold hover:bg-blue-50 hover:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Select all filtered ({total})
+            </button>
+            <button
+              type="button"
+              onClick={handleBulkPublish}
+              disabled={bulkBusy || selectedCount === 0}
+              className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold hover:from-emerald-700 hover:to-teal-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              🚀 Publish selected
             </button>
             <button
               type="button"

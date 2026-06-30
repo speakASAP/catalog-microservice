@@ -902,3 +902,52 @@ describe("ProductsService Aukro draft action", () => {
     });
   });
 });
+
+describe("ProductsService bulk marketplace publication", () => {
+  const logger = {
+    log: jest.fn(),
+    warn: jest.fn(),
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("dispatches unique selected products to selected marketplace-owned workflows", async () => {
+    const service = new ProductsService({} as any, logger as any);
+    jest.spyOn(service, "requestBazosDraft").mockResolvedValue({
+      success: true,
+      action: "create_bazos_draft",
+      productId: "product-1",
+      authority: "bazos",
+      nextAction: "resolve_policy_failures",
+    } as any);
+    jest.spyOn(service, "prepareFlipFlopSale").mockResolvedValue({
+      success: true,
+      action: "prepare_flipflop_sale",
+      productId: "product-1",
+      authority: "flipflop",
+      nextAction: "view_flipflop_listing",
+    } as any);
+
+    const result = await service.publishProductsToMarketplaces({
+      productIds: ["product-1", "product-1", "product-2"],
+      marketplaces: ["bazos", "flipflop"],
+      options: { bazos: { identityId: "identity-1" } },
+    }, "Bearer user-token");
+
+    expect(service.requestBazosDraft).toHaveBeenCalledTimes(2);
+    expect(service.requestBazosDraft).toHaveBeenCalledWith(
+      "product-1",
+      expect.objectContaining({ identityId: "identity-1", requestedBy: "catalog-bulk-publication", useCallerBazosIdentity: true }),
+      "Bearer user-token",
+    );
+    expect(service.prepareFlipFlopSale).toHaveBeenCalledTimes(2);
+    expect(result).toMatchObject({
+      success: true,
+      requestedProductIds: ["product-1", "product-2"],
+      marketplaces: ["bazos", "flipflop"],
+      totals: { requested: 4, succeeded: 4, failed: 0, blocked: 0 },
+    });
+  });
+});

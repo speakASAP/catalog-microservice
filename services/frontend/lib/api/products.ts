@@ -251,6 +251,44 @@ export interface UpdateMarketplaceFieldsPayload {
 }
 
 
+export type MarketplacePublicationChannel = 'allegro' | 'bazos' | 'aukro' | 'flipflop';
+
+export interface BulkMarketplacePublicationRequest {
+  productIds: string[];
+  marketplaces: MarketplacePublicationChannel[];
+  options?: Partial<Record<MarketplacePublicationChannel, any>>;
+}
+
+export interface BulkMarketplacePublicationResult {
+  productId: string;
+  marketplace: MarketplacePublicationChannel;
+  success: boolean;
+  blocked: boolean;
+  action?: string | null;
+  nextAction?: string | null;
+  listingUrl?: string | null;
+  message?: string | null;
+  reason?: string | null;
+  dependencyStatus?: number | null;
+  dependencyMessage?: string | null;
+  data?: any;
+}
+
+export interface BulkMarketplacePublicationResponse {
+  success: boolean;
+  action: 'bulk_marketplace_publication';
+  requestedProductIds: string[];
+  marketplaces: MarketplacePublicationChannel[];
+  totals: {
+    requested: number;
+    succeeded: number;
+    failed: number;
+    blocked: number;
+  };
+  results: BulkMarketplacePublicationResult[];
+}
+
+
 export interface ProductSalesChannel {
   productId: string;
   channel: string;
@@ -447,6 +485,10 @@ export const productsApi = {
 
   async confirmAllegroPublish(id: string) {
     return apiClient.post<AllegroSellActionResponse>(`/products/${id}/allegro-confirm`, {});
+  },
+
+  async bulkPublishProducts(data: BulkMarketplacePublicationRequest) {
+    return apiClient.post<BulkMarketplacePublicationResponse>('/products/publications/bulk', data);
   },
 
   async getFlipFlopStatus(id: string) {
