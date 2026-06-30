@@ -612,7 +612,7 @@ export class ProductsService {
     if (marketplace === 'aukro') {
       return this.requestAukroDraft(productId, { ...options, requestedBy }, authorization);
     }
-    return this.prepareFlipFlopSale(productId);
+    return this.prepareFlipFlopSale(productId, authorization);
   }
 
   private marketplacePublicationResult(
@@ -1028,49 +1028,60 @@ export class ProductsService {
     }
   }
 
-  async prepareFlipFlopSale(id: string) {
-    const product = await this.findOne(id);
+  async getFlipFlopStatus(id: string, authorization?: string) {
+    await this.findOne(id);
     const listingUrl = `${this.getFlipFlopPublicUrl()}/products/${encodeURIComponent(id)}`;
 
-    if (!product.isActive) {
+    if (!authorization) {
       return {
-        ...this.blockedChannelAction('flipflop', id, 'inactive_product', 'Only active catalog products can be shown on FlipFlop.'),
-        listingUrl,
-      };
-    }
-
-    const currentPrice = await this.resolveCurrentPrice(product);
-    if (!currentPrice) {
-      return {
-        ...this.blockedChannelAction('flipflop', id, 'price_required', 'A current catalog price is required before showing this product on FlipFlop.'),
+        ...this.blockedChannelAction('flipflop', id, 'auth_required', 'Authentication is required before reading FlipFlop publication status.'),
         listingUrl,
       };
     }
 
     try {
-      const productProjection = await this.getFlipFlopCatalogProjection(id);
-      const stockPreflight = this.stockPreflightFromProjection(productProjection);
-      if (!stockPreflight.sellable) {
-        return {
-          ...this.blockedChannelAction('flipflop', id, 'warehouse_stock_unavailable', 'Warehouse has no sellable stock for this product. Import or reconcile physical stock before showing it on FlipFlop.'),
-          listingUrl,
-          productProjection,
-        };
-      }
-      return {
-        success: true,
-        action: 'prepare_flipflop_sale',
-        productId: id,
-        authority: 'flipflop',
-        listingUrl,
-        availableOnFlipFlop: true,
-        message: 'Product is available through the Catalog Warehouse-backed FlipFlop projection.',
-        nextAction: 'view_flipflop_listing',
-        productProjection,
-      };
+      const response = await axios.get(
+        `${this.getFlipFlopServiceBaseUrl()}/products/publish/${encodeURIComponent(id)}/status`,
+        { headers: this.flipFlopHeaders(authorization) },
+      );
+      return this.flipFlopPublishResponse(id, response.data?.data || response.data);
     } catch (error: any) {
       return {
-        ...this.blockedChannelAction('flipflop', id, 'flipflop_projection_unavailable', 'FlipFlop product projection is not available yet. Check FlipFlop product-service routing and catalog projection.'),
+        ...this.blockedChannelAction('flipflop', id, 'flipflop_status_unavailable', 'FlipFlop publication status is unavailable. Check FlipFlop product-service routing and auth.'),
+        listingUrl,
+        dependencyStatus: error?.response?.status ?? null,
+        dependencyMessage: error?.response?.data?.message ?? error?.message ?? null,
+      };
+    }
+  }
+
+  async prepareFlipFlopSale(id: string, authorization?: string) {
+    await this.findOne(id);
+    const listingUrl = `${this.getFlipFlopPublicUrl()}/products/${encodeURIComponent(id)}`;
+
+    if (!authorization) {
+      return {
+        ...this.blockedChannelAction('flipflop', id, 'auth_required', 'Authentication is required before publishing to FlipFlop.'),
+        listingUrl,
+      };
+    }
+
+    try {
+      const response = await axios.post(
+        `${this.getFlipFlopServiceBaseUrl()}/products/publish/bulk`,
+        {
+          productIds: [id],
+          requestedBy: 'catalog-marketplace-publication',
+          requestId: `catalog-flipflop-${id}-${Date.now()}`,
+        },
+        { headers: this.flipFlopHeaders(authorization) },
+      );
+      const result = response.data?.data || response.data;
+      const item = result?.results?.find((entry: any) => entry?.catalogProductId === id || entry?.productId === id) || result?.results?.[0] || result;
+      return this.flipFlopPublishResponse(id, item);
+    } catch (error: any) {
+      return {
+        ...this.blockedChannelAction('flipflop', id, 'flipflop_publish_unavailable', 'FlipFlop native publish endpoint is unavailable. Check FlipFlop product-service routing and auth.'),
         listingUrl,
         dependencyStatus: error?.response?.status ?? null,
         dependencyMessage: error?.response?.data?.message ?? error?.message ?? null,
@@ -1308,6 +1319,42 @@ export class ProductsService {
 
   private getFlipFlopPublicUrl(): string {
     return (process.env.FLIPFLOP_PUBLIC_URL || 'https://flipflop.alfares.cz').replace(/\/$/, '');
+  }
+
+  private getFlipFlopServiceBaseUrl(): string {
+    return (
+      process.env.FLIPFLOP_PRODUCT_SERVICE_URL ||
+      process.env.FLIPFLOP_SERVICE_URL ||
+      'http://flipflop-product-service:3002'
+    ).replace(/\/$/, '');
+  }
+
+  private flipFlopHeaders(authorization: string): Record<string, string> {
+    return {
+      Authorization: authorization,
+      'Content-Type': 'application/json',
+    };
+  }
+
+  private flipFlopPublishResponse(productId: string, flipflopAction: any) {
+    const listingUrl = flipflopAction?.listingUrl || `${this.getFlipFlopPublicUrl()}/products/${encodeURIComponent(productId)}`;
+    const blocked = Boolean(flipflopAction?.blocked || flipflopAction?.success === false);
+    return {
+      success: !blocked,
+      action: flipflopAction?.action || 'publish_flipflop_listing',
+      productId,
+      authority: 'flipflop',
+      listingUrl,
+      availableOnFlipFlop: !blocked && (flipflopAction?.status === 'published' || flipflopAction?.published !== false),
+      blocked,
+      reason: flipflopAction?.reason ?? null,
+      message: flipflopAction?.message ?? null,
+      nextAction: flipflopAction?.nextAction || (blocked ? 'resolve_flipflop_requirements' : 'view_flipflop_listing'),
+      flipflopProductId: flipflopAction?.flipflopProductId ?? null,
+      status: flipflopAction?.status ?? null,
+      availableStock: flipflopAction?.availableStock ?? null,
+      data: flipflopAction,
+    };
   }
 
   private resolveBazosAuthorization(callerAuthorization?: string, preferCaller = false): string {

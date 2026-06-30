@@ -21,10 +21,25 @@ branch: feature/catalog-goal-19-canonical-content-connectors
 
 - Catalog bulk endpoint dispatches to existing marketplace-owned workflows instead of posting directly to external marketplaces.
 - Bazos remains authority for identity, compliance, drafts, queueing, and publish actions.
-- FlipFlop remains storefront/projection owner; Catalog only checks/dispatches the existing projection path until a FlipFlop-owned bulk endpoint exists.
+- FlipFlop remains storefront owner; Catalog dispatches to the native FlipFlop product-service bulk publish lifecycle endpoint instead of treating projection availability as publication.
 - No schema, migration, secret, deployment manifest, pricing, stock, checkout, or Auth ownership change was introduced by Goal 20.
 
 ## Known Gaps
 
-- FlipFlop has no native bulk publish/sell-action endpoint yet. Current Catalog behavior treats FlipFlop publication as availability through the existing Catalog Warehouse-backed FlipFlop projection.
 - Bazos bulk operation is per-product iteration over the existing single-product sell-action contract; no native Bazos bulk endpoint exists.
+- FlipFlop native endpoint deploy must precede the Catalog caller deploy so `/products/publish/bulk` is available in product-service.
+
+
+## 2026-06-30 Native FlipFlop Follow-up
+
+- Catalog `prepareFlipFlopSale` now calls `POST /products/publish/bulk` on FlipFlop product-service with the caller Authorization header.
+- Catalog `GET /api/products/:id/flipflop-status` now reads `GET /products/publish/:catalogProductId/status` instead of invoking publication or projection checks.
+- Focused Catalog product service spec passed after this caller switch; backend build passed.
+
+
+## 2026-06-30 Native FlipFlop Caller Validation
+
+- `git diff --check` passed.
+- `npm test -- --runInBand src/products/products.service.spec.ts` passed: 1 suite, 21 tests.
+- `npm run build` passed.
+- `npm test -- --runInBand` passed: 8 suites, 67 tests.

@@ -40,5 +40,10 @@ Catalog owns selection, product truth, and publication readiness aggregation. Ma
 - The publish button opens a dedicated publication page.
 - The page lists selected products and marketplace choices.
 - Submitting calls a protected Catalog bulk endpoint.
-- The bulk endpoint dispatches to existing single-product Bazos, Allegro, Aukro, and FlipFlop flows.
+- The bulk endpoint dispatches to Bazos, Allegro, Aukro, and the native FlipFlop product-service bulk publish lifecycle.
 - Results show sent, blocked, or failed status per item/channel.
+
+
+## 2026-06-30 FlipFlop Native Endpoint Follow-up
+
+FlipFlop publication is no longer projection-only. Catalog dispatches selected FlipFlop products to the FlipFlop product-service native bulk publish lifecycle, and status reads use the native FlipFlop lifecycle status endpoint.

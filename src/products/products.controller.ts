@@ -303,9 +303,10 @@ export class ProductsController {
   @UseGuards(CatalogAuthGuard)
   async getFlipFlopStatus(
     @Param("id", ParseUUIDPipe) id: string,
+    @Headers("authorization") authorization?: string,
   ) {
     this.logger.log(`GET /api/products/${id}/flipflop-status`, "ProductsController");
-    const result = await this.productsService.prepareFlipFlopSale(id);
+    const result = await this.productsService.getFlipFlopStatus(id, authorization);
     return { success: result.success !== false, data: result };
   }
 
@@ -316,7 +317,7 @@ export class ProductsController {
     @Req() request?: CatalogAuthenticatedRequest,
   ) {
     this.logger.log(`POST /api/products/${id}/sell-on-flipflop`, "ProductsController");
-    const result = await this.productsService.prepareFlipFlopSale(id);
+    const result = await this.productsService.prepareFlipFlopSale(id, request?.headers.authorization);
     if (request) {
       this.logger.auditCatalogWrite(request, {
         action: 'prepare_flipflop_sale',
