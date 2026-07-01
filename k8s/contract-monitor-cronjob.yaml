@@ -4,7 +4,7 @@ metadata:
   name: catalog-contract-monitor
   namespace: statex-apps
   labels:
-    app: catalog-microservice
+    app: catalog-contract-monitor
     component: contract-monitor
     managed-by: k8s-migration
 spec:
@@ -18,7 +18,7 @@ spec:
       template:
         metadata:
           labels:
-            app: catalog-microservice
+            app: catalog-contract-monitor
             component: contract-monitor
         spec:
           restartPolicy: Never
