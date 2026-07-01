@@ -299,6 +299,46 @@ export class ProductsController {
     return { success: result.success !== false, data: result };
   }
 
+  @Get(":id/heureka-status")
+  @UseGuards(CatalogAuthGuard)
+  async getHeurekaStatus(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Query("feedType") feedType = "heureka_cz",
+  ) {
+    this.logger.log(`GET /api/products/${id}/heureka-status`, "ProductsController");
+    const result = await this.productsService.getHeurekaStatus(id, feedType);
+    return { success: result.success !== false, data: result };
+  }
+
+  @Post(":id/sell-on-heureka")
+  @UseGuards(CatalogAuthGuard)
+  async sellOnHeureka(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() data: any,
+    @Req() request?: CatalogAuthenticatedRequest,
+  ) {
+    this.logger.log(`POST /api/products/${id}/sell-on-heureka`, "ProductsController");
+    const result = await this.productsService.prepareHeurekaSale(id, data || {});
+    if (request) {
+      this.logger.auditCatalogWrite(request, {
+        action: 'prepare_heureka_sale',
+        resourceType: 'product',
+        resourceId: id,
+      });
+    }
+    return { success: result.success !== false, data: result };
+  }
+
+  @Get(":id/heureka-feed-snapshot")
+  async getHeurekaFeedSnapshot(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Query("feedType") feedType = "heureka_cz",
+  ) {
+    this.logger.log(`GET /api/products/${id}/heureka-feed-snapshot`, "ProductsController");
+    const snapshot = await this.productsService.getHeurekaFeedSnapshot(id, feedType);
+    return { success: true, data: snapshot };
+  }
+
   @Get(":id/flipflop-status")
   @UseGuards(CatalogAuthGuard)
   async getFlipFlopStatus(

@@ -143,7 +143,7 @@ type CatalogStockPreflight = {
   projection: any | null;
 };
 
-export type MarketplacePublicationChannel = 'allegro' | 'bazos' | 'aukro' | 'flipflop';
+export type MarketplacePublicationChannel = 'allegro' | 'bazos' | 'aukro' | 'flipflop' | 'heureka';
 
 export type BulkMarketplacePublicationRequest = {
   productIds: string[];
@@ -180,7 +180,7 @@ export type BulkMarketplacePublicationResponse = {
   results: BulkMarketplacePublicationResult[];
 };
 
-const MARKETPLACE_PUBLICATION_CHANNELS: MarketplacePublicationChannel[] = ['allegro', 'bazos', 'aukro', 'flipflop'];
+const MARKETPLACE_PUBLICATION_CHANNELS: MarketplacePublicationChannel[] = ['allegro', 'bazos', 'aukro', 'flipflop', 'heureka'];
 
 const DEFAULT_SALES_CHANNELS = ['flipflop', 'allegro', 'aukro', 'bazos', 'heureka'];
 
@@ -466,7 +466,7 @@ export class ProductsService {
 
   private async renderMarketplaceDescription(
     product: Product,
-    marketplace: 'allegro' | 'bazos' | 'aukro' | 'flipflop',
+    marketplace: 'allegro' | 'bazos' | 'aukro' | 'flipflop' | 'heureka',
   ): Promise<string | null> {
     if (!this.contentRendererService) {
       return product.description ? cleanPlainText(product.description) : null;
@@ -669,6 +669,9 @@ export class ProductsService {
     }
     if (marketplace === 'aukro') {
       return this.requestAukroDraft(productId, { ...options, requestedBy }, authorization);
+    }
+    if (marketplace === 'heureka') {
+      return this.prepareHeurekaSale(productId, { ...options, requestedBy });
     }
     return this.prepareFlipFlopSale(productId, authorization);
   }
@@ -1091,6 +1094,81 @@ export class ProductsService {
     }
   }
 
+  async getHeurekaStatus(id: string, feedType = 'heureka_cz') {
+    await this.findOne(id);
+    try {
+      const response = await axios.get(
+        `${this.getHeurekaBaseUrl()}/heureka/products/${encodeURIComponent(id)}/status?feedType=${encodeURIComponent(feedType || 'heureka_cz')}`,
+      );
+      return this.heurekaPublishResponse(id, response.data?.data || response.data);
+    } catch (error: any) {
+      return {
+        ...this.blockedChannelAction('heureka', id, 'heureka_status_unavailable', 'Heureka product status is unavailable. Check Heureka service routing and readiness.'),
+        dependencyStatus: error?.response?.status ?? null,
+        dependencyMessage: error?.response?.data?.message ?? error?.message ?? null,
+      };
+    }
+  }
+
+  async prepareHeurekaSale(id: string, data: any = {}) {
+    const product = await this.findOne(id);
+    const feedType = data?.feedType || 'heureka_cz';
+    const snapshot = await this.getHeurekaFeedSnapshot(id, feedType, product);
+
+    try {
+      const response = await axios.post(
+        `${this.getHeurekaBaseUrl()}/heureka/products/${encodeURIComponent(id)}/include`,
+        {
+          feedType,
+          requestedBy: data?.requestedBy || 'catalog-marketplace-publication',
+          sourceHash: snapshot.sourceHash,
+        },
+        { headers: this.heurekaHeaders() },
+      );
+      return this.heurekaPublishResponse(id, response.data?.data || response.data, snapshot);
+    } catch (error: any) {
+      return {
+        ...this.blockedChannelAction('heureka', id, 'heureka_publish_unavailable', 'Heureka feed inclusion failed. Resolve Heureka readiness blockers before retrying.'),
+        dependencyStatus: error?.response?.status ?? null,
+        dependencyMessage: error?.response?.data?.message ?? error?.message ?? null,
+        readiness: error?.response?.data?.readiness ?? error?.response?.data?.readinessItem ?? null,
+        snapshot,
+      };
+    }
+  }
+
+  async getHeurekaFeedSnapshot(id: string, feedType = 'heureka_cz', loadedProduct?: Product) {
+    const product = loadedProduct || await this.productRepository.findOne({
+      where: { id },
+      relations: ['categories', 'media', 'pricing'],
+    });
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+
+    const preview = this.contentRendererService
+      ? await this.contentRendererService.renderProductContent(product, 'heureka')
+      : null;
+    const currentPrice = await this.resolveCurrentPrice(product);
+    const feedFields = {
+      ...(preview?.content?.feedFields || {}),
+      ITEM_ID: preview?.content?.feedFields?.ITEM_ID || product.sku || product.id,
+      PRICE_VAT: currentPrice,
+    };
+
+    return {
+      contractVersion: 'catalog-heureka-feed-snapshot.v1',
+      productId: product.id,
+      marketplace: 'heureka',
+      feedType: feedType || 'heureka_cz',
+      sourceHash: preview?.source?.sourceHash || `catalog:${product.id}:${product.updatedAt?.toISOString?.() || ''}`,
+      generatedAt: new Date().toISOString(),
+      feedFields,
+      overridesApplied: preview?.overridesApplied || [],
+      warnings: preview?.warnings || [],
+    };
+  }
+
   async getFlipFlopStatus(id: string, authorization?: string) {
     await this.findOne(id);
     const listingUrl = `${this.getFlipFlopPublicUrl()}/products/${encodeURIComponent(id)}`;
@@ -1380,6 +1458,46 @@ export class ProductsService {
       : { 'Content-Type': 'application/json' };
   }
 
+  private getHeurekaBaseUrl(): string {
+    return (process.env.HEUREKA_SERVICE_URL || process.env.HEUREKA_BASE_URL || 'http://heureka-service:3800').replace(/\/$/, '');
+  }
+
+  private getHeurekaServiceToken(): string | null {
+    const token = process.env.HEUREKA_INTERNAL_SERVICE_TOKEN || process.env.HEUREKA_SERVICE_TOKEN || process.env.INTERNAL_SERVICE_TOKEN || process.env.CATALOG_INTERNAL_SERVICE_TOKEN;
+    return token?.trim() || null;
+  }
+
+  private heurekaHeaders(): Record<string, string> {
+    const token = this.getHeurekaServiceToken();
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { 'x-internal-service-token': token } : {}),
+      'x-service-name': 'catalog-microservice',
+    };
+  }
+
+  private heurekaPublishResponse(productId: string, heurekaAction: any, snapshot?: any) {
+    const blocked = Boolean(heurekaAction?.blocked || heurekaAction?.success === false);
+    return {
+      success: !blocked,
+      action: heurekaAction?.action || 'include_heureka_product',
+      productId,
+      authority: 'heureka',
+      publishAuthority: 'heureka',
+      feedType: heurekaAction?.feedType || snapshot?.feedType || 'heureka_cz',
+      included: Boolean(heurekaAction?.included),
+      blocked,
+      reason: heurekaAction?.reason ?? null,
+      message: heurekaAction?.message ?? null,
+      nextAction: heurekaAction?.nextAction || (blocked ? 'resolve_heureka_readiness_blockers' : 'view_heureka_feed'),
+      feedUrl: heurekaAction?.feedUrl || `${this.getHeurekaBaseUrl()}/heureka/feed?type=${encodeURIComponent(heurekaAction?.feedType || snapshot?.feedType || 'heureka_cz')}`,
+      readiness: heurekaAction?.readiness ?? null,
+      readinessItem: heurekaAction?.readinessItem ?? null,
+      snapshot: snapshot ?? null,
+      data: heurekaAction,
+    };
+  }
+
   private getFlipFlopPublicUrl(): string {
     return (process.env.FLIPFLOP_PUBLIC_URL || 'https://flipflop.alfares.cz').replace(/\/$/, '');
   }
@@ -1517,7 +1635,7 @@ export class ProductsService {
     };
   }
 
-  private blockedChannelAction(channel: 'allegro' | 'flipflop', productId: string, reason: string, message: string) {
+  private blockedChannelAction(channel: 'allegro' | 'flipflop' | 'heureka', productId: string, reason: string, message: string) {
     return {
       success: false,
       action: channel === 'allegro' ? 'prepare_allegro_sale' : 'prepare_flipflop_sale',

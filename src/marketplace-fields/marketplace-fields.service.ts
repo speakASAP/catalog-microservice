@@ -93,6 +93,20 @@ const COMMON_CANONICAL_FIELDS: MarketplaceFieldDefinition[] = [
 
 const MARKETPLACE_DEFINITIONS: MarketplaceDefinition[] = [
   {
+    marketplace: 'heureka',
+    label: 'Heureka',
+    description: 'Heureka XML feed fields and product-specific overrides. Catalog keeps canonical JSON and renders platform-specific feed fields at publication time.',
+    fields: [
+      ...COMMON_CANONICAL_FIELDS,
+      { key: 'productName', label: 'PRODUCTNAME', type: 'text', source: 'override', marketplacePath: 'PRODUCTNAME', aliases: ['productName', 'PRODUCTNAME', 'heurekaProductName'], editable: true },
+      { key: 'categoryText', label: 'CATEGORYTEXT', type: 'text', source: 'override', marketplacePath: 'CATEGORYTEXT', aliases: ['categoryText', 'CATEGORYTEXT', 'categoryPath', 'heurekaCategory'], editable: true },
+      { key: 'deliveryDate', label: 'DELIVERY_DATE', type: 'number', source: 'override', marketplacePath: 'DELIVERY_DATE', aliases: ['deliveryDate', 'DELIVERY_DATE', 'availabilityDays'], editable: true },
+      { key: 'deliveryPrice', label: 'DELIVERY price', type: 'number', source: 'override', marketplacePath: 'DELIVERY', aliases: ['deliveryPrice', 'DELIVERY', 'shippingPrice'], editable: true },
+      { key: 'feedType', label: 'Feed type', type: 'text', source: 'override', marketplacePath: 'feedType', aliases: ['feedType', 'heurekaFeedType'], editable: true },
+      { key: 'feedProductId', label: 'Heureka feed product ID', type: 'text', source: 'externalRef', marketplacePath: 'ITEM_ID', aliases: ['feedProductId', 'ITEM_ID', 'itemId'], editable: false },
+    ],
+  },
+  {
     marketplace: 'allegro',
     label: 'Allegro',
     description: 'Allegro-specific offer, productSet, parameter and policy fields. Canonical product text stays in Catalog.',

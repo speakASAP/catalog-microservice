@@ -1,4 +1,4 @@
-export type MarketplaceContentKey = 'allegro' | 'bazos' | 'aukro' | 'flipflop';
+export type MarketplaceContentKey = 'allegro' | 'bazos' | 'aukro' | 'flipflop' | 'heureka';
 
 export type ProductContentBlock =
   | { type: 'heading'; level?: number; text?: string }
@@ -17,7 +17,7 @@ export type ProductContentDocument = {
 export type MarketplaceContentPreview = {
   marketplace: MarketplaceContentKey;
   label: string;
-  format: 'html' | 'plain_text' | 'structured_blocks';
+  format: 'html' | 'plain_text' | 'structured_blocks' | 'xml_feed_fields';
   product: {
     id: string;
     sku: string;
@@ -29,6 +29,7 @@ export type MarketplaceContentPreview = {
     html?: string;
     blocks?: ProductContentBlock[];
     sections?: Array<{ title?: string; body: string }>;
+    feedFields?: Record<string, string | number | null>;
   };
   source: {
     canonicalDocumentVersion: number;

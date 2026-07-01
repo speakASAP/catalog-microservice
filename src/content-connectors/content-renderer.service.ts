@@ -21,6 +21,7 @@ const MARKETPLACES: Array<{ key: MarketplaceContentKey; label: string; format: M
   { key: 'bazos', label: 'Bazoš', format: 'plain_text' },
   { key: 'aukro', label: 'Aukro', format: 'plain_text' },
   { key: 'flipflop', label: 'FlipFlop', format: 'structured_blocks' },
+  { key: 'heureka', label: 'Heureka', format: 'xml_feed_fields' },
 ];
 
 @Injectable()
@@ -64,17 +65,17 @@ export class ContentRendererService {
     const document = normalizeDescriptionDocument(product.descriptionRich, product.description);
     const legacyDescriptionFallback = !product.descriptionRich && Boolean(product.description?.trim());
     const overrides = profile?.overrides || {};
-    const title = cleanPlainText(overrides.headline) || product.title;
+    const title = this.resolveMarketplaceTitle(product, overrides, marketplace);
     const prefix = cleanPlainText(overrides.descriptionPrefix);
     const suffix = cleanPlainText(overrides.descriptionSuffix);
     const basePlainText = descriptionDocumentToPlainText(document) || cleanPlainText(product.description);
     const plainText = [prefix, basePlainText, suffix].filter(Boolean).join('\n\n').trim();
     const blocks = this.applyTextOverrides(document?.blocks || [], prefix, suffix);
     const warnings = this.warningsFor(document, product, marketplace);
-    const sourceHash = this.hashContent({ marketplace, title, plainText, blocks, overrides });
+    const sourceHash = this.hashContent({ marketplace, title, plainText, blocks, overrides, feedFields: marketplace === 'heureka' ? this.buildHeurekaFeedFields(product, title, plainText, overrides) : undefined });
     const generatedAt = new Date().toISOString();
 
-    const content = this.renderContent(marketplace, title, blocks, plainText);
+    const content = this.renderContent(marketplace, title, blocks, plainText, product, overrides);
     return {
       marketplace,
       label: marketplaceConfig.label,
@@ -91,7 +92,7 @@ export class ContentRendererService {
         sourceHash,
         generatedAt,
       },
-      overridesApplied: ['headline', 'descriptionPrefix', 'descriptionSuffix'].filter((key) => cleanPlainText((overrides as any)[key])),
+      overridesApplied: this.appliedOverrideKeys(overrides, marketplace),
       warnings,
     };
   }
@@ -136,6 +137,8 @@ export class ContentRendererService {
     title: string,
     blocks: ProductContentBlock[],
     plainText: string,
+    product?: Product,
+    overrides: Record<string, unknown> = {},
   ): MarketplaceContentPreview['content'] {
     if (marketplace === 'allegro') {
       return {
@@ -155,10 +158,69 @@ export class ContentRendererService {
       };
     }
 
+    if (marketplace === 'heureka') {
+      return {
+        title,
+        plainText,
+        feedFields: this.buildHeurekaFeedFields(product, title, plainText, overrides),
+      };
+    }
+
     return {
       title,
       plainText,
     };
+  }
+
+  private resolveMarketplaceTitle(product: Product, overrides: Record<string, unknown>, marketplace: MarketplaceContentKey): string {
+    if (marketplace === 'heureka') {
+      return cleanPlainText(overrides.productName) || cleanPlainText(overrides.headline) || product.title;
+    }
+    return cleanPlainText(overrides.headline) || product.title;
+  }
+
+  private buildHeurekaFeedFields(
+    product: Product | undefined,
+    title: string,
+    plainText: string,
+    overrides: Record<string, unknown>,
+  ): Record<string, string | number | null> {
+    const primaryImage = (product?.media || []).find((media: any) => media?.isPrimary)?.url || product?.media?.[0]?.url || null;
+    return {
+      ITEM_ID: product?.sku || product?.id || null,
+      PRODUCTNAME: title,
+      PRODUCT: title,
+      DESCRIPTION: plainText,
+      CATEGORYTEXT: this.resolveHeurekaCategoryText(product, overrides),
+      MANUFACTURER: cleanPlainText(overrides.manufacturer) || product?.manufacturer || product?.brand || null,
+      EAN: product?.ean || null,
+      IMGURL: primaryImage,
+      DELIVERY_DATE: this.optionalNumber(overrides.deliveryDate),
+      DELIVERY: this.optionalNumber(overrides.deliveryPrice),
+    };
+  }
+
+  private resolveHeurekaCategoryText(product: Product | undefined, overrides: Record<string, unknown>): string | null {
+    const explicit = cleanPlainText(overrides.categoryText || overrides.categoryPath || overrides.category);
+    if (explicit) return explicit;
+    const categoryNames = (product?.categories || [])
+      .map((category: any) => cleanPlainText(category?.name))
+      .filter(Boolean);
+    return categoryNames.length ? categoryNames.join(' | ') : null;
+  }
+
+  private optionalNumber(value: unknown): number | null {
+    if (value === null || value === undefined || value === '') return null;
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : null;
+  }
+
+  private appliedOverrideKeys(overrides: Record<string, unknown>, marketplace: MarketplaceContentKey): string[] {
+    const keys = ['headline', 'descriptionPrefix', 'descriptionSuffix'];
+    if (marketplace === 'heureka') {
+      keys.push('productName', 'categoryText', 'categoryPath', 'deliveryDate', 'deliveryPrice');
+    }
+    return keys.filter((key) => cleanPlainText((overrides as any)[key]));
   }
 
   private renderHtml(blocks: ProductContentBlock[]): string {
@@ -214,6 +276,9 @@ export class ContentRendererService {
     }
     if (marketplace === 'bazos' && descriptionDocumentToPlainText(document).length > 4500) {
       warnings.push('bazos_plain_text_may_be_too_long');
+    }
+    if (marketplace === 'heureka' && !this.resolveHeurekaCategoryText(product, {})) {
+      warnings.push('heureka_category_text_missing');
     }
     return warnings;
   }

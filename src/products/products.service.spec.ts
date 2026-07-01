@@ -946,10 +946,18 @@ describe("ProductsService bulk marketplace publication", () => {
       nextAction: "view_flipflop_listing",
     } as any);
 
+    jest.spyOn(service, "prepareHeurekaSale").mockResolvedValue({
+      success: true,
+      action: "include_heureka_product",
+      productId: "product-1",
+      authority: "heureka",
+      nextAction: "view_heureka_feed",
+    } as any);
+
     const result = await service.publishProductsToMarketplaces({
       productIds: ["product-1", "product-1", "product-2"],
-      marketplaces: ["bazos", "flipflop"],
-      options: { bazos: { identityId: "identity-1" } },
+      marketplaces: ["bazos", "flipflop", "heureka"],
+      options: { bazos: { identityId: "identity-1" }, heureka: { feedType: "heureka_cz" } },
     }, "Bearer user-token");
 
     expect(service.requestBazosDraft).toHaveBeenCalledTimes(2);
@@ -960,11 +968,13 @@ describe("ProductsService bulk marketplace publication", () => {
     );
     expect(service.prepareFlipFlopSale).toHaveBeenCalledTimes(2);
     expect(service.prepareFlipFlopSale).toHaveBeenCalledWith("product-1", "Bearer user-token");
+    expect(service.prepareHeurekaSale).toHaveBeenCalledTimes(2);
+    expect(service.prepareHeurekaSale).toHaveBeenCalledWith("product-1", expect.objectContaining({ feedType: "heureka_cz", requestedBy: "catalog-bulk-publication" }));
     expect(result).toMatchObject({
       success: true,
       requestedProductIds: ["product-1", "product-2"],
-      marketplaces: ["bazos", "flipflop"],
-      totals: { requested: 4, succeeded: 4, failed: 0, blocked: 0 },
+      marketplaces: ["bazos", "flipflop", "heureka"],
+      totals: { requested: 6, succeeded: 6, failed: 0, blocked: 0 },
     });
   });
 });

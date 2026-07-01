@@ -1361,3 +1361,16 @@ Current blockers:
 - `[MISSING: owner-approved machine-auth receiver contract or valid Auth-compatible Catalog Warehouse token]` for passing the Catalog propagation leg of the stock acceptance gate.
 - `[MISSING: owner-provided BizBox/current export, real supplier API contract, additional seller authorization, or explicit authority confirmation]` for stock beyond the 9 current Allegro-authoritative offers totaling 496 pieces.
 - `[MISSING: explicit approval for read-only Suppliers DB/API metadata inspection if service JWT remains invalid]`.
+
+
+## 2026-07-01 - Heureka Catalog Publication Connector
+
+Change: added Heureka to Catalog marketplace publication and content conversion. Catalog now exposes protected GET /api/products/:id/heureka-status, protected POST /api/products/:id/sell-on-heureka, public-safe GET /api/products/:id/heureka-feed-snapshot, and bulk POST /api/products/publications/bulk accepts marketplaces=[heureka]. Canonical product JSON stays in Catalog; Heureka-specific feed fields are rendered from the content connector and product_marketplace_profiles overrides: productName, categoryText, deliveryDate, deliveryPrice, feedType, feedProductId.
+
+Runtime evidence: Catalog focused tests passed (src/content-connectors/content-renderer.service.spec.ts, src/products/products.service.spec.ts, 25 tests), Catalog build passed, Catalog deployed image digest sha256:0ce500d55881258f9fded223898fc222df9445c87c5e4bf6346afccdeec918ba. Live snapshot endpoint returned contractVersion=catalog-heureka-feed-snapshot.v1 with CATEGORYTEXT, PRICE_VAT, IMGURL, and canonical description for product aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3.
+
+Heureka integration evidence: Heureka accepts HEUREKA_INTERNAL_SERVICE_TOKEN sourced from Catalog internal token, consumes Catalog Heureka feed snapshots, and filters public XML output to stock-positive products with required public feed fields. Bulk publish from Catalog to Heureka succeeded for six FlipFlop products: requested=6, succeeded=6, blocked=0. Heureka status for aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3 returned included=true, readiness=ready, availableStock=12. Public https://heureka.alfares.cz/heureka/feed?type=heureka_cz returned HTTP 200, x-heureka-feed-status=valid, SHOPITEM=6, CATEGORYTEXT=6, and excluded older blocked product 8bba517b-e5c6-41c4-9bb3-92108f4f84c3. Heureka deployed image digest sha256:c9c367d32c2709dc405aa0d35fbd5f3e652d1953163dd93131b2efbd965e01f8.
+
+Boundary decision: no raw secret values were printed; token verification used length and hash prefixes only. No destructive DB/file operations were performed.
+
+Next action: No action needed.
