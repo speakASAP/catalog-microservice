@@ -385,104 +385,96 @@ describe("ProductsService FlipFlop status action", () => {
     delete process.env.INTERNAL_SERVICE_TOKEN;
   });
 
-  it("uses the Catalog Warehouse-backed FlipFlop projection for channel status stock", async () => {
-    process.env.CATALOG_SERVICE_URL = "http://catalog-microservice:3200";
-    process.env.CATALOG_INTERNAL_SERVICE_TOKEN = "catalog-internal-token";
+  it("uses the native FlipFlop bulk publish lifecycle endpoint", async () => {
+    process.env.FLIPFLOP_PRODUCT_SERVICE_URL = "http://flipflop-product-service:3002";
     const repository = {
       findOne: jest.fn(async () => product),
       count: jest.fn(async () => 1),
-    };
-    const pricingService = {
-      getCurrentPrice: jest.fn(async () => ({ productId: product.id, basePrice: 1000, salePrice: 900, currency: "CZK" })),
     };
     const mockedAxios = axios as jest.Mocked<typeof axios>;
     mockedAxios.post.mockResolvedValueOnce({
       data: {
         success: true,
         data: {
-          items: [{
-            id: product.id,
+          results: [{
+            catalogProductId: product.id,
             productId: product.id,
-            stockQuantity: 60,
-            availability: {
-              source: "warehouse",
-              totalAvailable: 60,
-            },
+            action: "publish_flipflop_listing",
+            authority: "flipflop",
+            status: "published",
+            success: true,
+            blocked: false,
+            listingUrl: `https://flipflop.alfares.cz/products/${product.id}`,
+            flipflopProductId: "flipflop-product-1",
+            availableStock: 60,
+            nextAction: "view_flipflop_listing",
           }],
         },
       },
     } as any);
-    const service = new ProductsService(repository as any, logger as any, pricingService as any);
+    const service = new ProductsService(repository as any, logger as any);
 
-    const result = await service.prepareFlipFlopSale(product.id);
+    const result = await service.prepareFlipFlopSale(product.id, "Bearer user-token");
 
     expect(mockedAxios.post).toHaveBeenCalledWith(
-      "http://catalog-microservice:3200/api/products/projections/flipflop/batch",
-      { productIds: [product.id], includeUnavailable: true },
+      "http://flipflop-product-service:3002/products/publish/bulk",
+      expect.objectContaining({
+        productIds: [product.id],
+        requestedBy: "catalog-marketplace-publication",
+      }),
       {
         headers: {
+          Authorization: "Bearer user-token",
           "Content-Type": "application/json",
-          "x-internal-service-token": "catalog-internal-token",
-          "x-service-name": "catalog-microservice",
         },
       },
     );
-    expect(mockedAxios.get).not.toHaveBeenCalledWith(expect.stringContaining("flipflop.alfares.cz/api/products"));
     expect(result).toMatchObject({
       success: true,
       authority: "flipflop",
-      productProjection: {
-        productId: product.id,
-        stockQuantity: 60,
-        availability: {
-          source: "warehouse",
-          totalAvailable: 60,
-        },
-      },
+      action: "publish_flipflop_listing",
+      status: "published",
+      flipflopProductId: "flipflop-product-1",
+      availableStock: 60,
     });
   });
 
-  it("blocks FlipFlop preparation when the Warehouse-backed projection has no sellable stock", async () => {
-    process.env.CATALOG_SERVICE_URL = "http://catalog-microservice:3200";
-    process.env.CATALOG_INTERNAL_SERVICE_TOKEN = "catalog-internal-token";
+  it("returns blocked FlipFlop lifecycle responses from the native endpoint", async () => {
+    process.env.FLIPFLOP_PRODUCT_SERVICE_URL = "http://flipflop-product-service:3002";
     const repository = {
       findOne: jest.fn(async () => product),
       count: jest.fn(async () => 1),
-    };
-    const pricingService = {
-      getCurrentPrice: jest.fn(async () => ({ productId: product.id, basePrice: 1000, currency: "CZK" })),
     };
     const mockedAxios = axios as jest.Mocked<typeof axios>;
     mockedAxios.post.mockResolvedValueOnce({
       data: {
         success: true,
         data: {
-          items: [{
-            id: product.id,
+          results: [{
+            catalogProductId: product.id,
             productId: product.id,
-            stockQuantity: 0,
-            availability: {
-              source: "warehouse",
-              totalAvailable: 0,
-              warehouses: [],
-            },
+            action: "publish_flipflop_listing",
+            authority: "flipflop",
+            status: "blocked",
+            success: false,
+            blocked: true,
+            reason: "warehouse_stock_unavailable",
+            message: "Warehouse has no sellable stock for this product.",
+            nextAction: "resolve_flipflop_requirements",
           }],
         },
       },
     } as any);
-    const service = new ProductsService(repository as any, logger as any, pricingService as any);
+    const service = new ProductsService(repository as any, logger as any);
 
-    const result = await service.prepareFlipFlopSale(product.id);
+    const result = await service.prepareFlipFlopSale(product.id, "Bearer user-token");
 
     expect(result).toMatchObject({
       success: false,
       blocked: true,
       reason: "warehouse_stock_unavailable",
       authority: "flipflop",
-      productProjection: {
-        productId: product.id,
-        stockQuantity: 0,
-      },
+      status: "blocked",
     });
   });
 });
@@ -923,6 +915,56 @@ describe("ProductsService Aukro draft action", () => {
       offerId: "aukro-offer-1",
       blockers: ["MEDIA_READINESS_MISSING"],
       nextAction: "resolve_aukro_policy_blockers",
+    });
+  });
+});
+
+describe("ProductsService bulk marketplace publication", () => {
+  const logger = {
+    log: jest.fn(),
+    warn: jest.fn(),
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("dispatches unique selected products to selected marketplace-owned workflows", async () => {
+    const service = new ProductsService({} as any, logger as any);
+    jest.spyOn(service, "requestBazosDraft").mockResolvedValue({
+      success: true,
+      action: "create_bazos_draft",
+      productId: "product-1",
+      authority: "bazos",
+      nextAction: "resolve_policy_failures",
+    } as any);
+    jest.spyOn(service, "prepareFlipFlopSale").mockResolvedValue({
+      success: true,
+      action: "prepare_flipflop_sale",
+      productId: "product-1",
+      authority: "flipflop",
+      nextAction: "view_flipflop_listing",
+    } as any);
+
+    const result = await service.publishProductsToMarketplaces({
+      productIds: ["product-1", "product-1", "product-2"],
+      marketplaces: ["bazos", "flipflop"],
+      options: { bazos: { identityId: "identity-1" } },
+    }, "Bearer user-token");
+
+    expect(service.requestBazosDraft).toHaveBeenCalledTimes(2);
+    expect(service.requestBazosDraft).toHaveBeenCalledWith(
+      "product-1",
+      expect.objectContaining({ identityId: "identity-1", requestedBy: "catalog-bulk-publication", useCallerBazosIdentity: true }),
+      "Bearer user-token",
+    );
+    expect(service.prepareFlipFlopSale).toHaveBeenCalledTimes(2);
+    expect(service.prepareFlipFlopSale).toHaveBeenCalledWith("product-1", "Bearer user-token");
+    expect(result).toMatchObject({
+      success: true,
+      requestedProductIds: ["product-1", "product-2"],
+      marketplaces: ["bazos", "flipflop"],
+      totals: { requested: 4, succeeded: 4, failed: 0, blocked: 0 },
     });
   });
 });

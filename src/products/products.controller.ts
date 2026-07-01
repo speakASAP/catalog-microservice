@@ -130,6 +130,41 @@ export class ProductsController {
   }
 
   /**
+   * Publish selected products through marketplace-owned publication workflows
+   * POST /api/products/publications/bulk
+   */
+  @Post("publications/bulk")
+  @UseGuards(CatalogAuthGuard)
+  async bulkMarketplacePublication(
+    @Body() data: { productIds?: string[]; marketplaces?: string[]; options?: Record<string, any> },
+    @Headers("authorization") authorization?: string,
+    @Req() request?: CatalogAuthenticatedRequest,
+  ) {
+    this.logger.log(`POST /api/products/publications/bulk`, "ProductsController");
+    const result = await this.productsService.publishProductsToMarketplaces({
+      productIds: Array.isArray(data?.productIds) ? data.productIds : [],
+      marketplaces: Array.isArray(data?.marketplaces) ? data.marketplaces as any : [],
+      options: data?.options || {},
+    }, authorization);
+    if (request) {
+      this.logger.auditCatalogWrite(request, {
+        action: 'bulk_marketplace_publication',
+        resourceType: 'product_group',
+        resourceId: 'bulk-publication',
+        metadata: {
+          productCount: result.requestedProductIds.length,
+          marketplaces: result.marketplaces.join(','),
+          requested: result.totals.requested,
+          succeeded: result.totals.succeeded,
+          blocked: result.totals.blocked,
+        },
+      });
+    }
+    return { success: result.success, data: result };
+  }
+
+
+  /**
    * Get readiness diagnostics for a product
    * GET /api/products/:id/readiness
    */
@@ -268,9 +303,10 @@ export class ProductsController {
   @UseGuards(CatalogAuthGuard)
   async getFlipFlopStatus(
     @Param("id", ParseUUIDPipe) id: string,
+    @Headers("authorization") authorization?: string,
   ) {
     this.logger.log(`GET /api/products/${id}/flipflop-status`, "ProductsController");
-    const result = await this.productsService.prepareFlipFlopSale(id);
+    const result = await this.productsService.getFlipFlopStatus(id, authorization);
     return { success: result.success !== false, data: result };
   }
 
@@ -281,7 +317,7 @@ export class ProductsController {
     @Req() request?: CatalogAuthenticatedRequest,
   ) {
     this.logger.log(`POST /api/products/${id}/sell-on-flipflop`, "ProductsController");
-    const result = await this.productsService.prepareFlipFlopSale(id);
+    const result = await this.productsService.prepareFlipFlopSale(id, request?.headers.authorization);
     if (request) {
       this.logger.auditCatalogWrite(request, {
         action: 'prepare_flipflop_sale',
