@@ -12,6 +12,7 @@ import { ProductAttribute } from '../attributes/product-attribute.entity';
 import { Media } from '../media/media.entity';
 import { ProductPricing } from '../pricing/product-pricing.entity';
 import { Category } from '../categories/category.entity';
+import type { ProductContentDocument } from '../content-connectors/content-document';
 
 export type ProductLifecycle = "draft" | "active" | "archived" | "needs_review";
 
@@ -32,6 +33,9 @@ export class Product {
 
   @Column({ type: 'text', nullable: true })
   description: string;
+
+  @Column({ name: 'description_rich', type: 'jsonb', nullable: true })
+  descriptionRich: ProductContentDocument | null;
 
   @Column({ length: 200, nullable: true })
   brand: string;
@@ -93,4 +97,3 @@ export class Product {
   @UpdateDateColumn()
   updatedAt: Date;
 }
-
