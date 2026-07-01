@@ -33,19 +33,24 @@ export class ProductsController {
     private readonly logger: LoggerService,
   ) {}
 
+  private productScope(request?: CatalogAuthenticatedRequest) {
+    return { actor: request?.catalogActor };
+  }
+
   /**
    * Create a new product
    * POST /api/products
    */
   @Post()
   @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Body() createProductDto: CreateProductDto,
     @Req() request: CatalogAuthenticatedRequest,
   ) {
     this.logger.log('POST /api/products', 'ProductsController');
-    const product = await this.productsService.create(createProductDto);
+    const product = await this.productsService.create(createProductDto, this.productScope(request));
     this.logger.auditCatalogWrite(request, {
       action: 'create',
       resourceType: 'product',
@@ -60,9 +65,14 @@ export class ProductsController {
    * GET /api/products
    */
   @Get()
-  async findAll(@Query() query: ProductQueryDto) {
+  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
+  async findAll(
+    @Query() query: ProductQueryDto,
+    @Req() request: CatalogAuthenticatedRequest,
+  ) {
     this.logger.log(`GET /api/products with query: ${JSON.stringify(query)}`, 'ProductsController');
-    const result = await this.productsService.findAll(query);
+    const result = await this.productsService.findAll(query, this.productScope(request));
     return {
       success: true,
       data: result.items,
@@ -80,9 +90,14 @@ export class ProductsController {
    * GET /api/products/sku/:sku
    */
   @Get('sku/:sku')
-  async findBySku(@Param('sku') sku: string) {
+  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
+  async findBySku(
+    @Param('sku') sku: string,
+    @Req() request: CatalogAuthenticatedRequest,
+  ) {
     this.logger.log(`GET /api/products/sku/${sku}`, 'ProductsController');
-    const product = await this.productsService.findBySku(sku);
+    const product = await this.productsService.findBySku(sku, this.productScope(request));
     if (!product) {
       return { success: false, data: null, message: 'Product not found' };
     }
@@ -95,9 +110,11 @@ export class ProductsController {
    * GET /api/products/audits/quality
    */
   @Get("audits/quality")
-  async qualityAudit() {
+  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
+  async qualityAudit(@Req() request: CatalogAuthenticatedRequest) {
     this.logger.log("GET /api/products/audits/quality", "ProductsController");
-    const audit = await this.productsService.getQualityAudit();
+    const audit = await this.productsService.getQualityAudit(this.productScope(request));
     return { success: true, data: audit };
   }
 
@@ -107,6 +124,7 @@ export class ProductsController {
    */
   @Get("bazos/account-status")
   @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
   async getBazosAccountStatus(
     @Headers("authorization") authorization?: string,
   ) {
@@ -121,6 +139,7 @@ export class ProductsController {
    */
   @Get("aukro/account-status")
   @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
   async getAukroAccountStatus(
     @Headers("authorization") authorization?: string,
   ) {
@@ -135,6 +154,7 @@ export class ProductsController {
    */
   @Post("publications/bulk")
   @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
   async bulkMarketplacePublication(
     @Body() data: { productIds?: string[]; marketplaces?: string[]; options?: Record<string, any> },
     @Headers("authorization") authorization?: string,
@@ -145,7 +165,7 @@ export class ProductsController {
       productIds: Array.isArray(data?.productIds) ? data.productIds : [],
       marketplaces: Array.isArray(data?.marketplaces) ? data.marketplaces as any : [],
       options: data?.options || {},
-    }, authorization);
+    }, authorization, this.productScope(request));
     if (request) {
       this.logger.auditCatalogWrite(request, {
         action: 'bulk_marketplace_publication',
@@ -169,36 +189,46 @@ export class ProductsController {
    * GET /api/products/:id/readiness
    */
   @Get(":id/readiness")
-  async readiness(@Param("id", ParseUUIDPipe) id: string) {
+  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
+  async readiness(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Req() request: CatalogAuthenticatedRequest,
+  ) {
     this.logger.log("GET /api/products/" + id + "/readiness", "ProductsController");
-    const readiness = await this.productsService.getReadiness(id);
+    const readiness = await this.productsService.getReadiness(id, this.productScope(request));
     return { success: true, data: readiness };
   }
 
   @Get(":id/bazos-status")
   @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
   async getBazosStatus(
     @Param("id", ParseUUIDPipe) id: string,
     @Headers("authorization") authorization?: string,
+    @Req() request?: CatalogAuthenticatedRequest,
   ) {
     this.logger.log(`GET /api/products/${id}/bazos-status`, "ProductsController");
-    const result = await this.productsService.getBazosStatus(id, authorization);
+    const result = await this.productsService.getBazosStatus(id, authorization, this.productScope(request));
     return { success: result.success !== false, data: result };
   }
 
   @Get(":id/aukro-status")
   @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
   async getAukroStatus(
     @Param("id", ParseUUIDPipe) id: string,
     @Headers("authorization") authorization?: string,
+    @Req() request?: CatalogAuthenticatedRequest,
   ) {
     this.logger.log(`GET /api/products/${id}/aukro-status`, "ProductsController");
-    const result = await this.productsService.getAukroStatus(id, authorization);
+    const result = await this.productsService.getAukroStatus(id, authorization, this.productScope(request));
     return { success: result.success !== false, data: result };
   }
 
   @Post(":id/aukro-draft")
   @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
   async requestAukroDraft(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() data: any,
@@ -206,7 +236,7 @@ export class ProductsController {
     @Req() request?: CatalogAuthenticatedRequest,
   ) {
     this.logger.log(`POST /api/products/${id}/aukro-draft`, "ProductsController");
-    const result = await this.productsService.requestAukroDraft(id, data, authorization);
+    const result = await this.productsService.requestAukroDraft(id, data, authorization, this.productScope(request));
     if (request) {
       this.logger.auditCatalogWrite(request, {
         action: 'request_aukro_draft',
@@ -219,6 +249,7 @@ export class ProductsController {
 
   @Post(":id/sell-on-aukro")
   @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
   async sellOnAukro(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() data: any,
@@ -231,6 +262,7 @@ export class ProductsController {
 
   @Post(":id/sell-on-allegro")
   @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
   async sellOnAllegro(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() data: any,
@@ -238,7 +270,7 @@ export class ProductsController {
     @Req() request?: CatalogAuthenticatedRequest,
   ) {
     this.logger.log(`POST /api/products/${id}/sell-on-allegro`, "ProductsController");
-    const result = await this.productsService.prepareAllegroSale(id, data, authorization);
+    const result = await this.productsService.prepareAllegroSale(id, data, authorization, this.productScope(request));
     if (request) {
       this.logger.auditCatalogWrite(request, {
         action: 'prepare_allegro_sale',
@@ -251,17 +283,20 @@ export class ProductsController {
 
   @Get(":id/allegro-status")
   @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
   async getAllegroStatus(
     @Param("id", ParseUUIDPipe) id: string,
     @Headers("authorization") authorization?: string,
+    @Req() request?: CatalogAuthenticatedRequest,
   ) {
     this.logger.log(`GET /api/products/${id}/allegro-status`, "ProductsController");
-    const result = await this.productsService.getAllegroStatus(id, authorization);
+    const result = await this.productsService.getAllegroStatus(id, authorization, this.productScope(request));
     return { success: result.success !== false, data: result };
   }
 
   @Put(":id/allegro-draft")
   @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
   async updateAllegroDraft(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() data: any,
@@ -269,7 +304,7 @@ export class ProductsController {
     @Req() request?: CatalogAuthenticatedRequest,
   ) {
     this.logger.log(`PUT /api/products/${id}/allegro-draft`, "ProductsController");
-    const result = await this.productsService.updateAllegroDraft(id, data, authorization);
+    const result = await this.productsService.updateAllegroDraft(id, data, authorization, this.productScope(request));
     if (request) {
       this.logger.auditCatalogWrite(request, {
         action: 'update_allegro_draft',
@@ -282,13 +317,14 @@ export class ProductsController {
 
   @Post(":id/allegro-confirm")
   @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
   async confirmAllegroPublish(
     @Param("id", ParseUUIDPipe) id: string,
     @Headers("authorization") authorization?: string,
     @Req() request?: CatalogAuthenticatedRequest,
   ) {
     this.logger.log(`POST /api/products/${id}/allegro-confirm`, "ProductsController");
-    const result = await this.productsService.confirmAllegroPublish(id, authorization);
+    const result = await this.productsService.confirmAllegroPublish(id, authorization, this.productScope(request));
     if (request) {
       this.logger.auditCatalogWrite(request, {
         action: 'confirm_allegro_publish',
@@ -301,24 +337,27 @@ export class ProductsController {
 
   @Get(":id/heureka-status")
   @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
   async getHeurekaStatus(
     @Param("id", ParseUUIDPipe) id: string,
     @Query("feedType") feedType = "heureka_cz",
+    @Req() request?: CatalogAuthenticatedRequest,
   ) {
     this.logger.log(`GET /api/products/${id}/heureka-status`, "ProductsController");
-    const result = await this.productsService.getHeurekaStatus(id, feedType);
+    const result = await this.productsService.getHeurekaStatus(id, feedType, this.productScope(request));
     return { success: result.success !== false, data: result };
   }
 
   @Post(":id/sell-on-heureka")
   @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
   async sellOnHeureka(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() data: any,
     @Req() request?: CatalogAuthenticatedRequest,
   ) {
     this.logger.log(`POST /api/products/${id}/sell-on-heureka`, "ProductsController");
-    const result = await this.productsService.prepareHeurekaSale(id, data || {});
+    const result = await this.productsService.prepareHeurekaSale(id, data || {}, this.productScope(request));
     if (request) {
       this.logger.auditCatalogWrite(request, {
         action: 'prepare_heureka_sale',
@@ -341,23 +380,26 @@ export class ProductsController {
 
   @Get(":id/flipflop-status")
   @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
   async getFlipFlopStatus(
     @Param("id", ParseUUIDPipe) id: string,
     @Headers("authorization") authorization?: string,
+    @Req() request?: CatalogAuthenticatedRequest,
   ) {
     this.logger.log(`GET /api/products/${id}/flipflop-status`, "ProductsController");
-    const result = await this.productsService.getFlipFlopStatus(id, authorization);
+    const result = await this.productsService.getFlipFlopStatus(id, authorization, this.productScope(request));
     return { success: result.success !== false, data: result };
   }
 
   @Post(":id/sell-on-flipflop")
   @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
   async sellOnFlipFlop(
     @Param("id", ParseUUIDPipe) id: string,
     @Req() request?: CatalogAuthenticatedRequest,
   ) {
     this.logger.log(`POST /api/products/${id}/sell-on-flipflop`, "ProductsController");
-    const result = await this.productsService.prepareFlipFlopSale(id, request?.headers.authorization);
+    const result = await this.productsService.prepareFlipFlopSale(id, request?.headers.authorization, this.productScope(request));
     if (request) {
       this.logger.auditCatalogWrite(request, {
         action: 'prepare_flipflop_sale',
@@ -370,6 +412,7 @@ export class ProductsController {
 
   @Post(":id/bazos-draft")
   @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
   async requestBazosDraft(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() data: any,
@@ -377,7 +420,7 @@ export class ProductsController {
     @Req() request?: CatalogAuthenticatedRequest,
   ) {
     this.logger.log(`POST /api/products/${id}/bazos-draft`, "ProductsController");
-    const result = await this.productsService.requestBazosDraft(id, data, authorization);
+    const result = await this.productsService.requestBazosDraft(id, data, authorization, this.productScope(request));
     if (request) {
       this.logger.auditCatalogWrite(request, {
         action: 'request_bazos_draft',
@@ -390,6 +433,7 @@ export class ProductsController {
 
   @Post(":id/sell-on-bazos")
   @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
   async sellOnBazos(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() data: any,
@@ -407,9 +451,13 @@ export class ProductsController {
    */
   @Get(':id/sales-statistics')
   @UseGuards(CatalogAuthGuard)
-  async getSalesStatistics(@Param('id', ParseUUIDPipe) id: string) {
+  @RequireCatalogRoles('catalog:authenticated')
+  async getSalesStatistics(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() request: CatalogAuthenticatedRequest,
+  ) {
     this.logger.log(`GET /api/products/${id}/sales-statistics`, 'ProductsController');
-    const statistics = await this.productsService.getSalesStatistics(id);
+    const statistics = await this.productsService.getSalesStatistics(id, this.productScope(request));
     return { success: true, data: statistics };
   }
 
@@ -418,9 +466,14 @@ export class ProductsController {
    * GET /api/products/:id
    */
   @Get(':id')
-  async findOne(@Param('id', ParseUUIDPipe) id: string) {
+  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
+  async findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() request: CatalogAuthenticatedRequest,
+  ) {
     this.logger.log(`GET /api/products/${id}`, 'ProductsController');
-    const product = await this.productsService.findOne(id);
+    const product = await this.productsService.findOne(id, this.productScope(request));
     return { success: true, data: product };
   }
 
@@ -430,13 +483,14 @@ export class ProductsController {
    */
   @Put(':id')
   @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateProductDto: UpdateProductDto,
     @Req() request: CatalogAuthenticatedRequest,
   ) {
     this.logger.log(`PUT /api/products/${id}`, 'ProductsController');
-    const product = await this.productsService.update(id, updateProductDto);
+    const product = await this.productsService.update(id, updateProductDto, this.productScope(request));
     this.logger.auditCatalogWrite(request, {
       action: 'update',
       resourceType: 'product',
@@ -452,13 +506,14 @@ export class ProductsController {
    */
   @Delete(':id')
   @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @Req() request: CatalogAuthenticatedRequest,
   ) {
     this.logger.log(`DELETE /api/products/${id}`, 'ProductsController');
-    await this.productsService.remove(id);
+    await this.productsService.remove(id, this.productScope(request));
     this.logger.auditCatalogWrite(request, {
       action: 'soft_delete',
       resourceType: 'product',
@@ -484,7 +539,7 @@ export class ProductsController {
     }
 
     this.logger.warn(`DELETE /api/products/${id}/hard with explicit owner approval`, 'ProductsController');
-    await this.productsService.hardRemove(id);
+    await this.productsService.hardRemove(id, this.productScope(request));
     this.logger.auditCatalogWrite(request, {
       action: 'hard_delete',
       resourceType: 'product',

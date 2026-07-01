@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere, ILike, In } from 'typeorm';
+import { Repository, FindOptionsWhere, In, IsNull, SelectQueryBuilder } from 'typeorm';
 import { Product, ProductLifecycle } from "./product.entity";
 import { LoggerService } from '../logger/logger.service';
 import { PricingService } from '../pricing/pricing.service';
 import { CreateProductDto, UpdateProductDto, ProductQueryDto } from './dto';
+import type { CatalogActor } from '../auth/catalog-auth.guard';
 import axios from "axios";
 import { ContentRendererService } from '../content-connectors/content-renderer.service';
 import {
@@ -143,6 +144,10 @@ type CatalogStockPreflight = {
   projection: any | null;
 };
 
+type ProductAccessScope = {
+  actor?: CatalogActor;
+};
+
 export type MarketplacePublicationChannel = 'allegro' | 'bazos' | 'aukro' | 'flipflop' | 'heureka';
 
 export type BulkMarketplacePublicationRequest = {
@@ -195,13 +200,52 @@ export class ProductsService {
     private readonly contentRendererService?: ContentRendererService,
   ) {}
 
+  private canAccessAllProducts(actor?: CatalogActor): boolean {
+    if (!actor || actor.type === 'service') {
+      return true;
+    }
+    return actor.roles.some((role) => [
+      'global:superadmin',
+      'global:platform_admin',
+      'app:catalog-microservice:admin',
+      'internal:catalog-microservice:admin',
+    ].includes(role));
+  }
+
+  private resolveOwnerUserId(actor?: CatalogActor): string | null {
+    if (!actor || actor.type === 'service') {
+      return null;
+    }
+    return actor.sub;
+  }
+
+  private productWhereWithOwner(
+    where: FindOptionsWhere<Product>,
+    actor?: CatalogActor,
+  ): FindOptionsWhere<Product> {
+    if (this.canAccessAllProducts(actor)) {
+      return where;
+    }
+    return { ...where, ownerUserId: actor?.sub };
+  }
+
+  private applyOwnerScope(queryBuilder: SelectQueryBuilder<Product>, actor?: CatalogActor): void {
+    if (this.canAccessAllProducts(actor)) {
+      return;
+    }
+    queryBuilder.andWhere('product.ownerUserId = :ownerUserId', { ownerUserId: actor?.sub });
+  }
+
   /**
    * Create a new product
    */
-  async create(createProductDto: CreateProductDto): Promise<Product> {
+  async create(createProductDto: CreateProductDto, scope: ProductAccessScope = {}): Promise<Product> {
     this.logger.log(`Creating product with SKU: ${createProductDto.sku}`, 'ProductsService');
 
-    const product = this.productRepository.create(this.withLifecycleDefaults(this.withCanonicalContentDefaults(createProductDto)));
+    const product = this.productRepository.create({
+      ...this.withLifecycleDefaults(this.withCanonicalContentDefaults(createProductDto)),
+      ownerUserId: this.resolveOwnerUserId(scope.actor),
+    });
     const saved = await this.productRepository.save(product);
 
     this.logger.log(`Product created: ${saved.id}`, 'ProductsService');
@@ -211,17 +255,11 @@ export class ProductsService {
   /**
    * Find all products with pagination and filters
    */
-  async findAll(query: ProductQueryDto): Promise<{ items: Product[]; total: number; page: number; limit: number }> {
+  async findAll(query: ProductQueryDto, scope: ProductAccessScope = {}): Promise<{ items: Product[]; total: number; page: number; limit: number }> {
     const { page = 1, limit = 20, search, isActive, lifecycle, categoryId } = query;
     const skip = (page - 1) * limit;
 
     this.logger.log(`Finding products: page=${page}, limit=${limit}, search=${search}`, 'ProductsService');
-
-    const where: FindOptionsWhere<Product> = {};
-
-    if (isActive !== undefined) {
-      where.isActive = isActive;
-    }
 
     const queryBuilder = this.productRepository.createQueryBuilder('product');
 
@@ -240,6 +278,8 @@ export class ProductsService {
     if (lifecycle) {
       queryBuilder.andWhere("product.lifecycle = :lifecycle", { lifecycle });
     }
+
+    this.applyOwnerScope(queryBuilder, scope.actor);
 
     // Filter by category
     if (categoryId) {
@@ -267,11 +307,11 @@ export class ProductsService {
   /**
    * Find one product by ID
    */
-  async findOne(id: string): Promise<Product> {
+  async findOne(id: string, scope: ProductAccessScope = {}): Promise<Product> {
     this.logger.log(`Finding product: ${id}`, 'ProductsService');
 
     const product = await this.productRepository.findOne({
-      where: { id },
+      where: this.productWhereWithOwner({ id }, scope.actor),
       relations: ['categories', 'attributes', 'attributes.attribute', 'media', 'pricing'],
     });
 
@@ -286,11 +326,11 @@ export class ProductsService {
   /**
    * Find product by SKU
    */
-  async findBySku(sku: string): Promise<Product | null> {
+  async findBySku(sku: string, scope: ProductAccessScope = {}): Promise<Product | null> {
     this.logger.log(`Finding product by SKU: ${sku}`, 'ProductsService');
 
     return this.productRepository.findOne({
-      where: { sku },
+      where: this.productWhereWithOwner({ sku }, scope.actor),
       relations: ['categories', 'media', 'pricing'],
     });
   }
@@ -318,8 +358,8 @@ export class ProductsService {
   }
 
 
-  async getSalesStatistics(id: string): Promise<ProductSalesStatistics> {
-    await this.findOne(id);
+  async getSalesStatistics(id: string, scope: ProductAccessScope = {}): Promise<ProductSalesStatistics> {
+    await this.findOne(id, scope);
 
     const serviceToken = this.getOrdersServiceToken();
     if (!serviceToken) {
@@ -360,10 +400,10 @@ export class ProductsService {
   /**
    * Update a product
    */
-  async update(id: string, updateProductDto: UpdateProductDto): Promise<Product> {
+  async update(id: string, updateProductDto: UpdateProductDto, scope: ProductAccessScope = {}): Promise<Product> {
     this.logger.log(`Updating product: ${id}`, 'ProductsService');
 
-    const product = await this.findOne(id);
+    const product = await this.findOne(id, scope);
     Object.assign(product, this.withLifecycleDefaults(this.withCanonicalContentDefaults(updateProductDto, product), product));
 
     const updated = await this.productRepository.save(product);
@@ -373,40 +413,48 @@ export class ProductsService {
   }
 
 
-  async getReadiness(id: string): Promise<ProductReadiness> {
-    const product = await this.findOne(id);
+  async getReadiness(id: string, scope: ProductAccessScope = {}): Promise<ProductReadiness> {
+    const product = await this.findOne(id, scope);
     const duplicateSummary = await this.getDuplicateSummaryForProduct(product);
     return this.buildReadiness(product, duplicateSummary);
   }
 
-  async getQualityAudit(): Promise<ProductIdentifierAudit> {
+  async getQualityAudit(scope: ProductAccessScope = {}): Promise<ProductIdentifierAudit> {
     const missingEanRows = await this.productRepository
       .createQueryBuilder("product")
       .select(["product.id", "product.sku", "product.title"])
       .where("product.ean IS NULL OR length(btrim(product.ean)) = 0")
+    this.applyOwnerScope(missingEanRows, scope.actor);
+    const missingEanProducts = await missingEanRows
       .orderBy("product.createdAt", "DESC")
       .getMany();
 
-    const duplicateSkus = await this.productRepository
+    const duplicateSkuRows = this.productRepository
       .createQueryBuilder("product")
       .select("product.sku", "sku")
       .addSelect("COUNT(*)", "count")
       .where("product.sku IS NOT NULL AND length(btrim(product.sku)) > 0")
+    this.applyOwnerScope(duplicateSkuRows, scope.actor);
+    const duplicateSkus = await duplicateSkuRows
       .groupBy("product.sku")
+      .addGroupBy("product.ownerUserId")
       .having("COUNT(*) > 1")
       .getRawMany<{ sku: string; count: string }>();
 
-    const duplicateEans = await this.productRepository
+    const duplicateEanRows = this.productRepository
       .createQueryBuilder("product")
       .select("product.ean", "ean")
       .addSelect("COUNT(*)", "count")
       .where("product.ean IS NOT NULL AND length(btrim(product.ean)) > 0")
+    this.applyOwnerScope(duplicateEanRows, scope.actor);
+    const duplicateEans = await duplicateEanRows
       .groupBy("product.ean")
+      .addGroupBy("product.ownerUserId")
       .having("COUNT(*) > 1")
       .getRawMany<{ ean: string; count: string }>();
 
     return {
-      missingEan: missingEanRows.map((product) => ({
+      missingEan: missingEanProducts.map((product) => ({
         id: product.id,
         sku: product.sku,
         title: product.title,
@@ -574,10 +622,10 @@ export class ProductsService {
 
   private async getDuplicateSummaryForProduct(product: Product): Promise<{ duplicateSku: boolean; duplicateEan: boolean }> {
     const duplicateSku = product.sku
-      ? await this.productRepository.count({ where: { sku: product.sku } }) > 1
+      ? await this.productRepository.count({ where: { sku: product.sku, ownerUserId: product.ownerUserId ?? IsNull() } }) > 1
       : false;
     const duplicateEan = product.ean?.trim()
-      ? await this.productRepository.count({ where: { ean: product.ean } }) > 1
+      ? await this.productRepository.count({ where: { ean: product.ean, ownerUserId: product.ownerUserId ?? IsNull() } }) > 1
       : false;
 
     return { duplicateSku, duplicateEan };
@@ -587,6 +635,7 @@ export class ProductsService {
   async publishProductsToMarketplaces(
     request: BulkMarketplacePublicationRequest,
     authorization?: string,
+    scope: ProductAccessScope = {},
   ): Promise<BulkMarketplacePublicationResponse> {
     const productIds = this.normalizeBulkProductIds(request?.productIds);
     const marketplaces = this.normalizePublicationMarketplaces(request?.marketplaces);
@@ -595,7 +644,7 @@ export class ProductsService {
 
     for (const productId of productIds) {
       for (const marketplace of marketplaces) {
-        results.push(await this.dispatchMarketplacePublication(productId, marketplace, options[marketplace] || {}, authorization));
+        results.push(await this.dispatchMarketplacePublication(productId, marketplace, options[marketplace] || {}, authorization, scope));
       }
     }
 
@@ -631,9 +680,10 @@ export class ProductsService {
     marketplace: MarketplacePublicationChannel,
     options: any,
     authorization?: string,
+    scope: ProductAccessScope = {},
   ): Promise<BulkMarketplacePublicationResult> {
     try {
-      const data = await this.runMarketplacePublication(productId, marketplace, options, authorization);
+      const data = await this.runMarketplacePublication(productId, marketplace, options, authorization, scope);
       return this.marketplacePublicationResult(productId, marketplace, data);
     } catch (error: any) {
       return {
@@ -654,6 +704,7 @@ export class ProductsService {
     marketplace: MarketplacePublicationChannel,
     options: any,
     authorization?: string,
+    scope: ProductAccessScope = {},
   ): Promise<any> {
     const requestedBy = options?.requestedBy || 'catalog-bulk-publication';
 
@@ -662,18 +713,18 @@ export class ProductsService {
         ...options,
         requestedBy,
         useCallerBazosIdentity: options?.useCallerBazosIdentity !== false,
-      }, authorization);
+      }, authorization, scope);
     }
     if (marketplace === 'allegro') {
-      return this.prepareAllegroSale(productId, { ...options, requestedBy }, authorization);
+      return this.prepareAllegroSale(productId, { ...options, requestedBy }, authorization, scope);
     }
     if (marketplace === 'aukro') {
-      return this.requestAukroDraft(productId, { ...options, requestedBy }, authorization);
+      return this.requestAukroDraft(productId, { ...options, requestedBy }, authorization, scope);
     }
     if (marketplace === 'heureka') {
-      return this.prepareHeurekaSale(productId, { ...options, requestedBy });
+      return this.prepareHeurekaSale(productId, { ...options, requestedBy }, scope);
     }
-    return this.prepareFlipFlopSale(productId, authorization);
+    return this.prepareFlipFlopSale(productId, authorization, scope);
   }
 
   private marketplacePublicationResult(
@@ -701,8 +752,8 @@ export class ProductsService {
   }
 
 
-  async getBazosStatus(id: string, authorization?: string) {
-    await this.findOne(id);
+  async getBazosStatus(id: string, authorization?: string, scope: ProductAccessScope = {}) {
+    await this.findOne(id, scope);
 
     if (!authorization) {
       return this.blockedBazosDraft(id, 'auth_required', 'Authentication is required before reading Bazos listing status.');
@@ -772,8 +823,8 @@ export class ProductsService {
     }
   }
 
-  async requestBazosDraft(id: string, data: any = {}, authorization?: string) {
-    const product = await this.findOne(id);
+  async requestBazosDraft(id: string, data: any = {}, authorization?: string, scope: ProductAccessScope = {}) {
+    const product = await this.findOne(id, scope);
 
     if (!product.isActive) {
       return this.blockedBazosDraft(id, 'inactive_product', 'Only active catalog products can be sent to Bazos draft review.');
@@ -828,12 +879,12 @@ export class ProductsService {
     }
   }
 
-  async sellOnBazos(id: string, data: any = {}, authorization?: string) {
-    return this.requestBazosDraft(id, data, authorization);
+  async sellOnBazos(id: string, data: any = {}, authorization?: string, scope: ProductAccessScope = {}) {
+    return this.requestBazosDraft(id, data, authorization, scope);
   }
 
-  async getAukroStatus(id: string, authorization?: string) {
-    await this.findOne(id);
+  async getAukroStatus(id: string, authorization?: string, scope: ProductAccessScope = {}) {
+    await this.findOne(id, scope);
 
     if (!authorization && !this.getAukroServiceToken()) {
       return this.blockedAukroDraft(id, 'auth_required', 'Authentication is required before reading Aukro draft status.');
@@ -909,8 +960,8 @@ export class ProductsService {
     }
   }
 
-  async requestAukroDraft(id: string, data: any = {}, authorization?: string) {
-    const product = await this.findOne(id);
+  async requestAukroDraft(id: string, data: any = {}, authorization?: string, scope: ProductAccessScope = {}) {
+    const product = await this.findOne(id, scope);
 
     if (!product.isActive) {
       return this.blockedAukroDraft(id, 'inactive_product', 'Only active catalog products can be sent to Aukro draft review.');
@@ -948,12 +999,12 @@ export class ProductsService {
     }
   }
 
-  async sellOnAukro(id: string, data: any = {}, authorization?: string) {
-    return this.requestAukroDraft(id, data, authorization);
+  async sellOnAukro(id: string, data: any = {}, authorization?: string, scope: ProductAccessScope = {}) {
+    return this.requestAukroDraft(id, data, authorization, scope);
   }
 
-  async prepareAllegroSale(id: string, data: any = {}, authorization?: string) {
-    const product = await this.findOne(id);
+  async prepareAllegroSale(id: string, data: any = {}, authorization?: string, scope: ProductAccessScope = {}) {
+    const product = await this.findOne(id, scope);
 
     if (!authorization) {
       return this.blockedChannelAction('allegro', id, 'auth_required', 'Authentication is required before preparing an Allegro offer.');
@@ -1004,8 +1055,8 @@ export class ProductsService {
     }
   }
 
-  async getAllegroStatus(id: string, authorization?: string) {
-    await this.findOne(id);
+  async getAllegroStatus(id: string, authorization?: string, scope: ProductAccessScope = {}) {
+    await this.findOne(id, scope);
 
     if (!authorization) {
       return this.blockedChannelAction('allegro', id, 'auth_required', 'Authentication is required before reading Allegro offer status.');
@@ -1031,8 +1082,8 @@ export class ProductsService {
     }
   }
 
-  async updateAllegroDraft(id: string, data: any = {}, authorization?: string) {
-    const product = await this.findOne(id);
+  async updateAllegroDraft(id: string, data: any = {}, authorization?: string, scope: ProductAccessScope = {}) {
+    const product = await this.findOne(id, scope);
 
     if (!authorization) {
       return this.blockedChannelAction('allegro', id, 'auth_required', 'Authentication is required before editing an Allegro draft.');
@@ -1069,8 +1120,8 @@ export class ProductsService {
     }
   }
 
-  async confirmAllegroPublish(id: string, authorization?: string) {
-    await this.findOne(id);
+  async confirmAllegroPublish(id: string, authorization?: string, scope: ProductAccessScope = {}) {
+    await this.findOne(id, scope);
 
     if (!authorization) {
       return this.blockedChannelAction('allegro', id, 'auth_required', 'Authentication is required before confirming Allegro publication.');
@@ -1094,8 +1145,8 @@ export class ProductsService {
     }
   }
 
-  async getHeurekaStatus(id: string, feedType = 'heureka_cz') {
-    await this.findOne(id);
+  async getHeurekaStatus(id: string, feedType = 'heureka_cz', scope: ProductAccessScope = {}) {
+    await this.findOne(id, scope);
     try {
       const response = await axios.get(
         `${this.getHeurekaBaseUrl()}/heureka/products/${encodeURIComponent(id)}/status?feedType=${encodeURIComponent(feedType || 'heureka_cz')}`,
@@ -1110,8 +1161,8 @@ export class ProductsService {
     }
   }
 
-  async prepareHeurekaSale(id: string, data: any = {}) {
-    const product = await this.findOne(id);
+  async prepareHeurekaSale(id: string, data: any = {}, scope: ProductAccessScope = {}) {
+    const product = await this.findOne(id, scope);
     const feedType = data?.feedType || 'heureka_cz';
     const snapshot = await this.getHeurekaFeedSnapshot(id, feedType, product);
 
@@ -1169,8 +1220,8 @@ export class ProductsService {
     };
   }
 
-  async getFlipFlopStatus(id: string, authorization?: string) {
-    await this.findOne(id);
+  async getFlipFlopStatus(id: string, authorization?: string, scope: ProductAccessScope = {}) {
+    await this.findOne(id, scope);
     const listingUrl = `${this.getFlipFlopPublicUrl()}/products/${encodeURIComponent(id)}`;
 
     if (!authorization) {
@@ -1196,8 +1247,8 @@ export class ProductsService {
     }
   }
 
-  async prepareFlipFlopSale(id: string, authorization?: string) {
-    await this.findOne(id);
+  async prepareFlipFlopSale(id: string, authorization?: string, scope: ProductAccessScope = {}) {
+    await this.findOne(id, scope);
     const listingUrl = `${this.getFlipFlopPublicUrl()}/products/${encodeURIComponent(id)}`;
 
     if (!authorization) {
@@ -1844,10 +1895,10 @@ export class ProductsService {
   /**
    * Delete a product (soft delete by setting isActive = false)
    */
-  async remove(id: string): Promise<void> {
+  async remove(id: string, scope: ProductAccessScope = {}): Promise<void> {
     this.logger.log(`Removing product: ${id}`, 'ProductsService');
 
-    const product = await this.findOne(id);
+    const product = await this.findOne(id, scope);
     product.isActive = false;
     product.lifecycle = "archived";
     await this.productRepository.save(product);
@@ -1858,10 +1909,10 @@ export class ProductsService {
   /**
    * Hard delete a product
    */
-  async hardRemove(id: string): Promise<void> {
+  async hardRemove(id: string, scope: ProductAccessScope = {}): Promise<void> {
     this.logger.log(`Hard deleting product: ${id}`, 'ProductsService');
 
-    const result = await this.productRepository.delete(id);
+    const result = await this.productRepository.delete(this.productWhereWithOwner({ id }, scope.actor));
     if (result.affected === 0) {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }

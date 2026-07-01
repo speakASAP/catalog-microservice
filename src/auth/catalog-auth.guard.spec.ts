@@ -107,6 +107,29 @@ describe('CatalogAuthGuard', () => {
     expect(request.catalogActor).toBeUndefined();
   });
 
+  it('allows any Auth-validated user for authenticated-only routes', async () => {
+    const reflector = { getAllAndOverride: jest.fn().mockReturnValue(['catalog:authenticated']) } as unknown as Reflector;
+    const guard = new CatalogAuthGuard(reflector);
+    const request = buildRequest({ authorization: 'Bearer user-token' });
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        valid: true,
+        user: { sub: 'registered-user-1', roles: [] },
+      }),
+    } as any);
+
+    await expect(guard.canActivate(buildContext(request))).resolves.toBe(true);
+
+    expect(request.catalogActor).toEqual({
+      type: 'jwt',
+      sub: 'registered-user-1',
+      email: undefined,
+      roles: [],
+      authMethod: 'auth-validate',
+    });
+  });
+
   it('preserves the internal service token boundary without calling Auth validation', async () => {
     process.env.CATALOG_INTERNAL_SERVICE_TOKEN = 'machine-token';
     const reflector = { getAllAndOverride: jest.fn().mockReturnValue(['catalog:write']) } as unknown as Reflector;

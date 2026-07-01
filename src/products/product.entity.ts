@@ -25,8 +25,11 @@ export class Product {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true, length: 100 })
+  @Column({ length: 100 })
   sku: string;
+
+  @Column({ name: 'owner_user_id', length: 200, nullable: true })
+  ownerUserId: string | null;
 
   @Column({ length: 500 })
   title: string;

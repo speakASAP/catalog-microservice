@@ -65,7 +65,9 @@ export class CatalogAuthGuard implements CanActivate {
       ]) ?? this.defaultWriteRoles;
 
     const actor = await this.resolveActor(request);
-    const hasRequiredRole = requiredRoles.some((role) => actor.roles.includes(role));
+    const hasRequiredRole =
+      requiredRoles.includes('catalog:authenticated') ||
+      requiredRoles.some((role) => actor.roles.includes(role));
     if (!hasRequiredRole) {
       throw new ForbiddenException('Insufficient catalog permissions');
     }

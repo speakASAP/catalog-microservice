@@ -32,6 +32,50 @@ describe("ProductsService product readiness", () => {
     expect(product.isActive).toBe(true);
   });
 
+  it("assigns new products to the authenticated catalog user", async () => {
+    const repository = {
+      create: jest.fn((data) => data),
+      save: jest.fn(async (data) => ({ id: "product-user-1", ...data })),
+    };
+    const service = new ProductsService(repository as any, logger as any);
+
+    await service.create(
+      { sku: "SKU-USER-001", title: "User product" },
+      { actor: { type: "jwt", sub: "user-123", roles: [], authMethod: "auth-validate" } },
+    );
+
+    expect(repository.create).toHaveBeenCalledWith(expect.objectContaining({
+      sku: "SKU-USER-001",
+      ownerUserId: "user-123",
+    }));
+  });
+
+  it("filters product lists to the authenticated user's products", async () => {
+    const queryBuilder: any = {
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      getManyAndCount: jest.fn(async () => [[], 0]),
+    };
+    const repository = {
+      createQueryBuilder: jest.fn(() => queryBuilder),
+    };
+    const service = new ProductsService(repository as any, logger as any);
+
+    await service.findAll(
+      { page: 1, limit: 20 },
+      { actor: { type: "jwt", sub: "user-456", roles: [], authMethod: "auth-validate" } },
+    );
+
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+      "product.ownerUserId = :ownerUserId",
+      { ownerUserId: "user-456" },
+    );
+  });
+
   it("normalizes legacy HTML descriptions into plain text and canonical JSON fallback", async () => {
     const repository = {
       create: jest.fn((data) => data),
@@ -965,11 +1009,12 @@ describe("ProductsService bulk marketplace publication", () => {
       "product-1",
       expect.objectContaining({ identityId: "identity-1", requestedBy: "catalog-bulk-publication", useCallerBazosIdentity: true }),
       "Bearer user-token",
+      {},
     );
     expect(service.prepareFlipFlopSale).toHaveBeenCalledTimes(2);
-    expect(service.prepareFlipFlopSale).toHaveBeenCalledWith("product-1", "Bearer user-token");
+    expect(service.prepareFlipFlopSale).toHaveBeenCalledWith("product-1", "Bearer user-token", {});
     expect(service.prepareHeurekaSale).toHaveBeenCalledTimes(2);
-    expect(service.prepareHeurekaSale).toHaveBeenCalledWith("product-1", expect.objectContaining({ feedType: "heureka_cz", requestedBy: "catalog-bulk-publication" }));
+    expect(service.prepareHeurekaSale).toHaveBeenCalledWith("product-1", expect.objectContaining({ feedType: "heureka_cz", requestedBy: "catalog-bulk-publication" }), {});
     expect(result).toMatchObject({
       success: true,
       requestedProductIds: ["product-1", "product-2"],
