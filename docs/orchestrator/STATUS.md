@@ -1,3 +1,4 @@
+2026-07-03: Goal 24 scheduled marketplace affinity backfill contract defined docs-only. IPS chain: Vision -> marketplace purchase history improves related-product surfaces without moving sensitive order/payment/customer ownership into Catalog; Goal Impact -> the one-time Allegro affinity publish now has a repeatable contract path; System -> marketplace services own replay producers, Marketing owns parser/ledger/scheduler/idempotent publish orchestration, Catalog owns upsert-only product relation persistence; Feature -> protected marketplace replay candidates and scheduled dry-run-first backfill; Task -> define Allegro-owned replay endpoint semantics, idempotency, pruning gates, and parallel workstreams; Execution Plan -> document only, preserve blockers, avoid runtime mutation; Coding Prompt -> do not invent backend fields or expose customer/address/payment/provider data; Code -> `docs/contracts/catalog-marketplace-affinity-backfill.md`, `docs/contracts/catalog-product-relations.md`, Goal 24 status/report docs; Validation -> `git diff --check`; State Update -> implementation-gated by Marketing parser support, durable run ledger, Allegro replay endpoint, and Catalog source/window prune or retention decision.
 ## 2026-07-03 - Goal 25 Product Quality Review Admin Closed
 
 Change: closed Catalog Goal 25 after the W5 runtime deploy/read-smoke closure and final channel-state sweep. The execution plan now marks Goal 25 complete, with backend policy/API, validation/reporting, admin UI, and all five channel consumer lanes accepted.
@@ -1994,3 +1995,30 @@ Remaining blockers:
 
 - None for Catalog Goal 26 runtime closure.
 - `[MISSING: owner-approved FlipFlop quote/checkout contract]` remains a separate cross-service commerce follow-up if the owner wants end-to-end monetary discount observation.
+
+## 2026-07-03 - Goal 25 W4A Warehouse Quantity Default Closure
+
+Current focus: refresh Goal 25 closure evidence after the Warehouse-owned missing quantity default follow-up.
+
+Intent Preservation Chain:
+
+- Vision: imported or supplier-fed products must remain safe and non-misleading when source quantity is omitted.
+- Goal Impact: Goal 25 now has Warehouse-owned evidence for missing source quantity defaulting to `0`, not only explicit `quantity=0` stock-set behavior.
+- System: Warehouse owns stock quantity and reconciliation; Catalog owns product quality/readiness closure documentation only.
+- Feature: Product Quality Review Admin W4A Warehouse import quantity default.
+- Task: merge the validated Warehouse W4A branch, delete stale branch/worktree, and refresh Catalog Goal 25 rollup evidence.
+- Execution Plan: remote-only merge on Warehouse `main`, post-merge validation, branch cleanup, then Catalog documentation refresh.
+- Coding Prompt: preserve Warehouse stock ownership; do not edit Catalog source, deploy, mutate runtime data, or print secrets.
+- Code: Warehouse `main` includes `8a75b60 fix: default supplier reconciliation quantity`; Catalog documentation records the closure.
+- Validation: Warehouse `npm test -- --runInBand test/supplier-reconciliation.service.spec.ts` passed 21 tests, `npm run build` passed, and `git diff --check HEAD~1..HEAD` passed. Catalog documentation diff passed `git diff --check`.
+- State Update: W4A blocker `[MISSING: Warehouse import/supplier reconciliation evidence that absent quantity defaults to 0]` is closed.
+
+Branch cleanup:
+
+- Deleted Warehouse local and remote branch `catalog-goal25-w4a-quantity-default`.
+- Removed isolated worktree `/home/ssf/Documents/Github/warehouse-microservice-goal25-w4a`.
+- Checked Catalog, Warehouse, Bazos, Allegro, Aukro, Heureka, and FlipFlop merged-branch lists; no additional merged stale feature branches were present beyond `main`.
+
+Boundary decision: no Catalog source change, Catalog deploy, Warehouse runtime mutation, production product mutation, marketplace publish/confirm/queue action, Kubernetes manifest change, migration, destructive command, or secret output was performed.
+
+Remaining blockers: none for Goal 25 W4A Warehouse quantity-default closure.

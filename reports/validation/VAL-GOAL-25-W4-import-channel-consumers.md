@@ -29,11 +29,11 @@ Execution Plan: W4 lane in `implementation-goals/GOAL-25-product-quality-review-
 
 Coding Prompt: delegated W4 prompt from thread `019f2358-4c0c-7a42-b68d-7d96846a9eb9`.
 
-Code: all channel consumer lanes are now complete from remote subagent handoffs. Bazos was completed/deployed earlier; Allegro, Aukro, FlipFlop, and Heureka were completed, pushed, and validated in this Goal-driven subagent rollup. This Catalog orchestrator update records status/report evidence only; no Catalog backend source, Warehouse source, product deletion, stock ownership, or marketplace publication path was changed here.
+Code: all channel consumer lanes are now complete from remote subagent handoffs. Bazos was completed/deployed earlier; Allegro, Aukro, FlipFlop, and Heureka were completed, pushed, and validated in this Goal-driven subagent rollup. A later W4A Warehouse follow-up merged `8a75b60 fix: default supplier reconciliation quantity`, defaulting absent/null/blank supplier reconciliation quantity to `0` without moving stock truth into Catalog. This Catalog orchestrator update records status/report evidence only; no Catalog backend source, product deletion, stock ownership move, or marketplace publication path was changed here.
 
-Validation: Bazos, Allegro, Aukro, FlipFlop, and Heureka handoff evidence confirms focused fail-closed tests/verifiers, builds, diff checks, and IPS gates where available. Bazos and Aukro include deployed/runtime health evidence. After owner approval, this W5 run deployed and read-only smoked Allegro, Heureka, and FlipFlop latest Goal 25 channel consumer commits. No Catalog deployment, production DB mutation, Warehouse mutation, product deletion, queue publish action, marketplace publication, or secret output was run by this Catalog closure.
+Validation: Bazos, Allegro, Aukro, FlipFlop, and Heureka handoff evidence confirms focused fail-closed tests/verifiers, builds, diff checks, and IPS gates where available. Bazos and Aukro include deployed/runtime health evidence. Warehouse W4A validation passed after merge to `main`: `npm test -- --runInBand test/supplier-reconciliation.service.spec.ts` (21 tests), `npm run build`, and `git diff --check HEAD~1..HEAD`. After owner approval, this W5 run deployed and read-only smoked Allegro, Heureka, and FlipFlop latest Goal 25 channel consumer commits. No Catalog deployment, production DB mutation, product deletion, queue publish action, marketplace publication, or secret output was run by this Catalog closure.
 
-State Update: W4 channel consumer implementation and validation are complete for Bazos, Allegro, Aukro, FlipFlop, and Heureka. W5 owner-approved runtime deploy/read smoke is now complete for the latest non-deployed Allegro, Heureka, and FlipFlop channel commits without marketplace publish/confirm/queue actions.
+State Update: W4 channel consumer implementation and validation are complete for Bazos, Allegro, Aukro, FlipFlop, and Heureka. W4A Warehouse quantity-default follow-up is merged on Warehouse `main` and the stale branch was deleted. W5 owner-approved runtime deploy/read smoke is complete for the latest non-deployed Allegro, Heureka, and FlipFlop channel commits without marketplace publish/confirm/queue actions.
 
 ## Changed Files
 
@@ -72,15 +72,19 @@ No W4 Catalog source edit was required.
 
 ### Warehouse
 
-Status at final inspection: `main...origin/main`, latest `4d0fa85 chore: harden warehouse migration build output`; clean.
+Status at refresh inspection: `main...origin/main`, latest `8b16fdb docs: record fulfillment status runtime smoke`; clean. Goal 25 W4A source commit `8a75b60 fix: default supplier reconciliation quantity` is included in `origin/main`.
 
 Evidence:
 
 - `src/stock/stock.service.ts` creates a missing stock row with `quantity=0`, `reserved=0`, `available=0` before absolute set operations.
 - `src/stock/dto/stock-mutation.dto.ts` accepts `quantity >= 0` for stock set.
+- `src/suppliers/dto/supplier-stock-reconciliation.dto.ts` now defaults absent/null/blank supplier reconciliation quantity to `0` and rejects negative, fractional, and non-numeric values.
+- `src/suppliers/supplier-reconciliation.service.ts` normalizes supplier reconciliation quantity before stock writes, movement evidence, reconciliation records, and mutation logs.
+- `test/supplier-reconciliation.service.spec.ts` covers absent/null/blank defaults and invalid value rejection at DTO and direct service boundaries.
+- Warehouse W4A validation report exists at `/home/ssf/Documents/Github/warehouse-microservice/reports/validation/VAL-GOAL-25-W4-warehouse-quantity-default.md`.
 - This preserves Warehouse stock ownership; no Catalog stock field was added.
 
-No Warehouse source edit was required.
+W4A Warehouse source edit was required and is merged. Validation after merge: `npm test -- --runInBand test/supplier-reconciliation.service.spec.ts` passed 21 tests, `npm run build` passed, and `git diff --check HEAD~1..HEAD` passed. Branch `catalog-goal25-w4a-quantity-default` was deleted locally/remotely after merge.
 
 ### Allegro
 

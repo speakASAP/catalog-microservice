@@ -166,13 +166,13 @@ Result:
 
 ## Blockers And Follow-Up
 
-- No Goal 25 product-quality contract blocker remains after generated-description state resolution.
+- No Goal 25 product-quality contract blocker remains after generated-description state resolution and the Warehouse W4A missing-quantity default follow-up merge.
 - Channel statuses block on marketplace/account auth where expected; this is not a Catalog deploy failure.
 - Heureka feed readiness self-test passed in the 2026-07-03 cross-channel acceptance refresh. Live sampled-product readiness can still show ordinary product/account blockers, which are channel readiness outcomes rather than Catalog contract failures.
 
 ## Next Action
 
-Goal 25 W5 can be treated as accepted for Catalog/Aukro/Bazos/Allegro/FlipFlop/Heureka source and runtime-health evidence. Next cross-service work should use live authorized smoke tokens only when owner-approved and keep marketplace/account blockers channel-owned.
+Goal 25 W5 can be treated as accepted for Catalog/Warehouse/Aukro/Bazos/Allegro/FlipFlop/Heureka source and runtime-health evidence. Next cross-service work should use live authorized smoke tokens only when owner-approved and keep marketplace/account blockers channel-owned.
 
 ## 2026-07-03 Cross-Channel Acceptance Refresh
 
@@ -181,6 +181,7 @@ Additional remote-only validation was run after the Aukro consumer deployment an
 | Scope | Evidence |
 |---|---|
 | Catalog focused tests | `npm test -- --runInBand src/products/products.service.spec.ts src/import-reconciliation/import-reconciliation.service.spec.ts` passed: 2 suites, 49 tests. |
+| Warehouse W4A quantity default | Warehouse `main` includes `8a75b60 fix: default supplier reconciliation quantity`; `npm test -- --runInBand test/supplier-reconciliation.service.spec.ts` passed 21 tests, `npm run build` passed, and `git diff --check HEAD~1..HEAD` passed after merge. |
 | Catalog build/report | `npm run build` passed; `npm run validate:product-quality -- --format json --out reports/validation/product-quality-audit.json` passed in synthetic read-only mode, products=3, blocked=2, readyForActivation=1. |
 | Allegro consumer | `LOGGING_SERVICE_URL=http://logging-microservice:3367 npx ts-node services/allegro-service/src/allegro/catalog-sell-action/catalog-sell-action.spec.ts` passed. |
 | Bazos consumer | `npm --prefix shared test -- bazos-catalog-sell-action.service.spec.ts publish-policy.service.spec.ts bazos-ad.service.spec.ts` passed: 3 suites, 67 tests. |
