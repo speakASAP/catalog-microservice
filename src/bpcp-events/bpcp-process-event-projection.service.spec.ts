@@ -88,7 +88,7 @@ describe('BPCP process event projection', () => {
     const service = new BpcpProcessEventProjectionService(logger as any);
 
     service.applyEvent(event());
-    service.applyEvent(event({ type: 'process.paused', status: 'paused' }));
+    service.applyEvent(event({ id: 'holiday-discount-2026:1:process.paused:2', type: 'process.paused', status: 'paused' }));
     const facts = service.discountEligibilityFacts({ id: 'product-1', categoryIds: ['category-1'], tags: [] });
 
     expect(facts.eligible).toBe(false);
