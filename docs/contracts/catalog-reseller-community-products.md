@@ -40,7 +40,7 @@ Admin/service actors keep operational access. User-facing dashboards and publica
 ```text
 catalog_user_settings
   user_id varchar(200) primary key
-  include_alfares_catalog boolean not null default false
+  include_alfares_catalog boolean not null default true
   include_community_catalog boolean not null default false
   source_application varchar(100) null
   first_seen_at timestamp not null default now()
@@ -50,7 +50,7 @@ catalog_user_settings
 
 Defaults:
 
-- `include_alfares_catalog=false`
+- `include_alfares_catalog=true`
 - `include_community_catalog=false`
 - own products are always included
 
@@ -122,7 +122,7 @@ Catalog publish entry points must resolve products through effective read scope.
 
 | Case | Expected Result |
 |---|---|
-| New seller settings | Alfares false, community false. |
+| New seller settings | Alfares true, community false. |
 | Seller creates product | Product owner is Auth subject and resale is false. |
 | Seller enables resale on own product | Product becomes community-visible to opted-in sellers. |
 | Other seller community disabled | Community product hidden. |

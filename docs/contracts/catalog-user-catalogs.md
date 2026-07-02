@@ -1,6 +1,6 @@
 # Catalog User Catalogs Contract
 
-> 2026-07-02 status note: Goal 23 extends this Goal 22 draft with community resale, while preserving the source-default requirement. Newly provisioned seller settings default to `include_alfares_catalog=false` and `include_community_catalog=false`; existing explicit user settings remain respected. See `docs/contracts/catalog-reseller-community-products.md`.
+> 2026-07-02 status note: Goal 23 supersedes the source-default portion of this Goal 22 draft. Newly provisioned seller settings now default to `include_alfares_catalog=true` and `include_community_catalog=false`; existing explicit user settings remain respected. See `docs/contracts/catalog-reseller-community-products.md`.
 
 ```yaml
 id: CONTRACT-CATALOG-USER-CATALOGS-V1
@@ -40,18 +40,18 @@ Add an idempotent settings record per Auth user.
 ```text
 catalog_user_settings
   user_id varchar(200) primary key
-  include_alfares_catalog boolean not null default false
+  include_alfares_catalog boolean not null default true
   source_application varchar(100) null
   first_seen_at timestamptz not null default now()
   created_at timestamptz not null default now()
   updated_at timestamptz not null default now()
 ```
 
-Default behavior is fail-closed:
+Current Goal 23 default behavior:
 
-- Missing settings row is treated as `includeAlfaresCatalog=false`.
+- Missing settings row is treated as `includeAlfaresCatalog=true`.
 - Provisioning is idempotent and must not copy Alfares products into the user's private catalog.
-- Enabling Alfares products changes the effective read/publish scope; it does not transfer ownership or grant edit/delete rights over Alfares product rows.
+- Disabling Alfares products removes that source from the effective read/publish scope; it does not transfer ownership or grant edit/delete rights over Alfares product rows.
 
 ## API Contract
 
@@ -76,7 +76,7 @@ Response:
   "success": true,
   "data": {
     "userId": "auth-user-id",
-    "includeAlfaresCatalog": false,
+    "includeAlfaresCatalog": true,
     "sourceApplication": "flipflop",
     "created": true
   }
@@ -101,9 +101,9 @@ Response:
   "success": true,
   "data": {
     "userId": "auth-user-id",
-    "includeAlfaresCatalog": false,
+    "includeAlfaresCatalog": true,
     "privateCatalogProductCount": 0,
-    "alfaresCatalogProductCount": 0
+    "alfaresCatalogProductCount": 56
   }
 }
 ```
@@ -191,8 +191,8 @@ The first durable guarantee should be Catalog-side lazy provisioning:
 1. User registers or logs in through hosted Auth on any sales point.
 2. Sales point callback stores the Auth token/session using its existing hosted Auth pattern.
 3. The dashboard calls `POST /api/catalog/access/provision` or `GET /api/catalog/settings`.
-4. Catalog creates a settings row if missing and returns `includeAlfaresCatalog=false`.
-5. Product selection calls `GET /api/products?catalogScope=own` or `effective`.
+4. Catalog creates a settings row if missing and returns `includeAlfaresCatalog=true`.
+5. Product selection calls `GET /api/products?catalogScope=effective` unless the UI explicitly requests private-only products.
 
 Auth-side post-registration fanout can be added later, but Catalog lazy provisioning avoids a distributed transaction between Auth and Catalog and covers OAuth/contact-code/login users as well as first-time email/password registrations.
 
@@ -214,19 +214,19 @@ Auth-side post-registration fanout can be added later, but Catalog lazy provisio
 
 | Case | Expected Result |
 |---|---|
-| New user settings | `includeAlfaresCatalog=false`; product list default is empty. |
+| New user settings | `includeAlfaresCatalog=true`; effective product list includes Alfares products and own products. |
 | User creates product | Product has `owner_user_id=<user id>` and is visible to that user. |
 | Second user reads product | Not found or excluded from list. |
-| Shared Alfares product, setting false | Hidden from list/detail and blocked from publication. |
+| Shared Alfares product, setting false | Hidden from list/detail and blocked from publication after the user explicitly disables Alfares products. |
 | Shared Alfares product, setting true | Visible in effective scope and eligible for channel draft/publish if stock/readiness/channel policy pass. |
 | Ordinary user edits shared product | Forbidden. |
 | Admin/service reads shared product | Existing operational access preserved. |
-| Bulk publication mixed private/shared, setting false | Private may proceed; shared returns blocked/forbidden item result. |
+| Bulk publication mixed private/shared, setting false | Private may proceed; shared returns blocked/forbidden item result after the user explicitly disables Alfares products. |
 | Bulk publication mixed private/shared, setting true | Both may proceed through channel-owned workflows if other gates pass. |
 
 ## Open Items
 
-- `[MISSING: owner decision whether product list default should be strictly own or effective with default-false setting]`
+- `[MISSING: final localized copy for the Alfares source toggle in each language]`
 - `[MISSING: final UI wording for the Alfares resale toggle in each language]`
 - `[MISSING: approved runtime token for authorized production smoke across every sales point]`
 - `[UNKNOWN: whether Auth should add a future event/outbox registration hook after Catalog lazy provisioning is deployed]`

@@ -336,7 +336,7 @@ export class ProductsService {
     }
     return this.catalogAccessService?.defaultSettings(actor) ?? {
       userId: actor?.sub ?? 'anonymous',
-      includeAlfaresCatalog: false,
+      includeAlfaresCatalog: true,
       includeCommunityCatalog: false,
       sourceApplication: null,
       created: false,

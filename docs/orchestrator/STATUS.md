@@ -1,12 +1,12 @@
 ## 2026-07-02 - Goal 23 Alfares Default Source Correction
 
-Change: restored the Goal 23 source contract after an erroneous default-on change. Newly provisioned seller settings must keep Alfares products disabled by default while community products remain opt-in. The legacy-named migration `scripts/migrations/20260702_catalog_alfares_default_enabled.sql` now preserves `include_alfares_catalog DEFAULT false`, Catalog service/entity defaults are `includeAlfaresCatalog=false`, and Goal 23 contract/planning/validation docs are aligned. Existing `catalog_user_settings` rows are intentionally not bulk-updated because true or false may represent an explicit seller choice.
+Change: re-applied the Goal 23 source contract after conflicting fail-closed commit `411ab76`. Newly provisioned seller settings include Alfares products by default while community products remain opt-in. The migration `scripts/migrations/20260702_catalog_alfares_default_enabled.sql` sets `include_alfares_catalog DEFAULT true`, Catalog service/entity defaults are `includeAlfaresCatalog=true`, and Goal 23 contract/planning/validation docs are aligned. Existing `catalog_user_settings` rows are intentionally not bulk-updated because `false` may represent an explicit seller choice.
 
 Validation evidence: `npm test -- --runInBand src/catalog-access/catalog-access.service.spec.ts src/products/products.service.spec.ts` passed with 2 suites and 35 tests; `npm run build` passed; `cd services/frontend && npm run build` passed with only the existing Next.js multiple-lockfile warning; focused `git diff --check` for the Goal 23 correction files passed.
 
 Boundary decision: no Warehouse, Orders, Payments, Auth, marketplace publication, customer data mutation, or destructive DB operation is included in this correction. The migration changes only the database default for future settings rows.
 
-Next action: apply the additive default migration, deploy Catalog backend/frontend, and then validate channel repository integrations.
+Next action: deploy the corrected Catalog backend/frontend image and then validate channel repository integrations.
 
 ## 2026-07-02 - Goal 22/23 Catalog Runtime Deployment
 
