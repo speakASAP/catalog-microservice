@@ -192,4 +192,4 @@ Evidence:
 - Batch returns per-item `upserted`, `updated`, or `failed` statuses and aggregate counts.
 - First version is upsert-only: no pruning, no backfill trigger, no marketplace publication, no bundle selling, no checkout/payment/warehouse mutation.
 
-Runtime status: not deployed or smoke-tested yet for the new batch endpoint.
+Runtime status: deployed as image tag `related-products-batch-20260702-1801`; protected in-pod self-relation smoke returned HTTP 201 with `summary.failed=1`, proving route/auth/DTO/service validation without inserting a valid relation row.

@@ -1542,5 +1542,5 @@ Intent chain:
 Boundary decision:
 
 - No relation rows were inserted during validation.
-- No runtime deploy or protected batch smoke has been run yet for this new write surface.
+- Runtime deploy completed with image tag `related-products-batch-20260702-1801`; protected in-pod batch smoke returned HTTP 201 with `failed=1` for a self-relation validation case and inserted no valid relation row.
 - No Orders, Marketing runtime caller, Warehouse, Payments, checkout, bundle, or marketplace code was changed from Catalog.

@@ -150,6 +150,5 @@ First version semantics:
 ## Blockers
 
 - `[MISSING: approved Marketing-to-Catalog service role beyond current internal Catalog service-token role]`
-- `[MISSING: runtime deploy and protected smoke for internal order-affinity batch endpoint]`
 - `[MISSING: bundle checkout contract owned by FlipFlop/Orders/Payments]`
 - `[MISSING: runtime backfill source for historical order-affinity scores]`
