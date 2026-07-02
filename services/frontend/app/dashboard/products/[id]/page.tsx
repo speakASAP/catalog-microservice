@@ -51,7 +51,7 @@ const formatGrossSales = (totals: Array<{ currency: string; amount: number }> = 
 };
 
 const formatMetricLabel = (value: string) => value
-  .split(/[_\\s-]+/)
+  .split(/[_\s-]+/)
   .filter(Boolean)
   .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
   .join(' ');

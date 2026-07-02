@@ -1256,6 +1256,155 @@ describe("ProductsService sales statistics bridge", () => {
     expect(result.sourceStatus).toBe("unavailable");
     expect(result.totals).toMatchObject({ orderCount: 0, quantitySold: 0 });
     expect(result.channels.every((channel) => channel.status === "unavailable")).toBe(true);
+    expect(result.orderDelivery).toMatchObject({
+      sourceStatus: "unavailable",
+      unavailableReason: "Orders product sales statistics are unavailable. Try again after the Orders-owned read model is reachable.",
+    });
+  });
+
+  it("normalizes the current Orders product statistics shape and marks lifecycle delivery stats missing", async () => {
+    process.env.ORDERS_SERVICE_TOKEN = "orders-token";
+    const repository = {
+      findOne: jest.fn(async () => product),
+    };
+    const mockedAxios = axios as jest.Mocked<typeof axios>;
+    mockedAxios.get.mockResolvedValueOnce({
+      data: {
+        data: {
+          productId: product.id,
+          byChannel: [
+            {
+              channel: "flipflop",
+              currency: "CZK",
+              orderCount: 2,
+              quantitySold: 3,
+              grossItemRevenue: 450,
+              lastOrderAt: "2026-07-02T08:00:00.000Z",
+            },
+          ],
+          byStatus: [
+            {
+              status: "confirmed",
+              currency: "CZK",
+              orderCount: 2,
+              quantitySold: 3,
+              grossItemRevenue: 450,
+              lastOrderAt: "2026-07-02T08:00:00.000Z",
+            },
+          ],
+          recentHistory: [
+            {
+              channel: "flipflop",
+              status: "confirmed",
+              currency: "CZK",
+              quantitySold: 3,
+              grossItemRevenue: 450,
+              orderedAt: "2026-07-02T08:00:00.000Z",
+            },
+          ],
+        },
+      },
+    } as any);
+    const service = new ProductsService(repository as any, logger as any);
+
+    const result = await service.getSalesStatistics(product.id);
+
+    expect(result.channels).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        channel: "flipflop",
+        status: "available",
+        orderCount: 2,
+        quantitySold: 3,
+        grossSales: 450,
+        lastOrderedAt: "2026-07-02T08:00:00.000Z",
+      }),
+    ]));
+    expect(result.orderStatuses).toEqual([
+      expect.objectContaining({
+        status: "confirmed",
+        orderCount: 2,
+        quantitySold: 3,
+        grossSales: 450,
+        lastOrderedAt: "2026-07-02T08:00:00.000Z",
+      }),
+    ]);
+    expect(result.recentHistory[0]).toMatchObject({
+      status: "confirmed",
+      grossSales: 450,
+    });
+    expect(result.orderDelivery).toMatchObject({
+      source: "orders",
+      sourceStatus: "unavailable",
+      unavailableReason: "[MISSING: Orders stats endpoint]",
+    });
+  });
+
+  it("normalizes Orders lifecycle, payment, and delivery aggregates when present", async () => {
+    process.env.ORDERS_SERVICE_TOKEN = "orders-token";
+    const repository = {
+      findOne: jest.fn(async () => product),
+    };
+    const mockedAxios = axios as jest.Mocked<typeof axios>;
+    mockedAxios.get.mockResolvedValueOnce({
+      data: {
+        data: {
+          productId: product.id,
+          allowedChannels: ["flipflop"],
+          byChannel: [],
+          lifecycleStatistics: {
+            byLifecycleStage: {
+              in_delivery: 2,
+              returned: 1,
+            },
+            byPaymentStatus: {
+              paid: 3,
+            },
+            byDeliveryStatus: {
+              in_delivery: 2,
+              returned: 1,
+            },
+            exceptionCounts: {
+              notReceived: 1,
+              returned: 1,
+              delayed: 2,
+              unfulfilled: 3,
+            },
+            channelLifecycle: [
+              {
+                channel: "flipflop",
+                byLifecycleStage: { in_delivery: 2 },
+                exceptionCounts: { notReceived: 1 },
+              },
+            ],
+          },
+        },
+      },
+    } as any);
+    const service = new ProductsService(repository as any, logger as any);
+
+    const result = await service.getSalesStatistics(product.id);
+
+    expect(result.orderDelivery.sourceStatus).toBe("available");
+    expect(result.orderDelivery.lifecycleStages).toEqual([
+      { key: "in_delivery", label: "In Delivery", count: 2, status: "available" },
+      { key: "returned", label: "Returned", count: 1, status: "available" },
+    ]);
+    expect(result.orderDelivery.paymentStatuses).toEqual([
+      { key: "paid", label: "Paid", count: 3, status: "available" },
+    ]);
+    expect(result.orderDelivery.deliveryExceptions).toEqual({
+      notReceived: 1,
+      returned: 1,
+      delayed: 2,
+      unfulfilled: 3,
+    });
+    expect(result.orderDelivery.channelLifecycle).toEqual([
+      expect.objectContaining({
+        channel: "flipflop",
+        lifecycleStages: [{ key: "in_delivery", label: "In Delivery", count: 2, status: "available" }],
+        deliveryExceptions: expect.objectContaining({ notReceived: 1 }),
+      }),
+    ]);
   });
 
 
