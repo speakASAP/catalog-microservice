@@ -4,12 +4,12 @@ import { CatalogAuthGuard } from '../auth/catalog-auth.guard';
 import { LoggerModule } from '../logger/logger.module';
 import { ProductsModule } from '../products/products.module';
 import { ProductRelation } from './product-relation.entity';
-import { ProductRelationsController } from './product-relations.controller';
+import { InternalOrderAffinityRelationsController, ProductRelationsController } from './product-relations.controller';
 import { ProductRelationsService } from './product-relations.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([ProductRelation]), LoggerModule, ProductsModule],
-  controllers: [ProductRelationsController],
+  controllers: [ProductRelationsController, InternalOrderAffinityRelationsController],
   providers: [ProductRelationsService, CatalogAuthGuard],
   exports: [ProductRelationsService],
 })

@@ -156,3 +156,40 @@ Date: 2026-07-02
 - `kube-system` pods such as `coredns`, `metrics-server`, and `local-path-provisioner` are also stuck in `ContainerCreating`.
 - External Catalog health currently returns Cloudflare HTTP 521.
 - Remaining blocker is node runtime/CNI/containerd recovery requiring operator/root access, not Catalog source validation.
+
+## Runtime Recovery And Smoke Closure
+
+Date: 2026-07-02
+
+- `kubectl get nodes`: `alfares Ready`.
+- `kube-system`: `coredns`, `metrics-server`, and `local-path-provisioner` are `Running`.
+- Catalog deployments: `catalog-microservice 1/1`, `catalog-frontend 1/1`.
+- Catalog service endpoints exist for backend `10.42.0.26:3200` and frontend `10.42.0.113:3000`.
+- External `https://catalog.alfares.cz/health`: HTTP 200, `status=healthy`, product event publisher enabled, outbox counts all 0.
+- External frontend `/`: HTTP 200.
+- Anonymous related-products request: HTTP 401 `Missing or invalid Authorization header`.
+- Protected in-pod non-mutating related-products smoke: HTTP 200 `{"success":true,"data":[]}` for product `8edc51f2-bed2-433f-8a3c-5738b49a02e1`; runtime token value was not printed.
+
+Conclusion: Goal 24 Catalog product-relations foundation is deployed and smoke-verified. Relation scoring/backfill and bundle purchase flows remain separate follow-up implementation goals.
+
+
+## Internal Order Affinity Batch Source Validation
+
+Date: 2026-07-02
+
+Scope: Catalog-only internal batch upsert contract for Marketing-derived order-affinity candidates.
+
+Validated commands:
+
+- `npm test -- --runInBand src/product-relations/product-relations.service.spec.ts`: passed, 1 suite, 5 tests.
+- `npm run build`: passed.
+- `git diff --check`: passed.
+
+Evidence:
+
+- Added `POST /api/internal/product-relations/order-affinity/batch` behind `CatalogAuthGuard` and existing admin/internal Catalog roles.
+- Service forces `relationType=order_affinity` and `source=marketing_order_affinity` server-side.
+- Batch returns per-item `upserted`, `updated`, or `failed` statuses and aggregate counts.
+- First version is upsert-only: no pruning, no backfill trigger, no marketplace publication, no bundle selling, no checkout/payment/warehouse mutation.
+
+Runtime status: not deployed or smoke-tested yet for the new batch endpoint.

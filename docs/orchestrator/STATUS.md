@@ -1,3 +1,23 @@
+## 2026-07-02 - Goal 25 Canonical JSON Propagation Runtime Closed Except Auth Positive Smoke
+
+Change: confirmed the canonical JSON/manual marketplace override slice after the k3s recovery. The additive `manual_overrides`/`source_state` migration is applied, Catalog backend and frontend are available `1/1`, and the deployed marketplace-fields route is reachable behind Auth.
+
+Validation evidence: `https://catalog.alfares.cz/health` returned HTTP 200 with `status=healthy` and product event outbox health `up`; `https://catalog.alfares.cz/` returned HTTP 200; anonymous `GET /api/products/00000000-0000-4000-8000-000000000001/marketplace-fields/bazos` returned protected HTTP 401 `Missing or invalid Authorization header`; post-recovery backend logs showed no fresh Goal 25 schema/relation errors.
+
+Boundary decision: no product rows, listing rows, Orders, Warehouse, Payments, channel publication, queueing, confirmation, or external marketplace state were mutated. No token values were printed. Authenticated positive marketplace-fields smoke remains `[MISSING: approved Auth token]`.
+
+Next action: run the authenticated positive marketplace-fields smoke when an approved operator/Auth token is available; otherwise continue with the next non-secret workstream.
+
+## 2026-07-02 - Goal 24/25 Runtime Recovery And Smoke Closed
+
+Change: confirmed k3s/node recovery after the earlier infrastructure incident. `alfares` node is `Ready`; `coredns`, `metrics-server`, and `local-path-provisioner` are `Running`; Catalog backend and frontend deployments are `1/1` available with service endpoints.
+
+Validation evidence: external `https://catalog.alfares.cz/health` returned HTTP 200 with `status=healthy`; external Catalog frontend returned HTTP 200; anonymous related-products request returned HTTP 401 `Missing or invalid Authorization header`; protected in-pod non-mutating related-products smoke used the runtime internal token without printing it and returned HTTP 200 `{"success":true,"data":[]}` for product `8edc51f2-bed2-433f-8a3c-5738b49a02e1`.
+
+Boundary decision: no relation rows were inserted, no product/order/payment/warehouse data was mutated, no token values were printed, and no marketplace publication was run. Goal 24 Catalog relation foundation is deployed and smoke-verified; relation scoring/backfill and bundle creation remain separate follow-up workstreams.
+
+Next action: continue with the next ready related-products workstream: order-affinity scoring/backfill contract and safe producer/consumer integration.
+
 ## 2026-07-02 - C1 Orders Source Contract Closed
 
 Change: Orders now implements the missing product-scoped `lifecycleStatistics` and `orderDeliveryStatistics` fields for `GET /api/orders/statistics/products/:productId`. Catalog already treats those fields as optional, aggregate-only, and fail-soft; no Catalog source change was required for this closure.
@@ -1503,3 +1523,24 @@ Heureka integration evidence: Heureka accepts HEUREKA_INTERNAL_SERVICE_TOKEN sou
 Boundary decision: no raw secret values were printed; token verification used length and hash prefixes only. No destructive DB/file operations were performed.
 
 Next action: No action needed.
+
+
+## 2026-07-02 - Goal 24 Internal Order Affinity Batch Upsert Contract
+
+Intent chain:
+
+- Vision: Catalog remains durable product relation owner while Marketing can later submit bounded order-affinity candidates through a Catalog-owned write surface.
+- Goal Impact: cross-service order-affinity ingestion now has a source-validated Catalog endpoint contract without direct DB writes or bundle-selling side effects.
+- System: Marketing computes candidates; Catalog validates products, relation constraints, and persistence; Orders/Warehouse/Payments/marketplaces remain unchanged.
+- Feature: protected internal batch upsert for `marketing_order_affinity` order-affinity rows.
+- Task: add `POST /api/internal/product-relations/order-affinity/batch`, service batch handling, DTOs, and focused tests.
+- Execution Plan: Catalog product-relations module only; no migration, no live backfill, no pruning, no marketplace publication.
+- Coding Prompt: force `relationType=order_affinity` and `source=marketing_order_affinity` server-side, return per-item statuses, keep evidence bounded.
+- Code: `src/product-relations/product-relations.controller.ts`, `src/product-relations/product-relations.service.ts`, `src/product-relations/product-relations.dto.ts`, `src/product-relations/product-relations.module.ts`, `src/product-relations/product-relations.service.spec.ts`.
+- Validation: focused product-relations Jest passed 5/5; `npm run build` passed; `git diff --check` passed.
+
+Boundary decision:
+
+- No relation rows were inserted during validation.
+- No runtime deploy or protected batch smoke has been run yet for this new write surface.
+- No Orders, Marketing runtime caller, Warehouse, Payments, checkout, bundle, or marketplace code was changed from Catalog.

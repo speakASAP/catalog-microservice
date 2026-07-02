@@ -9,6 +9,10 @@ type ProductRelationAccessScope = {
   actor?: CatalogActor;
 };
 
+const ORDER_AFFINITY_RELATION_TYPE = 'order_affinity';
+const MARKETING_ORDER_AFFINITY_SOURCE = 'marketing_order_affinity';
+const MAX_ORDER_AFFINITY_BATCH_ITEMS = 500;
+
 type ProductRelationFindOptions = {
   relationType?: string;
   scope?: ProductRelationAccessScope;
@@ -20,6 +24,21 @@ export type ProductRelationWriteInput = {
   confidence?: unknown;
   source?: unknown;
   evidence?: unknown;
+};
+
+type OrderAffinityBatchItemInput = {
+  sourceProductId?: unknown;
+  targetProductId?: unknown;
+  score?: unknown;
+  confidence?: unknown;
+  evidence?: unknown;
+};
+
+export type OrderAffinityBatchInput = {
+  source?: unknown;
+  idempotencyKey?: unknown;
+  generatedAt?: unknown;
+  items?: unknown;
 };
 
 export type ProductRelationResponse = {
@@ -35,10 +54,33 @@ export type ProductRelationResponse = {
   updatedAt: Date;
 };
 
+export type OrderAffinityBatchItemResult = {
+  index: number;
+  sourceProductId?: string;
+  targetProductId?: string;
+  status: 'upserted' | 'updated' | 'failed';
+  relation?: ProductRelationResponse;
+  error?: string;
+};
+
+export type OrderAffinityBatchResponse = {
+  source: typeof MARKETING_ORDER_AFFINITY_SOURCE;
+  idempotencyKey?: string;
+  generatedAt?: string;
+  summary: {
+    total: number;
+    upserted: number;
+    updated: number;
+    failed: number;
+  };
+  items: OrderAffinityBatchItemResult[];
+};
+
 @Injectable()
 export class ProductRelationsService {
   private readonly relationTypePattern = /^[a-z][a-z0-9_-]{0,59}$/;
   private readonly sourcePattern = /^[a-z][a-z0-9_-]{0,79}$/;
+  private readonly uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   private readonly allProductAccessRoles = [
     'global:superadmin',
     'global:platform_admin',
@@ -86,6 +128,73 @@ export class ProductRelationsService {
     await this.productsService.findOne(sourceProductId, scope as any);
     await this.productsService.findOne(targetProductId, scope as any);
 
+    const result = await this.upsertRelationWithStatus(sourceProductId, targetProductId, data, scope);
+    return result.relation;
+  }
+
+  async upsertOrderAffinityBatch(
+    data: OrderAffinityBatchInput,
+    scope: ProductRelationAccessScope = {},
+  ): Promise<OrderAffinityBatchResponse> {
+    const batch = this.normalizeOrderAffinityBatchInput(data);
+    const items: OrderAffinityBatchItemResult[] = [];
+
+    for (const [index, item] of batch.items.entries()) {
+      let sourceProductId: string | undefined;
+      let targetProductId: string | undefined;
+      try {
+        sourceProductId = this.normalizeUuid(item.sourceProductId, 'items.sourceProductId');
+        targetProductId = this.normalizeUuid(item.targetProductId, 'items.targetProductId');
+        const result = await this.upsertRelationWithStatus(sourceProductId, targetProductId, {
+          relationType: ORDER_AFFINITY_RELATION_TYPE,
+          source: MARKETING_ORDER_AFFINITY_SOURCE,
+          score: item.score,
+          confidence: item.confidence,
+          evidence: item.evidence,
+        }, scope);
+        items.push({
+          index,
+          sourceProductId,
+          targetProductId,
+          status: result.status,
+          relation: result.relation,
+        });
+      } catch (error) {
+        items.push({
+          index,
+          sourceProductId,
+          targetProductId,
+          status: 'failed',
+          error: this.errorMessage(error),
+        });
+      }
+    }
+
+    return {
+      source: MARKETING_ORDER_AFFINITY_SOURCE,
+      idempotencyKey: batch.idempotencyKey,
+      generatedAt: batch.generatedAt,
+      summary: {
+        total: items.length,
+        upserted: items.filter((item) => item.status === 'upserted').length,
+        updated: items.filter((item) => item.status === 'updated').length,
+        failed: items.filter((item) => item.status === 'failed').length,
+      },
+      items,
+    };
+  }
+
+  private async upsertRelationWithStatus(
+    sourceProductId: string,
+    targetProductId: string,
+    data: ProductRelationWriteInput,
+    scope: ProductRelationAccessScope,
+  ): Promise<{ relation: ProductRelationResponse; status: 'upserted' | 'updated' }> {
+    const normalized = this.normalizeRelationInput(sourceProductId, targetProductId, data);
+
+    await this.productsService.findOne(sourceProductId, scope as any);
+    await this.productsService.findOne(targetProductId, scope as any);
+
     const existing = await this.relationRepository.findOne({
       where: {
         sourceProductId,
@@ -106,7 +215,93 @@ export class ProductRelationsService {
     relation.confidence = normalized.confidence;
     relation.evidence = normalized.evidence;
 
-    return this.toResponse(await this.relationRepository.save(relation));
+    return {
+      relation: this.toResponse(await this.relationRepository.save(relation)),
+      status: existing ? 'updated' : 'upserted',
+    };
+  }
+
+
+  private normalizeOrderAffinityBatchInput(data: OrderAffinityBatchInput) {
+    if (!data || Array.isArray(data) || typeof data !== 'object') {
+      throw new BadRequestException('Order affinity batch payload must be an object');
+    }
+    if (
+      data.source !== undefined &&
+      data.source !== null &&
+      data.source !== '' &&
+      data.source !== MARKETING_ORDER_AFFINITY_SOURCE
+    ) {
+      throw new BadRequestException('source must be marketing_order_affinity');
+    }
+    if (!Array.isArray(data.items)) {
+      throw new BadRequestException('items must be an array');
+    }
+    if (data.items.length === 0) {
+      throw new BadRequestException('items must not be empty');
+    }
+    if (data.items.length > MAX_ORDER_AFFINITY_BATCH_ITEMS) {
+      throw new BadRequestException(`items must contain at most ${MAX_ORDER_AFFINITY_BATCH_ITEMS} entries`);
+    }
+
+    return {
+      idempotencyKey: this.normalizeOptionalString(data.idempotencyKey, 'idempotencyKey'),
+      generatedAt: this.normalizeOptionalIsoTimestamp(data.generatedAt, 'generatedAt'),
+      items: data.items.map((item) => this.normalizeOrderAffinityBatchItem(item)),
+    };
+  }
+
+  private normalizeOrderAffinityBatchItem(value: unknown): OrderAffinityBatchItemInput {
+    if (!value || Array.isArray(value) || typeof value !== 'object') {
+      throw new BadRequestException('items entries must be objects');
+    }
+    return value as OrderAffinityBatchItemInput;
+  }
+
+  private normalizeUuid(value: unknown, field: string): string {
+    if (typeof value !== 'string' || !this.uuidPattern.test(value.trim())) {
+      throw new BadRequestException(`${field} must be a UUID`);
+    }
+    return value.trim();
+  }
+
+  private normalizeOptionalString(value: unknown, field: string): string | undefined {
+    if (value === undefined || value === null || value === '') {
+      return undefined;
+    }
+    if (typeof value !== 'string' || value.trim().length === 0 || value.trim().length > 200) {
+      throw new BadRequestException(`${field} must be a non-empty string up to 200 characters`);
+    }
+    return value.trim();
+  }
+
+  private normalizeOptionalIsoTimestamp(value: unknown, field: string): string | undefined {
+    const normalized = this.normalizeOptionalString(value, field);
+    if (!normalized) {
+      return undefined;
+    }
+    const timestamp = Date.parse(normalized);
+    if (!Number.isFinite(timestamp)) {
+      throw new BadRequestException(`${field} must be an ISO timestamp`);
+    }
+    return normalized;
+  }
+
+  private errorMessage(error: unknown): string {
+    if (error instanceof BadRequestException || error instanceof NotFoundException) {
+      const response = error.getResponse();
+      if (typeof response === 'string') {
+        return response;
+      }
+      if (response && typeof response === 'object' && 'message' in response) {
+        const message = (response as { message?: unknown }).message;
+        return Array.isArray(message) ? message.join('; ') : String(message);
+      }
+    }
+    if (error instanceof Error) {
+      return error.message;
+    }
+    return 'unknown_error';
   }
 
   private normalizeRelationInput(

@@ -137,6 +137,78 @@ describe('ProductRelationsService', () => {
     } as any, { actor: adminActor })).rejects.toThrow(BadRequestException);
   });
 
+
+  it('batch upserts Marketing order affinity candidates with partial failure results', async () => {
+    const existingRelation = relationRow({
+      id: '00000000-0000-4000-8000-000000000902',
+      targetProductId: targetProductB,
+      source: 'marketing_order_affinity',
+    });
+    const repository = {
+      findOne: jest.fn(async ({ where }) => (
+        where.targetProductId === targetProductB ? existingRelation : null
+      )),
+      create: jest.fn((data) => relationRow(data)),
+      save: jest.fn(async (data) => ({
+        ...data,
+        id: data.id ?? '00000000-0000-4000-8000-000000000903',
+        createdAt: new Date('2026-07-02T01:00:00.000Z'),
+        updatedAt: new Date('2026-07-02T01:00:00.000Z'),
+      })),
+    };
+    const productsService = {
+      findOne: jest.fn(async (id: string) => ({ id })),
+    };
+    const service = new ProductRelationsService(repository as any, productsService as any);
+
+    const result = await service.upsertOrderAffinityBatch({
+      source: 'marketing_order_affinity',
+      idempotencyKey: 'marketing_order_affinity:test-batch',
+      generatedAt: '2026-07-02T10:00:00.000Z',
+      items: [
+        {
+          sourceProductId,
+          targetProductId: targetProductA,
+          score: 1,
+          confidence: 0.5,
+          evidence: { sourceSystem: 'marketing-microservice', candidateId: 'candidate-a' },
+        },
+        {
+          sourceProductId,
+          targetProductId: targetProductB,
+          score: 2,
+          confidence: 0.75,
+          evidence: { sourceSystem: 'marketing-microservice', candidateId: 'candidate-b' },
+        },
+        {
+          sourceProductId,
+          targetProductId: sourceProductId,
+          score: 1,
+          confidence: 0.5,
+          evidence: { sourceSystem: 'marketing-microservice', candidateId: 'candidate-self' },
+        },
+      ],
+    }, { actor: adminActor });
+
+    expect(result.source).toBe('marketing_order_affinity');
+    expect(result.summary).toEqual({ total: 3, upserted: 1, updated: 1, failed: 1 });
+    expect(result.items.map((item) => item.status)).toEqual(['upserted', 'updated', 'failed']);
+    expect(result.items[0].relation).toMatchObject({
+      relationType: 'order_affinity',
+      source: 'marketing_order_affinity',
+      score: 1,
+      confidence: 0.5,
+    });
+    expect(result.items[1].relation).toMatchObject({
+      id: existingRelation.id,
+      relationType: 'order_affinity',
+      source: 'marketing_order_affinity',
+      score: 2,
+      confidence: 0.75,
+    });
+    expect(result.items[2].error).toContain('same product');
+  });
+
   it('returns visible relations in deterministic score order', async () => {
     const repository = {
       find: jest.fn(async () => [

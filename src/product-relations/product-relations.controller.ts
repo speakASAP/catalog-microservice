@@ -1,8 +1,8 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Put, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { CatalogAuthGuard, type CatalogAuthenticatedRequest } from '../auth/catalog-auth.guard';
 import { RequireCatalogRoles } from '../auth/catalog-auth.decorator';
 import { LoggerService } from '../logger/logger.service';
-import { ProductRelationQueryDto, UpsertProductRelationDto } from './product-relations.dto';
+import { ProductRelationQueryDto, UpsertOrderAffinityBatchDto, UpsertProductRelationDto } from './product-relations.dto';
 import { ProductRelationsService } from './product-relations.service';
 
 const PRODUCT_RELATION_ADMIN_ROLES = [
@@ -66,5 +66,46 @@ export class ProductRelationsController {
     });
 
     return { success: true, data: relation };
+  }
+}
+
+@Controller('internal/product-relations/order-affinity')
+@UseGuards(CatalogAuthGuard)
+export class InternalOrderAffinityRelationsController {
+  constructor(
+    private readonly productRelationsService: ProductRelationsService,
+    private readonly logger: LoggerService,
+  ) {}
+
+  @Post('batch')
+  @RequireCatalogRoles(...PRODUCT_RELATION_ADMIN_ROLES)
+  async upsertBatch(
+    @Body() data: UpsertOrderAffinityBatchDto,
+    @Req() request: CatalogAuthenticatedRequest,
+  ) {
+    this.logger.log(
+      'POST /api/internal/product-relations/order-affinity/batch',
+      'InternalOrderAffinityRelationsController',
+    );
+    const result = await this.productRelationsService.upsertOrderAffinityBatch(data, {
+      actor: request.catalogActor,
+    });
+
+    this.logger.auditCatalogWrite(request, {
+      action: 'batch_upsert',
+      resourceType: 'product_relation',
+      resourceId: result.idempotencyKey ?? 'marketing_order_affinity_batch',
+      metadata: {
+        source: result.source,
+        idempotencyKey: result.idempotencyKey,
+        generatedAt: result.generatedAt,
+        total: result.summary.total,
+        upserted: result.summary.upserted,
+        updated: result.summary.updated,
+        failed: result.summary.failed,
+      },
+    });
+
+    return { success: true, data: result };
   }
 }

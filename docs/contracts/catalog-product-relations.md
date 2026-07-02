@@ -106,9 +106,50 @@ Validation:
 - `confidence` defaults to `1` and must be finite between `0` and `1`.
 - `evidence` defaults to `{}` and must be a JSON object.
 
+
+
+### `POST /api/internal/product-relations/order-affinity/batch`
+
+Protected by `CatalogAuthGuard` and restricted to platform/catalog admin roles or internal Catalog service actors.
+
+This endpoint is the Catalog-owned write surface for Marketing-derived order affinity candidates. Catalog forces `relationType = order_affinity` and `source = marketing_order_affinity` server-side; callers cannot use it to create other relation types or sources.
+
+Body:
+
+```json
+{
+  "source": "marketing_order_affinity",
+  "idempotencyKey": "marketing_order_affinity:2026-07-02T10:00:00Z:batch-001",
+  "generatedAt": "2026-07-02T10:00:00.000Z",
+  "items": [
+    {
+      "sourceProductId": "uuid",
+      "targetProductId": "uuid",
+      "score": 1,
+      "confidence": 0.5,
+      "evidence": {
+        "sourceSystem": "marketing-microservice",
+        "sourceEventType": "orders.order.created.v1",
+        "candidateId": "non-sensitive-candidate-id"
+      }
+    }
+  ]
+}
+```
+
+Response returns per-item statuses: `upserted`, `updated`, or `failed`, plus aggregate counts. Invalid items do not abort the whole batch after root payload validation succeeds.
+
+First version semantics:
+
+- Upsert only.
+- No deletion or pruning of missing rows.
+- No live backfill trigger.
+- No marketplace publication.
+- No bundle SKU, checkout, warehouse, payment, or free-shipping mutation.
+
 ## Blockers
 
-- `[MISSING: Orders-owned affinity producer/event contract]`
-- `[MISSING: owner-approved migration application and deployment window]`
+- `[MISSING: approved Marketing-to-Catalog service role beyond current internal Catalog service-token role]`
+- `[MISSING: runtime deploy and protected smoke for internal order-affinity batch endpoint]`
 - `[MISSING: bundle checkout contract owned by FlipFlop/Orders/Payments]`
 - `[MISSING: runtime backfill source for historical order-affinity scores]`

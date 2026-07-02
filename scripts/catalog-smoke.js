@@ -67,6 +67,11 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function requestReadContract(path) {
+  const headers = getAuthorizedHeaders();
+  return request(path, headers ? { headers } : {});
+}
+
 async function request(path, options = {}) {
   const url = /^https?:\/\//.test(path) ? path : `${baseUrl}${path}`;
   const attempts = Number.isFinite(requestRetries) && requestRetries > 0 ? requestRetries + 1 : 1;
@@ -281,7 +286,7 @@ async function main() {
   });
 
   await check("product-search", async () => {
-    const response = await request("/api/products?page=1&limit=1");
+    const response = await requestReadContract("/api/products?page=1&limit=1");
     assert(response.ok, "product-search", "Product search did not return 2xx", { statusCode: response.status });
     assert(Array.isArray(response.body?.data), "product-search", "Product search data is not an array", {
       statusCode: response.status,
@@ -302,7 +307,7 @@ async function main() {
       record("product-detail", "skip", { reason: "No product ID supplied and product search returned no rows." });
       return;
     }
-    const response = await request(`/api/products/${encodeURIComponent(productId)}`);
+    const response = await requestReadContract(`/api/products/${encodeURIComponent(productId)}`);
     assert(response.ok, "product-detail", "Product detail did not return 2xx", { statusCode: response.status, productId });
     assert(response.body?.data?.id === productId, "product-detail", "Product detail returned a different product ID", {
       statusCode: response.status,
@@ -317,7 +322,7 @@ async function main() {
       record("pricing-current", "skip", { reason: "No product ID available for pricing check." });
       return;
     }
-    const response = await request(`/api/pricing/product/${encodeURIComponent(productId)}/current`);
+    const response = await requestReadContract(`/api/pricing/product/${encodeURIComponent(productId)}/current`);
     assert(response.ok, "pricing-current", "Current pricing endpoint did not return 2xx", { statusCode: response.status, productId });
     assert(response.body?.success === true, "pricing-current", "Current pricing response did not use success envelope", {
       statusCode: response.status,
@@ -335,7 +340,7 @@ async function main() {
       record("media-by-product", "skip", { reason: "No product ID available for media check." });
       return;
     }
-    const response = await request(`/api/media/product/${encodeURIComponent(productId)}`);
+    const response = await requestReadContract(`/api/media/product/${encodeURIComponent(productId)}`);
     assert(response.ok, "media-by-product", "Product media endpoint did not return 2xx", { statusCode: response.status, productId });
     assert(Array.isArray(response.body?.data), "media-by-product", "Product media data is not an array", {
       statusCode: response.status,
