@@ -63,6 +63,13 @@ const getApiBaseUrl = (): string => {
 };
 
 const API_BASE_URL = getApiBaseUrl();
+const AUTH_STATE_KEY = "catalog_auth_state";
+const LOGOUT_REDIRECT_KEY = "catalog_logout_redirect";
+
+export const authSessionKeys = {
+  authState: AUTH_STATE_KEY,
+  logoutRedirect: LOGOUT_REDIRECT_KEY,
+};
 
 export const authApi = {
   async login(credentials: LoginCredentials) {
@@ -195,6 +202,11 @@ export const authApi = {
 
   logout() {
     apiClient.setToken(null);
+
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem(AUTH_STATE_KEY);
+      window.sessionStorage.setItem(LOGOUT_REDIRECT_KEY, "1");
+    }
   },
 };
 

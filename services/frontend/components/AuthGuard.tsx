@@ -3,6 +3,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { authSessionKeys } from '@/lib/api/auth';
 import LoadingSpinner from './LoadingSpinner';
 
 interface AuthGuardProps {
@@ -10,14 +11,23 @@ interface AuthGuardProps {
 }
 
 export default function AuthGuard({ children }: AuthGuardProps) {
-  const { loading, isAuthenticated } = useAuth();
+  const { loading, isAuthenticated, isLoggingOut } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      router.push('/login');
+    if (loading || isAuthenticated) return;
+
+    const shouldReturnHome =
+      isLoggingOut || window.sessionStorage.getItem(authSessionKeys.logoutRedirect) === '1';
+
+    if (shouldReturnHome) {
+      window.sessionStorage.removeItem(authSessionKeys.logoutRedirect);
+      router.replace('/');
+      return;
     }
-  }, [loading, isAuthenticated, router]);
+
+    router.push('/login');
+  }, [loading, isAuthenticated, isLoggingOut, router]);
 
   if (loading) {
     return (

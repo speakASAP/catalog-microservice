@@ -20,6 +20,7 @@ interface AuthContextType {
   }) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
+  isLoggingOut: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,6 +28,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     // Check if user is already authenticated
@@ -85,8 +87,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
+    setIsLoggingOut(true);
     authApi.logout();
     setUser(null);
+
+    if (typeof window !== "undefined") {
+      window.location.assign("/");
+    }
   };
 
   return (
@@ -98,6 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         register,
         logout,
         isAuthenticated: !!user,
+        isLoggingOut,
       }}
     >
       {children}
