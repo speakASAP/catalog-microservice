@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put, Query, Req, Use
 import { CatalogAuthGuard, type CatalogAuthenticatedRequest } from '../auth/catalog-auth.guard';
 import { RequireCatalogRoles } from '../auth/catalog-auth.decorator';
 import { LoggerService } from '../logger/logger.service';
-import { ProductRelationQueryDto, UpsertOrderAffinityBatchDto, UpsertProductRelationDto } from './product-relations.dto';
+import { ProductBundleCandidateQueryDto, ProductRelationQueryDto, UpsertOrderAffinityBatchDto, UpsertProductRelationDto } from './product-relations.dto';
 import { ProductRelationsService } from './product-relations.service';
 
 const PRODUCT_RELATION_ADMIN_ROLES = [
@@ -68,6 +68,33 @@ export class ProductRelationsController {
     return { success: true, data: relation };
   }
 }
+
+@Controller('products/:productId/bundle-candidates')
+@UseGuards(CatalogAuthGuard)
+export class ProductBundleCandidatesController {
+  constructor(
+    private readonly productRelationsService: ProductRelationsService,
+    private readonly logger: LoggerService,
+  ) {}
+
+  @Get()
+  @RequireCatalogRoles('catalog:authenticated')
+  async findBundleCandidates(
+    @Param('productId', ParseUUIDPipe) productId: string,
+    @Query() query: ProductBundleCandidateQueryDto,
+    @Req() request: CatalogAuthenticatedRequest,
+  ) {
+    this.logger.log(`GET /api/products/${productId}/bundle-candidates`, 'ProductBundleCandidatesController');
+    const result = await this.productRelationsService.findBundleCandidates(productId, {
+      limit: query.limit,
+      freeShippingThreshold: query.freeShippingThreshold,
+      currency: query.currency,
+      scope: { actor: request.catalogActor },
+    });
+    return { success: true, data: result };
+  }
+}
+
 
 @Controller('internal/product-relations/order-affinity')
 @UseGuards(CatalogAuthGuard)

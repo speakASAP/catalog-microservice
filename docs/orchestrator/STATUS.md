@@ -1573,3 +1573,32 @@ Intent chain:
 Boundary decision: Catalog consumes BPCP publication state and exposes eligibility facts only. It does not calculate the 10 percent discount, write product prices, call checkout, emit customer notifications, or become the BPCP process registry.
 
 Runtime deployment evidence: deployed image `localhost:5000/catalog-microservice:50e3c0c` rolled out successfully. BPCP `holiday-discount-2026:1` was validated and published through the BPCP API, then `POST /api/events/outbox/dispatch?limit=10` dispatched 3/3 pending process events to RabbitMQ. Catalog `/ready` on pod `catalog-microservice-5998ff94b4-srh8h` reported `bpcpProcessEvents.consumer.connection.status=up`, `missing=[]`, `received=1`, `applied=1`, `signatureFailures=0`, `lastAppliedEventId=holiday-discount-2026:1:process.published:3`, and `activeProjectionCount=1`. Remaining blocker is `[MISSING: final holiday eligibility fact schema or configured category/tag allow-list]`.
+
+
+## 2026-07-03 - Bundle Candidate Projection From Order Affinity
+
+Current focus: Expose a read-only Catalog bundle-candidate projection over existing `order_affinity` relations.
+
+Intent Preservation Chain:
+
+- Vision: Real purchase-derived product relationships can power buy-together presentation and future sets without bypassing Catalog product truth or checkout authority.
+- Goal Impact: Marketplaces can request candidate product pairs with deterministic current pricing and free-shipping top-up guidance while bundle SKU creation and checkout totals remain blocked until owner contracts exist.
+- System: Marketing produces `order_affinity` relations from Orders events; Catalog owns relation and product/pricing truth; FlipFlop/Orders/Payments own cart, discounts, totals, stock, and payment authorization.
+- Feature: Read-only bundle-candidate API.
+- Task: Add `GET /api/products/:productId/bundle-candidates`, derive candidates from visible `order_affinity` rows, enrich with product identity/current pricing, and expose threshold/top-up blockers.
+- Execution Plan: Catalog `product-relations` only; import `PricingModule`; no DB migration; no write endpoints; no checkout, warehouse, payment, marketplace publication, or bundle SKU mutation.
+- Coding Prompt: Return bounded pair candidates ordered by relation score/confidence, include current price summaries, calculate suggested display price only when `freeShippingThreshold` is supplied, and surface `[MISSING: ...]` blockers instead of inventing shipping policy.
+- Code: `src/product-relations/product-relations.controller.ts`, `src/product-relations/product-relations.service.ts`, `src/product-relations/product-relations.dto.ts`, `src/product-relations/product-relations.module.ts`, `src/product-relations/product-relations.service.spec.ts`, `docs/contracts/catalog-product-relations.md`, and this status entry.
+- Validation: focused product-relations Jest passed 7/7; `npm run build` passed; `git diff --check` passed.
+
+Parallel execution evidence:
+
+- Marketplace/read-path subagent confirmed FlipFlop already has related product and buy-together UI/read paths and should consume Catalog as candidate source without Catalog owning checkout discounts.
+- Catalog explorer subagent confirmed no migration is needed and identified `[MISSING: approved bundle checkout contract owned by FlipFlop/Orders/Payments]`, `[MISSING: explicit discount/price presentation policy for bundle candidates]`, and `[MISSING: sufficient order_affinity backfill volume]`.
+
+Remaining blockers:
+
+- `[MISSING: approved bundle checkout contract owned by FlipFlop/Orders/Payments]`.
+- `[MISSING: explicit discount/price presentation policy for bundle candidates]`.
+- `[MISSING: sufficient order_affinity backfill volume]`.
+- `[MISSING: runtime smoke for protected bundle-candidates endpoint after deploy]`.

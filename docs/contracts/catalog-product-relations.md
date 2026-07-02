@@ -108,6 +108,46 @@ Validation:
 
 
 
+
+
+### `GET /api/products/:productId/bundle-candidates`
+
+Read-only Catalog projection that derives candidate two-product bundles from existing `order_affinity` product relations. This endpoint does not create bundle SKUs, discounts, carts, checkout records, stock reservations, marketplace listings, or payment totals.
+
+Query:
+
+- `limit`: optional integer from `1` to `10`; default `3`.
+- `freeShippingThreshold`: optional non-negative number. When present, Catalog returns a suggested bundle display price at least equal to the threshold and a `topUpAmount` when current product prices are below that threshold.
+- `currency`: optional three-letter uppercase currency filter/check.
+
+Response shape:
+
+```json
+{
+  "success": true,
+  "data": {
+    "sourceProductId": "uuid",
+    "relationType": "order_affinity",
+    "source": "marketing_order_affinity",
+    "freeShippingThreshold": 1000,
+    "candidates": [
+      {
+        "candidateId": "order_affinity:<sourceProductId>:<targetProductId>",
+        "productIds": ["uuid", "uuid"],
+        "items": [
+          { "productId": "uuid", "sku": "SKU", "title": "Title", "price": { "amount": 600, "currency": "CZK", "source": "base" } }
+        ],
+        "relation": { "relationId": "uuid", "relationType": "order_affinity", "source": "marketing_order_affinity", "score": 1, "confidence": 0.5 },
+        "pricing": { "currency": "CZK", "subtotal": 950, "freeShippingThreshold": 1000, "suggestedBundlePrice": 1000, "topUpAmount": 50, "freeShippingEligible": true, "blockers": [] }
+      }
+    ],
+    "blockers": []
+  }
+}
+```
+
+If `freeShippingThreshold` is missing, Catalog still returns candidates but includes `[MISSING: free-shipping threshold contract]` in the response blockers and in each candidate pricing blocker. Checkout, Orders, Payments, and marketplace services remain responsible for authoritative selling rules and totals.
+
 ### `POST /api/internal/product-relations/order-affinity/batch`
 
 Protected by `CatalogAuthGuard` and restricted to platform/catalog admin roles or internal Catalog service actors.

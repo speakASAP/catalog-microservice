@@ -1,10 +1,29 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsNumber, IsObject, IsOptional, IsString, Max, Min, ValidateNested } from 'class-validator';
+import { IsArray, IsInt, IsNumber, IsObject, IsOptional, IsString, Max, Min, ValidateNested } from 'class-validator';
 
 export class ProductRelationQueryDto {
   @IsOptional()
   @IsString()
   relationType?: string;
+}
+
+export class ProductBundleCandidateQueryDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(10)
+  limit?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({ allowInfinity: false, allowNaN: false })
+  @Min(0)
+  freeShippingThreshold?: number;
+
+  @IsOptional()
+  @IsString()
+  currency?: string;
 }
 
 export class UpsertProductRelationDto {

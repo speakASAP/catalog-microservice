@@ -209,6 +209,80 @@ describe('ProductRelationsService', () => {
     expect(result.items[2].error).toContain('same product');
   });
 
+  it('returns priced bundle candidates with free-shipping top-up', async () => {
+    const repository = {
+      find: jest.fn(async () => [
+        relationRow({ id: 'rel-a', targetProductId: targetProductA, score: '5.0000' as any, confidence: '0.8000' as any, source: 'marketing_order_affinity' }),
+      ]),
+    };
+    const productsService = {
+      findOne: jest.fn(async (id: string) => ({
+        id,
+        sku: id === sourceProductId ? 'SKU-SOURCE' : 'SKU-TARGET',
+        title: id === sourceProductId ? 'Source product' : 'Target product',
+      })),
+    };
+    const pricingService = {
+      getCurrentPrice: jest.fn(async (id: string) => ({
+        productId: id,
+        basePrice: id === sourceProductId ? 600 : 350,
+        salePrice: null,
+        currency: 'CZK',
+      })),
+    };
+    const service = new ProductRelationsService(repository as any, productsService as any, pricingService as any);
+
+    const result = await service.findBundleCandidates(sourceProductId, {
+      freeShippingThreshold: 1000,
+      scope: { actor: jwtActor },
+    });
+
+    expect(result.blockers).toEqual([]);
+    expect(result.candidates).toHaveLength(1);
+    expect(result.candidates[0]).toMatchObject({
+      candidateId: `order_affinity:${sourceProductId}:${targetProductA}`,
+      productIds: [sourceProductId, targetProductA],
+      pricing: {
+        currency: 'CZK',
+        subtotal: 950,
+        freeShippingThreshold: 1000,
+        suggestedBundlePrice: 1000,
+        topUpAmount: 50,
+        freeShippingEligible: true,
+        blockers: [],
+      },
+    });
+    expect(result.candidates[0].items.map((item) => item.price?.amount)).toEqual([600, 350]);
+  });
+
+  it('returns bundle candidate blockers when free-shipping threshold is not configured', async () => {
+    const repository = {
+      find: jest.fn(async () => [
+        relationRow({ id: 'rel-a', targetProductId: targetProductA, source: 'marketing_order_affinity' }),
+      ]),
+    };
+    const productsService = {
+      findOne: jest.fn(async (id: string) => ({ id, sku: 'SKU', title: 'Product' })),
+    };
+    const pricingService = {
+      getCurrentPrice: jest.fn(async () => ({ basePrice: 200, salePrice: null, currency: 'CZK' })),
+    };
+    const service = new ProductRelationsService(repository as any, productsService as any, pricingService as any);
+
+    const result = await service.findBundleCandidates(sourceProductId, {
+      scope: { actor: jwtActor },
+    });
+
+    expect(result.blockers).toEqual(['[MISSING: free-shipping threshold contract]']);
+    expect(result.candidates[0].pricing).toMatchObject({
+      subtotal: 400,
+      suggestedBundlePrice: 400,
+      topUpAmount: null,
+      freeShippingEligible: false,
+      blockers: ['[MISSING: free-shipping threshold contract]'],
+    });
+  });
+
   it('returns visible relations in deterministic score order', async () => {
     const repository = {
       find: jest.fn(async () => [

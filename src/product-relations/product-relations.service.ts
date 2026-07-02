@@ -1,8 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, Repository } from 'typeorm';
 import type { CatalogActor } from '../auth/catalog-auth.guard';
 import { ProductsService } from '../products/products.service';
+import { PricingService } from '../pricing/pricing.service';
 import { ProductRelation, ProductRelationEvidence } from './product-relation.entity';
 
 type ProductRelationAccessScope = {
@@ -15,6 +16,13 @@ const MAX_ORDER_AFFINITY_BATCH_ITEMS = 500;
 
 type ProductRelationFindOptions = {
   relationType?: string;
+  scope?: ProductRelationAccessScope;
+};
+
+type ProductBundleCandidateFindOptions = {
+  limit?: unknown;
+  freeShippingThreshold?: unknown;
+  currency?: unknown;
   scope?: ProductRelationAccessScope;
 };
 
@@ -76,6 +84,48 @@ export type OrderAffinityBatchResponse = {
   items: OrderAffinityBatchItemResult[];
 };
 
+type BundleCandidateProductSummary = {
+  productId: string;
+  sku: string;
+  title: string;
+  price: {
+    amount: number;
+    currency: string;
+    source: 'sale' | 'base';
+  } | null;
+};
+
+export type ProductBundleCandidate = {
+  candidateId: string;
+  productIds: string[];
+  items: BundleCandidateProductSummary[];
+  relation: {
+    relationId: string;
+    relationType: typeof ORDER_AFFINITY_RELATION_TYPE;
+    source: typeof MARKETING_ORDER_AFFINITY_SOURCE | string;
+    score: number;
+    confidence: number;
+  };
+  pricing: {
+    currency?: string;
+    subtotal: number | null;
+    freeShippingThreshold?: number;
+    suggestedBundlePrice: number | null;
+    topUpAmount: number | null;
+    freeShippingEligible: boolean;
+    blockers: string[];
+  };
+};
+
+export type ProductBundleCandidateResponse = {
+  sourceProductId: string;
+  relationType: typeof ORDER_AFFINITY_RELATION_TYPE;
+  source: typeof MARKETING_ORDER_AFFINITY_SOURCE;
+  freeShippingThreshold?: number;
+  candidates: ProductBundleCandidate[];
+  blockers: string[];
+};
+
 @Injectable()
 export class ProductRelationsService {
   private readonly relationTypePattern = /^[a-z][a-z0-9_-]{0,59}$/;
@@ -92,6 +142,8 @@ export class ProductRelationsService {
     @InjectRepository(ProductRelation)
     private readonly relationRepository: Repository<ProductRelation>,
     private readonly productsService: ProductsService,
+    @Optional()
+    private readonly pricingService?: PricingService,
   ) {}
 
   async findRelated(
@@ -115,6 +167,66 @@ export class ProductRelationsService {
     return visibleRelations
       .sort((left, right) => this.compareRelations(left, right))
       .map((relation) => this.toResponse(relation));
+  }
+
+  async findBundleCandidates(
+    sourceProductId: string,
+    options: ProductBundleCandidateFindOptions = {},
+  ): Promise<ProductBundleCandidateResponse> {
+    const scope = options.scope ?? {};
+    const limit = this.normalizeBundleCandidateLimit(options.limit);
+    const freeShippingThreshold = this.normalizeOptionalBundleAmount(
+      options.freeShippingThreshold,
+      'freeShippingThreshold',
+    );
+    const requestedCurrency = this.normalizeOptionalCurrency(options.currency);
+    const sourceProduct = await this.productsService.findOne(sourceProductId, scope as any);
+    const relations = (await this.findRelated(sourceProductId, {
+      relationType: ORDER_AFFINITY_RELATION_TYPE,
+      scope,
+    })).slice(0, limit);
+
+    const blockers: string[] = [];
+    if (freeShippingThreshold === undefined) {
+      blockers.push('[MISSING: free-shipping threshold contract]');
+    }
+
+    const candidates: ProductBundleCandidate[] = [];
+    for (const relation of relations) {
+      const targetProduct = await this.productsService.findOne(relation.targetProductId, scope as any);
+      const sourcePrice = await this.bundlePriceSummary(sourceProduct.id);
+      const targetPrice = await this.bundlePriceSummary(targetProduct.id);
+      const pricing = this.bundlePricingSummary(
+        [sourcePrice, targetPrice],
+        requestedCurrency,
+        freeShippingThreshold,
+      );
+      candidates.push({
+        candidateId: `order_affinity:${sourceProduct.id}:${targetProduct.id}`,
+        productIds: [sourceProduct.id, targetProduct.id],
+        items: [
+          this.bundleProductSummary(sourceProduct, sourcePrice),
+          this.bundleProductSummary(targetProduct, targetPrice),
+        ],
+        relation: {
+          relationId: relation.id,
+          relationType: ORDER_AFFINITY_RELATION_TYPE,
+          source: relation.source,
+          score: relation.score,
+          confidence: relation.confidence,
+        },
+        pricing,
+      });
+    }
+
+    return {
+      sourceProductId,
+      relationType: ORDER_AFFINITY_RELATION_TYPE,
+      source: MARKETING_ORDER_AFFINITY_SOURCE,
+      freeShippingThreshold,
+      candidates,
+      blockers,
+    };
   }
 
   async upsertRelation(
@@ -221,6 +333,107 @@ export class ProductRelationsService {
     };
   }
 
+
+  private normalizeBundleCandidateLimit(value: unknown): number {
+    if (value === undefined || value === null || value === '') {
+      return 3;
+    }
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed < 1 || parsed > 10) {
+      throw new BadRequestException('limit must be an integer between 1 and 10');
+    }
+    return parsed;
+  }
+
+  private normalizeOptionalBundleAmount(value: unknown, field: string): number | undefined {
+    if (value === undefined || value === null || value === '') {
+      return undefined;
+    }
+    const amount = Number(value);
+    if (!Number.isFinite(amount) || amount < 0) {
+      throw new BadRequestException(`${field} must be a finite non-negative number`);
+    }
+    return amount;
+  }
+
+  private normalizeOptionalCurrency(value: unknown): string | undefined {
+    if (value === undefined || value === null || value === '') {
+      return undefined;
+    }
+    if (typeof value !== 'string' || !/^[A-Z]{3}$/.test(value.trim())) {
+      throw new BadRequestException('currency must be a three-letter uppercase code');
+    }
+    return value.trim();
+  }
+
+  private async bundlePriceSummary(productId: string): Promise<BundleCandidateProductSummary['price']> {
+    if (!this.pricingService) {
+      return null;
+    }
+    const price = await this.pricingService.getCurrentPrice(productId);
+    if (!price) {
+      return null;
+    }
+    const salePrice = price.salePrice === null || price.salePrice === undefined ? null : this.numberValue(price.salePrice);
+    const basePrice = this.numberValue(price.basePrice);
+    return {
+      amount: salePrice ?? basePrice,
+      currency: price.currency,
+      source: salePrice === null ? 'base' : 'sale',
+    };
+  }
+
+  private bundleProductSummary(product: { id: string; sku: string; title: string }, price: BundleCandidateProductSummary['price']): BundleCandidateProductSummary {
+    return {
+      productId: product.id,
+      sku: product.sku,
+      title: product.title,
+      price,
+    };
+  }
+
+  private bundlePricingSummary(
+    prices: Array<BundleCandidateProductSummary['price']>,
+    requestedCurrency: string | undefined,
+    freeShippingThreshold: number | undefined,
+  ): ProductBundleCandidate['pricing'] {
+    const blockers: string[] = [];
+    if (prices.some((price) => !price)) {
+      blockers.push('[MISSING: current product price]');
+    }
+    const currencies = Array.from(new Set(prices.filter((price): price is NonNullable<typeof price> => !!price).map((price) => price.currency)));
+    const currency = requestedCurrency ?? currencies[0];
+    if (requestedCurrency && currencies.some((item) => item !== requestedCurrency)) {
+      blockers.push('bundle_currency_mismatch');
+    }
+    if (currencies.length > 1) {
+      blockers.push('bundle_currency_mismatch');
+    }
+    if (freeShippingThreshold === undefined) {
+      blockers.push('[MISSING: free-shipping threshold contract]');
+    }
+    const subtotal = blockers.some((blocker) => blocker === '[MISSING: current product price]' || blocker === 'bundle_currency_mismatch')
+      ? null
+      : prices.reduce((sum, price) => sum + (price?.amount ?? 0), 0);
+    const suggestedBundlePrice = subtotal === null
+      ? null
+      : freeShippingThreshold === undefined
+        ? subtotal
+        : Math.max(subtotal, freeShippingThreshold);
+    const topUpAmount = subtotal === null || freeShippingThreshold === undefined
+      ? null
+      : Math.max(0, freeShippingThreshold - subtotal);
+
+    return {
+      currency,
+      subtotal,
+      freeShippingThreshold,
+      suggestedBundlePrice,
+      topUpAmount,
+      freeShippingEligible: suggestedBundlePrice !== null && freeShippingThreshold !== undefined && suggestedBundlePrice >= freeShippingThreshold,
+      blockers,
+    };
+  }
 
   private normalizeOrderAffinityBatchInput(data: OrderAffinityBatchInput) {
     if (!data || Array.isArray(data) || typeof data !== 'object') {
