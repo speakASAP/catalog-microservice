@@ -47,7 +47,7 @@ describe('BPCP process event projection', () => {
     });
   }
 
-  it('fails closed when no active BPCP projection or eligibility fact schema exists', () => {
+  it('fails closed when no active BPCP projection or eligibility allow-list exists', () => {
     const service = new BpcpProcessEventProjectionService(logger as any);
 
     const facts = service.discountEligibilityFacts({ id: 'product-1', categoryIds: ['category-1'], tags: [] });
@@ -55,40 +55,41 @@ describe('BPCP process event projection', () => {
     expect(facts.eligible).toBe(false);
     expect(facts.blockers).toEqual(expect.arrayContaining([
       '[MISSING: active BPCP projection for holiday-discount-2026]',
-      '[MISSING: final holiday eligibility fact schema or configured category/tag allow-list]',
+      '[MISSING: approved Holiday Discount selected category/tag allow-list]',
     ]));
   });
 
-  it('returns eligible only after a supported active process and configured category match', () => {
+  it('returns eligible only after a supported active process and configured category match', async () => {
     process.env.CATALOG_BPCP_HOLIDAY_ELIGIBLE_CATEGORY_IDS = 'category-1';
     const service = new BpcpProcessEventProjectionService(logger as any);
 
-    service.applyEvent(event());
+    await service.applyEvent(event());
     const facts = service.discountEligibilityFacts({ id: 'product-1', categoryIds: ['category-1'], tags: [] });
 
     expect(facts.eligible).toBe(true);
     expect(facts.processVersion).toBe(1);
     expect(facts.policyRefs).toEqual(['holiday-10-percent-selected-categories']);
     expect(facts.reasonCodes).toContain('HOLIDAY_DISCOUNT_ELIGIBLE');
+    expect(facts.eligibilityAllowList.schemaVersion).toBe('catalog.holiday-discount-eligibility-allow-list.v1');
   });
 
-  it('deduplicates replayed process events by event id', () => {
+  it('deduplicates replayed process events by event id', async () => {
     const service = new BpcpProcessEventProjectionService(logger as any);
 
-    service.applyEvent(event());
-    service.applyEvent(event());
+    await service.applyEvent(event());
+    await service.applyEvent(event());
     const status = service.getStatus();
 
     expect(status.appliedEvents).toBe(1);
     expect(status.duplicateEvents).toBe(1);
   });
 
-  it('removes eligibility after pause or retire events', () => {
+  it('removes eligibility after pause or retire events', async () => {
     process.env.CATALOG_BPCP_HOLIDAY_ELIGIBLE_CATEGORY_IDS = 'category-1';
     const service = new BpcpProcessEventProjectionService(logger as any);
 
-    service.applyEvent(event());
-    service.applyEvent(event({ id: 'holiday-discount-2026:1:process.paused:2', type: 'process.paused', status: 'paused' }));
+    await service.applyEvent(event());
+    await service.applyEvent(event({ id: 'holiday-discount-2026:1:process.paused:2', type: 'process.paused', status: 'paused' }));
     const facts = service.discountEligibilityFacts({ id: 'product-1', categoryIds: ['category-1'], tags: [] });
 
     expect(facts.eligible).toBe(false);

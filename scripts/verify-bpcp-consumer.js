@@ -21,9 +21,10 @@ const checks = [
     patterns: [
       'catalog.discount-eligibility-facts.v1',
       'holiday-discount-2026',
-      '[MISSING: final holiday eligibility fact schema or configured category/tag allow-list]',
+      '[MISSING: approved Holiday Discount selected category/tag allow-list]',
       '[MISSING: durable BPCP event dedupe/projection store]',
-      'seenEventIds',
+      'catalog.bpcp-process-projection-store.v1',
+      'catalog.holiday-discount-eligibility-allow-list.v1',
     ],
   },
   {
@@ -33,6 +34,8 @@ const checks = [
       'CATALOG_BPCP_EVENTS_EXCHANGE: "bpcp.events"',
       'CATALOG_BPCP_EVENTS_ROUTING_KEYS: "bpcp.process.published.v1,bpcp.process.paused.v1,bpcp.process.retired.v1"',
       'CATALOG_BPCP_EVENTS_QUEUE: "catalog.bpcp.process-lifecycle.v1"',
+      'CATALOG_BPCP_HOLIDAY_ELIGIBLE_CATEGORY_IDS: ""',
+      'CATALOG_BPCP_HOLIDAY_ELIGIBLE_TAGS: ""',
     ],
   },
   {
@@ -50,6 +53,17 @@ const checks = [
       'catalog.bpcp.process-lifecycle.v1',
       'bpcp.process.paused.v1',
       'bpcp.process.retired.v1',
+      'catalog.holiday-discount-eligibility-allow-list.v1',
+      'approved Holiday Discount selected category/tag allow-list',
+      'durable BPCP event dedupe/projection store',
+    ],
+  },
+  {
+    file: 'scripts/migrations/20260703_bpcp_process_projection_store.sql',
+    patterns: [
+      'catalog_bpcp_process_event_dedupe',
+      'catalog_bpcp_process_projection',
+      'process.published',
     ],
   },
 ];

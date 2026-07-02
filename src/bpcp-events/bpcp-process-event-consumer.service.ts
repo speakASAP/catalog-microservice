@@ -160,7 +160,7 @@ export class BpcpProcessEventConsumerService implements OnModuleInit, OnModuleDe
       await channel.bindQueue(config.queue, config.exchange, routingKey);
     }
     await channel.prefetch(config.prefetch);
-    await channel.consume(config.queue, (message) => this.handleMessage(message, config.signingSecret), { noAck: false });
+    await channel.consume(config.queue, (message) => { void this.handleMessage(message, config.signingSecret); }, { noAck: false });
     this.lastError = null;
     this.logger.log(
       `BPCP process event consumer bound ${config.exchange}:${config.routingKeys.join(',')} -> ${config.queue}`,
@@ -168,7 +168,7 @@ export class BpcpProcessEventConsumerService implements OnModuleInit, OnModuleDe
     );
   }
 
-  private handleMessage(message: BpcpAmqpMessage | null, signingSecret: string | null): void {
+  private async handleMessage(message: BpcpAmqpMessage | null, signingSecret: string | null): Promise<void> {
     if (!message) {
       return;
     }
@@ -182,7 +182,7 @@ export class BpcpProcessEventConsumerService implements OnModuleInit, OnModuleDe
       }
       const parsed = JSON.parse(message.content.toString('utf8'));
       const event = parseBpcpProcessEventEnvelope(parsed);
-      const result = this.projection.applyEvent(event);
+      const result = await this.projection.applyEvent(event);
       if (result.applied) {
         this.applied += 1;
         this.lastAppliedEventId = event.id;

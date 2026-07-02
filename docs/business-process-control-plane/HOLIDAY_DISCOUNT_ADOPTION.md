@@ -1,7 +1,7 @@
 # BPCP Holiday Discount Adoption
 
 Status: service-local adoption contract
-Date: 2026-07-02
+Date: 2026-07-03
 Service: `catalog-microservice`
 Central contract pack: `statex-ecosystem/docs/business-process-control-plane/`
 
@@ -12,7 +12,7 @@ Product fact provider for category, tags, marketplace profile, eligibility facts
 ## Responsibilities
 
 - Expose product facts needed by BPCP and pricing.
-- Mark products/categories as holiday-eligible when business policy needs it.
+- Mark products/categories as holiday-eligible only through the explicit allow-list contract (`CATALOG_BPCP_HOLIDAY_ELIGIBLE_CATEGORY_IDS`, `CATALOG_BPCP_HOLIDAY_ELIGIBLE_TAGS`).
 - Preserve Catalog as fact owner, not discount calculator.
 
 ## Required interfaces
@@ -28,6 +28,11 @@ Product fact provider for category, tags, marketplace profile, eligibility facts
 - Protected fact endpoint:
   - `GET /api/business-process/catalog/products/:productId/discount-eligibility`
   - response schema: `catalog.discount-eligibility-facts.v1`
+  - embedded allow-list schema: `catalog.holiday-discount-eligibility-allow-list.v1`
+- Durable local process store:
+  - event dedupe table: `catalog_bpcp_process_event_dedupe`
+  - active projection table: `catalog_bpcp_process_projection`
+  - SQL migration: `scripts/migrations/20260703_bpcp_process_projection_store.sql`
 
 ## Boundaries
 
@@ -48,15 +53,15 @@ Product fact provider for category, tags, marketplace profile, eligibility facts
 
 ## Blockers and unknowns
 
-- [MISSING: durable BPCP event dedupe/projection store]
+- Durable BPCP event dedupe/projection store is implemented in code and requires the additive SQL migration before runtime can leave memory fallback. Runtime blocker string: [MISSING: durable BPCP event dedupe/projection store]
 
-- [MISSING: final fact schema for holiday eligibility]
-- [MISSING: approved Holiday Discount selected category references]
-- [MISSING: pricing owner that consumes catalog facts]
+- Holiday eligibility fact schema is implemented as `catalog.discount-eligibility-facts.v1` with allow-list contract `catalog.holiday-discount-eligibility-allow-list.v1`.
+- [MISSING: approved Holiday Discount selected category/tag allow-list]
+- FlipFlop order-service consumes Catalog facts for quote eligibility; central Orders immutable snapshot remains a later integration.
 
 ## Validation evidence required before implementation is accepted
 
-- Product fixture with eligible category returns stable facts.
+- Product fixture with eligible category/tag returns stable facts and includes `catalog.holiday-discount-eligibility-allow-list.v1`.
 - Ineligible product fixture does not leak false holiday eligibility.
 - Existing catalog quality gates remain unchanged.
 

@@ -1616,15 +1616,15 @@ Intent chain:
 - Goal Impact: Holiday Discount pilot has the first downstream consumer lane from BPCP to Catalog.
 - System: BPCP publishes signed process lifecycle events; Catalog owns its queue, projection, health, and product eligibility facts.
 - Feature: BPCP process-event consumer and fail-closed discount eligibility facts endpoint.
-- Task: bind `catalog.bpcp.process-published.v1` to `bpcp.events`, validate `bpcp.process-event.v1`, project supported active processes, and expose `catalog.discount-eligibility-facts.v1`.
+- Task: bind `catalog.bpcp.process-lifecycle.v1` to `bpcp.events`, validate `bpcp.process-event.v1`, project supported active processes, and expose `catalog.discount-eligibility-facts.v1`.
 - Execution Plan: additive `src/bpcp-events` module, health/readiness integration, k8s env/secret wiring, focused tests, and static verifier.
 - Coding Prompt: do not move discount calculation, pricing, cart, order, or process registry ownership into Catalog; mark unresolved fact schema and category references as `[MISSING: ...]`.
 - Code: `src/bpcp-events/*`, `src/health/*`, `src/app.module.ts`, `k8s/configmap.yaml`, `k8s/external-secret.yaml`, `scripts/verify-bpcp-consumer.js`, `docs/business-process-control-plane/HOLIDAY_DISCOUNT_ADOPTION.md`.
-- Validation: npm run verify:bpcp-consumer passed; focused BPCP projection Jest passed 3/3; npm run build passed; full npm test -- --runInBand passed 13 suites / 111 tests; git diff --check passed.
+- Validation: npm run verify:bpcp-consumer passed; focused BPCP projection Jest passed 4/4; npm run build passed; full npm test -- --runInBand passed 13 suites / 117 tests; git diff --check passed. Refreshed read-only validation on 2026-07-02T23:07Z confirmed the same gates on remote main.
 
 Boundary decision: Catalog consumes BPCP publication state and exposes eligibility facts only. It does not calculate the 10 percent discount, write product prices, call checkout, emit customer notifications, or become the BPCP process registry.
 
-Runtime deployment evidence: deployed image `localhost:5000/catalog-microservice:50e3c0c` rolled out successfully. BPCP `holiday-discount-2026:1` was validated and published through the BPCP API, then `POST /api/events/outbox/dispatch?limit=10` dispatched 3/3 pending process events to RabbitMQ. Catalog `/ready` on pod `catalog-microservice-5998ff94b4-srh8h` reported `bpcpProcessEvents.consumer.connection.status=up`, `missing=[]`, `received=1`, `applied=1`, `signatureFailures=0`, `lastAppliedEventId=holiday-discount-2026:1:process.published:3`, and `activeProjectionCount=1`. Remaining blocker is `[MISSING: final holiday eligibility fact schema or configured category/tag allow-list]`.
+Runtime deployment evidence: current deployed image `localhost:5000/catalog-microservice:4b7cfa0` is rolled out with deployment ready/updated/available `1/1/1`. BPCP `holiday-discount-2026:1` was validated and published through the BPCP API, then `POST /api/events/outbox/dispatch?limit=10` dispatched 3/3 pending process events to RabbitMQ. Catalog `/health` and `/ready` report `bpcpProcessEvents.consumer.connection.status=up`, `missing=[]`, `received=1`, `applied=1`, `rejected=0`, `signatureFailures=0`, `lastAppliedEventId=holiday-discount-2026:1:process.published:3`, and `activeProjectionCount=1`. Remaining blockers are `[MISSING: final holiday eligibility fact schema or configured category/tag allow-list]` and `[MISSING: durable BPCP event dedupe/projection store]`.
 
 
 ## 2026-07-03 - Bundle Candidate Projection From Order Affinity

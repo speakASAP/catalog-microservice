@@ -42,6 +42,15 @@ export type CatalogDiscountEligibilityFacts = {
   processId: string;
   processVersion: number | null;
   policyRefs: string[];
+  eligibilityAllowList: {
+    schemaVersion: 'catalog.holiday-discount-eligibility-allow-list.v1';
+    processId: 'holiday-discount-2026';
+    categoryIds: string[];
+    tags: string[];
+    configured: boolean;
+    requiredEnv: string[];
+    missing: string[];
+  };
   eligible: boolean;
   matchedCategoryIds: string[];
   matchedTags: string[];
