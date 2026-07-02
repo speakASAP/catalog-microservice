@@ -2,7 +2,7 @@
 
 ```yaml
 id: CATALOG-PRODUCT-RELATIONS-CONTRACT
-status: draft
+status: runtime-deployed-contract
 owner: catalog-microservice
 created: 2026-07-02
 scope: Catalog-owned product relation metadata only
@@ -13,14 +13,14 @@ scope: Catalog-owned product relation metadata only
 Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation
 
 - Vision: Catalog remains the product truth service and can expose bounded related-product and order-affinity metadata without owning Orders ingestion, checkout, or bundle selling.
-- Goal Impact: downstream product-detail and operator surfaces can read deterministic relation scores from Catalog once a migration is approved.
+- Goal Impact: downstream product-detail and operator surfaces can read deterministic relation scores and read-only bundle candidates from Catalog while cross-service bundle selling remains explicitly gated.
 - System: `catalog-microservice` owns `product_relations`; Orders, FlipFlop checkout, Warehouse stock, Payments, and marketplace services remain outside this foundation.
-- Feature: protected `GET /api/products/:productId/related` returns relation rows ordered by score, confidence, then target product id.
-- Task: add an additive TypeORM table/entity/service/controller and focused tests for manual/admin relation writes and protected reads.
+- Feature: protected related-products, read-only bundle-candidates, and internal Marketing-owned `order_affinity` batch ingestion surfaces.
+- Task: keep Catalog relation APIs deterministic and fail-closed while documenting the proven Orders/Marketing replay path and unresolved bundle checkout decisions.
 - Execution Plan: see `docs/orchestrator/2026-07-02-related-products-order-affinity-plan.md`.
-- Coding Prompt: implement Catalog-only relation metadata and mark ingestion/selling blockers as missing rather than inventing upstream contracts.
+- Coding Prompt: preserve Catalog-only relation metadata; mark ingestion, replay, and selling blockers as `[MISSING: ...]` or `[UNKNOWN: ...]` instead of inventing upstream contracts.
 - Code: `src/product-relations/*`, `scripts/migrations/20260702_product_relation_scores.sql`, `src/app.module.ts`.
-- Validation: source validation is recorded under `reports/validation/VAL-GOAL-24-product-relations.md`.
+- Validation: source validation is recorded under `reports/validation/VAL-GOAL-24-product-relations.md` and the 2026-07-03 contract refresh under `reports/validation/VAL-GOAL-24-bundle-order-affinity-contract.md`.
 
 ## Ownership Boundary
 
@@ -37,6 +37,37 @@ Catalog does not own:
 - Checkout bundle construction, cart discounts, or payment behavior.
 - Warehouse stock, reservations, logistics routes, or fulfillment.
 - Channel-specific publication or marketplace compliance.
+
+## Current Ecosystem Status
+
+Order-affinity replay is no longer missing at the source-contract level:
+
+- Orders documents `orders.order.created.v1` `payload.items[]` as the bounded product-affinity snapshot.
+- Orders exposes internal replay candidates for paid, non-cancelled orders with at least two unique product ids.
+- Marketing builds directed `order_affinity` candidates from replayed created-event envelopes.
+- Marketing can publish batches to Catalog only through the Catalog internal batch endpoint when enabled and configured.
+- Catalog forces `relationType=order_affinity` and `source=marketing_order_affinity` server-side.
+
+Live replay remains dependency-gated:
+
+- The read-only Marketing dry-run returned `inputRecords=0`, `acceptedCreatedEvents=0`, `aggregatePairs=0`, and `candidates=[]`.
+- A non-empty publish run requires qualifying historical paid multi-product Orders rows, an owner-reviewed mutation window, and stale-row pruning/replacement semantics.
+
+Bundle checkout remains outside this contract:
+
+- FlipFlop has a local bundle-intent checkout path that stores/submits bundle identifiers, recomputes eligibility and savings server-side, creates a central Orders UUID before payment, and sends Payments the final server total.
+- That FlipFlop-local path is not an ecosystem Catalog bundle aggregate, bundle SKU, Warehouse reservation, Orders bundle identity, or Payments pricing contract.
+
+## Bundle Selling Decision Gate
+
+Before any service implements real ecosystem bundle selling, owners must resolve these contracts:
+
+- `[MISSING: Catalog bundle ownership decision: read-only candidate, standalone bundle aggregate, or product-like SKU]`
+- `[MISSING: Orders bundle create-order contract and bundle identity representation beyond normal line items]`
+- `[MISSING: Warehouse bundle reservation contract for stock and fulfillment effects]`
+- `[MISSING: Payments metadata policy for bundle/free-shipping evidence without making Payments pricing truth]`
+- `[MISSING: approved real checkout smoke scope]`
+- `[MISSING: explicit discount/price presentation policy for bundle candidates]`
 
 ## API
 
@@ -189,6 +220,13 @@ First version semantics:
 
 ## Blockers
 
-- `[MISSING: approved Marketing-to-Catalog service role beyond current internal Catalog service-token role]`
-- `[MISSING: bundle checkout contract owned by FlipFlop/Orders/Payments]`
-- `[MISSING: runtime backfill source for historical order-affinity scores]`
+- `[MISSING: docs-rag JWT_TOKEN]`
+- `[MISSING: qualifying historical paid multi-product Orders rows for non-empty replay evidence]`
+- `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`
+- `[MISSING: pruning/replacement semantics for stale affinity rows]`
+- `[MISSING: Catalog bundle ownership decision: read-only candidate, standalone bundle aggregate, or product-like SKU]`
+- `[MISSING: Orders bundle create-order contract and bundle identity representation beyond normal line items]`
+- `[MISSING: Warehouse bundle reservation contract for stock and fulfillment effects]`
+- `[MISSING: Payments metadata policy for bundle/free-shipping evidence without making Payments pricing truth]`
+- `[MISSING: approved real checkout smoke scope]`
+- `[UNKNOWN: whether current live Orders history should contain paid multi-product rows or whether upstream order capture is still empty]`

@@ -42,6 +42,8 @@ As of 2026-07-03, the additive `product_relations` migration is applied and the 
 
 Catalog still does not own Orders historical affinity replay, bundle checkout, Payments totals, Warehouse stock mutation, channel publication, or marketplace presentation.
 
+Follow-up read-only evidence on 2026-07-03 confirmed the Orders replay endpoint, Marketing order-affinity aggregator, Marketing-to-Catalog publisher, and Catalog internal batch endpoint exist and pass focused source checks. The live Marketing dry-run remained empty (`inputRecords=0`, `acceptedCreatedEvents=0`, `aggregatePairs=0`, `candidates=[]`), so automated historical replay is gated on qualifying order evidence and publish/pruning decisions, not on missing source infrastructure.
+
 ## Allowed Files
 
 - `docs/contracts/catalog-product-relations.md`
@@ -64,20 +66,31 @@ Catalog still does not own Orders historical affinity replay, bundle checkout, P
 - `[MISSING: docs-rag JWT_TOKEN]`
 - `[MISSING: scripts/pre_coding_gate.py]`
 - `[MISSING: scripts/strict_doc_audit.py]`
-- `[MISSING: Orders-owned affinity producer/event contract]`
-- `[MISSING: bundle checkout contract owned by FlipFlop/Orders/Payments]`
-- `[MISSING: runtime backfill source for historical order-affinity scores]`
+- `[MISSING: qualifying historical paid multi-product Orders rows for non-empty replay evidence]`
+- `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`
+- `[MISSING: pruning/replacement semantics for stale affinity rows]`
+- `[MISSING: Catalog bundle ownership decision: read-only candidate, standalone bundle aggregate, or product-like SKU]`
+- `[MISSING: Orders bundle create-order contract and bundle identity representation beyond normal line items]`
+- `[MISSING: Warehouse bundle reservation contract for stock and fulfillment effects]`
+- `[MISSING: Payments metadata policy for bundle/free-shipping evidence without making Payments pricing truth]`
+- `[MISSING: approved real checkout smoke scope]`
+- `[UNKNOWN: whether current live Orders history should contain paid multi-product rows or whether upstream order capture is still empty]`
 
 ## Parallel Execution
 
-No parallel source workers were started because the backend change edits one shared schema/API contract and one module wiring point.
+The original backend foundation was not split because it edited one shared schema/API contract and one module wiring point. The 2026-07-03 contract refresh used read-only subagents for independent evidence collection and one Catalog integration owner for documentation updates.
 
-Future lanes are dependency-gated:
+Current lanes:
 
-- Orders affinity producer: blocked on `[MISSING: Orders-owned affinity producer/event contract]`.
-- Historical relation backfill: blocked on `[MISSING: owner-approved historical order-affinity source and live DB mutation approval]`.
-- Frontend/operator relation display: ready to consume deployed related-products and bundle-candidates read APIs when a UI owner is assigned.
-- Bundle checkout: blocked on `[MISSING: bundle checkout contract owned by FlipFlop/Orders/Payments]`.
+- `ready now`: Orders replay contract maintenance. Owner role: Orders worker. Scope: keep `orders.order.created.v1` item snapshots and replay verifier compatible with Marketing/Catalog affinity replay. Expected output: source-only verification or bounded fixes in Orders. Validation: `npm run verify:order-affinity-replay`.
+- `ready now`: Marketing dry-run/export/backfill hardening. Owner role: Marketing worker. Scope: keep the backfill CLI, aggregation, and Catalog publisher safe and dry-run-first. Expected output: source-only verification or bounded fixes in Marketing. Validation: focused order-affinity backfill tests and non-mutating dry-run.
+- `ready now`: Catalog product relation API maintenance. Owner role: Catalog worker. Scope: maintain protected related-products, bundle-candidates, and internal batch endpoint. Validation: focused product-relations Jest and `git diff --check`.
+- `dependency-gated`: Non-empty historical affinity publish. Owner role: integration validator. Blockers: `[MISSING: qualifying historical paid multi-product Orders rows for non-empty replay evidence]`, `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`, and `[MISSING: pruning/replacement semantics for stale affinity rows]`.
+- `dependency-gated`: Catalog durable bundle aggregate/API. Owner role: Catalog/commerce architect. Blocker: `[MISSING: Catalog bundle ownership decision: read-only candidate, standalone bundle aggregate, or product-like SKU]`.
+- `dependency-gated`: Marketplace/operator bundle suggestions. Owner role: channel worker. Blocker: `[MISSING: channel-specific external marketplace bundle publication policies]`.
+- `blocked`: Ecosystem real bundle selling beyond the existing FlipFlop-local bundle intent. Blockers: `[MISSING: Orders bundle create-order contract and bundle identity representation beyond normal line items]`, `[MISSING: Warehouse bundle reservation contract for stock and fulfillment effects]`, `[MISSING: Payments metadata policy for bundle/free-shipping evidence without making Payments pricing truth]`, and `[MISSING: approved real checkout smoke scope]`.
+
+Shared files/contracts: `docs/contracts/catalog-product-relations.md`, Orders `ORDER_EVENT_CONTRACTS.md`, Marketing orders-events integration contract, and any future bundle checkout contract. Integration owner: Catalog orchestrator until a commerce integration owner is assigned. Validation owner: integration validator. Merge order: source contract verification before any runtime publish or checkout implementation.
 
 ## Rollback Notes
 
