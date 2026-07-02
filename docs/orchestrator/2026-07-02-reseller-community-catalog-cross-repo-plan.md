@@ -231,7 +231,7 @@ Merge order: Catalog contract -> Catalog frontend -> independent channel pickers
 Requires approved Auth token and deploy approval:
 
 1. Create/read settings for synthetic seller.
-2. Verify defaults: Alfares true, community false.
+2. Verify defaults: Alfares false, community false.
 3. Create synthetic seller product with resale false.
 4. Verify another seller cannot see it under community scope.
 5. Owner enables resale.
