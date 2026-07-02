@@ -1920,3 +1920,37 @@ Remaining blocker:
 
 - `[MISSING: non-mutating FlipFlop quote endpoint]` Existing FlipFlop order-service computes Holiday Discount only inside order creation, which has order/payment/stock side effects. Do not use live order creation as a quote smoke.
 - `[MISSING: BPCP active-window decision]` Applied Holiday Discount cannot be observed until BPCP v1 window opens or an approved canary-active process/version contract is implemented end to end.
+
+## 2026-07-03 - Holiday Discount Canary Active Runtime Closure
+
+Current focus: close stale Goal 26 status after verifying that the BPCP v2 canary process is active and Catalog has no remaining Catalog-owned blocker.
+
+Intent Preservation Chain:
+
+- Vision: Catalog remains product fact owner while BPCP remains business process control-plane owner and FlipFlop owns quote/checkout UX.
+- Goal Impact: Holiday Discount eligibility facts can be read from Catalog for a single canary allow-listed product without broad discount exposure.
+- System: BPCP publishes signed lifecycle events over RabbitMQ; Catalog consumes, deduplicates, stores durable projections, and exposes fail-closed eligibility facts.
+- Feature: Active Holiday Discount canary process projection with explicit Catalog tag allow-list.
+- Task: verify current runtime health/readiness after BPCP v2 canary publication and correct stale Goal 26 documentation.
+- Execution Plan: read-only runtime health check plus docs/status update only; no deploy, product mutation, order creation, Warehouse reservation, price mutation, or secret output.
+- Coding Prompt: preserve Catalog/BPCP/FlipFlop ownership boundaries and record exact runtime evidence.
+- Code: no source code change in this lane; documentation/status only.
+- Validation: `npm run verify:bpcp-consumer`, synthetic product-quality validator, `git diff --check`, and public Catalog health check.
+
+Runtime evidence:
+
+- Public `https://catalog.alfares.cz/health` returned HTTP 200.
+- Health body reports BPCP consumer connection `status=up`, `exchange=bpcp.events`, queue `catalog.bpcp.process-lifecycle.v1`, `received=1`, `applied=1`, `rejected=0`, and `signatureFailures=0` for the current pod lifetime.
+- Durable projection store reports `mode=durable`, `ready=true`, tables `catalog_bpcp_process_event_dedupe` and `catalog_bpcp_process_projection`, and `activeProjectionCount=2`.
+- Eligibility allow-list reports `tags=[allegro-offer:18106037370]`, `configured=true`, and `missing=[]`.
+- Latest applied projection is `holiday-discount-2026` version `2`, status `active`, campaign `holiday-2026-canary`, `activeFrom=2026-07-02T00:00:00Z`, and `activeTo=2026-07-10T23:59:59Z`.
+- Existing version `1` remains represented for the future main Holiday 2026 window.
+
+Boundary decision:
+
+No Catalog discount calculation, product price mutation, product data mutation, order creation, Payments mutation, Warehouse reservation, marketplace publish/queue/confirm action, deployment, migration, secret print, or destructive command was run. FlipFlop quote/checkout validation remains a separate owner-approved commerce lane, not a Catalog Goal 26 blocker.
+
+Remaining blockers:
+
+- None for Catalog Goal 26 runtime closure.
+- `[MISSING: owner-approved FlipFlop quote/checkout contract]` remains a separate cross-service commerce follow-up if the owner wants end-to-end monetary discount observation.

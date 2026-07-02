@@ -260,7 +260,7 @@ Acceptance criteria:
 
 ## Goal 26 - BPCP Holiday Discount Catalog Consumer
 
-Status: runtime complete; blocked only on final eligibility allow-list/durable projection-store decisions
+Status: runtime complete; canary active; no Catalog-owned blocker remains
 
 Intent: Catalog consumes BPCP Holiday Discount process publication events and exposes fail-closed product eligibility facts without becoming discount or process owner.
 
