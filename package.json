@@ -23,7 +23,8 @@
     "test:cov": "jest --coverage",
     "check:aos-auth-contract": "node scripts/check-aos-auth-contract.js",
     "verify:stock-credential:wiring": "bash scripts/check-stock-credential-wiring.sh",
-    "report:allegro-stock-reconciliation": "node scripts/report-allegro-stock-reconciliation.js"
+    "report:allegro-stock-reconciliation": "node scripts/report-allegro-stock-reconciliation.js",
+    "validate:product-quality": "node scripts/validate-product-quality.js"
   },
   "dependencies": {
     "@nestjs/axios": "^3.0.1",
