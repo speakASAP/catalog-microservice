@@ -20,6 +20,14 @@ Product fact provider for category, tags, marketplace profile, eligibility facts
 - Product facts endpoint or existing product API extension.
 - Category and tag identifiers.
 - Optional `discountEligibilityFacts` projection.
+- BPCP RabbitMQ consumer binding:
+  - exchange: `bpcp.events`
+  - routing key: `bpcp.process.published.v1`
+  - queue: `catalog.bpcp.process-published.v1`
+  - DLQ: `catalog.bpcp.process-published.v1.dlq`
+- Protected fact endpoint:
+  - `GET /api/business-process/catalog/products/:productId/discount-eligibility`
+  - response schema: `catalog.discount-eligibility-facts.v1`
 
 ## Boundaries
 
@@ -41,6 +49,7 @@ Product fact provider for category, tags, marketplace profile, eligibility facts
 ## Blockers and unknowns
 
 - [MISSING: final fact schema for holiday eligibility]
+- [MISSING: approved Holiday Discount selected category references]
 - [MISSING: pricing owner that consumes catalog facts]
 
 ## Validation evidence required before implementation is accepted

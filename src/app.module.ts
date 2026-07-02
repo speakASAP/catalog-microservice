@@ -17,6 +17,7 @@ import { MarketplaceFieldsModule } from "./marketplace-fields/marketplace-fields
 import { ContentConnectorsModule } from "./content-connectors/content-connectors.module";
 import { CatalogAccessModule } from "./catalog-access/catalog-access.module";
 import { ProductRelationsModule } from './product-relations/product-relations.module';
+import { BpcpEventsModule } from './bpcp-events/bpcp-events.module';
 
 /**
  * Main application module for Catalog Microservice
@@ -60,6 +61,7 @@ import { ProductRelationsModule } from './product-relations/product-relations.mo
     ContentConnectorsModule,
     CatalogAccessModule,
     ProductRelationsModule,
+    BpcpEventsModule,
   ],
 })
 export class AppModule {}

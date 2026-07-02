@@ -258,6 +258,19 @@ Acceptance criteria:
 - Bazos authorized draft smoke requires separate explicit opt-in and Bazos-owned inputs.
 - No secrets or raw production payloads are printed.
 
+## Goal 26 - BPCP Holiday Discount Catalog Consumer
+
+Status: source implementation in progress
+
+Intent: Catalog consumes BPCP Holiday Discount process publication events and exposes fail-closed product eligibility facts without becoming discount or process owner.
+
+Acceptance criteria:
+
+- Catalog binds a service-owned RabbitMQ queue to `bpcp.events`.
+- BPCP process events are signature-checked, version-validated, and projected fail-closed.
+- Product discount eligibility facts preserve `processId`, `processVersion`, and `policyRefs`.
+- Catalog does not calculate monetary discounts or mutate product prices.
+
 ## Goal 19 - Canonical Content Connectors
 
 Status: source complete across Catalog and channel services; runtime deployment pending clean isolation
