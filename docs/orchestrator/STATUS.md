@@ -1636,3 +1636,33 @@ Remaining blockers:
 - `[MISSING: explicit discount/price presentation policy for bundle candidates]`.
 - `[MISSING: sufficient order_affinity backfill volume]`.
 - `[MISSING: current product price rows for canary/order-affinity products before presenting sellable bundle prices]`.
+
+
+## 2026-07-03 - Bundle Candidate Canary Pricing Evidence
+
+Current focus: Make the controlled order-affinity canary price-complete for downstream buy-together smoke tests.
+
+Intent Preservation Chain:
+
+- Vision: Real purchase-derived product relationships can become sellable bundle candidates only when Catalog can expose product truth and current pricing without inventing checkout ownership.
+- Goal Impact: The canary relation now demonstrates free-shipping top-up guidance with active Catalog price rows.
+- System: Catalog owns relation and price facts; Marketing owns order-affinity production; FlipFlop/Orders/Payments/Warehouse remain owners of storefront presentation, order totals, payment authorization, and stock mutation.
+- Feature: Price-complete bundle-candidate smoke for the existing `marketing_order_affinity` relation.
+- Task: Add active regular price rows for the two controlled canary products and re-run the protected bundle-candidates read smoke.
+- Execution Plan: Use the protected Catalog pricing API from inside the Catalog pod; do not print secrets; do not mutate checkout, warehouse, payments, marketplace listings, bundle SKUs, or order data.
+- Coding Prompt: Correct the first future-dated price-row attempt by using a valid current `validFrom` and record exact runtime evidence.
+- Code: runtime data only; documentation evidence in this status entry.
+- Validation: Protected in-pod `GET /api/products/ebbdd4fa-5c73-481a-9d07-dbab3d20a150/bundle-candidates?limit=3&freeShippingThreshold=1000&currency=CZK` returned HTTP 200.
+
+Runtime evidence:
+
+- Added active regular price rows with `validFrom=2026-07-02T00:00:00.000Z` after an initial future-dated `2026-07-03T00:00:00Z` attempt was not current on the server clock.
+- Product `ebbdd4fa-5c73-481a-9d07-dbab3d20a150` price: `600 CZK`.
+- Product `2d6e4b4c-02a4-4b1c-98c8-afa4ad46a32e` price: `350 CZK`.
+- Bundle candidate smoke returned `relationType=order_affinity`, `source=marketing_order_affinity`, `subtotal=950`, `freeShippingThreshold=1000`, `topUpAmount=50`, `suggestedBundlePrice=1000`, `freeShippingEligible=true`, and `blockers=[]`.
+
+Remaining blockers:
+
+- `[MISSING: approved bundle checkout contract owned by FlipFlop/Orders/Payments]`.
+- `[MISSING: explicit discount/price presentation policy for bundle candidates]`.
+- `[MISSING: sufficient order_affinity backfill volume]`.
