@@ -4,6 +4,18 @@
 
 import { apiClient } from './client';
 
+export interface ProductMedia {
+  id: string;
+  productId: string;
+  type: string;
+  url: string;
+  thumbnailUrl?: string | null;
+  altText?: string | null;
+  title?: string | null;
+  position?: number;
+  isPrimary?: boolean;
+}
+
 export interface Product {
   id: string;
   sku: string;
@@ -24,6 +36,7 @@ export interface Product {
   createdAt: string;
   updatedAt: string;
   categories?: Array<{ id: string; name: string }>;
+  media?: ProductMedia[];
 }
 
 export type ProductContentBlock =

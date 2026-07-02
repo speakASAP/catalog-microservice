@@ -25,6 +25,15 @@ function formatLifecycle(value?: Product['lifecycle']) {
     .join(' ');
 }
 
+function getPrimaryImage(product: Product) {
+  const images = (product.media || [])
+    .filter((item) => item.type === 'image' && (item.thumbnailUrl || item.url))
+    .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || (a.position ?? 0) - (b.position ?? 0));
+  const image = images[0];
+
+  return image ? { src: image.thumbnailUrl || image.url, alt: image.altText || image.title || product.title } : null;
+}
+
 export default function AdminProductsPage() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
@@ -419,6 +428,9 @@ export default function AdminProductsPage() {
                       Product
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Image
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       SKU
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
@@ -433,55 +445,72 @@ export default function AdminProductsPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {products.map((product) => (
-                    <tr key={product.id} className="hover:bg-blue-50/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <input
-                          type="checkbox"
-                          checked={allFilteredSelected || selectedIds.has(product.id)}
-                          onChange={() => toggleProductSelection(product.id)}
-                          disabled={bulkBusy}
-                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          aria-label={`Select ${product.title}`}
-                        />
-                      </td>
-                      <td className="px-6 py-4">
-                        <div>
-                          <Link
-                            href={`/dashboard/products/${product.id}`}
-                            className="text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors"
-                          >
-                            {product.title}
-                          </Link>
-                          {product.description && (
-                            <p className="text-xs text-gray-500 mt-1 line-clamp-2">{product.description}</p>
+                  {products.map((product) => {
+                    const image = getPrimaryImage(product);
+
+                    return (
+                      <tr key={product.id} className="hover:bg-blue-50/50 transition-colors">
+                        <td className="px-6 py-4">
+                          <input
+                            type="checkbox"
+                            checked={allFilteredSelected || selectedIds.has(product.id)}
+                            onChange={() => toggleProductSelection(product.id)}
+                            disabled={bulkBusy}
+                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            aria-label={`Select ${product.title}`}
+                          />
+                        </td>
+                        <td className="px-6 py-4">
+                          <div>
+                            <Link
+                              href={`/dashboard/products/${product.id}`}
+                              className="text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors"
+                            >
+                              {product.title}
+                            </Link>
+                            {product.description && (
+                              <p className="text-xs text-gray-500 mt-1 line-clamp-2">{product.description}</p>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {image ? (
+                            <img
+                              src={image.src}
+                              alt={image.alt}
+                              className="h-14 w-14 rounded-lg border border-gray-200 object-cover bg-gray-50"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="flex h-14 w-14 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 text-xs font-semibold text-gray-400">
+                              No image
+                            </div>
                           )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                        {product.sku}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {product.brand || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-wrap gap-2">
-                          <span
-                            className={`px-3 py-1.5 text-xs font-bold rounded-full shadow-sm ${
-                              product.isActive
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}
-                          >
-                            {product.isActive ? '✓ Active' : '✗ Inactive'}
-                          </span>
-                          <span className="px-3 py-1.5 text-xs font-bold rounded-full shadow-sm bg-gray-100 text-gray-700">
-                            {formatLifecycle(product.lifecycle)}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex items-center justify-end gap-3">
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                          {product.sku}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {product.brand || '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex flex-wrap gap-2">
+                            <span
+                              className={`px-3 py-1.5 text-xs font-bold rounded-full shadow-sm ${
+                                product.isActive
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}
+                            >
+                              {product.isActive ? '✓ Active' : '✗ Inactive'}
+                            </span>
+                            <span className="px-3 py-1.5 text-xs font-bold rounded-full shadow-sm bg-gray-100 text-gray-700">
+                              {formatLifecycle(product.lifecycle)}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex items-center justify-end gap-3">
                           <Link
                             href={`/dashboard/products/${product.id}`}
                             className="text-blue-600 hover:text-blue-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-all"
@@ -495,10 +524,11 @@ export default function AdminProductsPage() {
                           >
                             🗑️ Delete
                           </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

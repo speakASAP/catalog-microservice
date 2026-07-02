@@ -4,17 +4,30 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 
 const DEFAULT_LOGIN_URL =
-  'https://auth.alfares.cz/login?return_url=https%3A%2F%2Fcatalog.alfares.cz%2Fauth%2Fcallback&client_id=catalog&state=catalog-dashboard';
+  'https://auth.alfares.cz/login?return_url=https%3A%2F%2Fcatalog.alfares.cz%2Fauth%2Fcallback&client_id=catalog-microservice&state=catalog-auth';
+
+const AUTH_STATE_KEY = 'catalog_auth_state';
+const CLIENT_ID = 'catalog-microservice';
+
+function createAuthState(): string {
+  if (typeof window !== 'undefined' && window.crypto?.randomUUID) {
+    return window.crypto.randomUUID();
+  }
+
+  return `catalog-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
 
 function buildHostedAuthUrl(mode: 'login' | 'register'): string {
   if (typeof window === 'undefined') return DEFAULT_LOGIN_URL;
 
   const authBase = process.env.NEXT_PUBLIC_HOSTED_AUTH_URL || 'https://auth.alfares.cz';
   const returnUrl = `${window.location.origin}/auth/callback`;
+  const state = createAuthState();
   const url = new URL(mode === 'register' ? '/register' : '/login', authBase);
   url.searchParams.set('return_url', returnUrl);
-  url.searchParams.set('client_id', 'catalog');
-  url.searchParams.set('state', 'catalog-dashboard');
+  url.searchParams.set('client_id', CLIENT_ID);
+  url.searchParams.set('state', state);
+  window.sessionStorage.setItem(AUTH_STATE_KEY, state);
   return url.toString();
 }
 

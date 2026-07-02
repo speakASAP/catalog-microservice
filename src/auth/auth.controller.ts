@@ -4,6 +4,7 @@ import {
   Get,
   Body,
   Headers,
+  HttpException,
   HttpCode,
   HttpStatus,
   Query,
@@ -78,10 +79,7 @@ export class AuthController {
   async getProfile(@Headers('authorization') authorization: string) {
     this.logger.log('GET /api/auth/profile', 'AuthController');
     if (!authorization || !authorization.startsWith('Bearer ')) {
-      return {
-        statusCode: HttpStatus.UNAUTHORIZED,
-        message: 'Missing or invalid authorization header',
-      };
+      throw new UnauthorizedException('Missing or invalid authorization header');
     }
 
     const token = authorization.substring(7);
@@ -95,10 +93,13 @@ export class AuthController {
         'AuthController',
       );
       const statusCode = error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR;
-      return {
+      throw new HttpException(
+        {
+          statusCode,
+          message: error.response?.data?.message || error.message || 'Failed to get profile',
+        },
         statusCode,
-        message: error.response?.data?.message || error.message || 'Failed to get profile',
-      };
+      );
     }
   }
 
@@ -118,7 +119,6 @@ export class AuthController {
   }
 
 }
-
 
 
 

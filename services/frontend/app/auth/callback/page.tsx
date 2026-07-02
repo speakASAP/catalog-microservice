@@ -5,23 +5,35 @@ import Link from 'next/link';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { apiClient } from '@/lib/api/client';
 
-function readTokenFromHash(): string | null {
-  if (typeof window === 'undefined') return null;
+const AUTH_STATE_KEY = 'catalog_auth_state';
+
+function readHashParams(): URLSearchParams {
+  if (typeof window === 'undefined') return new URLSearchParams();
   const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash;
-  const params = new URLSearchParams(hash);
-  return params.get('access_token');
+  return new URLSearchParams(hash);
 }
 
 export default function AuthCallbackPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const token = readTokenFromHash();
+    const params = readHashParams();
+    const token = params.get('access_token');
+    const returnedState = params.get('state');
+    const expectedState = window.sessionStorage.getItem(AUTH_STATE_KEY);
+
     if (!token) {
       setError('Auth response did not include an access token.');
       return;
     }
 
+    if (!expectedState || returnedState !== expectedState) {
+      setError('Auth response state could not be validated. Please start sign-in again.');
+      window.history.replaceState(null, '', '/auth/callback');
+      return;
+    }
+
+    window.sessionStorage.removeItem(AUTH_STATE_KEY);
     apiClient.setToken(token);
     window.history.replaceState(null, '', '/auth/callback');
     window.location.replace('/dashboard');
