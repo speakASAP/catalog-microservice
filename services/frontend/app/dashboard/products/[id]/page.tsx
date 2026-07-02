@@ -50,6 +50,19 @@ const formatGrossSales = (totals: Array<{ currency: string; amount: number }> = 
     .join(' / ');
 };
 
+const formatMetricLabel = (value: string) => value
+  .split(/[_\\s-]+/)
+  .filter(Boolean)
+  .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+  .join(' ');
+
+const deliveryExceptionKeys = [
+  { key: 'notReceived', label: 'Not received' },
+  { key: 'returned', label: 'Returned' },
+  { key: 'delayed', label: 'Delayed' },
+  { key: 'unfulfilled', label: 'Unfulfilled' },
+] as const;
+
 const formatQuantity = (value: number | null | undefined) => Number(value ?? 0).toLocaleString("cs-CZ");
 
 const isReservableRoute = (route: ProductWarehouseLogisticsOption) => {
@@ -276,6 +289,16 @@ export default function EditProductPage() {
     ? salesStats.channels
     : buildFallbackSalesChannels(productId, salesUnavailableReason ? 'unavailable' : 'zero', salesUnavailableReason);
   const recentSalesHistory = salesStats?.recentHistory ?? [];
+  const orderStatusRows = salesStats?.orderStatuses ?? [];
+  const orderDeliveryStats = salesStats?.orderDelivery ?? null;
+  const orderDeliveryUnavailableReason = orderDeliveryStats?.sourceStatus === 'unavailable'
+    ? orderDeliveryStats.unavailableReason || '[MISSING: Orders stats endpoint]'
+    : null;
+  const orderDeliveryPanelUnavailableReason = orderDeliveryUnavailableReason || (!salesStats ? salesUnavailableReason : null);
+  const lifecycleStageRows = orderDeliveryStats?.sourceStatus === 'available' ? orderDeliveryStats.lifecycleStages : [];
+  const paymentStatusRows = orderDeliveryStats?.sourceStatus === 'available' ? orderDeliveryStats.paymentStatuses : [];
+  const deliveryStatusRows = orderDeliveryStats?.sourceStatus === 'available' ? orderDeliveryStats.deliveryStatuses : [];
+  const deliveryExceptions = orderDeliveryStats?.deliveryExceptions ?? { notReceived: 0, returned: 0, delayed: 0, unfulfilled: 0 };
   const warehouseRouteStatus = getWarehouseRouteStatus(warehouseAvailability);
   const warehouseRows = warehouseAvailability?.warehouses ?? [];
   const warehouseRoutes = warehouseAvailability?.logistics?.options ?? [];
@@ -587,7 +610,7 @@ export default function EditProductPage() {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h2 className="text-xl font-bold text-gray-900">Marketplace sales</h2>
-              <p className="text-sm text-gray-600">Product-specific sales totals from Orders.</p>
+              <p className="text-sm text-gray-600">Product-specific sales, order status, and delivery signals from Orders.</p>
               {salesUnavailableReason && (
                 <p className="mt-2 text-sm text-amber-700">{salesUnavailableReason}</p>
               )}
@@ -634,6 +657,113 @@ export default function EditProductPage() {
                   )}
                 </div>
               ))}
+            </div>
+          )}
+
+          {!salesStatsLoading && (
+            <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <h3 className="font-bold text-gray-900">Order status</h3>
+                {orderStatusRows.length === 0 ? (
+                  <div className="mt-3 rounded-lg border border-dashed border-gray-300 bg-white p-3 text-sm text-gray-600">
+                    No Orders status rows returned for this product.
+                  </div>
+                ) : (
+                  <div className="mt-3 space-y-2">
+                    {orderStatusRows.map((row) => (
+                      <div key={`${row.status}-${row.currency}`} className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm">
+                        <div>
+                          <div className="font-semibold text-gray-900">{formatMetricLabel(row.status)}</div>
+                          <div className="text-xs text-gray-500">{row.quantitySold} sold / {row.grossSales.toLocaleString('cs-CZ')} {row.currency}</div>
+                        </div>
+                        <div className="text-right font-bold text-gray-900">{row.orderCount}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <h3 className="font-bold text-gray-900">Lifecycle and payment</h3>
+                {orderDeliveryPanelUnavailableReason ? (
+                  <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                    {orderDeliveryPanelUnavailableReason}
+                  </div>
+                ) : (
+                  <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="rounded-lg border border-gray-200 bg-white p-3">
+                      <div className="text-xs font-semibold uppercase text-gray-500">Lifecycle</div>
+                      {lifecycleStageRows.length === 0 ? (
+                        <div className="mt-2 text-sm text-gray-600">No lifecycle rows returned.</div>
+                      ) : (
+                        <div className="mt-2 space-y-2">
+                          {lifecycleStageRows.map((row) => (
+                            <div key={row.key} className="flex items-center justify-between gap-3 text-sm">
+                              <span className="text-gray-700">{row.label || formatMetricLabel(row.key)}</span>
+                              <span className="font-bold text-gray-900">{row.count}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="rounded-lg border border-gray-200 bg-white p-3">
+                      <div className="text-xs font-semibold uppercase text-gray-500">Payment</div>
+                      {paymentStatusRows.length === 0 ? (
+                        <div className="mt-2 text-sm text-gray-600">No payment rows returned.</div>
+                      ) : (
+                        <div className="mt-2 space-y-2">
+                          {paymentStatusRows.map((row) => (
+                            <div key={row.key} className="flex items-center justify-between gap-3 text-sm">
+                              <span className="text-gray-700">{row.label || formatMetricLabel(row.key)}</span>
+                              <span className="font-bold text-gray-900">{row.count}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {!salesStatsLoading && (
+            <div className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <h3 className="font-bold text-gray-900">Delivery exceptions</h3>
+                <span className={`w-fit rounded-full px-2.5 py-1 text-xs font-semibold ${orderDeliveryStats?.sourceStatus === 'available' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                  {orderDeliveryStats?.sourceStatus || 'unavailable'}
+                </span>
+              </div>
+              {orderDeliveryPanelUnavailableReason ? (
+                <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                  {orderDeliveryPanelUnavailableReason}
+                </div>
+              ) : (
+                <>
+                  <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
+                    {deliveryExceptionKeys.map((item) => (
+                      <div key={item.key} className="rounded-lg border border-gray-200 bg-white p-3">
+                        <div className="text-xs font-semibold uppercase text-gray-500">{item.label}</div>
+                        <div className="mt-1 text-2xl font-extrabold text-gray-900">{deliveryExceptions[item.key]}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {deliveryStatusRows.length > 0 && (
+                    <div className="mt-4 rounded-lg border border-gray-200 bg-white p-3">
+                      <div className="text-xs font-semibold uppercase text-gray-500">Delivery status</div>
+                      <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        {deliveryStatusRows.map((row) => (
+                          <div key={row.key} className="flex items-center justify-between gap-3 text-sm">
+                            <span className="text-gray-700">{row.label || formatMetricLabel(row.key)}</span>
+                            <span className="font-bold text-gray-900">{row.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           )}
 

@@ -212,6 +212,47 @@ export type ProductSalesHistoryEvent = {
   status: string | null;
 };
 
+export type ProductSalesOrderStatus = {
+  status: string;
+  currency: string;
+  orderCount: number;
+  quantitySold: number;
+  grossSales: number;
+  lastOrderedAt: string | null;
+};
+
+export type ProductSalesCountMetric = {
+  key: string;
+  label: string;
+  count: number;
+  status: 'available' | 'zero' | 'unavailable';
+  unavailableReason?: string;
+};
+
+export type ProductDeliveryExceptionMetrics = {
+  notReceived: number;
+  returned: number;
+  delayed: number;
+  unfulfilled: number;
+};
+
+export type ProductChannelOrderDeliveryStatistics = {
+  channel: string;
+  lifecycleStages: ProductSalesCountMetric[];
+  deliveryExceptions: ProductDeliveryExceptionMetrics;
+};
+
+export type ProductOrderDeliveryStatistics = {
+  source: 'orders';
+  sourceStatus: 'available' | 'unavailable';
+  unavailableReason?: string;
+  lifecycleStages: ProductSalesCountMetric[];
+  paymentStatuses: ProductSalesCountMetric[];
+  deliveryStatuses: ProductSalesCountMetric[];
+  deliveryExceptions: ProductDeliveryExceptionMetrics;
+  channelLifecycle: ProductChannelOrderDeliveryStatistics[];
+};
+
 export type ProductSalesStatistics = {
   productId: string;
   source: 'orders';
@@ -225,7 +266,9 @@ export type ProductSalesStatistics = {
     grossSalesByCurrency: Array<{ currency: string; amount: number }>;
   };
   channels: ProductSalesChannel[];
+  orderStatuses: ProductSalesOrderStatus[];
   recentHistory: ProductSalesHistoryEvent[];
+  orderDelivery: ProductOrderDeliveryStatistics;
   unavailableReason?: string;
 };
 
@@ -284,6 +327,7 @@ export type BulkMarketplacePublicationResponse = {
 const MARKETPLACE_PUBLICATION_CHANNELS: MarketplacePublicationChannel[] = ['allegro', 'bazos', 'aukro', 'flipflop', 'heureka'];
 
 const DEFAULT_SALES_CHANNELS = ['flipflop', 'allegro', 'aukro', 'bazos', 'heureka'];
+const MISSING_ORDERS_STATS_ENDPOINT = '[MISSING: Orders stats endpoint]';
 
 @Injectable()
 export class ProductsService {
@@ -2226,14 +2270,15 @@ export class ProductsService {
   }
 
   private normalizeOrdersSalesStatistics(productId: string, payload: any): ProductSalesStatistics {
-    const allowedChannels = Array.isArray(payload?.allowedChannels) && payload.allowedChannels.length
-      ? payload.allowedChannels.map((channel: unknown) => String(channel))
-      : DEFAULT_SALES_CHANNELS;
-    const rawChannels = Array.isArray(payload?.channels) ? payload.channels : [];
+    const rawChannels = this.arrayFromFirst(payload?.channels, payload?.byChannel);
+    const allowedChannels = this.normalizeAllowedSalesChannels(payload, rawChannels);
     const channelRows = allowedChannels.map((channel) => {
       const row = rawChannels.find((candidate: any) => String(candidate?.channel) === channel);
       return this.normalizeSalesChannel(productId, channel, row);
     });
+    const orderStatuses = this.normalizeSalesOrderStatuses(
+      this.arrayFromFirst(payload?.orderStatuses, payload?.byStatus, payload?.statuses),
+    );
 
     return {
       productId,
@@ -2244,14 +2289,35 @@ export class ProductsService {
       conversion: String(payload?.conversion || '[UNKNOWN: conversion]'),
       totals: this.sumSalesTotals(channelRows),
       channels: channelRows,
+      orderStatuses,
       recentHistory: this.normalizeSalesHistory(payload),
+      orderDelivery: this.normalizeOrderDeliveryStatistics(payload),
     };
+  }
+
+  private normalizeAllowedSalesChannels(payload: any, rawChannels: any[]): string[] {
+    const configured = Array.isArray(payload?.allowedChannels) && payload.allowedChannels.length
+      ? payload.allowedChannels.map((channel: unknown) => String(channel))
+      : DEFAULT_SALES_CHANNELS;
+    const observed = rawChannels
+      .map((row: any) => row?.channel ? String(row.channel) : '')
+      .filter(Boolean);
+    return Array.from(new Set([...configured, ...observed]));
+  }
+
+  private arrayFromFirst(...values: unknown[]): any[] {
+    for (const value of values) {
+      if (Array.isArray(value)) {
+        return value;
+      }
+    }
+    return [];
   }
 
   private normalizeSalesChannel(productId: string, channel: string, row: any): ProductSalesChannel {
     const orderCount = this.toNonNegativeNumber(row?.orderCount);
     const quantitySold = this.toNonNegativeNumber(row?.quantitySold);
-    const grossSales = this.toNonNegativeNumber(row?.grossSales);
+    const grossSales = this.toNonNegativeNumber(row?.grossSales ?? row?.grossItemRevenue);
     const currency = String(row?.currency || 'CZK');
     const hasSales = orderCount > 0 || quantitySold > 0 || grossSales > 0;
 
@@ -2262,9 +2328,20 @@ export class ProductsService {
       orderCount,
       quantitySold,
       grossSales,
-      lastOrderedAt: row?.lastOrderedAt ? String(row.lastOrderedAt) : null,
+      lastOrderedAt: row?.lastOrderedAt || row?.lastOrderAt ? String(row.lastOrderedAt || row.lastOrderAt) : null,
       status: hasSales ? 'available' : 'zero',
     };
+  }
+
+  private normalizeSalesOrderStatuses(rawRows: any[]): ProductSalesOrderStatus[] {
+    return rawRows.map((row: any) => ({
+      status: String(row?.status || 'unknown'),
+      currency: String(row?.currency || 'CZK'),
+      orderCount: this.toNonNegativeNumber(row?.orderCount),
+      quantitySold: this.toNonNegativeNumber(row?.quantitySold),
+      grossSales: this.toNonNegativeNumber(row?.grossSales ?? row?.grossItemRevenue),
+      lastOrderedAt: row?.lastOrderedAt || row?.lastOrderAt ? String(row.lastOrderedAt || row.lastOrderAt) : null,
+    }));
   }
 
   private normalizeSalesHistory(payload: any): ProductSalesHistoryEvent[] {
@@ -2283,9 +2360,105 @@ export class ProductsService {
         : null,
       currency: String(event?.currency || 'CZK'),
       quantitySold: this.toNonNegativeNumber(event?.quantitySold ?? event?.quantity ?? event?.itemsQuantity),
-      grossSales: this.toNonNegativeNumber(event?.grossSales ?? event?.amount ?? event?.total),
+      grossSales: this.toNonNegativeNumber(event?.grossSales ?? event?.grossItemRevenue ?? event?.amount ?? event?.total),
       status: event?.status ? String(event.status) : null,
     }));
+  }
+
+  private normalizeOrderDeliveryStatistics(payload: any): ProductOrderDeliveryStatistics {
+    const source = payload?.orderDeliveryStatistics
+      ?? payload?.orderDelivery
+      ?? payload?.lifecycleDeliveryStatistics
+      ?? payload?.lifecycleStatistics
+      ?? payload?.lifecycleAggregates
+      ?? null;
+    const container = source ?? payload;
+    const hasOrderDeliverySource = Boolean(
+      source
+      || payload?.lifecycleStages
+      || payload?.byLifecycleStage
+      || payload?.paymentStatuses
+      || payload?.byPaymentStatus
+      || payload?.deliveryStatuses
+      || payload?.byDeliveryStatus
+      || payload?.deliveryExceptions
+      || payload?.exceptionCounts
+      || payload?.channelLifecycle
+      || payload?.byChannelLifecycle
+    );
+
+    if (!hasOrderDeliverySource) {
+      return this.unavailableOrderDeliveryStatistics(MISSING_ORDERS_STATS_ENDPOINT);
+    }
+
+    return {
+      source: 'orders',
+      sourceStatus: 'available',
+      lifecycleStages: this.normalizeCountMetrics(container?.lifecycleStages ?? container?.byLifecycleStage ?? payload?.byLifecycleStage, 'lifecycleStage'),
+      paymentStatuses: this.normalizeCountMetrics(container?.paymentStatuses ?? container?.byPaymentStatus ?? payload?.byPaymentStatus, 'paymentStatus'),
+      deliveryStatuses: this.normalizeCountMetrics(container?.deliveryStatuses ?? container?.byDeliveryStatus ?? payload?.byDeliveryStatus, 'deliveryStatus'),
+      deliveryExceptions: this.normalizeDeliveryExceptions(container?.deliveryExceptions ?? container?.exceptionCounts ?? payload?.exceptionCounts),
+      channelLifecycle: this.normalizeChannelLifecycle(container?.channelLifecycle ?? container?.byChannelLifecycle),
+    };
+  }
+
+  private normalizeCountMetrics(input: any, preferredKey: string): ProductSalesCountMetric[] {
+    const rows = Array.isArray(input)
+      ? input
+      : input && typeof input === 'object'
+        ? Object.entries(input).map(([key, count]) => ({ [preferredKey]: key, count }))
+        : [];
+
+    return rows
+      .map((row: any) => {
+        const key = String(row?.[preferredKey] ?? row?.key ?? row?.status ?? row?.name ?? '').trim();
+        const count = this.toNonNegativeNumber(row?.count ?? row?.orderCount ?? row?.total ?? row?.value);
+        return {
+          key,
+          label: this.humanizeOrderMetricKey(key),
+          count,
+          status: count > 0 ? 'available' as const : 'zero' as const,
+        };
+      })
+      .filter((metric) => Boolean(metric.key));
+  }
+
+  private normalizeDeliveryExceptions(input: any): ProductDeliveryExceptionMetrics {
+    const source = input && typeof input === 'object' ? input : {};
+    const pick = (...keys: string[]) => {
+      for (const key of keys) {
+        if (source[key] !== undefined) {
+          return this.toNonNegativeNumber(source[key]);
+        }
+      }
+      return 0;
+    };
+
+    return {
+      notReceived: pick('notReceived', 'not_received', 'deliveryNotReceived', 'delivery_not_received'),
+      returned: pick('returned', 'return', 'returns'),
+      delayed: pick('delayed', 'delay', 'late', 'deliveryDelayed', 'delivery_delayed'),
+      unfulfilled: pick('unfulfilled', 'notFulfilled', 'not_fulfilled', 'fulfillmentBlocked', 'fulfillment_blocked'),
+    };
+  }
+
+  private normalizeChannelLifecycle(input: any): ProductChannelOrderDeliveryStatistics[] {
+    const rows = Array.isArray(input) ? input : [];
+    return rows
+      .map((row: any) => ({
+        channel: String(row?.channel || '').trim(),
+        lifecycleStages: this.normalizeCountMetrics(row?.lifecycleStages ?? row?.byLifecycleStage, 'lifecycleStage'),
+        deliveryExceptions: this.normalizeDeliveryExceptions(row?.deliveryExceptions ?? row?.exceptionCounts),
+      }))
+      .filter((row) => Boolean(row.channel));
+  }
+
+  private humanizeOrderMetricKey(key: string): string {
+    return key
+      .split(/[_\s-]+/)
+      .filter(Boolean)
+      .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+      .join(' ');
   }
 
   private sumSalesTotals(channels: ProductSalesChannel[]): ProductSalesStatistics['totals'] {
@@ -2328,8 +2501,28 @@ export class ProductsService {
       conversion: '[UNKNOWN: conversion]',
       totals: this.sumSalesTotals(channels),
       channels,
+      orderStatuses: [],
       recentHistory: [],
+      orderDelivery: this.unavailableOrderDeliveryStatistics(unavailableReason),
       unavailableReason,
+    };
+  }
+
+  private unavailableOrderDeliveryStatistics(unavailableReason: string): ProductOrderDeliveryStatistics {
+    return {
+      source: 'orders',
+      sourceStatus: 'unavailable',
+      unavailableReason,
+      lifecycleStages: [],
+      paymentStatuses: [],
+      deliveryStatuses: [],
+      deliveryExceptions: {
+        notReceived: 0,
+        returned: 0,
+        delayed: 0,
+        unfulfilled: 0,
+      },
+      channelLifecycle: [],
     };
   }
 

@@ -404,6 +404,47 @@ export interface ProductSalesHistoryEvent {
   status: string | null;
 }
 
+export interface ProductSalesOrderStatus {
+  status: string;
+  currency: string;
+  orderCount: number;
+  quantitySold: number;
+  grossSales: number;
+  lastOrderedAt: string | null;
+}
+
+export interface ProductSalesCountMetric {
+  key: string;
+  label: string;
+  count: number;
+  status: 'available' | 'zero' | 'unavailable';
+  unavailableReason?: string;
+}
+
+export interface ProductDeliveryExceptionMetrics {
+  notReceived: number;
+  returned: number;
+  delayed: number;
+  unfulfilled: number;
+}
+
+export interface ProductChannelOrderDeliveryStatistics {
+  channel: string;
+  lifecycleStages: ProductSalesCountMetric[];
+  deliveryExceptions: ProductDeliveryExceptionMetrics;
+}
+
+export interface ProductOrderDeliveryStatistics {
+  source: 'orders';
+  sourceStatus: 'available' | 'unavailable';
+  unavailableReason?: string;
+  lifecycleStages: ProductSalesCountMetric[];
+  paymentStatuses: ProductSalesCountMetric[];
+  deliveryStatuses: ProductSalesCountMetric[];
+  deliveryExceptions: ProductDeliveryExceptionMetrics;
+  channelLifecycle: ProductChannelOrderDeliveryStatistics[];
+}
+
 export interface ProductSalesStatistics {
   productId: string;
   source: 'orders';
@@ -417,7 +458,9 @@ export interface ProductSalesStatistics {
     grossSalesByCurrency: Array<{ currency: string; amount: number }>;
   };
   channels: ProductSalesChannel[];
+  orderStatuses: ProductSalesOrderStatus[];
   recentHistory: ProductSalesHistoryEvent[];
+  orderDelivery: ProductOrderDeliveryStatistics;
   unavailableReason?: string;
 }
 
