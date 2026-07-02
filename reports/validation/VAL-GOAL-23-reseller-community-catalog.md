@@ -2,7 +2,7 @@
 
 ```yaml
 id: VAL-GOAL-23-RESELLER-COMMUNITY-CATALOG
-status: runtime-catalog-verified-cross-channel-deploy-gated
+status: runtime-marker-verified-auth-gated
 source_goal: implementation-goals/GOAL-23-reseller-community-catalog.md
 owner: Catalog integration owner
 created: 2026-07-02
@@ -94,7 +94,7 @@ npm run smoke:e2e:catalog-source
 
 ## Cross-Repo Validation
 
-Catalog contract source validation has passed and channel source integrations were audited. First-wave runtime images are now aligned for Allegro, Aukro, Bazos, and Heureka; authenticated human-bearer E2E remains missing.
+Catalog contract source validation has passed and channel source integrations were audited. First-wave runtime images now contain the source controls for Allegro, Aukro, Bazos, and Heureka; authenticated human-bearer E2E remains missing.
 
 - `docs/orchestrator/2026-07-02-reseller-community-catalog-cross-repo-plan.md`
 
@@ -105,6 +105,15 @@ Source/runtime commits pushed after channel audit:
 - `bazos` -> `9f8f2bb feat: finalize catalog source controls for bazos`
 - `heureka` -> `61c5e82 docs: record heureka catalog source validation`, includes `bf467cd feat: finalize catalog source controls for heureka`
 - `flipflop` -> `a463e5e feat: improve storefront product browsing`, includes `30a5e6c feat: integrate catalog user access for flipflop`
+
+Runtime image refresh, 2026-07-02 15:19 UTC:
+
+- `catalog-microservice` -> `localhost:5000/catalog-microservice:d2a2f66`
+- `catalog-frontend` -> `localhost:5000/catalog-frontend:latest`
+- `allegro-api-gateway` and `allegro-service` -> `localhost:5000/allegro-*:2886b4b`; `allegro-frontend` -> `localhost:5000/allegro-frontend:salespoint-20260702170737`
+- `aukro-service` -> `localhost:5000/aukro-service:salespoint-20260702171200`
+- `bazos-service` -> `localhost:5000/bazos-service:salespoint-20260702171300`
+- `heureka-api-gateway` and `heureka-service` -> `localhost:5000/heureka-*:salespoint-20260702171000`
 
 Channel source validation commands:
 
@@ -132,7 +141,7 @@ Channel source validation commands:
 
 ## Deployed Marker Evidence
 
-Read-only deployed marker pass, 2026-07-02 15:14 UTC:
+Read-only deployed marker pass, 2026-07-02 15:19 UTC:
 
 - Catalog frontend source checkboxes: `includeAlfaresCatalog`, `includeCommunityCatalog` in `/app/.next/server/chunks/ssr/_9cb9ee33._.js`; product resale checkbox marker `resaleEnabled` in `/app/.next/server/chunks/ssr/app_dashboard_products_[id]_page_tsx_e4021c16._.js`.
 - Allegro gateway/service: `catalogProductsRoute`, `/api/products`, and `catalogScope: 'effective'` in deployed `dist` files.

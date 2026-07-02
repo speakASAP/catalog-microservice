@@ -2,7 +2,7 @@
 
 ```yaml
 id: CATALOG-SOURCE-CONTROLS-DEPLOY-E2E-READINESS-2026-07-02
-status: deploy-and-auth-gated
+status: runtime-marker-verified-auth-gated
 owner: Catalog integration/orchestration owner
 created: 2026-07-02
 scope:
@@ -44,15 +44,15 @@ scope:
 | `allegro-api-gateway` | `localhost:5000/allegro-api-gateway:2886b4b` | aligned; `/api/products?catalogScope=effective&limit=1` returns protected `401` without token |
 | `allegro-frontend` | `localhost:5000/allegro-frontend:salespoint-20260702170737` | fresh salespoint image; authenticated UI smoke still required |
 | `allegro-service` | `localhost:5000/allegro-service:2886b4b` | aligned to source history |
-| `aukro-service` | `localhost:5000/aukro-service:269f5d8` | aligned |
-| `bazos-service` | `localhost:5000/bazos-service:9f8f2bb` | aligned |
-| `heureka-api-gateway` | `localhost:5000/heureka-api-gateway:61c5e82` | aligned |
-| `heureka-service` | `localhost:5000/heureka-service:61c5e82` | aligned |
+| `aukro-service` | `localhost:5000/aukro-service:salespoint-20260702171200` | fresh salespoint image; deployed markers still confirm Aukro source controls |
+| `bazos-service` | `localhost:5000/bazos-service:salespoint-20260702171300` | fresh salespoint image; deployed markers still confirm Bazos source controls |
+| `heureka-api-gateway` | `localhost:5000/heureka-api-gateway:salespoint-20260702171000` | fresh salespoint image; protected route shape remains aligned |
+| `heureka-service` | `localhost:5000/heureka-service:salespoint-20260702171000` | fresh salespoint image; deployed markers still confirm Heureka source controls |
 | `flipflop-product-service` | `localhost:5000/flipflop-product-service:goal12-upsell-20260702163830` | immutable provenance proving `30a5e6c` and active GOAL-12 work |
 
 ## Deploy Gate
 
-Do not run these commands until the owner explicitly approves channel deployment alignment.
+No Catalog-source deploy is required from this handoff. Do not run deploy scripts, image changes, rollout restarts, or pod deletion unless the owner explicitly asks for a new deployment.
 
 Run one repo at a time. Before each deploy:
 
@@ -88,7 +88,7 @@ ssh alfares 'cd /home/ssf/Documents/Github/heureka && npx ts-node services/heure
 
 ## Candidate Deploy Commands
 
-No Catalog-source channel deploy command is currently recommended from this handoff. Allegro, Aukro, Bazos, and Heureka are image-aligned for the first-wave source-control work. Deploy again only if authenticated smoke finds a channel-specific defect and the owner explicitly approves that repair.
+No Catalog-source channel deploy command is currently recommended from this handoff. Allegro, Aukro, Bazos, and Heureka are running feature-bearing images for the first-wave source-control work. Deploy again only if authenticated smoke finds a channel-specific defect and the owner explicitly approves that repair.
 
 ```bash
 # none at this gate
@@ -96,16 +96,16 @@ No Catalog-source channel deploy command is currently recommended from this hand
 
 FlipFlop is excluded from this deploy set until the active GOAL-12 work owner provides immutable-image guidance.
 
-## Read-Only Runtime Refresh 2026-07-02 15:10 UTC
+## Read-Only Runtime Refresh 2026-07-02 15:19 UTC
 
 - `catalog-microservice` is ready on `localhost:5000/catalog-microservice:d2a2f66`; `/health` returned `200`; `/api/catalog/settings` returned `401` without a bearer token.
 - `catalog-frontend` is ready on `localhost:5000/catalog-frontend:latest`; `/` returned `200`.
 - `allegro-api-gateway` and `allegro-service` are ready on `localhost:5000/allegro-*:2886b4b`; `allegro-frontend` is ready on `localhost:5000/allegro-frontend:salespoint-20260702170737`; `/api/products?catalogScope=effective&limit=1` returned `401` without a bearer token.
-- `aukro-service` is ready on `localhost:5000/aukro-service:269f5d8`; `/aukro/ui/catalog/products?limit=1` returned protected `403` without a bearer token.
-- `bazos-service` is ready on `localhost:5000/bazos-service:9f8f2bb`; `/ui/catalog/products?limit=1` returned `401` without a bearer token.
-- `heureka-api-gateway` and `heureka-service` are ready on `localhost:5000/heureka-*:61c5e82`; `/api/heureka/dashboard/catalog-products?limit=1&source=effective` returned `401` without a bearer token.
+- `aukro-service` is ready on `localhost:5000/aukro-service:salespoint-20260702171200`; `/aukro/ui/catalog/products?limit=1` returned protected `403` without a bearer token.
+- `bazos-service` is ready on `localhost:5000/bazos-service:salespoint-20260702171300`; `/ui/catalog/products?limit=1` returned `401` without a bearer token.
+- `heureka-api-gateway` and `heureka-service` are ready on `localhost:5000/heureka-*:salespoint-20260702171000`; `/api/heureka/dashboard/catalog-products?limit=1&source=effective` returned `401` without a bearer token.
 
-## Deployed UI/Runtime Marker Evidence 2026-07-02 15:14 UTC
+## Deployed UI/Runtime Marker Evidence 2026-07-02 15:19 UTC
 
 - Catalog frontend contains `includeAlfaresCatalog` and `includeCommunityCatalog` in `/app/.next/server/chunks/ssr/_9cb9ee33._.js`; product edit `resaleEnabled` is in `/app/.next/server/chunks/ssr/app_dashboard_products_[id]_page_tsx_e4021c16._.js`.
 - Allegro gateway contains `catalogProductsRoute` and `/api/products` in `/app/services/api-gateway/dist/gateway/gateway.controller.js`.
