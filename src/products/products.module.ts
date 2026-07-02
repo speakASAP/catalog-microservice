@@ -9,6 +9,8 @@ import { PricingModule } from '../pricing/pricing.module';
 import { ContentConnectorsModule } from '../content-connectors/content-connectors.module';
 import { ProductEventsModule } from '../product-events/product-events.module';
 import { CatalogAccessModule } from '../catalog-access/catalog-access.module';
+import { AttributesModule } from '../attributes/attributes.module';
+import { CategoriesModule } from '../categories/categories.module';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { CatalogAccessModule } from '../catalog-access/catalog-access.module';
     ContentConnectorsModule,
     ProductEventsModule,
     CatalogAccessModule,
+    AttributesModule,
+    CategoriesModule,
   ],
   controllers: [ProductsController],
   providers: [ProductsService, CatalogAuthGuard],

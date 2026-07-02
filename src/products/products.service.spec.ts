@@ -441,7 +441,8 @@ describe("ProductsService product readiness", () => {
     });
   });
 
-  it("applies allowlisted product quality bulk updates and fail-closes unsupported patches", async () => {
+  it("applies allowlisted product, category, attribute, and pricing quality bulk updates", async () => {
+    const category = { id: "category-1", name: "Accessories", isActive: true };
     const product = {
       id: "product-quality-bulk",
       sku: "SKU-BULK",
@@ -457,35 +458,110 @@ describe("ProductsService product readiness", () => {
       manufacturer: "",
       tags: [],
       categories: [],
+      attributes: [],
       media: [{ type: "image", url: "https://cdn.example/image.jpg" }],
       pricing: [{ isActive: true, basePrice: 120 }],
     } as unknown as Product;
     const repository = {
       findOne: jest.fn(async () => product),
       count: jest.fn(async () => 1),
-      save: jest.fn(async (data) => ({ ...data })),
+      save: jest.fn(async (data) => data),
     };
-    const service = new ProductsService(repository as any, logger as any);
+    const pricingService = {
+      getCurrentPrice: jest.fn(async () => ({ isActive: true, basePrice: 120 })),
+      bulkUpsert: jest.fn(async (entries) => ({ count: entries.length, prices: entries })),
+    };
+    const attributesService = {
+      findOne: jest.fn(async (id) => ({ id, isActive: true })),
+      setProductAttribute: jest.fn(async (productId, attributeId, value) => ({ productId, attributeId, value })),
+    };
+    const categoriesService = {
+      findOne: jest.fn(async () => category),
+    };
+    const service = new ProductsService(
+      repository as any,
+      logger as any,
+      pricingService as any,
+      undefined,
+      undefined,
+      undefined,
+      attributesService as any,
+      categoriesService as any,
+    );
 
     const result = await service.bulkUpdateProductsAfterQualityReview(
       {
         productIds: ["product-quality-bulk"],
         expectedMissingField: "brand",
         patch: { brand: "Acme", sku: "SHOULD-NOT-BULK-EDIT" },
+        categoryPatch: { categoryId: "category-1", mode: "replace" },
+        attributePatch: { "attribute-color": "red" },
+        pricingPatch: { basePrice: 199, currency: "CZK" },
       },
       { actor: { type: "jwt", sub: "seller-1", roles: [], authMethod: "auth-validate" } },
     );
 
     expect(result.success).toBe(true);
     expect(result.totals.updated).toBe(1);
+    expect(pricingService.bulkUpsert).toHaveBeenCalledWith([
+      expect.objectContaining({ productId: "product-quality-bulk", basePrice: 199, currency: "CZK" }),
+    ], undefined);
+    expect(categoriesService.findOne).toHaveBeenCalledWith("category-1");
+    expect(attributesService.findOne).toHaveBeenCalledWith("attribute-color");
+    expect(attributesService.setProductAttribute).toHaveBeenCalledWith("product-quality-bulk", "attribute-color", "red");
     expect(repository.save).toHaveBeenCalledWith(expect.objectContaining({
       brand: "Acme",
       sku: "SKU-BULK",
     }));
+    expect(product.categories).toEqual([category]);
+  });
+
+  it("delegates mass product quality pricing patches to the existing human-review guard", async () => {
+    const repository = {
+      findOne: jest.fn(async ({ where }) => ({
+        id: where.id,
+        sku: `SKU-${where.id}`,
+        title: "Bulk price product",
+        ownerUserId: "seller-1",
+        resaleEnabled: false,
+        isActive: false,
+        lifecycle: "draft",
+        ean: null,
+        description: "Priced product",
+        descriptionRich: null,
+        brand: "Acme",
+        manufacturer: "Acme",
+        tags: ["bulk"],
+        categories: [],
+        attributes: [],
+        media: [{ type: "image", url: "https://cdn.example/image.jpg" }],
+        pricing: [{ isActive: true, basePrice: 120 }],
+      })),
+      count: jest.fn(async () => 1),
+      save: jest.fn(async (data) => data),
+    };
+    const pricingService = {
+      getCurrentPrice: jest.fn(async () => ({ isActive: true, basePrice: 120 })),
+      bulkUpsert: jest.fn(async (entries, humanReview) => {
+        if (entries.length > 10 && humanReview !== "explicit") {
+          throw new Error("Mass pricing changes over 10 rows require x-human-review: explicit");
+        }
+        return { count: entries.length, prices: entries };
+      }),
+    };
+    const service = new ProductsService(repository as any, logger as any, pricingService as any);
+    const productIds = Array.from({ length: 11 }, (_unused, index) => `product-price-${index}`);
+
     await expect(service.bulkUpdateProductsAfterQualityReview(
-      { productIds: ["product-quality-bulk"], pricingPatch: { basePrice: 1 } },
+      { productIds, pricingPatch: { basePrice: 99 } },
       { actor: { type: "jwt", sub: "seller-1", roles: [], authMethod: "auth-validate" } },
-    )).rejects.toThrow("guarded pricing path");
+    )).rejects.toThrow("Mass pricing changes over 10 rows require x-human-review: explicit");
+
+    expect(pricingService.bulkUpsert).toHaveBeenCalledWith(
+      expect.arrayContaining([expect.objectContaining({ productId: "product-price-0", basePrice: 99 })]),
+      undefined,
+    );
+    expect(repository.save).not.toHaveBeenCalled();
   });
 
 
