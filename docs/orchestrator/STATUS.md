@@ -1736,6 +1736,60 @@ Remaining blockers:
 - `[MISSING: approved bundle checkout contract owned by FlipFlop/Orders/Payments]` for future server-authoritative bundle pricing beyond current display/intent flow.
 
 
+## 2026-07-03 - Goal 24 Bundle/Order-Affinity Contract Refresh
+
+Current focus: classify the remaining Goal 24 order-affinity replay and bundle checkout gates from read-only cross-repo evidence.
+
+Intent Preservation Chain:
+
+- Vision: Purchase-derived relationships should power product recommendations and future bundle flows without moving checkout, stock, payment, or marketplace ownership into Catalog.
+- Goal Impact: The remaining Goal 24 gates are now narrowed from broad missing infrastructure to explicit replay-data, publish-window, pruning, and bundle-selling contract decisions.
+- System: Catalog owns relation rows and read-only bundle candidates; Orders owns order/replay facts; Marketing owns affinity scoring/backfill; FlipFlop owns storefront checkout intent; Warehouse owns stock/reservations; Payments owns payment authorization/status.
+- Feature: Bundle/order-affinity contract refresh.
+- Task: Use read-only subagent evidence to update Catalog contract docs and validation state without mutating runtime data or service code.
+- Execution Plan: Inspect Catalog, Orders, Marketing, FlipFlop, and Payments source/docs; preserve `[MISSING: ...]`/`[UNKNOWN: ...]` blockers; do not run deploy, DB mutation, publish backfill, checkout smoke, or secret-printing commands.
+- Coding Prompt: Do not invent backend fields or bundle ownership. Treat existing `bundle-candidates` as read-only display metadata and fail closed on unresolved bundle-selling semantics.
+- Code: documentation only in `docs/contracts/catalog-product-relations.md`, `implementation-goals/GOAL-24-product-relations.md`, `docs/IMPLEMENTATION_STATE.md`, this status entry, and `reports/validation/VAL-GOAL-24-bundle-order-affinity-contract.md`.
+- Validation: read-only subagent reports plus `git diff --check` for the docs-only patch.
+
+Evidence:
+
+- Catalog `main` was clean at `d5a8f1f` before the isolated worktree update.
+- Catalog exposes protected `GET /api/products/:productId/related`, protected `GET /api/products/:productId/bundle-candidates`, and admin/internal `POST /api/internal/product-relations/order-affinity/batch`.
+- Orders source/docs expose `orders.order.created.v1` product item snapshots and `GET /orders/internal/order-affinity/replay-candidates` for paid, non-cancelled replay candidates.
+- Marketing source builds directed `order_affinity` candidates, aggregates historical replay records, and publishes to Catalog only when enabled/configured.
+- Source checks reported by the read-only replay worker passed: Orders `npm run verify:order-affinity-replay`, Marketing focused `order-affinity-backfill` tests, and Catalog focused product-relations Jest.
+- Live read-only Marketing dry-run returned `inputRecords=0`, `acceptedCreatedEvents=0`, `aggregatePairs=0`, and `candidates=[]`.
+- FlipFlop has a local bundle-intent path that submits identifiers, recomputes eligibility/savings server-side, creates a central Orders UUID before payment, and sends Payments the final server total.
+- Payments accepts final `orderId`, `amount`, and `currency`; it must not infer Catalog bundle pricing.
+
+Boundary decision:
+
+- No Catalog source code, migration, deployment, DB mutation, relation publish, checkout, payment, Warehouse, channel publication, or secret output was performed.
+- The existing FlipFlop-local bundle intent path is not an ecosystem Catalog bundle aggregate, bundle SKU, Orders bundle identity, Warehouse reservation, or Payments pricing contract.
+
+Parallel execution:
+
+- `ready now`: Orders replay contract maintenance. Validation: `npm run verify:order-affinity-replay`.
+- `ready now`: Marketing dry-run/export/backfill hardening. Validation: focused `order-affinity-backfill` tests plus dry-run.
+- `ready now`: Catalog relation API maintenance. Validation: focused product-relations Jest plus `git diff --check`.
+- `dependency-gated`: non-empty historical affinity publish. Blockers: qualifying rows, owner-reviewed mutation window, and pruning/replacement semantics.
+- `dependency-gated`: Catalog durable bundle aggregate/API. Blocker: Catalog ownership decision for read-only candidate versus standalone aggregate versus product-like SKU.
+- `blocked`: real ecosystem bundle selling. Blockers: Orders bundle create-order contract, Warehouse reservation contract, Payments metadata policy, explicit discount/price presentation policy, and approved real-checkout smoke scope.
+
+Remaining blockers:
+
+- `[MISSING: qualifying historical paid multi-product Orders rows for non-empty replay evidence]`.
+- `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`.
+- `[MISSING: pruning/replacement semantics for stale affinity rows]`.
+- `[MISSING: Catalog bundle ownership decision: read-only candidate, standalone bundle aggregate, or product-like SKU]`.
+- `[MISSING: Orders bundle create-order contract and bundle identity representation beyond normal line items]`.
+- `[MISSING: Warehouse bundle reservation contract for stock and fulfillment effects]`.
+- `[MISSING: Payments metadata policy for bundle/free-shipping evidence without making Payments pricing truth]`.
+- `[MISSING: approved real checkout smoke scope]`.
+- `[UNKNOWN: whether current live Orders history should contain paid multi-product rows or whether upstream order capture is still empty]`.
+
+
 ## 2026-07-03 - Goal 25 W5 Channel Runtime Deploy Smoke Closure
 
 Current focus: close the owner-approved runtime deployment/read-smoke gate for the latest Goal 25 channel consumer commits.
