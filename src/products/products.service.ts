@@ -1281,19 +1281,21 @@ export class ProductsService {
   private withLifecycleDefaults<T extends Partial<Product>>(data: T, current?: Product): T {
     const next = { ...data };
 
+    if (!current) {
+      next.lifecycle = "draft";
+      next.isActive = false;
+      return next;
+    }
+
     if (!next.lifecycle) {
       if (next.isActive === false) {
-        next.lifecycle = current ? "archived" : "draft";
-      } else if (next.isActive === true && current?.lifecycle === "archived") {
+        next.lifecycle = "archived";
+      } else if (next.isActive === true && current.lifecycle === "archived") {
         next.lifecycle = "active";
-      } else if (!current) {
-        next.lifecycle = "draft";
       }
     }
 
     if (next.lifecycle === "archived") {
-      next.isActive = false;
-    } else if (next.lifecycle === "draft" && !current && next.isActive === undefined) {
       next.isActive = false;
     } else if (next.lifecycle === "active" && next.isActive === undefined) {
       next.isActive = true;

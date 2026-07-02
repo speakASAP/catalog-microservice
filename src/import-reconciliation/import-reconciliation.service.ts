@@ -64,6 +64,8 @@ export class ImportReconciliationService {
         createCandidates: results.filter((row) => row.action === "create").length,
         updateCandidates: results.filter((row) => row.action === "update").length,
         skippedRows: results.filter((row) => row.action === "skip").length,
+        draftCandidates: results.filter((row) => row.targetLifecycle === "draft").length,
+        nonPublishableCandidates: results.filter((row) => !row.publishable).length,
         issueCount,
       },
       rows: results,
@@ -122,6 +124,7 @@ export class ImportReconciliationService {
     const productBySku = sku ? existingProducts.find((product) => this.normalizeToken(product.sku) === sku) : undefined;
     const productByEan = ean ? existingProducts.find((product) => this.normalizeToken(product.ean ?? undefined) === ean) : undefined;
     const product = productBySku ?? productByEan;
+    const warehouseStock = this.resolveWarehouseStockPreview(row);
 
     this.addRequiredIdentityIssues(row, sku, ean, issues);
     this.addPayloadDuplicateIssues(sku, ean, payloadSkuCounts, payloadEanCounts, issues);
@@ -147,17 +150,27 @@ export class ImportReconciliationService {
       });
     }
 
+    const qualityBlockingIssues = this.buildImportQualityBlockers(row, sku, payloadSkuCounts);
     const hasBlockingIssue = issues.some((issue) => issue.severity === "blocking");
+    const action = hasBlockingIssue ? "skip" : product ? "update" : "create";
+    const targetLifecycle = action === "create" ? "draft" : null;
+    const targetIsActive = action === "create" ? false : null;
+
     return {
       rowNumber,
       sku: sku || null,
       productId: product?.id ?? null,
-      action: hasBlockingIssue ? "skip" : product ? "update" : "create",
+      action,
       issues,
+      qualityBlockingIssues,
       matchedCategoryIds: categoryMatch.matchedCategoryIds,
       missingCategoryRefs: categoryMatch.missingCategoryRefs,
       mediaUrlCount: (row.mediaUrls ?? []).length,
       pricingRowCount: (row.pricing ?? []).length,
+      targetLifecycle,
+      targetIsActive,
+      publishable: action !== "skip" && qualityBlockingIssues.length === 0 && targetLifecycle !== "draft",
+      warehouseStock,
     };
   }
 
@@ -226,7 +239,7 @@ export class ImportReconciliationService {
 
   private addPricingIssues(pricingRows: ImportPricingRow[], issues: ImportReconciliationIssue[]): void {
     if (!pricingRows.length) {
-      issues.push({ code: "missing_pricing", field: "pricing", message: "No pricing rows were supplied.", severity: "blocking" });
+      return;
     }
     for (const row of pricingRows) {
       const currency = row.currency ?? "CZK";
@@ -242,6 +255,77 @@ export class ImportReconciliationService {
         issues.push({ code: "invalid_sale_price", field: "pricing.salePrice", message: "Sale price must be positive and not exceed base price.", severity: "blocking" });
       }
     }
+  }
+
+
+  private buildImportQualityBlockers(
+    row: ImportProductRow,
+    sku: string,
+    payloadSkuCounts: Map<string, number>,
+  ): ImportReconciliationIssue[] {
+    const issues: ImportReconciliationIssue[] = [];
+    if (!sku) {
+      issues.push({ code: "missing_sku", field: "sku", message: "SKU is required for activation and publishability.", severity: "blocking" });
+    }
+    if ((payloadSkuCounts.get(sku) ?? 0) > 1) {
+      issues.push({ code: "duplicate_sku", field: "sku", message: "SKU appears multiple times in this import.", severity: "blocking" });
+    }
+    if (!row.title?.trim()) {
+      issues.push({ code: "missing_title", field: "title", message: "Title is required for activation and publishability.", severity: "blocking" });
+    }
+    if (!this.hasImportDescription(row)) {
+      issues.push({ code: "missing_description", field: "description", message: "Description is required before activation and publishability.", severity: "blocking" });
+    }
+    if (!this.hasPositiveImportPricing(row.pricing ?? [])) {
+      issues.push({ code: "missing_current_price", field: "pricing", message: "A positive current price is required before activation and publishability.", severity: "blocking" });
+    }
+    if (!this.hasExternalImportImage(row.mediaUrls ?? [])) {
+      issues.push({ code: "missing_image", field: "mediaUrls", message: "At least one external image URL is required before activation and publishability.", severity: "blocking" });
+    }
+    return issues;
+  }
+
+  private hasImportDescription(row: ImportProductRow): boolean {
+    if (row.description?.trim()) {
+      return true;
+    }
+    if (typeof row.descriptionRich === "string") {
+      return row.descriptionRich.trim().length > 0;
+    }
+    return row.descriptionRich !== null && row.descriptionRich !== undefined;
+  }
+
+  private hasPositiveImportPricing(pricingRows: ImportPricingRow[]): boolean {
+    return pricingRows.some((row) => {
+      const basePrice = Number(row.basePrice);
+      const salePrice = row.salePrice === null || row.salePrice === undefined ? null : Number(row.salePrice);
+      return Number.isFinite(salePrice) && salePrice > 0 || Number.isFinite(basePrice) && basePrice > 0;
+    });
+  }
+
+  private hasExternalImportImage(mediaUrls: string[]): boolean {
+    return mediaUrls.some((url) => this.isExternalMediaUrl(url));
+  }
+
+  private resolveWarehouseStockPreview(row: ImportProductRow) {
+    const rawQuantity = row.sourceQuantity ?? row.stockQuantity ?? row.quantity;
+    const defaulted = rawQuantity === undefined || rawQuantity === null || (typeof rawQuantity === "string" && rawQuantity.trim() === "");
+    const sourceQuantity = defaulted ? null : this.toWarehouseQuantity(rawQuantity);
+    return {
+      source: "warehouse" as const,
+      sourceQuantity,
+      resolvedQuantity: sourceQuantity ?? 0,
+      defaulted,
+      ownsStockInCatalog: false as const,
+    };
+  }
+
+  private toWarehouseQuantity(value: string | number | null | undefined): number | null {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric < 0) {
+      return null;
+    }
+    return Math.floor(numeric);
   }
 
   private matchCategories(row: ImportProductRow, categories: CategoryRef[]): { matchedCategoryIds: string[]; missingCategoryRefs: string[] } {

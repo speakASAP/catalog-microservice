@@ -32,6 +32,29 @@ describe("ProductsService product readiness", () => {
     expect(product.isActive).toBe(false);
   });
 
+  it("keeps explicitly active created products draft until quality activation passes", async () => {
+    const repository = {
+      create: jest.fn((data) => data),
+      save: jest.fn(async (data) => ({ id: "product-explicit-active", ...data })),
+    };
+    const service = new ProductsService(repository as any, logger as any);
+
+    const product = await service.create({
+      sku: "SKU-EXPLICIT-ACTIVE",
+      title: "Explicit active import",
+      lifecycle: "active",
+      isActive: true,
+    });
+
+    expect(repository.create).toHaveBeenCalledWith(expect.objectContaining({
+      sku: "SKU-EXPLICIT-ACTIVE",
+      lifecycle: "draft",
+      isActive: false,
+    }));
+    expect(product.lifecycle).toBe("draft");
+    expect(product.isActive).toBe(false);
+  });
+
   it("assigns new products to the authenticated catalog user", async () => {
     const repository = {
       create: jest.fn((data) => data),
