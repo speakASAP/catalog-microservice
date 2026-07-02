@@ -41,10 +41,10 @@ scope:
 
 | Deployment | Current image | Required alignment |
 |---|---|---|
-| `allegro-api-gateway` | `localhost:5000/allegro-api-gateway:2886b4b` | tag aligned to source history, but compiled gateway still does not expose `/api/products` |
-| `allegro-frontend` | `localhost:5000/allegro-frontend:2886b4b` | aligned to source history |
+| `allegro-api-gateway` | `localhost:5000/allegro-api-gateway:2886b4b` | aligned; `/api/products?catalogScope=effective&limit=1` returns protected `401` without token |
+| `allegro-frontend` | `localhost:5000/allegro-frontend:salespoint-20260702170737` | fresh salespoint image; authenticated UI smoke still required |
 | `allegro-service` | `localhost:5000/allegro-service:2886b4b` | aligned to source history |
-| `aukro-service` | `localhost:5000/aukro-service:dc5a362` | `269f5d8` or newer |
+| `aukro-service` | `localhost:5000/aukro-service:269f5d8` | aligned |
 | `bazos-service` | `localhost:5000/bazos-service:9f8f2bb` | aligned |
 | `heureka-api-gateway` | `localhost:5000/heureka-api-gateway:61c5e82` | aligned |
 | `heureka-service` | `localhost:5000/heureka-service:61c5e82` | aligned |
@@ -88,24 +88,22 @@ ssh alfares 'cd /home/ssf/Documents/Github/heureka && npx ts-node services/heure
 
 ## Candidate Deploy Commands
 
-Use explicit commit tags so runtime provenance is inspectable. Bazos and Heureka are already aligned and should not be redeployed for this goal unless a later smoke finds a channel-specific defect. Allegro needs image/provenance repair or rebuild because the `2886b4b` tag is present but live compiled gateway code still misses the Catalog product picker route.
+No Catalog-source channel deploy command is currently recommended from this handoff. Allegro, Aukro, Bazos, and Heureka are image-aligned for the first-wave source-control work. Deploy again only if authenticated smoke finds a channel-specific defect and the owner explicitly approves that repair.
 
 ```bash
-ssh alfares 'cd /home/ssf/Documents/Github/allegro && ./scripts/deploy.sh 9258129'
-ssh alfares 'cd /home/ssf/Documents/Github/aukro && IMAGE_TAG=269f5d8 ./scripts/deploy.sh'
+# none at this gate
 ```
 
 FlipFlop is excluded from this deploy set until the active GOAL-12 work owner provides immutable-image guidance.
 
-## Read-Only Runtime Refresh 2026-07-02 14:59 UTC
+## Read-Only Runtime Refresh 2026-07-02 15:10 UTC
 
 - `catalog-microservice` is ready on `localhost:5000/catalog-microservice:d2a2f66`; `/health` returned `200`; `/api/catalog/settings` returned `401` without a bearer token.
 - `catalog-frontend` is ready on `localhost:5000/catalog-frontend:latest`; `/` returned `200`.
+- `allegro-api-gateway` and `allegro-service` are ready on `localhost:5000/allegro-*:2886b4b`; `allegro-frontend` is ready on `localhost:5000/allegro-frontend:salespoint-20260702170737`; `/api/products?catalogScope=effective&limit=1` returned `401` without a bearer token.
+- `aukro-service` is ready on `localhost:5000/aukro-service:269f5d8`; `/aukro/ui/catalog/products?limit=1` returned protected `403` without a bearer token.
 - `bazos-service` is ready on `localhost:5000/bazos-service:9f8f2bb`; `/ui/catalog/products?limit=1` returned `401` without a bearer token.
 - `heureka-api-gateway` and `heureka-service` are ready on `localhost:5000/heureka-*:61c5e82`; `/api/heureka/dashboard/catalog-products?limit=1&source=effective` returned `401` without a bearer token.
-- `allegro-*` now runs `2886b4b`, and `2886b4b` contains `9258129` in source history.
-- Allegro `/api/products?catalogScope=effective&limit=1` still returns `404`, and a runtime grep did not find `catalogProductsRoute` in the compiled gateway image; treat Allegro route exposure as still missing until rebuilt/repaired.
-- `aukro-service` still runs `dc5a362`; `/aukro/ui/catalog/products?limit=1` returns protected `403` without a bearer token, but image alignment to `269f5d8` is still missing.
 
 ## Post-Deploy Runtime Checks
 
@@ -133,7 +131,7 @@ Expected unauthenticated results:
 - Heureka dashboard products: `401`.
 - Bazos UI catalog products: `401`.
 - Aukro UI catalog products: protected `403` or authenticated route behavior.
-- Allegro `/api/products`: should stop returning the old `404` after `9258129` deploy.
+- Allegro `/api/products`: `401`.
 
 ## Authenticated E2E Smoke Requirements
 
@@ -167,7 +165,7 @@ CATALOG_SOURCE_E2E_VIEWER_TOKEN='<viewer human bearer>' \
 npm run smoke:e2e:catalog-source
 ```
 
-Optional read-only channel picker route smoke after channel alignment:
+Optional read-only channel picker route smoke:
 
 ```bash
 CATALOG_SOURCE_E2E_EXECUTE=true CATALOG_SOURCE_E2E_CHANNEL_ROUTES=true ...
@@ -175,8 +173,6 @@ CATALOG_SOURCE_E2E_EXECUTE=true CATALOG_SOURCE_E2E_CHANNEL_ROUTES=true ...
 
 ## Remaining Blockers
 
-- `[MISSING: explicit owner approval to repair/rebuild Allegro route image and deploy Aukro image alignment]`
-- `[MISSING: approved human Auth bearer token for E2E smoke]`
+- `[MISSING: approved human Auth bearer tokens for two distinct sellers to run Catalog source E2E smoke]`
+- `[MISSING: authenticated channel picker/UI smoke with human bearer after image alignment]`
 - `[MISSING: FlipFlop immutable image provenance after GOAL-12 dirty rollout]`
-- `[MISSING: Allegro live `/api/products` route exposure despite `2886b4b` image tag]`
-- `[MISSING: Aukro live deployment aligned to 269f5d8 or newer]`

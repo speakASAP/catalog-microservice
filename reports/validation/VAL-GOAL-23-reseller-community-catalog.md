@@ -94,16 +94,16 @@ npm run smoke:e2e:catalog-source
 
 ## Cross-Repo Validation
 
-Catalog contract source validation has passed and channel source integrations were audited. Runtime deployment alignment remains incomplete for several channel services:
+Catalog contract source validation has passed and channel source integrations were audited. First-wave runtime images are now aligned for Allegro, Aukro, Bazos, and Heureka; authenticated human-bearer E2E remains missing.
 
 - `docs/orchestrator/2026-07-02-reseller-community-catalog-cross-repo-plan.md`
 
-Source commits pushed after channel audit:
+Source/runtime commits pushed after channel audit:
 
-- `allegro` -> `9258129 feat: finalize catalog source controls for allegro`
-- `aukro` -> `f237fda feat: finalize catalog source controls for aukro`
+- `allegro` -> `2886b4b fix: add allegro event subscriber amqp dependency`, includes `9258129 feat: finalize catalog source controls for allegro`
+- `aukro` -> `269f5d8 docs: record aukro catalog source validation`, includes `f237fda feat: finalize catalog source controls for aukro`
 - `bazos` -> `9f8f2bb feat: finalize catalog source controls for bazos`
-- `heureka` -> `bf467cd feat: finalize catalog source controls for heureka`
+- `heureka` -> `61c5e82 docs: record heureka catalog source validation`, includes `bf467cd feat: finalize catalog source controls for heureka`
 - `flipflop` -> `a463e5e feat: improve storefront product browsing`, includes `30a5e6c feat: integrate catalog user access for flipflop`
 
 Channel source validation commands:
@@ -132,9 +132,7 @@ Channel source validation commands:
 
 Current blockers:
 
-- `[MISSING: Allegro live deployment aligned to source commit 9258129 or newer]`
-- `[MISSING: Aukro live deployment aligned to source commit f237fda or newer]`
-- `[MISSING: Bazos live deployment aligned to source commit 9f8f2bb or newer; current runtime is 33eaf4d with partial dirty markers]`
-- `[MISSING: Heureka live deployment aligned to source commit bf467cd or newer]`
-- `[MISSING: FlipFlop live deployment alignment for commit 30a5e6c after unrelated GOAL-12 dirty rollout is resolved]`
-- `[MISSING: approved deploy gate before starting any new channel deploy loops]`
+- `[MISSING: approved Auth tokens for two distinct synthetic seller users]`
+- `[MISSING: authorized Catalog source E2E smoke execution with `scripts/catalog-source-e2e-smoke.js`]`
+- `[MISSING: authenticated channel picker/UI smoke for Allegro, Aukro, Bazos, and Heureka with a human bearer token]`
+- `[MISSING: FlipFlop immutable image provenance for commit 30a5e6c after unrelated GOAL-12 dirty rollout is resolved]`
