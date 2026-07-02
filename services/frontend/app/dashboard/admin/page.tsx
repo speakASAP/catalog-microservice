@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import AdminGuard from '@/components/AdminGuard';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useAuth } from '@/contexts/AuthContext';
@@ -53,6 +54,24 @@ export default function InternalAdminPage() {
               <dd className="mt-1 text-sm text-gray-700">Catalog admin section</dd>
             </div>
           </dl>
+        </div>
+
+        <div className="rounded-lg bg-white p-6 shadow-sm border border-gray-200">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase text-blue-700">Product quality</p>
+              <h2 className="mt-1 text-lg font-bold text-gray-900">Review queue</h2>
+              <p className="mt-1 text-sm text-gray-600">
+                Mandatory blockers, optional opportunities, report exports, bulk updates, and activation gates.
+              </p>
+            </div>
+            <Link
+              href="/dashboard/admin/product-review"
+              className="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+            >
+              Open review
+            </Link>
+          </div>
         </div>
 
         <div className="rounded-lg bg-white shadow-sm border border-gray-200 overflow-hidden">

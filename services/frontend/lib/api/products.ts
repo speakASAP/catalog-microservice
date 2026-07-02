@@ -174,6 +174,154 @@ export interface ProductQuery {
   catalogSources?: ProductCatalogSource[];
 }
 
+export type ProductQualityReviewSeverity = 'blocking' | 'optional';
+export type ProductQualityReviewExportFormat = 'json' | 'csv' | 'markdown';
+
+export interface ProductQualityReviewQuery extends ProductQuery {
+  missingField?: string;
+  severity?: ProductQualityReviewSeverity;
+}
+
+export interface ProductQualityReviewIssue {
+  code: string;
+  field?: string;
+  severity: string;
+  message: string;
+  source: string;
+}
+
+export interface ProductQualityReviewItem {
+  productId: string;
+  sku: string;
+  title: string;
+  ownerScope: string;
+  sourceScope: ProductCatalogSource;
+  lifecycle: NonNullable<Product['lifecycle']>;
+  isActive: boolean;
+  publishable: boolean;
+  canActivate: boolean;
+  completionScore: number;
+  blockingIssues: ProductQualityReviewIssue[];
+  blockingMissingFields: string[];
+  optionalOpportunities: ProductQualityReviewIssue[];
+  nextAction: string;
+  readiness?: Record<string, any>;
+}
+
+export interface ProductQualityReviewResponse {
+  policyId: string;
+  blockers: string[];
+  items: ProductQualityReviewItem[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface ProductQualityReviewExportResponse {
+  policyId: string;
+  format: ProductQualityReviewExportFormat;
+  generatedAt: string;
+  contentType: string;
+  blockers: string[];
+  items: ProductQualityReviewItem[];
+  content: ProductQualityReviewItem[] | string;
+}
+
+export interface ProductQualityReviewProductPatch {
+  title?: string;
+  description?: string;
+  brand?: string;
+  manufacturer?: string;
+  ean?: string;
+  tags?: string[];
+  lifecycle?: Product['lifecycle'];
+  isActive?: boolean;
+}
+
+export interface ProductQualityReviewPricingPatch {
+  basePrice?: number;
+  salePrice?: number;
+  currency?: string;
+  isActive?: boolean;
+}
+
+export interface ProductQualityReviewCategoryPatch {
+  categoryId?: string;
+  categoryIds?: string[];
+  mode?: 'replace' | 'add';
+}
+
+export interface ProductQualityReviewBulkUpdateRequest {
+  productIds: string[];
+  patch?: ProductQualityReviewProductPatch;
+  categoryPatch?: ProductQualityReviewCategoryPatch;
+  pricingPatch?: ProductQualityReviewPricingPatch;
+  attributePatch?: Record<string, unknown>;
+  expectedMissingField?: string;
+  humanReview?: string;
+}
+
+export interface ProductQualityReviewBulkUpdateResult {
+  productId: string;
+  sku: string;
+  title: string;
+  success: boolean;
+  updated: boolean;
+  blocked: boolean;
+  skipped: boolean;
+  blockingIssues: ProductQualityReviewIssue[];
+  nextAction: string;
+  quality: ProductQualityReviewItem;
+}
+
+export interface ProductQualityReviewBulkUpdateResponse {
+  success: boolean;
+  policyId: string;
+  requestedProductIds: string[];
+  blockers: string[];
+  totals: {
+    requested: number;
+    updated: number;
+    blocked: number;
+    skipped: number;
+  };
+  results: ProductQualityReviewBulkUpdateResult[];
+}
+
+export interface ProductQualityReviewActivateRequest {
+  productIds: string[];
+  humanReview?: string;
+  reason?: string;
+}
+
+export interface ProductQualityReviewActivationResult {
+  productId: string;
+  sku: string;
+  title: string;
+  success: boolean;
+  activated: boolean;
+  blocked: boolean;
+  lifecycleBefore: NonNullable<Product['lifecycle']>;
+  lifecycleAfter: NonNullable<Product['lifecycle']>;
+  blockingIssues: ProductQualityReviewIssue[];
+  nextAction: string;
+  quality: ProductQualityReviewItem;
+}
+
+export interface ProductQualityReviewActivationResponse {
+  success: boolean;
+  policyId: string;
+  requestedProductIds: string[];
+  blockers: string[];
+  totals: {
+    requested: number;
+    activated: number;
+    blocked: number;
+    unchanged: number;
+  };
+  results: ProductQualityReviewActivationResult[];
+}
+
 export interface PaginatedResponse<T> {
   items: T[];
   pagination: {
@@ -556,6 +704,47 @@ export const productsApi = {
 
   async getProductBySku(sku: string) {
     return apiClient.get<Product>(`/products/sku/${sku}`);
+  },
+
+  async getProductQualityReview(query?: ProductQualityReviewQuery) {
+    const params = new URLSearchParams();
+    if (query?.page) params.append('page', query.page.toString());
+    if (query?.limit) params.append('limit', query.limit.toString());
+    if (query?.search) params.append('search', query.search);
+    if (query?.isActive !== undefined) params.append('isActive', query.isActive.toString());
+    if (query?.lifecycle) params.append('lifecycle', query.lifecycle);
+    if (query?.catalogScope) params.append('catalogScope', query.catalogScope);
+    if (query?.catalogSources) params.append('catalogSources', query.catalogSources.join(','));
+    if (query?.missingField) params.append('missingField', query.missingField);
+    if (query?.severity) params.append('severity', query.severity);
+
+    const queryString = params.toString();
+    return apiClient.get<ProductQualityReviewResponse>(`/products/review/quality${queryString ? `?${queryString}` : ''}`);
+  },
+
+  async exportProductQualityReview(query?: ProductQualityReviewQuery & { format?: ProductQualityReviewExportFormat }) {
+    const params = new URLSearchParams();
+    if (query?.page) params.append('page', query.page.toString());
+    if (query?.limit) params.append('limit', query.limit.toString());
+    if (query?.search) params.append('search', query.search);
+    if (query?.isActive !== undefined) params.append('isActive', query.isActive.toString());
+    if (query?.lifecycle) params.append('lifecycle', query.lifecycle);
+    if (query?.catalogScope) params.append('catalogScope', query.catalogScope);
+    if (query?.catalogSources) params.append('catalogSources', query.catalogSources.join(','));
+    if (query?.missingField) params.append('missingField', query.missingField);
+    if (query?.severity) params.append('severity', query.severity);
+    if (query?.format) params.append('format', query.format);
+
+    const queryString = params.toString();
+    return apiClient.get<ProductQualityReviewExportResponse>(`/products/review/quality/export${queryString ? `?${queryString}` : ''}`);
+  },
+
+  async bulkUpdateAfterQualityReview(data: ProductQualityReviewBulkUpdateRequest) {
+    return apiClient.post<ProductQualityReviewBulkUpdateResponse>('/products/review/bulk-update', data);
+  },
+
+  async activateAfterQualityReview(data: ProductQualityReviewActivateRequest) {
+    return apiClient.post<ProductQualityReviewActivationResponse>('/products/review/activate', data);
   },
 
   async createProduct(data: Partial<Product>) {
