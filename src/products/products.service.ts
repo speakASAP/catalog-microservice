@@ -3,7 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, In, IsNull, SelectQueryBuilder, EntityManager, Brackets } from 'typeorm';
 import { Product, ProductLifecycle } from "./product.entity";
 import { LoggerService } from '../logger/logger.service';
-import { PricingService } from '../pricing/pricing.service';
+import { PricingService, type PricingWriteInput } from '../pricing/pricing.service';
+import { AttributesService } from '../attributes/attributes.service';
+import { CategoriesService } from '../categories/categories.service';
+import { Category } from '../categories/category.entity';
 import {
   CreateProductDto,
   UpdateProductDto,
@@ -33,6 +36,21 @@ import type {
 } from '../product-events/product-event.types';
 
 type ProductQualitySeverity = "blocking" | "warning";
+
+type ProductQualityAttributePatchEntry = {
+  attributeId: string;
+  value: string;
+};
+
+type ProductQualityCategoryPatch = {
+  mode: 'replace' | 'add';
+  categoryIds: string[];
+};
+
+type ResolvedProductQualityCategoryPatch = {
+  mode: 'replace' | 'add';
+  categories: Category[];
+};
 
 export type ProductQualityIssue = {
   code: string;
@@ -370,6 +388,10 @@ export class ProductsService {
     private readonly productEventPublisher?: ProductEventPublisherService,
     @Optional()
     private readonly catalogAccessService?: CatalogAccessService,
+    @Optional()
+    private readonly attributesService?: AttributesService,
+    @Optional()
+    private readonly categoriesService?: CategoriesService,
   ) {}
 
   private canAccessAllProducts(actor?: CatalogActor): boolean {
@@ -1035,27 +1057,33 @@ export class ProductsService {
       throw new BadRequestException('Updating more than 50 products requires humanReview: explicit');
     }
 
-    if (data?.pricingPatch && Object.keys(data.pricingPatch).length > 0) {
-      throw new BadRequestException('Product quality pricingPatch must use the existing guarded pricing path. [MISSING: Goal 25 pricing bulk delegation implementation]');
-    }
-    if (data?.attributePatch && Object.keys(data.attributePatch).length > 0) {
-      throw new BadRequestException('Product quality attributePatch is not implemented in W1. [MISSING: Goal 25 attribute bulk update implementation]');
-    }
-    if (data?.categoryPatch && Object.keys(data.categoryPatch).length > 0) {
-      throw new BadRequestException('Product quality categoryPatch is not implemented in W1. [MISSING: Goal 25 category bulk update implementation]');
-    }
-
     const patch = this.allowedProductQualityBulkPatch(data?.patch || {});
-    if (Object.keys(patch).length === 0) {
-      throw new BadRequestException('Product quality bulk update requires at least one allowlisted product patch field');
+    const pricingPatch = this.normalizeProductQualityPricingPatch(data?.pricingPatch);
+    const attributePatch = this.normalizeProductQualityAttributePatch(data?.attributePatch);
+    const categoryPatch = this.normalizeProductQualityCategoryPatch(data?.categoryPatch);
+    const hasProductPatch = Object.keys(patch).length > 0;
+    const hasPricingPatch = Boolean(pricingPatch);
+    const hasAttributePatch = attributePatch.length > 0;
+    const hasCategoryPatch = Boolean(categoryPatch);
+
+    if (!hasProductPatch && !hasPricingPatch && !hasAttributePatch && !hasCategoryPatch) {
+      throw new BadRequestException('Product quality bulk update requires at least one allowlisted product, category, attribute, or pricing patch field');
     }
 
-    const results: ProductQualityBulkUpdateResult[] = [];
-    for (const productId of productIds) {
+    const pricingService = hasPricingPatch ? this.requireProductQualityPricingService() : undefined;
+    const resolvedCategoryPatch = categoryPatch ? await this.resolveProductQualityCategoryPatch(categoryPatch) : undefined;
+    if (hasAttributePatch) {
+      await this.assertProductQualityAttributePatchSupported(attributePatch);
+    }
+
+    const results: Array<ProductQualityBulkUpdateResult | undefined> = [];
+    const candidates: Array<{ index: number; product: Product }> = [];
+
+    for (const [index, productId] of productIds.entries()) {
       const product = await this.findOneWithRepository(this.productRepository, productId, scope, 'mutate');
       const beforeQuality = await this.buildProductQualityReviewItem(product);
       if (data?.expectedMissingField && !this.qualityItemHasField(beforeQuality, data.expectedMissingField)) {
-        results.push({
+        results[index] = {
           productId: product.id,
           sku: product.sku,
           title: product.title,
@@ -1066,38 +1094,67 @@ export class ProductsService {
           blockingIssues: beforeQuality.blockingIssues,
           nextAction: `skipped_expected_missing_field:${data.expectedMissingField}`,
           quality: beforeQuality,
-        });
+        };
         continue;
       }
 
-      const saved = await this.update(product.id, patch, scope);
-      const quality = await this.buildProductQualityReviewItem(saved);
-      results.push({
-        productId: saved.id,
-        sku: saved.sku,
-        title: saved.title,
+      candidates.push({ index, product });
+    }
+
+    const pricingUpdatedProductIds = new Set<string>();
+    if (pricingPatch && candidates.length > 0) {
+      const pricingEntries = candidates.map(({ product }) => ({
+        ...pricingPatch,
+        productId: product.id,
+      }));
+      await pricingService!.bulkUpsert(pricingEntries, data?.humanReview);
+      for (const { product } of candidates) {
+        pricingUpdatedProductIds.add(product.id);
+      }
+    }
+
+    for (const { index, product } of candidates) {
+      let latest = product;
+      if (hasProductPatch) {
+        latest = await this.update(product.id, patch, scope);
+      }
+      if (resolvedCategoryPatch) {
+        latest = await this.applyProductQualityCategoryPatch(product.id, resolvedCategoryPatch, scope);
+      }
+      if (hasAttributePatch) {
+        await this.applyProductQualityAttributePatch(product.id, attributePatch);
+      }
+
+      latest = await this.findOneWithRepository(this.productRepository, product.id, scope);
+      const quality = await this.buildProductQualityReviewItem(latest);
+      results[index] = {
+        productId: latest.id,
+        sku: latest.sku,
+        title: latest.title,
         success: true,
-        updated: true,
+        updated: hasProductPatch || hasCategoryPatch || hasAttributePatch || pricingUpdatedProductIds.has(product.id),
         blocked: false,
         skipped: false,
         blockingIssues: quality.blockingIssues,
         nextAction: quality.nextAction,
         quality,
-      });
+      };
     }
 
+    const finalResults = results.filter((result): result is ProductQualityBulkUpdateResult => Boolean(result));
+
     return {
-      success: results.every((result) => result.success || result.skipped),
+      success: finalResults.every((result) => result.success || result.skipped),
       policyId: PRODUCT_QUALITY_POLICY_ID,
       requestedProductIds: productIds,
       blockers: [PRODUCT_QUALITY_MISSING_GENERATED_DESCRIPTION_STATE],
       totals: {
         requested: productIds.length,
-        updated: results.filter((result) => result.updated).length,
-        blocked: results.filter((result) => result.blocked).length,
-        skipped: results.filter((result) => result.skipped).length,
+        updated: finalResults.filter((result) => result.updated).length,
+        blocked: finalResults.filter((result) => result.blocked).length,
+        skipped: finalResults.filter((result) => result.skipped).length,
       },
-      results,
+      results: finalResults,
     };
   }
 
@@ -1606,6 +1663,225 @@ export class ProductsService {
       }
     }
     return allowed;
+  }
+
+  private normalizeProductQualityPricingPatch(patch: Record<string, unknown> | undefined): Partial<PricingWriteInput> | null {
+    const payload = this.nonEmptyProductQualityPatchObject(patch, 'pricingPatch');
+    if (!payload) {
+      return null;
+    }
+
+    const allowedKeys = new Set([
+      'basePrice',
+      'costPrice',
+      'salePrice',
+      'currency',
+      'priceType',
+      'validFrom',
+      'validTo',
+      'isActive',
+      'marginPercent',
+    ]);
+    const normalized: Partial<PricingWriteInput> = {};
+    for (const [key, value] of Object.entries(payload)) {
+      if (!allowedKeys.has(key)) {
+        throw new BadRequestException(`Product quality pricingPatch field is not allowlisted: ${key}`);
+      }
+      (normalized as Record<string, unknown>)[key] = value;
+    }
+
+    return normalized;
+  }
+
+  private normalizeProductQualityAttributePatch(patch: Record<string, unknown> | undefined): ProductQualityAttributePatchEntry[] {
+    const payload = this.nonEmptyProductQualityPatchObject(patch, 'attributePatch');
+    if (!payload) {
+      return [];
+    }
+
+    const values = this.attributePatchValues(payload);
+    return Object.entries(values).map(([attributeId, rawValue]) => {
+      const id = attributeId.trim();
+      if (!id) {
+        throw new BadRequestException('Product quality attributePatch attribute id must be non-empty');
+      }
+      if (rawValue === null || rawValue === undefined || typeof rawValue === 'object') {
+        throw new BadRequestException('Product quality attributePatch values must be string, number, or boolean');
+      }
+      const value = String(rawValue).trim();
+      if (!value) {
+        throw new BadRequestException('Product quality attributePatch values must be non-empty');
+      }
+      return { attributeId: id, value };
+    });
+  }
+
+  private attributePatchValues(payload: Record<string, unknown>): Record<string, unknown> {
+    if (Object.prototype.hasOwnProperty.call(payload, 'values')) {
+      const keys = Object.keys(payload);
+      if (keys.length !== 1 || !this.isProductQualityPatchObject(payload.values)) {
+        throw new BadRequestException('Product quality attributePatch.values must be the only field and must be an object');
+      }
+      return payload.values;
+    }
+    return payload;
+  }
+
+  private normalizeProductQualityCategoryPatch(patch: Record<string, unknown> | undefined): ProductQualityCategoryPatch | null {
+    const payload = this.nonEmptyProductQualityPatchObject(patch, 'categoryPatch');
+    if (!payload) {
+      return null;
+    }
+
+    const allowedKeys = new Set(['categoryId', 'categoryIds', 'mode']);
+    for (const key of Object.keys(payload)) {
+      if (!allowedKeys.has(key)) {
+        throw new BadRequestException(`Product quality categoryPatch field is not allowlisted: ${key}`);
+      }
+    }
+
+    const mode = payload.mode === undefined ? 'replace' : String(payload.mode).trim();
+    if (mode !== 'replace' && mode !== 'add') {
+      throw new BadRequestException('Product quality categoryPatch.mode must be replace or add');
+    }
+
+    const ids: string[] = [];
+    if (payload.categoryId !== undefined) {
+      ids.push(this.normalizeProductQualityCategoryId(payload.categoryId));
+    }
+    if (payload.categoryIds !== undefined) {
+      if (!Array.isArray(payload.categoryIds)) {
+        throw new BadRequestException('Product quality categoryPatch.categoryIds must be an array');
+      }
+      ids.push(...payload.categoryIds.map((categoryId) => this.normalizeProductQualityCategoryId(categoryId)));
+    }
+
+    const categoryIds = Array.from(new Set(ids.filter(Boolean)));
+    if (categoryIds.length === 0) {
+      throw new BadRequestException('Product quality categoryPatch requires categoryId or categoryIds');
+    }
+
+    return { mode, categoryIds };
+  }
+
+  private normalizeProductQualityCategoryId(categoryId: unknown): string {
+    if (typeof categoryId !== 'string') {
+      throw new BadRequestException('Product quality category ids must be strings');
+    }
+    const normalized = categoryId.trim();
+    if (!normalized) {
+      throw new BadRequestException('Product quality category ids must be non-empty');
+    }
+    return normalized;
+  }
+
+  private nonEmptyProductQualityPatchObject(value: Record<string, unknown> | undefined, field: string): Record<string, unknown> | null {
+    if (value === undefined || value === null) {
+      return null;
+    }
+    if (!this.isProductQualityPatchObject(value)) {
+      throw new BadRequestException(`Product quality ${field} must be an object`);
+    }
+    return Object.keys(value).length > 0 ? value : null;
+  }
+
+  private isProductQualityPatchObject(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
+  }
+
+  private requireProductQualityPricingService(): PricingService {
+    if (!this.pricingService) {
+      throw new BadRequestException('Product quality pricingPatch cannot be applied because PricingService is unavailable. [MISSING: Goal 25 pricing bulk delegation dependency]');
+    }
+    return this.pricingService;
+  }
+
+  private requireProductQualityAttributesService(): AttributesService {
+    if (!this.attributesService) {
+      throw new BadRequestException('Product quality attributePatch cannot be applied because AttributesService is unavailable. [MISSING: Goal 25 attribute bulk delegation dependency]');
+    }
+    return this.attributesService;
+  }
+
+  private requireProductQualityCategoriesService(): CategoriesService {
+    if (!this.categoriesService) {
+      throw new BadRequestException('Product quality categoryPatch cannot be applied because CategoriesService is unavailable. [MISSING: Goal 25 category bulk delegation dependency]');
+    }
+    return this.categoriesService;
+  }
+
+  private async assertProductQualityAttributePatchSupported(entries: ProductQualityAttributePatchEntry[]): Promise<void> {
+    const attributesService = this.requireProductQualityAttributesService();
+    for (const entry of entries) {
+      const attribute = await attributesService.findOne(entry.attributeId);
+      if (attribute.isActive === false) {
+        throw new BadRequestException(`Product quality attributePatch cannot use inactive attribute: ${entry.attributeId}`);
+      }
+    }
+  }
+
+  private async applyProductQualityAttributePatch(
+    productId: string,
+    entries: ProductQualityAttributePatchEntry[],
+  ): Promise<void> {
+    const attributesService = this.requireProductQualityAttributesService();
+    for (const entry of entries) {
+      await attributesService.setProductAttribute(productId, entry.attributeId, entry.value);
+    }
+  }
+
+  private async resolveProductQualityCategoryPatch(
+    patch: ProductQualityCategoryPatch,
+  ): Promise<ResolvedProductQualityCategoryPatch> {
+    const categoriesService = this.requireProductQualityCategoriesService();
+    const categories: Category[] = [];
+    for (const categoryId of patch.categoryIds) {
+      const category = await categoriesService.findOne(categoryId);
+      if (category.isActive === false) {
+        throw new BadRequestException(`Product quality categoryPatch cannot use inactive category: ${categoryId}`);
+      }
+      categories.push(category);
+    }
+    return { mode: patch.mode, categories };
+  }
+
+  private async applyProductQualityCategoryPatch(
+    productId: string,
+    patch: ResolvedProductQualityCategoryPatch,
+    scope: ProductAccessScope,
+  ): Promise<Product> {
+    return this.withProductTransaction(async (repository, manager) => {
+      const product = await this.findOneWithRepository(repository, productId, scope, 'mutate');
+      const before = this.snapshotProductForEvent(product);
+      const existingCategories = product.categories || [];
+      const categoryMap = new Map<string, Category>();
+
+      if (patch.mode === 'add') {
+        for (const category of existingCategories) {
+          if (category.id) {
+            categoryMap.set(category.id, category);
+          }
+        }
+      }
+      for (const category of patch.categories) {
+        categoryMap.set(category.id, category);
+      }
+
+      const nextCategories = Array.from(categoryMap.values());
+      const nextCategoryIds = nextCategories.map((category) => category.id).filter(Boolean).sort();
+      if (this.sameCategoryIds(before.categoryIds, nextCategoryIds)) {
+        return product;
+      }
+
+      product.categories = nextCategories;
+      const saved = await repository.save(product);
+      const after = this.snapshotProductForEvent(saved);
+      const changedFields = this.changedProductFields({}, before, after);
+      if (changedFields.length > 0) {
+        await this.recordProductEvents(manager, this.productUpdateEvents(before, after, changedFields, scope, 'product_quality_review_bulk_category_patch'));
+      }
+      return saved;
+    });
   }
 
   private qualityItemHasField(item: ProductQualityReviewItem, expectedMissingField: string): boolean {
