@@ -8,7 +8,7 @@ created: 2026-07-02
 last_updated: 2026-07-02
 source_goal: implementation-goals/GOAL-25-product-quality-review-admin.md
 execution_plan: implementation-goals/GOAL-25-product-quality-review-admin-execution-plan.md
-completeness_level: backend-policy-api-slice
+completeness_level: backend-validation-frontend-source-validation
 ```
 
 ## Intent Preservation Chain
@@ -31,7 +31,7 @@ Code: `src/products/products.service.ts`, `src/products/products.controller.ts`,
 
 Validation: `reports/validation/VAL-GOAL-25-product-quality-review-admin.md`.
 
-State Update: `[MISSING: orchestrator-owned docs/IMPLEMENTATION_STATE.md and docs/orchestrator/STATUS.md update after concurrent dirty state is integrated]`.
+State Update: W1-W3 source validation is recorded in Goal 25 validation reports, `docs/IMPLEMENTATION_STATE.md`, and `docs/orchestrator/STATUS.md`; W4/W5 remain open.
 
 ## Policy Version
 
@@ -176,30 +176,32 @@ Implemented response fields:
 - `totals`: requested, activated, blocked, unchanged
 - `results[]`: product id, sku, title, success/activated/blocked, lifecycle before/after, blockingIssues, nextAction, quality item
 
-## Backend Source Slice Status
+## Product Quality Source Status
 
-Implemented in this slice:
+Implemented in W1-W3:
 
 - `GET /api/products/review/quality`
 - `GET /api/products/review/quality/export`
+- `POST /api/products/review/bulk-update`
 - `POST /api/products/review/activate`
 - shared `catalog.product_quality.v1` blocker evaluation extending the existing Goal 02 readiness diagnostics
 - fail-closed missing-description behavior because no generated-description state contract exists in the source
 - activation gate that ignores draft/inactive status as promotion candidates but blocks archived products and mandatory data failures
+- guarded category, attribute, and pricing bulk delegation through existing Catalog services
+- `npm run validate:product-quality` JSON/Markdown/CSV reporting
+- `/dashboard/admin/product-review` frontend admin queue, filters, report export, selection model, guarded bulk editor, and activation action
 
 Deferred:
 
-- `[MISSING: bulk update endpoint implementation]`
-- `[MISSING: validate:product-quality script/reporting implementation]`
-- `[MISSING: admin frontend product review page]`
-- `[MISSING: importer draft gate and channel consumer implementation]`
+- `[MISSING: importer draft gate and channel consumer implementation/validation]`
 - `[MISSING: generated-description state contract]`
+- `[MISSING: runtime deploy/smoke approval]`
 
 ## Validation Script Contract
 
 Package alias: `validate:product-quality`.
 
-Expected implementation artifact: `[UNKNOWN: final script language/path; proposed scripts/validate-product-quality.js]`.
+Implementation artifact: `scripts/validate-product-quality.js`.
 
 Expected outputs:
 
@@ -239,5 +241,5 @@ Machine row minimum shape:
 
 - `[MISSING: docs-rag JWT_TOKEN]`
 - `[MISSING: generated-description state contract]`
-- `[UNKNOWN: final admin route path, /dashboard/admin/product-review or /dashboard/product-review]`
+- Admin route path: `/dashboard/admin/product-review`
 - `[UNKNOWN: production-safe unmasked owner report approval process]`

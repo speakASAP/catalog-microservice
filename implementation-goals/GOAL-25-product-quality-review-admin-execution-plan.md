@@ -2,21 +2,21 @@
 
 ```yaml
 id: EP-CATALOG-25-PRODUCT-QUALITY-REVIEW-ADMIN
-status: backend-policy-api-slice-implemented
+status: w1-w3-source-validated-w4-active
 source_goal: implementation-goals/GOAL-25-product-quality-review-admin.md
 policy_contract: docs/contracts/catalog-product-quality-review.md
 cross_repo_plan: docs/orchestrator/2026-07-02-product-quality-review-admin-cross-repo-plan.md
 owner: catalog orchestrator
 created: 2026-07-02
 last_updated: 2026-07-02
-completeness_level: partial-source-validation
+completeness_level: backend-validation-frontend-source-validation
 ```
 
 ## Metadata
 
 Branch: `main` currently has existing dirty work. Implementation should use an isolated branch or worktree after W0 is accepted and current Goal 24/source changes are isolated.
 
-Lifecycle state: W1 backend policy/API source slice implemented without deployment. Frontend, validation script, importer/channel consumers, runtime smoke, and deployment remain dependency-gated.
+Lifecycle state: W1 backend policy/API, W2 validation/reporting, and W3 admin frontend are source-validated on `main`. W4 import/channel consumer work is active in Codex thread `019f24ba-0695-7bc2-aff7-27d9df27ea9a`. Runtime smoke and deployment remain owner/deploy-gated.
 
 Filename note: this plan intentionally uses a product-quality-specific filename because `implementation-goals/GOAL-25-execution-plan.md` is already occupied by a concurrent dirty Goal 25 canonical-json propagation lane.
 
@@ -159,16 +159,16 @@ cd services/frontend && npm run build
 npm run validate:product-quality -- --format json --out reports/validation/product-quality-audit.json
 ```
 
-W1 source-slice validation completed in `reports/validation/VAL-GOAL-25-product-quality-review-admin.md`:
+Completed source validation:
 
-- `npm test -- --runInBand src/products/products.service.spec.ts` passed, 1 suite / 37 tests.
-- `npm run build` passed.
-- `git diff --check` passed.
+- W1 backend/API: `reports/validation/VAL-GOAL-25-product-quality-review-admin.md`.
+- W2 validation/reporting: `reports/validation/VAL-GOAL-25-product-quality-validation-script.md`.
+- W3 admin UI: `reports/validation/VAL-GOAL-25-product-quality-review-admin-ui.md`.
+- Latest orchestrator verification after W3 commit: `npm test -- --runInBand src/products/products.service.spec.ts` passed, 1 suite / 41 tests; `cd services/frontend && npm run build` passed with `/dashboard/admin/product-review`; `git diff --check` passed.
 
 Deferred validation:
 
-- `[MISSING: validate:product-quality script/reporting implementation]`
-- `[MISSING: frontend build for admin review UI because UI is not implemented in this slice]`
+- `[MISSING: W4 import/channel consumer validation]`
 - `[MISSING: runtime smoke/deploy approval]`
 
 Runtime validation after explicit deploy approval only:
@@ -214,10 +214,10 @@ Workstreams:
 
 - W0 policy contract and IPS baseline: ready now; documentation only; allowed files are the Goal 25 contract, execution plan, and pre-coding validation report.
 - W1 backend evaluator/API: dependency-gated on W0 acceptance; source ownership limited to backend products/media/pricing/auth conventions and focused tests.
-- W2 validation/reporting: dependency-gated on W1 evaluator contract; owns validation script and report artifacts.
-- W3 frontend admin: dependency-gated on W1 API shape; owns dashboard route/components/API client only.
-- W4 import/channel consumers: dependency-gated on W0/W1; read-only cross-repo discovery first, implementation only after contract stabilizes.
-- W5 final integration: final integration; owns conflict resolution, status updates, full validation, and deploy-readiness evidence.
+- W2 validation/reporting: source-validated; owns validation script and report artifacts.
+- W3 frontend admin: source-validated; owns dashboard route/components/API client only.
+- W4 import/channel consumers: active in Codex thread `019f24ba-0695-7bc2-aff7-27d9df27ea9a`; read-only cross-repo discovery first, implementation only when safe and bounded.
+- W5 final integration: active in the orchestrator thread; owns conflict resolution, status updates, full validation, and deploy-readiness evidence.
 
 ## Agent Handoff Prompt
 
@@ -227,10 +227,10 @@ You are implementing Catalog Goal 25 Product Quality Review Admin. Work only on 
 
 - [x] W0 pre-coding gate accepted
 - [x] Backend evaluator/API implemented
-- [ ] Validation script/report implemented (`[MISSING: validate:product-quality script/reporting implementation]`)
-- [ ] Frontend admin review UI implemented
-- [ ] Import/channel consumer blockers verified
+- [x] Validation script/report implemented
+- [x] Frontend admin review UI implemented
+- [ ] Import/channel consumer blockers verified (`W4 active: 019f24ba-0695-7bc2-aff7-27d9df27ea9a`)
 - [x] Focused backend tests complete
-- [x] W1 validation evidence collected
+- [x] W1/W2/W3 validation evidence collected
 - [x] Goal 25 contract/report documentation updated
-- [x] Deviations documented for deferred bulk update, validation script, frontend, importer/channel consumers, generated-description state, and runtime deploy approval
+- [x] Deviations documented for deferred importer/channel consumers, generated-description state, and runtime deploy approval

@@ -1,3 +1,13 @@
+## 2026-07-02 - Goal 25 Product Quality Review Admin W1-W3
+
+Change: completed and pushed the product-quality admin source slice through W3. Catalog now has the Goal 25 review/export/bulk-update/activate backend API, `npm run validate:product-quality` report generation, and a protected admin UI at `/dashboard/admin/product-review` with filters, owner report export, explicit selection, guarded bulk update controls, and activation through the Catalog quality gate.
+
+Validation evidence: `npm test -- --runInBand src/products/products.service.spec.ts` passed with 1 suite / 41 tests; `cd services/frontend && npm run build` passed and listed `/dashboard/admin/product-review`; `git diff --check` passed. W3 validation details are recorded in `reports/validation/VAL-GOAL-25-product-quality-review-admin-ui.md`.
+
+Boundary decision: no deploy, migration, production data mutation, Warehouse stock ownership change, product deletion, marketplace publication, queueing, confirmation, or secret output was run. Optional completeness fields remain separate from mandatory owner blockers. W4 import/channel consumer work is active in Codex thread `019f24ba-0695-7bc2-aff7-27d9df27ea9a`.
+
+Next action: finish W4 import/channel consumer validation or bounded implementation, then run W5 full validation and deployment-readiness review.
+
 ## 2026-07-02 - Goal 25 Canonical JSON Propagation Runtime Closed
 
 Change: confirmed the canonical JSON/manual marketplace override slice after the k3s recovery. The additive `manual_overrides`/`source_state` migration is applied, Catalog backend and frontend are available `1/1`, and the deployed marketplace-fields route is reachable behind Auth.
