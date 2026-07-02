@@ -2,9 +2,9 @@
 
 ```yaml
 id: VAL-GOAL-25-W4-IMPORT-CHANNEL-CONSUMERS
-status: source-implemented-partial-cross-repo-handoff
+status: bazos-lane-complete-cross-channel-rollup-active
 created: 2026-07-02
-last_updated: 2026-07-02
+last_updated: 2026-07-03
 primary_repository: /home/ssf/Documents/Github/catalog-microservice
 worker_role: W4 cross-repo integration owner
 source_goal: implementation-goals/GOAL-25-product-quality-review-admin.md
@@ -29,11 +29,11 @@ Execution Plan: W4 lane in `implementation-goals/GOAL-25-product-quality-review-
 
 Coding Prompt: delegated W4 prompt from thread `019f2358-4c0c-7a42-b68d-7d96846a9eb9`.
 
-Code: Bazos source-only changes listed below. No Catalog, Warehouse, Allegro, Aukro, FlipFlop, or Heureka source edits were made by this worker.
+Code: Bazos source changes were completed, pushed to `main`, and deployed by the Bazos worker. This Catalog orchestrator update only records status/report evidence; no Catalog backend source, Warehouse, Allegro, Aukro, FlipFlop, or Heureka source edits were made here.
 
-Validation: focused Bazos unit specs, shared build, and whitespace diff check passed. No deployment, production DB mutation, queue execution, marketplace publish, Warehouse mutation, or live smoke was run.
+Validation: Bazos handoff evidence confirms whitespace diff check, focused shared tests, shared build, runtime secret mapping dry-run, pod-to-Catalog readiness/review smokes, production health, and deployment readiness. No Catalog deployment, production DB mutation, Warehouse mutation, product deletion, queue publish action, marketplace publication, or secret output was run by this Catalog closure.
 
-State Update: this report records W4 handoff evidence for W5; broad orchestrator status integration remains W5-owned because several related repos have concurrent dirty Goal 25 work.
+State Update: Bazos consumer lane is complete and accepted for W5. Cross-channel rollup remains active for Allegro, Aukro, FlipFlop, Heureka, and final integration/deploy-readiness evidence.
 
 ## Changed Files
 
@@ -96,12 +96,30 @@ No Allegro edit was made by this worker. W5 must integrate with the concurrent A
 
 ### Bazos
 
-This worker implemented the bounded missing core described above.
+Status: complete, pushed, deployed, and accepted by the Catalog orchestrator.
+
+Final handoff evidence:
+
+- Repository clean and synced on `main` at `b3576a6 docs: record bazos goal25 deployment`.
+- Runtime image `localhost:5000/bazos-service:b583b10` deployed.
+- Deployment reported ready=1 updated=1 available=1.
+- Production health returned `status=ok`.
+- Durable report: `/home/ssf/Documents/Github/bazos/reports/validation/2026-07-02-goal-25-bazos-product-quality-consumer.md`.
+- Catalog readiness/review endpoint smokes from the Bazos pod returned HTTP 200 without printing secrets.
+
+Implemented consumer contract:
+
+- `CatalogClientService.getProductReadiness(productId, authorization)` supports bearer propagation and internal service-token headers.
+- Bazos `prepare` fails closed before draft create/update when Catalog blockers remain or readiness is unavailable.
+- Bazos `confirm` re-checks Catalog readiness before queueing a draft.
+- Publish-policy preflight consumes Catalog quality blockers before publish-adjacent queue paths.
+- UI surfaces sanitized Catalog blocker codes/messages and disables confirmation while blocked.
+- Bazos-created Catalog products remain draft/non-active; Bazos ad preparation does not filter out draft Catalog products.
 
 Important boundary:
 
-- The new publish policy gate uses Catalog readiness only; it does not publish, queue, mutate Warehouse, or alter Bazos identity/session/challenge controls.
-- Runtime readiness depends on a configured Catalog internal token in Bazos runtime environment. This was not verified live because no deploy or secret inspection was in scope.
+- The policy gate uses Catalog readiness only; it does not publish, mutate Warehouse, bypass identity/session/challenge controls, or own stock quantity.
+- Runtime `CATALOG_INTERNAL_SERVICE_TOKEN` was mapped from the existing Auth secret; token values were not printed.
 
 ### Aukro
 
@@ -156,6 +174,33 @@ ssh alfares 'cd /home/ssf/Documents/Github/bazos && git diff --check'
 # PASS: no output
 ```
 
+```bash
+ssh alfares 'cd /home/ssf/Documents/Github/bazos && kubectl apply --dry-run=server -f k8s/external-secret.yaml -n statex-apps'
+# PASS
+```
+
+```bash
+ssh alfares 'cd /home/ssf/Documents/Github/bazos && npm --prefix shared test -- bazos-catalog-sell-action.service.spec.ts publish-policy.service.spec.ts bazos-ad.service.spec.ts'
+# PASS: 3 suites, 67 tests
+```
+
+```bash
+ssh alfares 'cd /home/ssf/Documents/Github/bazos && npm --prefix shared run build'
+# PASS
+```
+
+```bash
+ssh alfares 'cd /home/ssf/Documents/Github/bazos && npm --prefix services/aukro-service run build'
+# PASS: Bazos monorepo command from worker report
+```
+
+Runtime evidence from Bazos handoff:
+
+- Pod-to-Catalog review endpoint smoke: HTTP 200, token present, no secret printed.
+- Pod-to-Catalog exact readiness endpoint smoke: HTTP 200, issues array present, no secret printed.
+- Production health `https://bazos.alfares.cz/health`: `status=ok`.
+- Deployment: ready=1 updated=1 available=1 on image `localhost:5000/bazos-service:b583b10`.
+
 Read-only inspection commands were also run across all seven repos with `git status --short --branch`, targeted `rg`, and targeted `sed`/`nl` source reads.
 
 ## Dirty Worktree Caveats
@@ -163,7 +208,6 @@ Read-only inspection commands were also run across all seven repos with `git sta
 Final observed dirty worktrees after concurrent work:
 
 - `allegro`: dirty Goal 25 consumer files and `reports/validation/VAL-GOAL-25-allegro-catalog-quality-consumer.md`.
-- `bazos`: this worker's six source/spec files plus concurrent docs/UI/catalog sell-action files.
 - `aukro`: dirty Goal 25 blocker files and IPS artifacts.
 - `flipflop`: ahead one commit `b1817e7 feat: consume catalog quality blockers`.
 - `heureka`: dirty Goal 25 quality/feed/dashboard files and validation report.
@@ -172,8 +216,7 @@ W5 must not stage all dirty files blindly. Stage by owner/workstream after inspe
 
 ## Remaining Blockers
 
-- `[MISSING: W5 integration review of concurrent Allegro/Aukro/FlipFlop/Heureka/Bazos dirty worktrees]`
-- `[MISSING: Bazos runtime verification that CATALOG_INTERNAL_SERVICE_TOKEN or INTERNAL_SERVICE_TOKEN is configured for protected Catalog readiness calls]`
+- `[MISSING: W5 integration review of concurrent Allegro/Aukro/FlipFlop/Heureka dirty worktrees]`
 - `[MISSING: full cross-service validation matrix after all W4 consumer changes are merged]`
 - `[MISSING: deploy approval]`
 - `[MISSING: authorized runtime smoke token for protected Catalog/channel checks]`
@@ -183,7 +226,7 @@ W5 must not stage all dirty files blindly. Stage by owner/workstream after inspe
 
 Recommended merge/order:
 
-1. Inspect and stage Bazos W4 source/spec files from this report separately from concurrent Bazos docs/UI/catalog sell-action files.
+1. Treat Bazos as complete and do not reopen the deployed consumer lane unless a regression appears.
 2. Integrate concurrent Allegro, Aukro, FlipFlop, and Heureka Goal 25 consumer outputs in repo-specific order, resolving only actual file overlaps.
 3. Re-run per-repo focused tests/builds, then Catalog validation:
    - `npm test -- --runInBand src/products/products.service.spec.ts`
