@@ -51,7 +51,9 @@ Order-affinity replay is no longer missing at the source-contract level:
 Live replay remains dependency-gated:
 
 - The read-only Marketing dry-run returned `inputRecords=0`, `acceptedCreatedEvents=0`, `aggregatePairs=0`, and `candidates=[]`.
-- A non-empty publish run requires qualifying historical paid multi-product Orders rows, an owner-reviewed mutation window, and stale-row pruning/replacement semantics.
+- A non-empty central Orders publish run requires qualifying historical paid multi-product Orders rows, an owner-reviewed mutation window, and stale-row pruning/replacement semantics.
+- Allegro one-time marketplace evidence has been published through the existing Marketing/Catalog path, but durable scheduling is now governed by `docs/contracts/catalog-marketplace-affinity-backfill.md`.
+- Marketplace-owned replay endpoints remain implementation-gated until Marketing accepts marketplace source envelopes without requiring temporary Orders-compatible `/tmp` exports.
 
 Bundle checkout remains outside this contract:
 
@@ -223,7 +225,10 @@ First version semantics:
 - `[MISSING: docs-rag JWT_TOKEN]`
 - `[MISSING: qualifying historical paid multi-product Orders rows for non-empty replay evidence]`
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`
-- `[MISSING: pruning/replacement semantics for stale affinity rows]`
+- `[MISSING: Marketing parser support for marketplace-owned replay source envelopes]`
+- `[MISSING: durable Marketing backfill run ledger and idempotency key registry]`
+- `[MISSING: Allegro-owned protected replay endpoint so future runs do not require a temporary SQL export]`
+- `[MISSING: Catalog source/window scoped stale-affinity pruning or replacement API]`
 - `[MISSING: Catalog bundle ownership decision: read-only candidate, standalone bundle aggregate, or product-like SKU]`
 - `[MISSING: Orders bundle create-order contract and bundle identity representation beyond normal line items]`
 - `[MISSING: Warehouse bundle reservation contract for stock and fulfillment effects]`

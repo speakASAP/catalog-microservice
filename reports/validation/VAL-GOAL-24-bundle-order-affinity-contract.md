@@ -94,6 +94,32 @@ Commands and results:
 
 Boundary: Catalog relation rows were inserted/updated through the approved internal batch endpoint only. No central Orders row, Warehouse row, Payments row, checkout/cart state, product row, marketplace offer/listing, deployment, Kubernetes manifest, or service source code was changed. No customer/buyer/address/payment/provider data, raw marketplace payloads, token values, or secret values were printed.
 
+
+## Scheduled Marketplace Backfill Contract
+
+Owner-approved Allegro publish evidence is now separated from durable scheduling infrastructure.
+
+Defined contract:
+
+- `docs/contracts/catalog-marketplace-affinity-backfill.md`
+
+Key decisions:
+
+- Marketplace services must own protected replay endpoints or equivalent owner-run exports for their local order history.
+- Allegro is the first ready producer because its one-time qualified evidence already published 16 Catalog relations.
+- Marketing must add parser/normalizer support for marketplace-owned source envelopes; the current parser only accepts `source=orders-microservice`, and the direct `source=allegro-service` dry-run failed closed with `order_event_source_invalid=8`.
+- Marketing must add a durable backfill run ledger and scheduled dry-run-first orchestration before marketplace-wide automation.
+- Catalog remains upsert-only until a source/window scoped pruning or replacement API and owner retention policy exist.
+
+New blockers:
+
+- `[MISSING: Marketing parser support for marketplace-owned replay source envelopes]`
+- `[MISSING: durable Marketing backfill run ledger and idempotency key registry]`
+- `[MISSING: Allegro-owned protected replay endpoint so future runs do not require a temporary SQL export]`
+- `[MISSING: scheduled dry-run matrix across Allegro, Aukro, Bazos, FlipFlop, and central Orders]`
+- `[MISSING: Catalog source/window scoped stale-affinity pruning or replacement API]`
+- `[MISSING: owner-approved retention/decay policy for stale affinity rows]`
+
 ## Local Validation
 
 ```bash
@@ -161,4 +187,4 @@ Merge order: source contract verification, then non-empty replay evidence, then 
 
 ## Next Action
 
-Run a read-only Orders aggregate/count check or existing statistics endpoint for paid multi-product orders without printing customer, address, payment, or provider data.
+Implement W1 Allegro protected replay producer or owner-run CLI export, then update Marketing parser support for marketplace-owned replay envelopes before enabling any scheduled publish.

@@ -95,3 +95,18 @@ Shared files/contracts: `docs/contracts/catalog-product-relations.md`, Orders `O
 ## Rollback Notes
 
 Before migration application, rollback is source-only: revert the additive files and `ProductRelationsModule` import. After migration application, rollback requires dropping or ignoring `product_relations` only with explicit DB approval.
+
+## 2026-07-03 Scheduled Marketplace Backfill Contract Update
+
+Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update.
+
+- Vision: marketplace purchase history can improve related-product surfaces without moving customer, payment, address, stock, checkout, or publication ownership into Catalog.
+- Goal Impact: the owner-approved Allegro one-time affinity publish is now translated into a repeatable implementation contract.
+- System: marketplace services own replay producers, Marketing owns aggregation/scheduling/idempotency, and Catalog owns upsert-only relation persistence.
+- Feature: protected marketplace replay candidates and scheduled dry-run-first backfill orchestration.
+- Task: define Allegro replay endpoint semantics, Marketing run ledger/idempotency, Catalog pruning gates, and cross-channel parallel workstreams.
+- Execution Plan: docs-only contract update; no service code or runtime mutation.
+- Coding Prompt: record `[MISSING: ...]` blockers instead of inventing parser, endpoint, ledger, or pruning contracts.
+- Code: `docs/contracts/catalog-marketplace-affinity-backfill.md` and linked Goal 24 docs.
+- Validation: `git diff --check`.
+- State Update: W1 Allegro replay producer is ready now; Marketing parser/ledger and Catalog prune/replace work are dependency-gated.
