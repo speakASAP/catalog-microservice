@@ -1,3 +1,4 @@
+2026-07-03: Goal 25 live authorized smoke refresh completed. Allegro Goal 25 source commit `5d189ee` was validated and deployed across service/api-gateway/settings/imports/frontend images; protected Catalog smoke passed with 11 pass / 0 fail, read-only channel-status smoke passed with 19 pass / 0 fail, and live product-quality API validation scanned 60 products with 45 blocked and 15 ready in read-only mode. Bazos authorized draft smoke stayed skipped as side-effect-risk. No marketplace publish/confirm/queue, Warehouse mutation, production data mutation, or Auth/RBAC change was performed.
 # Catalog Implementation State
 
 Last updated: 2026-07-03.

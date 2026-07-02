@@ -190,3 +190,17 @@ Additional remote-only validation was run after the Aukro consumer deployment an
 | Runtime health | Catalog, Allegro, Bazos, Aukro, and Heureka public health endpoints returned HTTP 200; FlipFlop product-quality verification passed through its repo script rather than `/health`, which is not its public health route. |
 
 All listed checks preserved the boundary that Catalog owns product quality/readiness, Warehouse owns stock quantities, and channel services own marketplace publication/feed/account behavior.
+
+## 2026-07-03 Live Authorized Smoke Refresh
+
+Owner-approved protected smoke validation was rerun after aligning Allegro runtime with its Goal 25 source commit.
+
+| Scope | Evidence |
+|---|---|
+| Allegro deploy alignment | Allegro `main` at `5d189ee Guard Allegro mutations on Catalog quality` was validated and deployed; `allegro-service`, `allegro-api-gateway`, `allegro-settings`, `allegro-imports`, and `allegro-frontend` rolled out successfully on image tag `5d189ee`. |
+| Allegro source validation | `git diff --check`, `catalog-sell-action.spec.ts`, `offers.catalog-quality.spec.ts`, `policy-engine.spec.ts`, `publish-lifecycle.update-terminal.spec.ts`, `npm --prefix shared run build`, and `npm --prefix services/allegro-service run build` passed. |
+| Authorized Catalog smoke | `CATALOG_SMOKE_INTERNAL_SERVICE_TOKEN=<secret> CATALOG_SMOKE_SERVICE_NAME=catalog-microservice npm run smoke:e2e:authorized` passed with 11 pass, 4 skip, 0 fail. |
+| Read-only channel status smoke | `CATALOG_SMOKE_ENABLE_HEUREKA_READINESS=true CATALOG_SMOKE_ASSERT_STOCK=true npm run smoke:e2e:channel-status` passed with 19 pass, 1 skip, 0 fail. Channel statuses remained channel-owned and blocked on expected auth/account requirements. |
+| Live product-quality API validation | `CATALOG_PRODUCT_QUALITY_API_BASE=https://catalog.alfares.cz/api CATALOG_INTERNAL_SERVICE_TOKEN=<secret> npm run validate:product-quality -- --format json --max-pages 3` passed in API/read-only mode: products=60, blocked=45, readyForActivation=15, blockers=[]. |
+
+The Bazos authorized draft smoke remained intentionally skipped because the script marks it as side-effect-risk. No token value was intentionally printed by the smoke commands, and no marketplace publish/confirm/queue action, Warehouse mutation, production data mutation, or Auth/RBAC change was performed.

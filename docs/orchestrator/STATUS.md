@@ -1,3 +1,13 @@
+## 2026-07-03 - Goal 25 Live Authorized Smoke Refresh
+
+Change: aligned Allegro runtime with Goal 25 source commit `5d189ee` and reran protected Catalog live smokes. Allegro service, api-gateway, settings, imports, and frontend rollouts completed on image tag `5d189ee`.
+
+Validation evidence: Allegro diff check, focused Goal 25 specs, shared build, and service build passed. Catalog authorized smoke passed with 11 pass / 4 skip / 0 fail. Read-only channel-status smoke passed with 19 pass / 1 skip / 0 fail. Live product-quality API validation passed in read-only API mode with products=60, blocked=45, readyForActivation=15, blockers=[].
+
+Boundary: Bazos authorized draft smoke remained skipped because it is side-effect-risk. No marketplace publish/confirm/queue action, Warehouse mutation, production data mutation, or Auth/RBAC change was performed.
+
+Next action: no Goal 25 action remains unless owner wants side-effect-risk Bazos draft smoke or marketplace-account-specific live checks.
+
 ## 2026-07-03 - Goal 25 W4 Cross-Channel Subagent Rollup Complete
 
 Change: completed the Goal-driven subagent rollup for all Catalog product-quality channel consumers. Allegro, Aukro, FlipFlop, and Heureka returned clean pushed handoffs after the previously accepted Bazos lane. W4 channel consumer implementation/validation is now complete; W5 remains limited to deploy-readiness/runtime smoke decisions where source commits are not deployed.
