@@ -1749,3 +1749,10 @@ Runtime evidence:
 Boundary decision: no Catalog backend/frontend deployment, marketplace publish, draft confirm, queue action, Warehouse stock mutation, product data mutation, destructive command, or secret output was performed. Bazos and Aukro runtime evidence remains the prior accepted deployed evidence.
 
 Remaining blockers: none for Goal 25 channel consumer runtime smoke closure. Protected authenticated draft/publish action smokes remain intentionally out of scope unless a side-effect-safe owner-approved scenario is created.
+
+
+Final sweep addendum:
+
+- Heureka was observed clean at `cf14a73 fix: recognize zero-stock feed exclusions` with live service/api-gateway deployments on tag `cf14a73`, superseding the earlier `7ea1f79` deploy evidence from this run.
+- FlipFlop was observed at `c0d20d7 chore: update generatedAt timestamp in orders readiness smoke report`; live deployments remained ready=1 updated=1 available=1. Untracked `services/frontend/lib/hooks/useVisiblePolling.ts` was unrelated and left untouched.
+- Aukro retained unrelated dirty `services/aukro-service/src/ui/ui.controller.ts` polling fields and was left untouched.

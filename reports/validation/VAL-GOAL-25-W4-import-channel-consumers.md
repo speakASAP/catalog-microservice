@@ -301,15 +301,15 @@ Allegro evidence:
 
 Heureka evidence:
 
-- Repository: `/home/ssf/Documents/Github/heureka`, clean `main...origin/main` at `7ea1f79 docs: clarify heureka goal 25 report refresh` before deploy.
+- Repository: `/home/ssf/Documents/Github/heureka`, clean `main...origin/main` at `7ea1f79 docs: clarify heureka goal 25 report refresh` before this deploy; final sweep observed concurrent clean `main...origin/main` at `cf14a73 fix: recognize zero-stock feed exclusions`.
 - Deploy command: `./scripts/deploy.sh` completed successfully.
-- Runtime images built/pushed: `localhost:5000/heureka-service:7ea1f79` and `localhost:5000/heureka-api-gateway:7ea1f79`.
+- Runtime images built/pushed during this deploy: `localhost:5000/heureka-service:7ea1f79` and `localhost:5000/heureka-api-gateway:7ea1f79`; final sweep observed live deployments at `localhost:5000/heureka-service:cf14a73` and `localhost:5000/heureka-api-gateway:cf14a73` from a concurrent follow-up commit.
 - Rollouts succeeded for `heureka-service` and `heureka-api-gateway`.
 - Public smoke from `alfares`: `https://heureka.alfares.cz/health` returned HTTP 200 with `status=ok`; `https://heureka.alfares.cz/heureka/feed?type=heureka_cz` returned HTTP 200 and XML beginning with `<?xml version="1.0" encoding="UTF-8"?><SHOP>`.
 
 FlipFlop evidence:
 
-- Repository: `/home/ssf/Documents/Github/flipflop`, clean `main...origin/main` at `7a092c2`; Goal 25 consumer source commit `3462917` is included. The preflight dirty generated validation timestamp disappeared by final repo check and was not manually reverted.
+- Repository: `/home/ssf/Documents/Github/flipflop`, clean `main...origin/main` at `7a092c2` during deploy; Goal 25 consumer source commit `3462917` is included. Final sweep observed `main...origin/main` at `c0d20d7 chore: update generatedAt timestamp in orders readiness smoke report` plus unrelated untracked `services/frontend/lib/hooks/useVisiblePolling.ts`; those files were not touched by this Catalog closure.
 - Deploy command: `git diff --check && ./scripts/deploy.sh` built/pushed images and applied manifests, but exited non-zero because the script timed out while new pods were still pulling/starting.
 - Read-only follow-up confirmed recovery: all six deployments rolled out successfully and reported ready=1 updated=1 available=1 for `flipflop-service`, `flipflop-frontend`, `flipflop-product-service`, `flipflop-cart-service`, `flipflop-order-service`, and `flipflop-user-service`.
 - Runtime images are `localhost:5000/flipflop-*:latest`, with `flipflop-product-service` advanced from the prior `27b1eb9` tag to the current `latest` deployment.
@@ -317,3 +317,13 @@ FlipFlop evidence:
 - Recovery evidence: `flipflop-order-service` initially had a startup probe failure while the new image was starting, then rolled out successfully without corrective mutation.
 
 Final W5 state: Bazos, Aukro, Allegro, Heureka, and FlipFlop have complete Goal 25 consumer source validation and runtime evidence. Bazos/Aukro runtime evidence was recorded before this run; Allegro/Heureka/FlipFlop runtime deploy/read smoke was completed in this run.
+
+
+Final sweep addendum:
+
+- `catalog-microservice`: clean `main...origin/main` at `aaedc96 docs: record goal25 channel runtime closure` before this addendum.
+- `allegro`: clean `main...origin/main` at `5d189ee`; live deployments ready=1 updated=1 available=1 on tag `5d189ee`.
+- `heureka`: clean `main...origin/main` at `cf14a73`; final live deployments ready=1 updated=1 available=1 on tag `cf14a73`, superseding the earlier `7ea1f79` deploy evidence during this run.
+- `flipflop`: final live deployments ready=1 updated=1 available=1; repo at `c0d20d7` with unrelated untracked `services/frontend/lib/hooks/useVisiblePolling.ts` left untouched.
+- `bazos`: clean `main...origin/main` at `b3576a6`.
+- `aukro`: `main...origin/main` at `f276a8c` with unrelated dirty `services/aukro-service/src/ui/ui.controller.ts` polling fields left untouched.
