@@ -14,7 +14,7 @@ Sellers can bring their own products into the Alfares Catalog and explicitly mar
 
 ## Goal Impact
 
-The platform gains a governed product-distribution network: product owners get more sales reach, and sellers get a broader assortment without manually sourcing every item. The default stays conservative: Alfares products are included, products from other sellers are hidden until the seller opts in, and each product owner must opt in before their product joins the community catalog.
+The platform gains a governed product-distribution network: product owners get more sales reach, and sellers get a broader assortment without manually sourcing every item. The default stays fail-closed: newly provisioned sellers start with Alfares products hidden and community products hidden. A seller must explicitly opt in to Alfares products, and community products require both owner resale opt-in and viewer community opt-in.
 
 ## Source Of Truth
 

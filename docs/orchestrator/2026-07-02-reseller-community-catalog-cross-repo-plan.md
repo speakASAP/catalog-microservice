@@ -21,7 +21,7 @@ Sellers can publish selected owned products into a community resale catalog, and
 
 ## Goal Impact
 
-This creates a marketplace-like supply layer inside the Alfares platform. Alfares products remain visible by default for newly registered sellers. Products from other users require two opt-ins: the owner enables resale on the product, and the viewer enables products from other sellers.
+This creates a marketplace-like supply layer inside the Alfares platform. Newly registered sellers start with an empty effective catalog by default: Alfares products are hidden until the seller explicitly enables them, and products from other users require two opt-ins: the owner enables resale on the product, and the viewer enables products from other sellers.
 
 ## System Boundary
 
