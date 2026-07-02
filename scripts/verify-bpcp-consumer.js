@@ -35,7 +35,7 @@ const checks = [
       'CATALOG_BPCP_EVENTS_ROUTING_KEYS: "bpcp.process.published.v1,bpcp.process.paused.v1,bpcp.process.retired.v1"',
       'CATALOG_BPCP_EVENTS_QUEUE: "catalog.bpcp.process-lifecycle.v1"',
       'CATALOG_BPCP_HOLIDAY_ELIGIBLE_CATEGORY_IDS: ""',
-      'CATALOG_BPCP_HOLIDAY_ELIGIBLE_TAGS: ""',
+      'CATALOG_BPCP_HOLIDAY_ELIGIBLE_TAGS: "allegro-offer:18106037370"',
     ],
   },
   {
