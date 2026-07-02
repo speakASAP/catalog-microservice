@@ -260,7 +260,7 @@ Acceptance criteria:
 
 ## Goal 26 - BPCP Holiday Discount Catalog Consumer
 
-Status: source implementation in progress
+Status: runtime complete; blocked only on final eligibility allow-list/durable projection-store decisions
 
 Intent: Catalog consumes BPCP Holiday Discount process publication events and exposes fail-closed product eligibility facts without becoming discount or process owner.
 
@@ -273,7 +273,7 @@ Acceptance criteria:
 
 ## Goal 19 - Canonical Content Connectors
 
-Status: source complete across Catalog and channel services; runtime deployment pending clean isolation
+Status: runtime complete; optional FlipFlop shared auth error normalization remains follow-up
 
 Intent: Catalog stores one canonical structured product description and connector renderers generate marketplace-specific outputs without letting any channel redefine product truth.
 

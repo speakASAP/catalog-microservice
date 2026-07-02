@@ -2,11 +2,11 @@
 
 ```yaml
 id: GOAL-24-product-relations
-status: source-implemented
+status: runtime-deployed
 owner_role: catalog worker
 created: 2026-07-02
-deployment_status: not_deployed
-database_status: migration_not_applied
+deployment_status: deployed
+database_status: migration_applied
 ```
 
 ## Goal
@@ -36,6 +36,12 @@ Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding P
 - Existing product, pricing, Warehouse, Orders, Payments, channel, deletion, and deploy flows are not changed.
 - Focused Jest, `npm run build`, and `git diff --check` evidence is recorded.
 
+## Runtime Closure
+
+As of 2026-07-03, the additive `product_relations` migration is applied and the Catalog relation API is deployed. Runtime evidence in `docs/orchestrator/STATUS.md` confirms protected related-products readback, Marketing-owned `order_affinity` batch upsert for controlled canary rows, read-only `bundle-candidates` responses, active current-price evidence, and live FlipFlop-mapped product-pair readback.
+
+Catalog still does not own Orders historical affinity replay, bundle checkout, Payments totals, Warehouse stock mutation, channel publication, or marketplace presentation.
+
 ## Allowed Files
 
 - `docs/contracts/catalog-product-relations.md`
@@ -59,7 +65,6 @@ Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding P
 - `[MISSING: scripts/pre_coding_gate.py]`
 - `[MISSING: scripts/strict_doc_audit.py]`
 - `[MISSING: Orders-owned affinity producer/event contract]`
-- `[MISSING: owner-approved migration application and deployment window]`
 - `[MISSING: bundle checkout contract owned by FlipFlop/Orders/Payments]`
 - `[MISSING: runtime backfill source for historical order-affinity scores]`
 
@@ -71,7 +76,7 @@ Future lanes are dependency-gated:
 
 - Orders affinity producer: blocked on `[MISSING: Orders-owned affinity producer/event contract]`.
 - Historical relation backfill: blocked on `[MISSING: owner-approved historical order-affinity source and live DB mutation approval]`.
-- Frontend/operator relation display: blocked on backend migration/deploy approval.
+- Frontend/operator relation display: ready to consume deployed related-products and bundle-candidates read APIs when a UI owner is assigned.
 - Bundle checkout: blocked on `[MISSING: bundle checkout contract owned by FlipFlop/Orders/Payments]`.
 
 ## Rollback Notes
