@@ -1,7 +1,7 @@
 {
   "policyId": "catalog.product_quality.v1",
   "contract": "catalog.product_quality.validation_report.v1",
-  "generatedAt": "2026-07-02T21:03:23.987Z",
+  "generatedAt": "2026-07-02T22:24:21.612Z",
   "source": {
     "mode": "synthetic",
     "label": "synthetic/sanitized",
@@ -15,7 +15,6 @@
     "ownerIdentifiersMasked": true
   },
   "blockers": [
-    "[MISSING: generated description state contract]",
     "[MISSING: live Catalog API base/token; synthetic validation mode used]"
   ],
   "totals": {
