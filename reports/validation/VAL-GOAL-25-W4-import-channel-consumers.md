@@ -327,3 +327,9 @@ Final sweep addendum:
 - `flipflop`: final live deployments ready=1 updated=1 available=1; repo at `c0d20d7` with unrelated untracked `services/frontend/lib/hooks/useVisiblePolling.ts` left untouched.
 - `bazos`: clean `main...origin/main` at `b3576a6`.
 - `aukro`: `main...origin/main` at `f276a8c` with unrelated dirty `services/aukro-service/src/ui/ui.controller.ts` polling fields left untouched.
+
+
+Final closure refresh:
+
+- Heureka advanced again after the prior sweep and is live healthy on service/api-gateway tag `336fc90 fix: use warehouse service token for heureka stock reads`.
+- Heureka repo final observed state: `main...origin/main` at `336fc90` with unrelated dirty `services/heureka-service/src/public/public-dashboard-routes.self-test.ts` and `services/heureka-service/src/public/public.controller.ts`; those files were not touched by the Catalog Goal 25 closure.

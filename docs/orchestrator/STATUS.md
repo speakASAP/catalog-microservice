@@ -6,6 +6,8 @@ Intent Preservation Chain: Vision - Catalog remains product truth for sellable c
 
 Boundary decision: no Catalog deploy, production data mutation, Warehouse mutation, marketplace publish, draft confirm, queue action, destructive command, or secret output was performed for this closure. Side-effect-risk authenticated draft/publish-path smokes remain out of scope unless separately approved with a safe scenario.
 
+Final runtime refresh: Heureka advanced concurrently after the earlier `cf14a73` sweep and is now live healthy on tag `336fc90` for service/api-gateway. The Heureka repo is `main...origin/main` at `336fc90` with unrelated dirty public dashboard/controller files left untouched.
+
 Next action: No Goal 25 action needed.
 
 ## 2026-07-03 - Goal 25 Live Authorized Smoke Refresh
