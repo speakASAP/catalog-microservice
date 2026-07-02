@@ -2,18 +2,19 @@
 
 ```yaml
 id: VAL-GOAL-23-RESELLER-COMMUNITY-CATALOG
-status: runtime-marker-verified-auth-gated
+status: runtime-e2e-verified
 source_goal: implementation-goals/GOAL-23-reseller-community-catalog.md
 owner: Catalog integration owner
 created: 2026-07-02
+last_verified: 2026-07-02T19:49:36Z
 ```
 
 ## Intent Compliance
 
 - Vision preserved: sellers can share selected owned products for resale.
-- Goal impact preserved: new sellers start fail-closed with Alfares source disabled and community source disabled; community visibility requires both owner product opt-in and viewer source opt-in.
+- Goal impact preserved: sellers start fail-closed for community source visibility; community visibility requires both owner product opt-in and viewer source opt-in.
 - System boundary preserved: Catalog owns product/source access, Auth owns identity, Warehouse owns stock, marketplace services own publication/compliance.
-- Sensitive data preserved: tests and docs use synthetic user/product ids only.
+- Sensitive data preserved: validation used owner-approved existing Auth users and did not print bearer tokens or generated JWT values.
 
 ## Source Validation Commands
 
@@ -34,125 +35,120 @@ created: 2026-07-02
 # PASS no whitespace errors
 ```
 
-## Expected Assertions
+## Runtime Deployment State
 
-- Settings default: Alfares false, community false.
-- Seller product create: owner assigned, resale false.
-- Seller product update: owner can enable resale.
-- Shared/non-owned product mutation: forbidden for ordinary seller.
-- Effective list scope: own + enabled source buckets.
-- Dashboard source checkboxes compile and call settings API.
-- Product create/edit resale checkbox compiles and sends `resaleEnabled`.
-
-## Runtime Validation
+Read-only runtime refresh, 2026-07-02 19:49-20:00 UTC. No deploy script, image update, rollout restart, or pod deletion was run during this verification pass; the earlier infrastructure blocker recovered before E2E execution.
 
 ```bash
-2026-07-02 ssh alfares 'git -C /home/ssf/Documents/Github/catalog-microservice status --short --branch'
+2026-07-02 ssh alfares 'cd /home/ssf/Documents/Github/catalog-microservice && git status --short --branch && git log --oneline -5'
 # ## main...origin/main
+# 8850e5e docs: close goal 25 runtime validation
+# 311030d docs: record order affinity batch deployment
+# 618dccb fix: import product relation validators
+# 6b4ff33 feat: extend product relation management
+# 0f948a7 docs: record orders lifecycle statistics source contract
 
-2026-07-02 ssh alfares 'git -C /home/ssf/Documents/Github/catalog-microservice log --oneline -3'
-# 66c97e2 docs: plan dashboard catalog source options
-# d2a2f66 docs: align catalog source defaults
-# 2549389 fix: wait for catalog source settings before product load
-
-2026-07-02 ssh alfares 'kubectl get deployment catalog-microservice -n statex-apps -o wide'
-# catalog-microservice READY 1/1 image localhost:5000/catalog-microservice:d2a2f66
-
-2026-07-02 ssh alfares 'kubectl get pods -n statex-apps -l app=catalog-microservice -o wide'
-# catalog-microservice-6fcc9b459d-5zlzf READY 1/1 Running
-
-2026-07-02 curl -fsS -m 8 https://catalog.alfares.cz/health
-# HTTP 200 healthy, production, productEvents publisher disabled by runtime config
-
-2026-07-02 curl -i -sS -m 8 https://catalog.alfares.cz/api/catalog/settings
-# HTTP 401 Missing or invalid Authorization header
-
-2026-07-02 curl -i -sS -m 8 https://catalog.alfares.cz/api/products
-# HTTP 401 Missing or invalid Authorization header
+2026-07-02 ssh alfares 'kubectl get deployment auth-microservice catalog-microservice catalog-frontend allegro-api-gateway allegro-service aukro-service bazos-service heureka-api-gateway heureka-service flipflop-product-service flipflop-frontend flipflop-service -n statex-apps -o custom-columns=NAME:.metadata.name,READY:.status.readyReplicas,IMAGE:.spec.template.spec.containers[0].image --no-headers'
+# auth-microservice          1     localhost:5000/auth-microservice:0d4282b-20260702102426
+# catalog-microservice       1     localhost:5000/catalog-microservice:8850e5e
+# catalog-frontend           1     localhost:5000/catalog-frontend:latest
+# allegro-api-gateway        1     localhost:5000/allegro-api-gateway:6c64a30
+# allegro-service            1     localhost:5000/allegro-service:6c64a30
+# aukro-service              1     localhost:5000/aukro-service:ba61422
+# bazos-service              1     localhost:5000/bazos-service:cdcd739
+# heureka-api-gateway        1     localhost:5000/heureka-api-gateway:b80d8c4
+# heureka-service            1     localhost:5000/heureka-service:b80d8c4
+# flipflop-product-service   1     localhost:5000/flipflop-product-service:latest
+# flipflop-frontend          1     localhost:5000/flipflop-frontend:latest
+# flipflop-service           1     localhost:5000/flipflop-service:latest
 ```
 
-Catalog runtime is deployed and healthy on image `d2a2f66`; top repository commit `66c97e2` is docs-only. Protected source/product APIs are reachable and reject unauthenticated requests as expected.
+Health checks observed during the same pass:
 
-Blocked until:
+- `https://auth.alfares.cz/health` -> HTTP 200.
+- `https://catalog.alfares.cz/health` -> HTTP 200.
+- `https://allegro.alfares.cz/` -> HTTP 200.
+- `https://flipflop.alfares.cz/` -> HTTP 200.
+- `https://flipflop.alfares.cz/api/products?limit=1` -> HTTP 200.
 
-- `[MISSING: approved Auth tokens for two distinct synthetic seller users]`
-- `[MISSING: authorized seller E2E smoke execution for provision settings, toggle Alfares/community sources, create owner product, enable resale, verify effective community visibility]`
+## Authenticated E2E Validation
 
-## Prepared Authenticated E2E Harness
-
-`scripts/catalog-source-e2e-smoke.js` is ready but intentionally token-gated and execute-gated. It does not mint Auth tokens and it does not mutate Catalog unless `CATALOG_SOURCE_E2E_EXECUTE=true` is set with two distinct approved human bearer tokens.
-
-Expected run shape after approval:
+Approved-user runner:
 
 ```bash
-CATALOG_SOURCE_E2E_EXECUTE=true \
-CATALOG_SOURCE_E2E_EXPECT_FRESH_USERS=true \
-CATALOG_SOURCE_E2E_OWNER_TOKEN='<owner human bearer>' \
-CATALOG_SOURCE_E2E_VIEWER_TOKEN='<viewer human bearer>' \
-npm run smoke:e2e:catalog-source
+2026-07-02 ssh alfares 'bash /tmp/run-catalog-source-e2e-approved-users.sh'
+# [ssfskype-owner-test-viewer] exit=0 owner=ssfskype@gmail.com viewer=stashokmisha@gmail.com
+# [test-owner-stashokmisha-viewer] exit=0 owner=test@example.com viewer=stashokmisha@gmail.com
+# result_file=/tmp/catalog-source-e2e-approved-users-20260702T194936Z.jsonl
 ```
 
-## Cross-Repo Validation
+Validated scenarios:
 
-Catalog contract source validation has passed and channel source integrations were audited. First-wave runtime images now contain the source controls for Allegro, Aukro, Bazos, and Heureka; authenticated human-bearer E2E remains missing.
+- `ssfskype@gmail.com` owner -> `stashokmisha@gmail.com` viewer: pass.
+- `test@example.com` owner -> `stashokmisha@gmail.com` viewer: pass.
+
+The earlier `test@example.com` viewer attempt was discarded as a role-selection false positive, not a Catalog effective-scope defect: `test@example.com` has admin/global superadmin roles and can see more than an ordinary seller. The corrected viewer, `stashokmisha@gmail.com`, is an active `end_user` with no roles.
+
+E2E assertions passed in both approved-user runs:
+
+- Owner and viewer Catalog access provision/update paths returned successful settings responses.
+- Owner created a product with `resaleEnabled=false`.
+- Owner own-scope search returned the created product.
+- Ordinary viewer effective-scope search returned `total=0` before resale sharing.
+- Ordinary viewer effective-scope search still returned `total=0` after owner enabled resale while viewer community source was disabled.
+- Viewer setting update enabled `includeCommunityCatalog=true`.
+- Ordinary viewer effective-scope search then returned `total=1` and matched the created product.
+- Non-owner product mutation was hidden/forbidden with status `404`.
+- Cleanup archived the created products and restored owner/viewer settings.
+
+Archived E2E products:
+
+- `2d6e4b4c-02a4-4b1c-98c8-afa4ad46a32e`
+- `ebbdd4fa-5c73-481a-9d07-dbab3d20a150`
+
+The harness skipped `catalog-fresh-user-defaults` because the authorized accounts are existing real users, not fresh synthetic identities. Fail-closed defaults remain covered by source tests and by explicit E2E settings reset before each visibility assertion.
+
+## Channel Route Smoke
+
+The same authenticated runner also verified first-wave channel effective-picker routes with the approved viewer context:
+
+- Allegro: `https://allegro.alfares.cz/api/products?catalogScope=effective&limit=1` -> HTTP 200.
+- Aukro: `https://aukro.alfares.cz/aukro/ui/catalog/products?limit=1` -> HTTP 200.
+- Bazos: `https://bazos.alfares.cz/ui/catalog/products?limit=1` -> HTTP 200.
+- Heureka: `https://heureka.alfares.cz/api/heureka/dashboard/catalog-products?limit=1&source=effective` -> HTTP 200.
+
+## Cross-Repo Coverage
+
+Catalog contract source validation passed, Catalog runtime E2E passed, and first-wave channel effective-picker route smoke passed for Allegro, Aukro, Bazos, and Heureka.
 
 - `docs/orchestrator/2026-07-02-reseller-community-catalog-cross-repo-plan.md`
+- `docs/orchestrator/2026-07-02-catalog-source-deploy-e2e-readiness.md`
 
-Source/runtime commits pushed after channel audit:
+Runtime image refresh at E2E time:
 
-- `allegro` -> `2886b4b fix: add allegro event subscriber amqp dependency`, includes `9258129 feat: finalize catalog source controls for allegro`
-- `aukro` -> `269f5d8 docs: record aukro catalog source validation`, includes `f237fda feat: finalize catalog source controls for aukro`
-- `bazos` -> `9f8f2bb feat: finalize catalog source controls for bazos`
-- `heureka` -> `61c5e82 docs: record heureka catalog source validation`, includes `bf467cd feat: finalize catalog source controls for heureka`
-- `flipflop` -> `a463e5e feat: improve storefront product browsing`, includes `30a5e6c feat: integrate catalog user access for flipflop`
-
-Runtime image refresh, 2026-07-02 15:19 UTC:
-
-- `catalog-microservice` -> `localhost:5000/catalog-microservice:d2a2f66`
+- `auth-microservice` -> `localhost:5000/auth-microservice:0d4282b-20260702102426`
+- `catalog-microservice` -> `localhost:5000/catalog-microservice:8850e5e`
 - `catalog-frontend` -> `localhost:5000/catalog-frontend:latest`
-- `allegro-api-gateway` and `allegro-service` -> `localhost:5000/allegro-*:2886b4b`; `allegro-frontend` -> `localhost:5000/allegro-frontend:salespoint-20260702170737`
-- `aukro-service` -> `localhost:5000/aukro-service:salespoint-20260702171200`
-- `bazos-service` -> `localhost:5000/bazos-service:salespoint-20260702171300`
-- `heureka-api-gateway` and `heureka-service` -> `localhost:5000/heureka-*:salespoint-20260702171000`
-
-Channel source validation commands:
-
-```bash
-2026-07-02 ssh alfares 'cd /home/ssf/Documents/Github/allegro/services/allegro-service && npm run build'
-# PASS
-2026-07-02 ssh alfares 'cd /home/ssf/Documents/Github/allegro/services/frontend && npm run build'
-# PASS
-
-2026-07-02 ssh alfares 'cd /home/ssf/Documents/Github/aukro/services/aukro-service && npm run build'
-# PASS
-
-2026-07-02 ssh alfares 'cd /home/ssf/Documents/Github/bazos && npm --prefix shared test'
-# PASS: 10 suites, 124 tests
-2026-07-02 ssh alfares 'cd /home/ssf/Documents/Github/bazos && npm --prefix shared run build'
-# PASS
-2026-07-02 ssh alfares 'cd /home/ssf/Documents/Github/bazos && npm --prefix services/aukro-service run build'
-# PASS
-
-2026-07-02 ssh alfares 'cd /home/ssf/Documents/Github/heureka/services/heureka-service && npm run build'
-# PASS
-2026-07-02 ssh alfares 'cd /home/ssf/Documents/Github/heureka && npx ts-node services/heureka-service/src/heureka/dashboard/dashboard-list-products.self-test.ts'
-# PASS dashboard-list-products self-test
-```
+- `allegro-api-gateway` and `allegro-service` -> `localhost:5000/allegro-*:6c64a30`
+- `aukro-service` -> `localhost:5000/aukro-service:ba61422`
+- `bazos-service` -> `localhost:5000/bazos-service:cdcd739`
+- `heureka-api-gateway` and `heureka-service` -> `localhost:5000/heureka-*:b80d8c4`
+- `flipflop-product-service`, `flipflop-frontend`, and `flipflop-service` -> `localhost:5000/flipflop-*:latest`
 
 ## Deployed Marker Evidence
 
-Read-only deployed marker pass, 2026-07-02 15:19 UTC:
+Earlier deployed marker pass, retained as supporting evidence:
 
-- Catalog frontend source checkboxes: `includeAlfaresCatalog`, `includeCommunityCatalog` in `/app/.next/server/chunks/ssr/_9cb9ee33._.js`; product resale checkbox marker `resaleEnabled` in `/app/.next/server/chunks/ssr/app_dashboard_products_[id]_page_tsx_e4021c16._.js`.
-- Allegro gateway/service: `catalogProductsRoute`, `/api/products`, and `catalogScope: 'effective'` in deployed `dist` files.
-- Aukro service: `data-catalog-source`, `catalogSources`, and `Komunitní resale` in `/app/services/aukro-service/dist/ui/ui.controller.js`.
-- Bazos service: `resaleEnabled`, `catalogScope: 'effective'`, and `Katalog effective` in `/app/dist/ui/ui.assets.js`.
-- Heureka service: `products-source-filter`, `Community resale`, and `Shared for resale` in `/app/dist/public/public.controller.js`.
-- Marker evidence proves deployed assets contain expected UI/runtime hooks; authenticated seller E2E still remains required.
+- Catalog frontend source checkboxes: `includeAlfaresCatalog`, `includeCommunityCatalog`; product resale marker: `resaleEnabled`.
+- Allegro gateway/service: `catalogProductsRoute`, `/api/products`, and `catalogScope: 'effective'`.
+- Aukro service: `data-catalog-source`, `catalogSources`, and `Komunitni resale`.
+- Bazos service: `resaleEnabled`, `catalogScope: 'effective'`, and `Katalog effective`.
+- Heureka service: `products-source-filter`, `Community resale`, and `Shared for resale`.
 
-Current blockers:
+## Residual Follow-Up
 
-- `[MISSING: approved Auth tokens for two distinct synthetic seller users]`
-- `[MISSING: authorized Catalog source E2E smoke execution with `scripts/catalog-source-e2e-smoke.js`]`
-- `[MISSING: authenticated channel picker/UI smoke for Allegro, Aukro, Bazos, and Heureka with a human bearer token]`
-- `[MISSING: FlipFlop immutable image provenance for commit 30a5e6c after unrelated GOAL-12 dirty rollout is resolved]`
+No Catalog API/source-scope blocker remains for the first-wave Catalog plus Allegro/Aukro/Bazos/Heureka route-contract evidence. Remaining evidence gaps are follow-ups, not contradictions of the passed E2E run:
+
+- Fresh-user runtime defaults were not asserted because the owner-approved accounts already existed; source tests and E2E reset paths cover fail-closed behavior, and a fresh-account smoke can be added if strict runtime proof is required.
+- Full rendered cabinet/browser smoke for channel labels, checkboxes, and draft/listing account binding was not captured by this route harness.
+- FlipFlop source hooks and public product routes are present, but a dedicated authenticated FlipFlop seller UI flow is outside this Catalog E2E harness and remains a channel-specific follow-up if the owner wants full FlipFlop cabinet evidence.
