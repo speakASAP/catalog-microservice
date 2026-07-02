@@ -47,7 +47,7 @@ Source-level runtime publisher wiring only. No production migration was applied,
 |---|---|---|
 | `npm test -- --runInBand src/product-events/product-event-outbox-publisher.service.spec.ts` | Pass | 1 suite, 6 tests passed. |
 | `npm run build` | Pass | Nest build completed with exit 0. |
-| `git diff --check` | Pending final run | `[UNKNOWN: final whitespace check not run yet]` |
+| `git diff --check` | Pass | No whitespace errors. |
 
 ## Remaining Blockers
 
