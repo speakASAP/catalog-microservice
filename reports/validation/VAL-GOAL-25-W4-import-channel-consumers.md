@@ -2,7 +2,7 @@
 
 ```yaml
 id: VAL-GOAL-25-W4-IMPORT-CHANNEL-CONSUMERS
-status: w4-channel-consumers-complete-w5-deploy-readiness-gated
+status: w5-owner-approved-channel-runtime-smoke-complete
 created: 2026-07-02
 last_updated: 2026-07-03
 primary_repository: /home/ssf/Documents/Github/catalog-microservice
@@ -31,9 +31,9 @@ Coding Prompt: delegated W4 prompt from thread `019f2358-4c0c-7a42-b68d-7d96846a
 
 Code: all channel consumer lanes are now complete from remote subagent handoffs. Bazos was completed/deployed earlier; Allegro, Aukro, FlipFlop, and Heureka were completed, pushed, and validated in this Goal-driven subagent rollup. This Catalog orchestrator update records status/report evidence only; no Catalog backend source, Warehouse source, product deletion, stock ownership, or marketplace publication path was changed here.
 
-Validation: Bazos, Allegro, Aukro, FlipFlop, and Heureka handoff evidence confirms focused fail-closed tests/verifiers, builds, diff checks, and IPS gates where available. Bazos and Aukro include deployed/runtime health evidence; Allegro, FlipFlop, and Heureka latest commits were not deployed by this thread. No Catalog deployment, production DB mutation, Warehouse mutation, product deletion, queue publish action, marketplace publication, or secret output was run by this Catalog closure.
+Validation: Bazos, Allegro, Aukro, FlipFlop, and Heureka handoff evidence confirms focused fail-closed tests/verifiers, builds, diff checks, and IPS gates where available. Bazos and Aukro include deployed/runtime health evidence. After owner approval, this W5 run deployed and read-only smoked Allegro, Heureka, and FlipFlop latest Goal 25 channel consumer commits. No Catalog deployment, production DB mutation, Warehouse mutation, product deletion, queue publish action, marketplace publication, or secret output was run by this Catalog closure.
 
-State Update: W4 channel consumer implementation and validation are complete for Bazos, Allegro, Aukro, FlipFlop, and Heureka. W5 remains deployment/runtime-smoke gated for latest source commits that are not deployed.
+State Update: W4 channel consumer implementation and validation are complete for Bazos, Allegro, Aukro, FlipFlop, and Heureka. W5 owner-approved runtime deploy/read smoke is now complete for the latest non-deployed Allegro, Heureka, and FlipFlop channel commits without marketplace publish/confirm/queue actions.
 
 ## Changed Files
 
@@ -89,7 +89,7 @@ Status: complete, pushed, and accepted by the Catalog orchestrator for W4 source
 Final handoff evidence:
 
 - Repository clean and synced on `main` at `5d189ee Guard Allegro mutations on Catalog quality`.
-- Deploy: not run in this subagent rollup.
+- Deploy: W5 owner-approved runtime deploy completed after the subagent rollup.
 - Validation report: `/home/ssf/Documents/Github/allegro/docs/validation/2026-07-03-allegro-goal25-catalog-quality-blockers.md`.
 - Focused sell-action, publish-lifecycle, policy-engine, and offers Catalog-quality specs passed.
 - `services/allegro-service` build passed with `LOGGING_SERVICE_URL=http://logging-microservice:3367`.
@@ -168,8 +168,8 @@ Status: complete, pushed, and accepted by the Catalog orchestrator for W4 source
 
 Final handoff evidence:
 
-- Repository clean and synced on `main` at `3462917 test: expand catalog quality blocker verification`.
-- Deploy: not run in this subagent rollup.
+- Repository clean and synced on `main` at `7a092c2 docs: update STATUS.md with live Catalog order-affinity recommendation details and validation results`; Goal 25 consumer source commit `3462917 test: expand catalog quality blocker verification` is included.
+- Deploy: W5 owner-approved runtime deploy completed after the subagent rollup.
 - Validation reports: `/home/ssf/Documents/Github/flipflop/12_validation/VAL-TASK-004-catalog-product-quality-review-consumer.md` and `/home/ssf/Documents/Github/flipflop/implementation-goals/GOAL-25-catalog-product-quality-review-consumer.validation-report.md`.
 - `node scripts/verify-catalog-product-quality-blockers.js` passed and now covers policy normalization, product-service selection, offer filtering, publish dry-run/status, and reconciliation fail-closed paths.
 - Pre-coding gate, strict doc audit, `git diff --check`, shared build, product-service build, and frontend build passed.
@@ -193,7 +193,7 @@ Status: complete, pushed, and accepted by the Catalog orchestrator for W4 source
 Final handoff evidence:
 
 - Repository clean and synced on `main` at `7ea1f79 docs: clarify heureka goal 25 report refresh`.
-- Deploy: not run in this subagent rollup.
+- Deploy: W5 owner-approved runtime deploy completed after the subagent rollup.
 - Validation report: `/home/ssf/Documents/Github/heureka/reports/validation/VAL-GOAL-25-heureka-product-quality-consumer.md`.
 - Catalog client auth self-test, feed-readiness self-test, feed-preview-readonly self-test, dashboard-list-products self-test, and blocker-lane verifier passed.
 - `npm --prefix shared run build`, `LOGGING_SERVICE_URL=http://logging-microservice:3367 npm --prefix services/heureka-service run build`, and `git diff --check` passed.
@@ -208,7 +208,7 @@ Implemented consumer contract:
 Important boundary:
 
 - Heureka uses Catalog product-quality review evidence without redefining Catalog product truth.
-- Remaining W5 runtime blockers: `[UNKNOWN: live deployed Catalog product-quality review route status]` and `[MISSING: deploy approval]` for future Heureka rollout.
+- W5 Heureka runtime deploy/read smoke is complete for this lane; no marketplace publication, queueing, confirmation, or production data mutation was performed.
 
 ## Validation Evidence
 
@@ -271,9 +271,8 @@ No unrelated dirty worktree files were staged or reverted by this integration up
 
 ## Remaining Blockers
 
-- `[MISSING: owner approval for deploy/runtime smoke of latest non-deployed channel commits]`
-- `[MISSING: authorized runtime smoke token for protected Catalog/channel checks]`
-- `[UNKNOWN: live Catalog production readiness payload drift for non-deployed Allegro/Heureka source commits]`
+- None for Goal 25 channel consumer source/runtime smoke closure.
+- Protected authenticated draft/publish action smokes remain intentionally out of scope unless the owner approves a side-effect-safe scenario.
 
 ## Handoff For W5
 
@@ -281,5 +280,40 @@ Recommended merge/order:
 
 1. Treat W4 channel consumers as complete for source validation: Bazos, Allegro, Aukro, FlipFlop, and Heureka.
 2. Do not reopen channel source lanes unless a regression appears or the Catalog contract changes.
-3. For W5, decide whether to deploy/runtime-smoke the latest non-deployed channel commits; do not publish/confirm/queue marketplace actions as part of smoke.
+3. W5 deploy/runtime smoke has been run for the latest non-deployed channel commits after owner approval; do not publish/confirm/queue marketplace actions unless a new side-effect-safe smoke plan is approved.
 4. Keep Warehouse stock quantity ownership and channel marketplace ownership boundaries intact.
+
+
+## W5 Owner-Approved Runtime Deploy Smoke
+
+Date: 2026-07-03.
+
+Scope: owner-approved runtime deployment/read smoke for the remaining latest Goal 25 channel consumer commits. This run did not deploy Catalog, mutate Catalog/Warehouse/product data, print secrets, publish to marketplaces, confirm drafts, enqueue publication, or run destructive commands.
+
+Allegro evidence:
+
+- Repository: `/home/ssf/Documents/Github/allegro`, clean `main...origin/main` at `5d189ee Guard Allegro mutations on Catalog quality` before deploy.
+- Deploy command: `./scripts/deploy.sh` completed successfully.
+- Runtime images built/pushed with tag `5d189ee`: `allegro-service`, `allegro-api-gateway`, `allegro-settings`, `allegro-imports`, and `allegro-frontend`.
+- Rollouts succeeded for all five Allegro deployments.
+- Public smoke from `alfares`: `https://allegro.alfares.cz/health` returned HTTP 200 with `status=ok`; `https://allegro.alfares.cz/api/health` returned HTTP 200 with `service=api-gateway`.
+- Caveat: local Codex DNS could not resolve `allegro.alfares.cz`, so the successful public smokes were run from the `alfares` host.
+
+Heureka evidence:
+
+- Repository: `/home/ssf/Documents/Github/heureka`, clean `main...origin/main` at `7ea1f79 docs: clarify heureka goal 25 report refresh` before deploy.
+- Deploy command: `./scripts/deploy.sh` completed successfully.
+- Runtime images built/pushed: `localhost:5000/heureka-service:7ea1f79` and `localhost:5000/heureka-api-gateway:7ea1f79`.
+- Rollouts succeeded for `heureka-service` and `heureka-api-gateway`.
+- Public smoke from `alfares`: `https://heureka.alfares.cz/health` returned HTTP 200 with `status=ok`; `https://heureka.alfares.cz/heureka/feed?type=heureka_cz` returned HTTP 200 and XML beginning with `<?xml version="1.0" encoding="UTF-8"?><SHOP>`.
+
+FlipFlop evidence:
+
+- Repository: `/home/ssf/Documents/Github/flipflop`, clean `main...origin/main` at `7a092c2`; Goal 25 consumer source commit `3462917` is included. The preflight dirty generated validation timestamp disappeared by final repo check and was not manually reverted.
+- Deploy command: `git diff --check && ./scripts/deploy.sh` built/pushed images and applied manifests, but exited non-zero because the script timed out while new pods were still pulling/starting.
+- Read-only follow-up confirmed recovery: all six deployments rolled out successfully and reported ready=1 updated=1 available=1 for `flipflop-service`, `flipflop-frontend`, `flipflop-product-service`, `flipflop-cart-service`, `flipflop-order-service`, and `flipflop-user-service`.
+- Runtime images are `localhost:5000/flipflop-*:latest`, with `flipflop-product-service` advanced from the prior `27b1eb9` tag to the current `latest` deployment.
+- Public smoke from `alfares`: `https://flipflop.alfares.cz/` returned HTTP 200; `https://flipflop.alfares.cz/api/products?limit=1` returned HTTP 200 with `success=true` and a Catalog-linked item payload.
+- Recovery evidence: `flipflop-order-service` initially had a startup probe failure while the new image was starting, then rolled out successfully without corrective mutation.
+
+Final W5 state: Bazos, Aukro, Allegro, Heureka, and FlipFlop have complete Goal 25 consumer source validation and runtime evidence. Bazos/Aukro runtime evidence was recorded before this run; Allegro/Heureka/FlipFlop runtime deploy/read smoke was completed in this run.

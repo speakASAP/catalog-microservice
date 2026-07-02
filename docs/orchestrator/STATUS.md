@@ -1722,3 +1722,30 @@ Remaining blockers:
 
 - `[MISSING: automated order-affinity backfill/replay over historical Orders events]`.
 - `[MISSING: approved bundle checkout contract owned by FlipFlop/Orders/Payments]` for future server-authoritative bundle pricing beyond current display/intent flow.
+
+
+## 2026-07-03 - Goal 25 W5 Channel Runtime Deploy Smoke Closure
+
+Current focus: close the owner-approved runtime deployment/read-smoke gate for the latest Goal 25 channel consumer commits.
+
+Intent Preservation Chain:
+
+- Vision: Catalog remains product truth for sellable content and readiness while channels fail closed on Catalog quality blockers.
+- Goal Impact: Channel consumer implementations are now backed by runtime deploy/read evidence, not source validation only.
+- System: Catalog owns product quality/readiness; Bazos, Aukro, Allegro, Heureka, and FlipFlop own channel identity, drafts, feed/queue/publication behavior, and marketplace policy.
+- Feature: Product Quality Review blocker consumer runtime acceptance.
+- Task: deploy/read-smoke Allegro, Heureka, and FlipFlop latest Goal 25 consumer commits after owner approval without publish/confirm/queue actions.
+- Execution Plan: use remote-only Alfares repos, respect dirty worktrees, deploy existing channel scripts, run read-only public health/feed/product smokes, and record exact evidence.
+- Coding Prompt: do not deploy Catalog, do not mutate Warehouse/product data, do not print secrets, and document any rollout timeout separately from final rollout state.
+- Code: channel repos already contained source commits; this Catalog update records runtime evidence only.
+- Validation: Allegro, Heureka, and FlipFlop runtime smokes returned HTTP 200 and final rollout checks passed.
+
+Runtime evidence:
+
+- Allegro: deployed `5d189ee`; service/api-gateway/settings/imports/frontend rollouts passed; `https://allegro.alfares.cz/health` HTTP 200 `status=ok`; `https://allegro.alfares.cz/api/health` HTTP 200 `service=api-gateway`.
+- Heureka: deployed `7ea1f79`; service/api-gateway rollouts passed; `https://heureka.alfares.cz/health` HTTP 200 `status=ok`; `https://heureka.alfares.cz/heureka/feed?type=heureka_cz` HTTP 200 XML feed.
+- FlipFlop: deployed current `main` at `7a092c2`, including Goal 25 consumer commit `3462917`; initial deploy command timed out while pods were pulling/starting, but follow-up confirmed all six deployments successfully rolled out with ready=1 updated=1 available=1; `https://flipflop.alfares.cz/` HTTP 200 and `https://flipflop.alfares.cz/api/products?limit=1` HTTP 200 `success=true`.
+
+Boundary decision: no Catalog backend/frontend deployment, marketplace publish, draft confirm, queue action, Warehouse stock mutation, product data mutation, destructive command, or secret output was performed. Bazos and Aukro runtime evidence remains the prior accepted deployed evidence.
+
+Remaining blockers: none for Goal 25 channel consumer runtime smoke closure. Protected authenticated draft/publish action smokes remain intentionally out of scope unless a side-effect-safe owner-approved scenario is created.
