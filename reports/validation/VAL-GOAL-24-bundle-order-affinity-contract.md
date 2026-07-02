@@ -80,6 +80,20 @@ Result:
 
 Boundary: no `--publish`, no Catalog relation write, no live Orders row mutation, no Warehouse/Payments/checkout mutation, no deployment, no secret output, and no customer/address/payment/provider data.
 
+## Allegro Live Catalog Publish
+
+Owner approval was used for an already-qualified marketplace source, not for central Orders mutation or bundle checkout.
+
+Commands and results:
+
+- Dry-run with `/tmp/allegro-affinity-events.validated.json`: failed closed with `order_event_source_invalid=8`; no publish attempted.
+- Dry-run with `/tmp/allegro-affinity-events.json`: `inputRecords=8`, `acceptedCreatedEvents=8`, `rejectedRecords=0`, `skippedEvents=0`, `aggregatePairs=16`, `totalPairEvidence=16`, `byChannel.allegro=8`.
+- Host-side source publish: `publish.status=disabled`, `candidateCount=16`, `batchCount=0`, `reason=publisher_disabled`; no Catalog write.
+- Deployed Marketing pod publish: `publish.status=published`, `candidateCount=16`, `batchCount=1`.
+- Catalog aggregate DB readback: `source=marketing_order_affinity`, `relation_type=order_affinity`, `channel=allegro`, `relation_count=16`, `min_score=1`, `max_score=1`, `min_confidence=0.5`, `max_confidence=0.5`.
+
+Boundary: Catalog relation rows were inserted/updated through the approved internal batch endpoint only. No central Orders row, Warehouse row, Payments row, checkout/cart state, product row, marketplace offer/listing, deployment, Kubernetes manifest, or service source code was changed. No customer/buyer/address/payment/provider data, raw marketplace payloads, token values, or secret values were printed.
+
 ## Local Validation
 
 ```bash

@@ -1832,6 +1832,46 @@ Remaining blockers:
 - `[MISSING: approved real checkout smoke scope]`.
 
 
+## 2026-07-03 - Goal 24 Allegro Affinity Live Catalog Publish
+
+Current focus: execute the owner-approved live Catalog publish from the already-qualified Allegro order-affinity export.
+
+Intent Preservation Chain:
+
+- Vision: Marketplace purchase history can improve related-product and future bundle surfaces while Catalog remains the product-relation source of truth.
+- Goal Impact: A qualified non-central Orders source now has live Catalog relation rows, proving the guarded Marketing-to-Catalog publish path beyond synthetic-only evidence.
+- System: Allegro owns marketplace order history; Marketing owns bounded affinity aggregation/publish orchestration; Catalog owns relation persistence; Orders central live history, Warehouse, Payments, checkout, and marketplace publication remain unchanged.
+- Feature: Allegro affinity live Catalog publish.
+- Task: Re-run the bounded Allegro dry-run, publish from the deployed Marketing pod using runtime service auth, and verify Catalog aggregate readback.
+- Execution Plan: Use `/tmp/allegro-affinity-events.json` only; publish only after dry-run produces the expected deterministic batch; read back aggregate Catalog relation counts only; do not print customer, buyer, address, payment/provider, secret, or raw marketplace payload data.
+- Coding Prompt: Use the existing Marketing CLI and Catalog batch endpoint; do not change source code, deploy, create checkout/payment/stock effects, or publish marketplace offers.
+- Code: no source change; operational evidence recorded in Catalog docs.
+- Validation: dry-run accepted 8 records and produced 16 candidates; deployed-pod publish returned `status=published`; Catalog aggregate DB readback returned 16 Allegro rows.
+
+Evidence:
+
+- Host-side source dry-run against `/tmp/allegro-affinity-events.validated.json` failed closed with `order_event_source_invalid=8`; no publish was attempted from that file.
+- Dry-run command used `/tmp/allegro-affinity-events.json` and returned `inputRecords=8`, `acceptedCreatedEvents=8`, `rejectedRecords=0`, `skippedEvents=0`, `aggregatePairs=16`, `totalPairEvidence=16`, `byChannel.allegro=8`.
+- Host-side publish command returned `publish.status=disabled`, proving local source execution did not inherit the deployed publisher environment and did not write Catalog.
+- Deployed Marketing pod publish command: `kubectl -n statex-apps exec -i deploy/marketing-microservice -- node dist/order-affinity-backfill.js --run-id allegro-history-20260703 --limit=50 --publish --pretty < /tmp/allegro-affinity-events.json`.
+- Deployed publish result: `status=published`, `candidateCount=16`, `batchCount=1`, endpoint `http://catalog-microservice.statex-apps.svc.cluster.local:3200/api/internal/product-relations/order-affinity/batch`.
+- Catalog aggregate readback: `source=marketing_order_affinity`, `relation_type=order_affinity`, `channel=allegro`, `relation_count=16`, `min_score=1`, `max_score=1`, `min_confidence=0.5`, `max_confidence=0.5`.
+
+Boundary decision:
+
+- Catalog relation rows were inserted/updated through the approved internal batch endpoint.
+- No central Orders row, Warehouse row, Payments row, checkout/cart state, product row, marketplace offer/listing, deployment, Kubernetes manifest, or service source code was changed.
+- No customer/buyer/address/payment/provider data, raw marketplace payloads, token values, or secret values were printed.
+
+Remaining blockers:
+
+- `[MISSING: Allegro-owned protected replay endpoint so future runs do not require a temporary SQL export]`.
+- `[MISSING: scheduled/idempotent marketplace-wide backfill orchestration across Allegro, Aukro, Bazos, FlipFlop, and central Orders]`.
+- `[MISSING: qualifying historical paid multi-product Orders rows for non-empty central Orders replay evidence]`.
+- `[MISSING: pruning/replacement semantics for stale affinity rows across repeated marketplace-wide runs]`.
+- `[MISSING: approved ecosystem bundle-selling contract across Catalog/Orders/Warehouse/Payments/FlipFlop]`.
+
+
 ## 2026-07-03 - Goal 25 W5 Channel Runtime Deploy Smoke Closure
 
 Current focus: close the owner-approved runtime deployment/read-smoke gate for the latest Goal 25 channel consumer commits.
