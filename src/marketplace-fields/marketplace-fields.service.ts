@@ -7,6 +7,13 @@ import { ProductMarketplaceProfile } from './marketplace-profile.entity';
 
 type FieldSource = 'canonical' | 'override' | 'externalRef' | 'sourceData';
 
+type ManualOverrideMetadata = {
+  manual: true;
+  field: string;
+  updatedAt: string;
+  productUpdatedAt: string | null;
+};
+
 type MarketplaceFieldDefinition = {
   key: string;
   label: string;
@@ -333,9 +340,10 @@ export class MarketplaceFieldsService {
     const product = await this.loadProduct(productId);
 
     const canonicalPatch = this.sanitizeCanonicalPatch(input?.canonical || {});
+    let workingProduct = product;
     if (Object.keys(canonicalPatch).length > 0) {
       Object.assign(product, canonicalPatch);
-      await this.productRepository.save(product);
+      workingProduct = await this.productRepository.save(product);
     }
 
     let profile = await this.findProfile(productId, definition.marketplace);
@@ -347,13 +355,17 @@ export class MarketplaceFieldsService {
         overrides: {},
         externalRefs: {},
         sourceData: null,
+        manualOverrides: {},
+        sourceState: {},
         status: 'draft',
       });
     }
 
     profile.canonicalAliases = this.buildCanonicalAliases(definition);
     profile.overrides = this.mergeJson(profile.overrides, input?.overrides);
+    profile.manualOverrides = this.markManualOverrides(profile.manualOverrides, input?.overrides, workingProduct);
     profile.externalRefs = this.mergeJson(profile.externalRefs, input?.externalRefs);
+    profile.sourceState = this.buildSourceState(workingProduct, profile.manualOverrides);
     if (input?.sourceData !== undefined) {
       profile.sourceData = input.sourceData;
     }
@@ -362,7 +374,7 @@ export class MarketplaceFieldsService {
     }
 
     const savedProfile = await this.profileRepository.save(profile);
-    const savedProduct = Object.keys(canonicalPatch).length > 0 ? await this.loadProduct(productId) : product;
+    const savedProduct = Object.keys(canonicalPatch).length > 0 ? await this.loadProduct(productId) : workingProduct;
 
     this.logger.log(`Marketplace fields updated for ${definition.marketplace}: ${productId}`, 'MarketplaceFieldsService');
     return this.toResponse(savedProduct, definition, savedProfile);
@@ -417,6 +429,68 @@ export class MarketplaceFieldsService {
     };
   }
 
+  private markManualOverrides(
+    current: Record<string, unknown> | null | undefined,
+    next: Record<string, unknown> | null | undefined,
+    product: Product,
+  ) {
+    const existing = current && typeof current === 'object' && !Array.isArray(current) ? current : {};
+    if (!next || typeof next !== 'object' || Array.isArray(next)) {
+      return existing;
+    }
+    const now = new Date().toISOString();
+    const productUpdatedAt = this.toIsoDate(product.updatedAt);
+    return Object.keys(next).reduce((manual, field) => ({
+      ...manual,
+      [field]: {
+        manual: true,
+        field,
+        updatedAt: now,
+        productUpdatedAt,
+      } satisfies ManualOverrideMetadata,
+    }), { ...existing });
+  }
+
+  private buildSourceState(product: Product, manualOverrides: Record<string, unknown> | null | undefined) {
+    const staleManualFields = this.getStaleManualFields(product, manualOverrides);
+    return {
+      canonicalProductUpdatedAt: this.toIsoDate(product.updatedAt),
+      staleManualFields,
+      validationRequired: staleManualFields.length > 0,
+      catalogReadinessRequired: staleManualFields.length > 0,
+    };
+  }
+
+  private getStaleManualFields(product: Product, manualOverrides: Record<string, unknown> | null | undefined) {
+    const productUpdatedAt = this.toTime(product.updatedAt);
+    if (!productUpdatedAt || !manualOverrides || typeof manualOverrides !== 'object' || Array.isArray(manualOverrides)) {
+      return [];
+    }
+    return Object.entries(manualOverrides)
+      .filter(([, value]) => {
+        const manual = value as Partial<ManualOverrideMetadata>;
+        const manualProductUpdatedAt = this.toTime(manual.productUpdatedAt);
+        return Boolean(manual.manual && manualProductUpdatedAt && productUpdatedAt > manualProductUpdatedAt);
+      })
+      .map(([field]) => field);
+  }
+
+  private toIsoDate(value: unknown): string | null {
+    if (!value) {
+      return null;
+    }
+    if (value instanceof Date) {
+      return value.toISOString();
+    }
+    const parsed = new Date(String(value));
+    return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+  }
+
+  private toTime(value: unknown): number | null {
+    const iso = this.toIsoDate(value);
+    return iso ? new Date(iso).getTime() : null;
+  }
+
   private toResponse(product: Product, definition: MarketplaceDefinition, profile: ProductMarketplaceProfile | null) {
     const profileData = {
       id: profile?.id || null,
@@ -427,8 +501,11 @@ export class MarketplaceFieldsService {
       overrides: profile?.overrides || {},
       externalRefs: profile?.externalRefs || {},
       sourceData: profile?.sourceData || null,
+      manualOverrides: profile?.manualOverrides || {},
+      sourceState: this.buildSourceState(product, profile?.manualOverrides || {}),
       updatedAt: profile?.updatedAt || null,
     };
+    const staleManualFields = this.getStaleManualFields(product, profileData.manualOverrides);
 
     return {
       product: this.toProductSummary(product),
@@ -438,11 +515,25 @@ export class MarketplaceFieldsService {
         description: definition.description,
       },
       profile: profileData,
-      fields: definition.fields.map((field) => ({
-        ...field,
-        editable: field.editable !== false,
-        value: this.resolveFieldValue(product, profileData, field),
-      })),
+      propagation: {
+        status: staleManualFields.length > 0 ? 'manual_review_required' : 'current',
+        canonicalProductUpdatedAt: this.toIsoDate(product.updatedAt),
+        staleManualFields,
+        validationRequired: staleManualFields.length > 0,
+        catalogReadinessRequired: staleManualFields.length > 0,
+      },
+      fields: definition.fields.map((field) => {
+        const manualOverride = Boolean((profileData.manualOverrides as Record<string, unknown>)?.[field.key]);
+        const stale = staleManualFields.includes(field.key);
+        return {
+          ...field,
+          editable: field.editable !== false,
+          value: this.resolveFieldValue(product, profileData, field),
+          manualOverride,
+          stale,
+          requiresManualReview: stale,
+        };
+      }),
     };
   }
 

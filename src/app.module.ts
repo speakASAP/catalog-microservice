@@ -16,6 +16,7 @@ import { ImportReconciliationModule } from "./import-reconciliation/import-recon
 import { MarketplaceFieldsModule } from "./marketplace-fields/marketplace-fields.module";
 import { ContentConnectorsModule } from "./content-connectors/content-connectors.module";
 import { CatalogAccessModule } from "./catalog-access/catalog-access.module";
+import { ProductRelationsModule } from './product-relations/product-relations.module';
 
 /**
  * Main application module for Catalog Microservice
@@ -58,6 +59,7 @@ import { CatalogAccessModule } from "./catalog-access/catalog-access.module";
     MarketplaceFieldsModule,
     ContentConnectorsModule,
     CatalogAccessModule,
+    ProductRelationsModule,
   ],
 })
 export class AppModule {}

@@ -47,6 +47,12 @@ export class ProductMarketplaceProfile {
   @Column({ name: 'source_data', type: 'jsonb', nullable: true })
   sourceData: Record<string, unknown> | null;
 
+  @Column({ name: 'manual_overrides', type: 'jsonb', default: () => "'{}'::jsonb" })
+  manualOverrides: Record<string, unknown>;
+
+  @Column({ name: 'source_state', type: 'jsonb', default: () => "'{}'::jsonb" })
+  sourceState: Record<string, unknown>;
+
   @Column({ length: 50, default: 'draft' })
   status: string;
 

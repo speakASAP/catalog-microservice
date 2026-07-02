@@ -135,6 +135,16 @@ export default function MarketplaceFieldsPanel({ product, onProductUpdated }: Ma
           <span className={`rounded-full px-2 py-0.5 text-xs ${field.source === 'canonical' ? 'bg-emerald-100 text-emerald-800' : 'bg-indigo-100 text-indigo-800'}`}>
             {field.source === 'canonical' ? 'Catalog truth' : field.source}
           </span>
+          {field.manualOverride && (
+            <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs text-slate-800">
+              Manual
+            </span>
+          )}
+          {field.stale && (
+            <span className="rounded-full bg-amber-200 px-2 py-0.5 text-xs text-amber-900">
+              Source changed
+            </span>
+          )}
         </span>
         {field.type === 'json' || field.key === 'description' ? (
           <textarea
@@ -152,6 +162,11 @@ export default function MarketplaceFieldsPanel({ product, onProductUpdated }: Ma
             onChange={(event) => setFieldValues((current) => ({ ...current, [field.key]: event.target.value }))}
             className={baseClass}
           />
+        )}
+        {field.stale && (
+          <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
+            Canonical product data changed after this manual marketplace value was saved. Review this listing before publishing updates.
+          </p>
         )}
         {field.aliases && field.aliases.length > 0 && (
           <p className="text-xs text-gray-500">Aliases: {field.aliases.join(', ')}</p>
@@ -193,6 +208,18 @@ export default function MarketplaceFieldsPanel({ product, onProductUpdated }: Ma
             <p className="font-semibold">{payload.marketplace.label}</p>
             <p className="mt-1">{payload.marketplace.description}</p>
           </div>
+
+          {payload.propagation?.status === 'manual_review_required' && (
+            <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+              <p className="font-bold">Canonical product source changed.</p>
+              <p className="mt-1">
+                Manual marketplace fields are preserved and will not be overwritten automatically. Review the marked fields before propagating this product to marketplace listings.
+              </p>
+              <p className="mt-2 text-xs font-semibold">
+                Fields: {payload.propagation.staleManualFields.join(', ')}
+              </p>
+            </div>
+          )}
 
           <details open className="rounded-xl border border-gray-200 bg-gray-50 p-4">
             <summary className="cursor-pointer text-sm font-bold text-gray-900">Canonical aliases</summary>
@@ -239,7 +266,7 @@ export default function MarketplaceFieldsPanel({ product, onProductUpdated }: Ma
               disabled={saving}
               className="px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {saving ? <LoadingSpinner size="sm" /> : 'Save marketplace fields'}
+              {saving ? <LoadingSpinner size="sm" /> : 'Save manual marketplace fields'}
             </button>
             {saved && <span className="text-sm font-semibold text-emerald-700">{saved}</span>}
           </div>

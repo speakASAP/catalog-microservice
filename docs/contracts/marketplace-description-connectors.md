@@ -61,6 +61,10 @@ Unsupported or malformed blocks are normalized to safe paragraphs or ignored. `P
 
 `product_marketplace_profiles.source_data` may store imported raw payload evidence such as `rawDescriptionHtml`. Source data is never canonical unless a separate review flow converts it to `descriptionRich`.
 
+Manual marketplace edits are tracked in `product_marketplace_profiles.manual_overrides` and the related `source_state` snapshot. A manual override means the operator intentionally changed a marketplace listing value for one platform, so connector regeneration must not overwrite that value automatically. When the canonical product source changes later, Catalog marks those manual fields as stale through marketplace-field `propagation.status=manual_review_required`, `staleManualFields`, and per-field `stale=true`. This is a review signal, not a marketplace mutation.
+
+Canonical product changes must still run Catalog quality/readiness validation before channel propagation. Stale manual overrides are preserved, excluded from automatic generated-description replacement, and visually marked for human review in Catalog.
+
 ## Adding A New Marketplace
 
 1. Add a marketplace definition to the content renderer registry.

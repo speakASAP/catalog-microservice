@@ -22,7 +22,22 @@ const benefits = [
   },
 ];
 
-const workflow = ['Register in Alfares Auth', 'Get catalog access', 'Manage products and prices'];
+const workflow = ['Register in Alfares Auth', 'Get catalog access', 'Choose sellable sources', 'Sell through connected channels'];
+
+const salesSources = [
+  {
+    title: 'Alfares supplier catalog',
+    text: 'Add company-approved supplier products with discounted buying conditions to your sales channels without sourcing inventory first.',
+  },
+  {
+    title: 'Your private catalog',
+    text: 'List products you own, control their content and price, and publish them to supported Alfares marketplace services.',
+  },
+  {
+    title: 'Community resale pool',
+    text: 'Opt in to products other sellers make available for resale, then offer them through Alfares channels or your own connected storefronts.',
+  },
+];
 
 export default function LandingPage() {
   const { isAuthenticated } = useAuth();
@@ -55,7 +70,7 @@ export default function LandingPage() {
               Product catalog for controlled selling across Alfares services
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-              Register your account, get approved catalog access, and manage the product data that other services rely on: products, categories, attributes, media, prices, and channel readiness.
+              Register your account, get approved catalog access, and manage the products you sell from three sources: your own catalog, Alfares supplier offers, and community resale products that other sellers open for distribution.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
@@ -120,6 +135,41 @@ export default function LandingPage() {
               <p className="mt-3 text-sm leading-6 text-slate-600">{benefit.text}</p>
             </article>
           ))}
+        </div>
+      </section>
+
+
+      <section className="border-t border-slate-200 bg-white">
+        <div className="mx-auto grid max-w-7xl gap-10 px-6 py-14 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
+          <div>
+            <h2 className="text-3xl font-extrabold tracking-normal text-slate-950">Sell products before you source them yourself</h2>
+            <p className="mt-4 text-base leading-7 text-slate-600">
+              Catalog is the shared sellable product pool for Alfares services. Sellers can start with discounted supplier products from Alfares, publish their own inventory, or resell products that other users explicitly make available.
+            </p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {salesSources.map((source) => (
+              <article key={source.title} className="rounded-lg border border-slate-200 bg-slate-50 p-5">
+                <h3 className="text-base font-extrabold text-slate-950">{source.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{source.text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-slate-200 bg-blue-50">
+        <div className="mx-auto grid max-w-7xl gap-8 px-6 py-14 lg:grid-cols-[1fr_1fr] lg:px-8">
+          <div>
+            <h2 className="text-3xl font-extrabold tracking-normal text-slate-950">Sales automation is the operating model</h2>
+            <p className="mt-4 text-base leading-7 text-slate-700">
+              Connect marketplace access once, keep product data current, and let Alfares prepare listings, fill channel accounts, synchronize catalog readiness, and support payment and order workflows across the connected sales services.
+            </p>
+          </div>
+          <div className="rounded-lg border border-blue-200 bg-white p-6 shadow-sm">
+            <p className="text-sm font-extrabold uppercase text-blue-700">Seller focus</p>
+            <p className="mt-3 text-lg font-bold leading-7 text-slate-950">Manage products, approve channel access, sell, and ship. Alfares handles the repetitive marketplace work around publication, account fill, order flow, and sales operations.</p>
+          </div>
         </div>
       </section>
 

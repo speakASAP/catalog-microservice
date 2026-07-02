@@ -266,6 +266,9 @@ export interface MarketplaceField {
   editable?: boolean;
   description?: string;
   value?: any;
+  manualOverride?: boolean;
+  stale?: boolean;
+  requiresManualReview?: boolean;
 }
 
 export interface MarketplaceFieldsResponse {
@@ -280,7 +283,21 @@ export interface MarketplaceFieldsResponse {
     overrides: Record<string, any>;
     externalRefs: Record<string, any>;
     sourceData: Record<string, any> | null;
+    manualOverrides?: Record<string, any>;
+    sourceState?: {
+      canonicalProductUpdatedAt?: string | null;
+      staleManualFields?: string[];
+      validationRequired?: boolean;
+      catalogReadinessRequired?: boolean;
+    };
     updatedAt?: string | null;
+  };
+  propagation?: {
+    status: 'current' | 'manual_review_required';
+    canonicalProductUpdatedAt?: string | null;
+    staleManualFields: string[];
+    validationRequired: boolean;
+    catalogReadinessRequired: boolean;
   };
   fields: MarketplaceField[];
 }

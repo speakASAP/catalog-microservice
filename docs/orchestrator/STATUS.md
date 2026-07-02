@@ -1,3 +1,24 @@
+## 2026-07-02 - Goal 24 Product Relations Runtime Migration
+
+Change: applied additive Catalog migration `scripts/migrations/20260702_product_relation_scores.sql` to `catalog_db` after owner approval. The migration created `product_relations`, relation constraints, and relation indexes. It does not ingest Orders, create bundles, change checkout, mutate stock, publish to channels, or insert relation rows.
+
+Validation evidence: `psql -U dbadmin -d catalog_db -v ON_ERROR_STOP=1` migration execution completed; schema verification confirmed `public.product_relations`, 7 indexes, 9 constraints, and `product_relation_rows=0`.
+
+Boundary decision: no Catalog deploy, frontend deploy, runtime API smoke, secret print, product data mutation, Warehouse/Orders/Payments mutation, or external marketplace mutation was run.
+
+Next action: deploy Catalog only after source review/staging, then run protected non-mutating relation endpoint smoke with an approved Auth token.
+
+
+## 2026-07-02 Goal 25 Canonical JSON Propagation Source
+
+Change: completed source implementation for manual marketplace override tracking and stale canonical source markers. Manual marketplace profile overrides now write `manual_overrides` metadata and `source_state`; marketplace field responses return propagation state and per-field manual/stale markers; Catalog frontend shows Manual and Source changed badges with a review warning.
+
+Validation evidence: focused marketplace-fields Jest passed (`1` suite, `4` tests), backend `npm run build` passed, frontend `npm run build` passed with the existing multiple-lockfile warning only, and `git diff --check` passed.
+
+Boundary decision: no production migration, deploy, channel draft, publish, queue, confirmation, Warehouse mutation, Orders mutation, or external marketplace mutation was run.
+
+Next action: review/apply the additive migration and deploy Catalog only after approval, then run protected API/runtime smoke with an approved Auth token.
+
 ## 2026-07-02 - Goal 23 Alfares Default Source Guard
 
 Change: restored the Goal 23 source contract after conflicting default-on commits. Newly provisioned seller settings keep Alfares products disabled by default while community products remain opt-in. The legacy-named migration `scripts/migrations/20260702_catalog_alfares_default_enabled.sql` sets `include_alfares_catalog DEFAULT false`, Catalog service/entity defaults are `includeAlfaresCatalog=false`, and Goal 23 contract/planning/validation docs are aligned. Existing `catalog_user_settings` rows are intentionally not bulk-updated because true or false may represent an explicit seller choice.
