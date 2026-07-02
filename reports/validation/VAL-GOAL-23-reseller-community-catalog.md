@@ -75,8 +75,22 @@ Catalog runtime is deployed and healthy on image `d2a2f66`; top repository commi
 
 Blocked until:
 
-- `[MISSING: approved Auth token for synthetic seller smoke]`
-- `[MISSING: authorized seller E2E smoke for provision settings, toggle Alfares/community sources, create owner product, enable resale, verify effective community visibility]`
+- `[MISSING: approved Auth tokens for two distinct synthetic seller users]`
+- `[MISSING: authorized seller E2E smoke execution for provision settings, toggle Alfares/community sources, create owner product, enable resale, verify effective community visibility]`
+
+## Prepared Authenticated E2E Harness
+
+`scripts/catalog-source-e2e-smoke.js` is ready but intentionally token-gated and execute-gated. It does not mint Auth tokens and it does not mutate Catalog unless `CATALOG_SOURCE_E2E_EXECUTE=true` is set with two distinct approved human bearer tokens.
+
+Expected run shape after approval:
+
+```bash
+CATALOG_SOURCE_E2E_EXECUTE=true \
+CATALOG_SOURCE_E2E_EXPECT_FRESH_USERS=true \
+CATALOG_SOURCE_E2E_OWNER_TOKEN='<owner human bearer>' \
+CATALOG_SOURCE_E2E_VIEWER_TOKEN='<viewer human bearer>' \
+npm run smoke:e2e:catalog-source
+```
 
 ## Cross-Repo Validation
 

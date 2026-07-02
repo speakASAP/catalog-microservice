@@ -14,6 +14,7 @@
     "test": "jest",
     "smoke:e2e": "node scripts/catalog-smoke.js",
     "smoke:e2e:authorized": "CATALOG_SMOKE_AUTHORIZED=true node scripts/catalog-smoke.js",
+    "smoke:e2e:catalog-source": "node scripts/catalog-source-e2e-smoke.js",
     "smoke:e2e:channel-status": "CATALOG_SMOKE_AUTHORIZED=true CATALOG_SMOKE_ENABLE_CHANNEL_STATUS=true node scripts/catalog-smoke.js",
     "verify:stock-acceptance:gates": "bash scripts/run-stock-acceptance-gates.sh",
     "smoke:e2e:bazos-authorized": "CATALOG_SMOKE_AUTHORIZED=true CATALOG_SMOKE_ENABLE_BAZOS_AUTHORIZED=true node scripts/catalog-smoke.js",

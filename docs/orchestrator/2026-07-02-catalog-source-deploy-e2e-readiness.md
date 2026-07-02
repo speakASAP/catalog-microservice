@@ -41,9 +41,9 @@ scope:
 
 | Deployment | Current image | Required alignment |
 |---|---|---|
-| `allegro-api-gateway` | `localhost:5000/allegro-api-gateway:ec6f97a` | `9258129` or newer |
-| `allegro-frontend` | `localhost:5000/allegro-frontend:ec6f97a` | `9258129` or newer |
-| `allegro-service` | `localhost:5000/allegro-service:ec6f97a` | `9258129` or newer |
+| `allegro-api-gateway` | `localhost:5000/allegro-api-gateway:2886b4b` | tag aligned to source history, but compiled gateway still does not expose `/api/products` |
+| `allegro-frontend` | `localhost:5000/allegro-frontend:2886b4b` | aligned to source history |
+| `allegro-service` | `localhost:5000/allegro-service:2886b4b` | aligned to source history |
 | `aukro-service` | `localhost:5000/aukro-service:dc5a362` | `269f5d8` or newer |
 | `bazos-service` | `localhost:5000/bazos-service:9f8f2bb` | aligned |
 | `heureka-api-gateway` | `localhost:5000/heureka-api-gateway:61c5e82` | aligned |
@@ -88,7 +88,7 @@ ssh alfares 'cd /home/ssf/Documents/Github/heureka && npx ts-node services/heure
 
 ## Candidate Deploy Commands
 
-Use explicit commit tags so runtime provenance is inspectable. Bazos and Heureka are already aligned and should not be redeployed for this goal unless a later smoke finds a channel-specific defect.
+Use explicit commit tags so runtime provenance is inspectable. Bazos and Heureka are already aligned and should not be redeployed for this goal unless a later smoke finds a channel-specific defect. Allegro needs image/provenance repair or rebuild because the `2886b4b` tag is present but live compiled gateway code still misses the Catalog product picker route.
 
 ```bash
 ssh alfares 'cd /home/ssf/Documents/Github/allegro && ./scripts/deploy.sh 9258129'
@@ -103,7 +103,8 @@ FlipFlop is excluded from this deploy set until the active GOAL-12 work owner pr
 - `catalog-frontend` is ready on `localhost:5000/catalog-frontend:latest`; `/` returned `200`.
 - `bazos-service` is ready on `localhost:5000/bazos-service:9f8f2bb`; `/ui/catalog/products?limit=1` returned `401` without a bearer token.
 - `heureka-api-gateway` and `heureka-service` are ready on `localhost:5000/heureka-*:61c5e82`; `/api/heureka/dashboard/catalog-products?limit=1&source=effective` returned `401` without a bearer token.
-- `allegro-*` still runs `ec6f97a`; `/api/products?catalogScope=effective&limit=1` still returns the old `404`.
+- `allegro-*` now runs `2886b4b`, and `2886b4b` contains `9258129` in source history.
+- Allegro `/api/products?catalogScope=effective&limit=1` still returns `404`, and a runtime grep did not find `catalogProductsRoute` in the compiled gateway image; treat Allegro route exposure as still missing until rebuilt/repaired.
 - `aukro-service` still runs `dc5a362`; `/aukro/ui/catalog/products?limit=1` returns protected `403` without a bearer token, but image alignment to `269f5d8` is still missing.
 
 ## Post-Deploy Runtime Checks
@@ -156,10 +157,26 @@ Minimum channel smoke:
 4. Heureka dashboard source filter works for `effective`, `own`, `alfares`, and `community`.
 5. Channel draft/listing operations remain bound to the current user's channel account/identity.
 
+Prepared Catalog E2E harness:
+
+```bash
+CATALOG_SOURCE_E2E_EXECUTE=true \
+CATALOG_SOURCE_E2E_EXPECT_FRESH_USERS=true \
+CATALOG_SOURCE_E2E_OWNER_TOKEN='<owner human bearer>' \
+CATALOG_SOURCE_E2E_VIEWER_TOKEN='<viewer human bearer>' \
+npm run smoke:e2e:catalog-source
+```
+
+Optional read-only channel picker route smoke after channel alignment:
+
+```bash
+CATALOG_SOURCE_E2E_EXECUTE=true CATALOG_SOURCE_E2E_CHANNEL_ROUTES=true ...
+```
+
 ## Remaining Blockers
 
-- `[MISSING: explicit owner approval to deploy Allegro/Aukro channel image alignment]`
+- `[MISSING: explicit owner approval to repair/rebuild Allegro route image and deploy Aukro image alignment]`
 - `[MISSING: approved human Auth bearer token for E2E smoke]`
 - `[MISSING: FlipFlop immutable image provenance after GOAL-12 dirty rollout]`
-- `[MISSING: Allegro live deployment aligned to 9258129 or newer]`
+- `[MISSING: Allegro live `/api/products` route exposure despite `2886b4b` image tag]`
 - `[MISSING: Aukro live deployment aligned to 269f5d8 or newer]`
