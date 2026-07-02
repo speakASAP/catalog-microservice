@@ -4,7 +4,7 @@ import { CatalogAccessService } from './catalog-access.service';
 describe('CatalogAccessService', () => {
   const actor = { type: 'jwt' as const, sub: 'seller-1', roles: [], authMethod: 'auth-validate' as const };
 
-  it('provisions seller settings with Alfares enabled and community disabled by default', async () => {
+  it('provisions seller settings with Alfares and community disabled by default', async () => {
     const repository: any = {
       findOne: jest.fn(async () => null),
       create: jest.fn((data) => data),
@@ -16,13 +16,13 @@ describe('CatalogAccessService', () => {
 
     expect(repository.create).toHaveBeenCalledWith(expect.objectContaining({
       userId: 'seller-1',
-      includeAlfaresCatalog: true,
+      includeAlfaresCatalog: false,
       includeCommunityCatalog: false,
       sourceApplication: 'catalog',
     }));
     expect(settings).toMatchObject({
       userId: 'seller-1',
-      includeAlfaresCatalog: true,
+      includeAlfaresCatalog: false,
       includeCommunityCatalog: false,
       sourceApplication: 'catalog',
       created: true,
@@ -32,7 +32,7 @@ describe('CatalogAccessService', () => {
   it('updates only source-selection settings for the authenticated seller', async () => {
     const row = {
       userId: 'seller-1',
-      includeAlfaresCatalog: true,
+      includeAlfaresCatalog: false,
       includeCommunityCatalog: false,
       sourceApplication: null,
     };
@@ -47,7 +47,7 @@ describe('CatalogAccessService', () => {
 
     expect(repository.save).toHaveBeenCalledWith(expect.objectContaining({
       userId: 'seller-1',
-      includeAlfaresCatalog: true,
+      includeAlfaresCatalog: false,
       includeCommunityCatalog: true,
     }));
     expect(settings.includeCommunityCatalog).toBe(true);

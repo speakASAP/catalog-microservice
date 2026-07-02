@@ -39,7 +39,7 @@ export class CatalogAccessService {
 
     const created = this.settingsRepository.create({
       userId,
-      includeAlfaresCatalog: true,
+      includeAlfaresCatalog: false,
       includeCommunityCatalog: false,
       sourceApplication: this.cleanSourceApplication(sourceApplication),
     });
@@ -60,7 +60,7 @@ export class CatalogAccessService {
     const existing = await this.settingsRepository.findOne({ where: { userId } });
     const settings = existing ?? this.settingsRepository.create({
       userId,
-      includeAlfaresCatalog: true,
+      includeAlfaresCatalog: false,
       includeCommunityCatalog: false,
       sourceApplication: null,
     });
@@ -81,7 +81,7 @@ export class CatalogAccessService {
   defaultSettings(actor?: CatalogActor): CatalogSourceSettings {
     return {
       userId: actor?.sub ?? 'anonymous',
-      includeAlfaresCatalog: true,
+      includeAlfaresCatalog: false,
       includeCommunityCatalog: false,
       sourceApplication: null,
       created: false,
@@ -98,7 +98,7 @@ export class CatalogAccessService {
   private toSettings(settings: CatalogUserSettings, created: boolean): CatalogSourceSettings {
     return {
       userId: settings.userId,
-      includeAlfaresCatalog: settings.includeAlfaresCatalog !== false,
+      includeAlfaresCatalog: settings.includeAlfaresCatalog === true,
       includeCommunityCatalog: settings.includeCommunityCatalog === true,
       sourceApplication: settings.sourceApplication ?? null,
       created,

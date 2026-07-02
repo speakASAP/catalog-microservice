@@ -21,7 +21,7 @@ Sellers can publish selected owned products into a community resale catalog, and
 
 ## Goal Impact
 
-This creates a marketplace-like supply layer inside the Alfares platform. Alfares products remain available by default. Products from other users require two opt-ins: the owner enables resale on the product, and the viewer enables products from other sellers.
+This creates a marketplace-like supply layer inside the Alfares platform. Alfares products remain disabled by default for newly registered sellers and require an explicit viewer opt-in. Products from other users require two opt-ins: the owner enables resale on the product, and the viewer enables products from other sellers.
 
 ## System Boundary
 
@@ -231,7 +231,7 @@ Merge order: Catalog contract -> Catalog frontend -> independent channel pickers
 Requires approved Auth token and deploy approval:
 
 1. Create/read settings for synthetic seller.
-2. Verify defaults: Alfares true, community false.
+2. Verify defaults: Alfares false, community false.
 3. Create synthetic seller product with resale false.
 4. Verify another seller cannot see it under community scope.
 5. Owner enables resale.

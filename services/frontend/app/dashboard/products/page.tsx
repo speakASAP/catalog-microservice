@@ -444,7 +444,7 @@ export default function AdminProductsPage() {
             <label className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-800">
               <input
                 type="checkbox"
-                checked={catalogSettings?.includeAlfaresCatalog !== false}
+                checked={catalogSettings?.includeAlfaresCatalog === true}
                 disabled={settingsSaving || !catalogSettings}
                 onChange={(event) => updateCatalogSource('includeAlfaresCatalog', event.target.checked)}
                 className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"

@@ -1,3 +1,13 @@
+## 2026-07-02 - Goal 23 Reseller Community Catalog Source
+
+Change: implemented the corrected seller-community resale model in Catalog. Alfares products are disabled by default, products from other sellers are disabled by default, and a seller-owned product is visible to other sellers only when the owner enables resale on that product. Added `products.resale_enabled`, `catalog_user_settings.include_alfares_catalog`, `catalog_user_settings.include_community_catalog`, protected source settings/provision endpoints, `catalogScope=own|effective|alfares|community|all`, owner-only mutation guards for non-owned visible products, Catalog dashboard source checkboxes, `/dashboard/settings`, product create/edit resale checkboxes, and Goal 23 contract/planning/validation docs.
+
+Validation evidence: `npm test -- --runInBand src/catalog-access/catalog-access.service.spec.ts src/products/products.service.spec.ts` passed with 2 suites and 34 tests; `npm run build` passed; `cd services/frontend && npm run build` passed with only the existing Next.js multiple-lockfile warning; `git diff --check` passed.
+
+Boundary decision: no production migration application, deployment, runtime smoke, token/secret read, production data mutation, Auth code change, Warehouse/Orders/Payments change, or channel repo source edit was performed. Existing dirty Goal 22/event files remain separate. Channel-service product pickers are ready follow-up lanes after Catalog contract review; Bazos remains blocked by its package JSON validation issue.
+
+Next action: review/stage the Goal 23 Catalog source patch, then either deploy Catalog after migration approval or dispatch independent channel workers for Allegro/Aukro/FlipFlop and dependency-gated Bazos/Heureka.
+
 ## 2026-07-02 - Goal 22 W1 Catalog Backend Source
 
 Change: implemented Catalog-side private user catalog settings and Alfares resale opt-in source scope. Added `src/catalog-access/*`, additive migration `scripts/migrations/20260702_catalog_user_settings.sql`, and product access changes for `catalogScope=own|effective|alfares`. Human users now default to own products only; `effective` includes shared Alfares products only after `includeAlfaresCatalog=true`; shared Alfares products are read-only for ordinary users; publication flows return `alfares_catalog_opt_in_required` when a user tries to publish a shared product without opt-in.

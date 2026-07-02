@@ -60,7 +60,7 @@ export default function CatalogSettingsPage() {
           <label className="flex items-start gap-3 rounded-xl border border-gray-200 p-4">
             <input
               type="checkbox"
-              checked={settings?.includeAlfaresCatalog !== false}
+              checked={settings?.includeAlfaresCatalog === true}
               disabled={saving || !settings}
               onChange={(event) => updateSetting('includeAlfaresCatalog', event.target.checked)}
               className="mt-1 h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"

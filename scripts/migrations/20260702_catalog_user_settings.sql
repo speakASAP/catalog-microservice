@@ -7,6 +7,7 @@
 CREATE TABLE IF NOT EXISTS catalog_user_settings (
   user_id varchar(200) PRIMARY KEY,
   include_alfares_catalog boolean NOT NULL DEFAULT false,
+  include_community_catalog boolean NOT NULL DEFAULT false,
   source_application varchar(100),
   first_seen_at timestamptz NOT NULL DEFAULT now(),
   created_at timestamptz NOT NULL DEFAULT now(),
