@@ -105,6 +105,16 @@ FlipFlop is excluded from this deploy set until the active GOAL-12 work owner pr
 - `bazos-service` is ready on `localhost:5000/bazos-service:9f8f2bb`; `/ui/catalog/products?limit=1` returned `401` without a bearer token.
 - `heureka-api-gateway` and `heureka-service` are ready on `localhost:5000/heureka-*:61c5e82`; `/api/heureka/dashboard/catalog-products?limit=1&source=effective` returned `401` without a bearer token.
 
+## Deployed UI/Runtime Marker Evidence 2026-07-02 15:14 UTC
+
+- Catalog frontend contains `includeAlfaresCatalog` and `includeCommunityCatalog` in `/app/.next/server/chunks/ssr/_9cb9ee33._.js`; product edit `resaleEnabled` is in `/app/.next/server/chunks/ssr/app_dashboard_products_[id]_page_tsx_e4021c16._.js`.
+- Allegro gateway contains `catalogProductsRoute` and `/api/products` in `/app/services/api-gateway/dist/gateway/gateway.controller.js`.
+- Allegro service contains `catalogScope: 'effective'` in `/app/services/allegro-service/dist/allegro/catalog-sell-action/catalog-sell-action.service.js`.
+- Aukro service contains `data-catalog-source`, `catalogSources`, and `Komunitní resale` in `/app/services/aukro-service/dist/ui/ui.controller.js`.
+- Bazos service contains `resaleEnabled`, `catalogScope: 'effective'`, and `Katalog effective` in `/app/dist/ui/ui.assets.js`.
+- Heureka service contains `products-source-filter`, `Community resale`, and `Shared for resale` in `/app/dist/public/public.controller.js`.
+- This marker pass is still not a substitute for authenticated seller E2E; it only proves the deployed assets contain the expected controls/routes.
+
 ## Post-Deploy Runtime Checks
 
 ```bash

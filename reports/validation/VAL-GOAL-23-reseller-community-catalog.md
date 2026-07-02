@@ -130,6 +130,17 @@ Channel source validation commands:
 # PASS dashboard-list-products self-test
 ```
 
+## Deployed Marker Evidence
+
+Read-only deployed marker pass, 2026-07-02 15:14 UTC:
+
+- Catalog frontend source checkboxes: `includeAlfaresCatalog`, `includeCommunityCatalog` in `/app/.next/server/chunks/ssr/_9cb9ee33._.js`; product resale checkbox marker `resaleEnabled` in `/app/.next/server/chunks/ssr/app_dashboard_products_[id]_page_tsx_e4021c16._.js`.
+- Allegro gateway/service: `catalogProductsRoute`, `/api/products`, and `catalogScope: 'effective'` in deployed `dist` files.
+- Aukro service: `data-catalog-source`, `catalogSources`, and `Komunitní resale` in `/app/services/aukro-service/dist/ui/ui.controller.js`.
+- Bazos service: `resaleEnabled`, `catalogScope: 'effective'`, and `Katalog effective` in `/app/dist/ui/ui.assets.js`.
+- Heureka service: `products-source-filter`, `Community resale`, and `Shared for resale` in `/app/dist/public/public.controller.js`.
+- Marker evidence proves deployed assets contain expected UI/runtime hooks; authenticated seller E2E still remains required.
+
 Current blockers:
 
 - `[MISSING: approved Auth tokens for two distinct synthetic seller users]`
