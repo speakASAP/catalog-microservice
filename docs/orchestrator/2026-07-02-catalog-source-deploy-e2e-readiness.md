@@ -30,14 +30,14 @@ scope:
 
 | Repo | Required commit | Status |
 |---|---:|---|
-| `catalog-microservice` | `9909a5d` | pushed; runtime backend image is `d2a2f66`, top commits are docs-only |
+| `catalog-microservice` | `fdb7df4` | pushed; runtime backend image is `d2a2f66`; `10c48de` fail-closed code is an ancestor of `d2a2f66`, and later top commits are docs-only |
 | `allegro` | `9258129` | pushed |
 | `aukro` | `269f5d8` | pushed; runtime feature code is in `f237fda`, validation docs in `269f5d8` |
-| `bazos` | `9f8f2bb` | pushed |
-| `heureka` | `61c5e82` | pushed; runtime feature code is in `bf467cd`, validation docs in `61c5e82` |
+| `bazos` | `9f8f2bb` | pushed and deployed |
+| `heureka` | `61c5e82` | pushed and deployed; runtime feature code is in `bf467cd`, validation docs in `61c5e82` |
 | `flipflop` | `a463e5e` | pushed; includes `30a5e6c` Catalog effective-scope commit |
 
-## Current Runtime Images To Replace Or Prove
+## Current Runtime Images And Alignment
 
 | Deployment | Current image | Required alignment |
 |---|---|---|
@@ -45,9 +45,9 @@ scope:
 | `allegro-frontend` | `localhost:5000/allegro-frontend:ec6f97a` | `9258129` or newer |
 | `allegro-service` | `localhost:5000/allegro-service:ec6f97a` | `9258129` or newer |
 | `aukro-service` | `localhost:5000/aukro-service:dc5a362` | `269f5d8` or newer |
-| `bazos-service` | `localhost:5000/bazos-service:33eaf4d` | `9f8f2bb` or newer |
-| `heureka-api-gateway` | `localhost:5000/heureka-api-gateway:43e890b` | `61c5e82` or newer |
-| `heureka-service` | `localhost:5000/heureka-service:43e890b` | `61c5e82` or newer |
+| `bazos-service` | `localhost:5000/bazos-service:9f8f2bb` | aligned |
+| `heureka-api-gateway` | `localhost:5000/heureka-api-gateway:61c5e82` | aligned |
+| `heureka-service` | `localhost:5000/heureka-service:61c5e82` | aligned |
 | `flipflop-product-service` | `localhost:5000/flipflop-product-service:goal12-upsell-20260702163830` | immutable provenance proving `30a5e6c` and active GOAL-12 work |
 
 ## Deploy Gate
@@ -88,16 +88,23 @@ ssh alfares 'cd /home/ssf/Documents/Github/heureka && npx ts-node services/heure
 
 ## Candidate Deploy Commands
 
-Use explicit commit tags so runtime provenance is inspectable.
+Use explicit commit tags so runtime provenance is inspectable. Bazos and Heureka are already aligned and should not be redeployed for this goal unless a later smoke finds a channel-specific defect.
 
 ```bash
 ssh alfares 'cd /home/ssf/Documents/Github/allegro && ./scripts/deploy.sh 9258129'
 ssh alfares 'cd /home/ssf/Documents/Github/aukro && IMAGE_TAG=269f5d8 ./scripts/deploy.sh'
-ssh alfares 'cd /home/ssf/Documents/Github/bazos && ./scripts/deploy.sh 9f8f2bb'
-ssh alfares 'cd /home/ssf/Documents/Github/heureka && ./scripts/deploy.sh 61c5e82'
 ```
 
 FlipFlop is excluded from this deploy set until the active GOAL-12 work owner provides immutable-image guidance.
+
+## Read-Only Runtime Refresh 2026-07-02 14:59 UTC
+
+- `catalog-microservice` is ready on `localhost:5000/catalog-microservice:d2a2f66`; `/health` returned `200`; `/api/catalog/settings` returned `401` without a bearer token.
+- `catalog-frontend` is ready on `localhost:5000/catalog-frontend:latest`; `/` returned `200`.
+- `bazos-service` is ready on `localhost:5000/bazos-service:9f8f2bb`; `/ui/catalog/products?limit=1` returned `401` without a bearer token.
+- `heureka-api-gateway` and `heureka-service` are ready on `localhost:5000/heureka-*:61c5e82`; `/api/heureka/dashboard/catalog-products?limit=1&source=effective` returned `401` without a bearer token.
+- `allegro-*` still runs `ec6f97a`; `/api/products?catalogScope=effective&limit=1` still returns the old `404`.
+- `aukro-service` still runs `dc5a362`; `/aukro/ui/catalog/products?limit=1` returns protected `403` without a bearer token, but image alignment to `269f5d8` is still missing.
 
 ## Post-Deploy Runtime Checks
 
@@ -115,6 +122,7 @@ Protected-route shape checks without a token:
 curl -i -sS -m 8 'https://catalog.alfares.cz/api/catalog/settings'
 curl -i -sS -m 8 'https://heureka.alfares.cz/api/heureka/dashboard/catalog-products?limit=1&source=effective'
 curl -i -sS -m 8 'https://aukro.alfares.cz/aukro/ui/catalog/products?limit=1'
+curl -i -sS -m 8 'https://bazos.alfares.cz/ui/catalog/products?limit=1'
 curl -i -sS -m 8 'https://allegro.alfares.cz/api/products?catalogScope=effective&limit=1'
 ```
 
@@ -122,6 +130,7 @@ Expected unauthenticated results:
 
 - Catalog settings: `401`.
 - Heureka dashboard products: `401`.
+- Bazos UI catalog products: `401`.
 - Aukro UI catalog products: protected `403` or authenticated route behavior.
 - Allegro `/api/products`: should stop returning the old `404` after `9258129` deploy.
 
@@ -149,10 +158,8 @@ Minimum channel smoke:
 
 ## Remaining Blockers
 
-- `[MISSING: explicit owner approval to deploy Allegro/Aukro/Bazos/Heureka channel images]`
+- `[MISSING: explicit owner approval to deploy Allegro/Aukro channel image alignment]`
 - `[MISSING: approved human Auth bearer token for E2E smoke]`
 - `[MISSING: FlipFlop immutable image provenance after GOAL-12 dirty rollout]`
 - `[MISSING: Allegro live deployment aligned to 9258129 or newer]`
 - `[MISSING: Aukro live deployment aligned to 269f5d8 or newer]`
-- `[MISSING: Bazos live deployment aligned to 9f8f2bb or newer]`
-- `[MISSING: Heureka live deployment aligned to 61c5e82 or newer]`
