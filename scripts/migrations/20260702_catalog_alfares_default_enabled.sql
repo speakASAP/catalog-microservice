@@ -1,6 +1,5 @@
--- Forward correction after an erroneous default-on source change.
--- Alfares products must stay disabled for newly provisioned sellers unless
--- the seller explicitly enables that source.
+-- Forward correction for Goal 23: Alfares products are visible to sellers by default.
+-- Existing user rows are not bulk-updated because false may be an explicit seller choice.
 
 ALTER TABLE catalog_user_settings
-  ALTER COLUMN include_alfares_catalog SET DEFAULT false;
+  ALTER COLUMN include_alfares_catalog SET DEFAULT true;

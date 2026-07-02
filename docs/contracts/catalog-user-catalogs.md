@@ -1,6 +1,6 @@
 # Catalog User Catalogs Contract
 
-> 2026-07-02 status note: Goal 23 extends this Goal 22 draft with community resale, while preserving the source-default requirement. Newly provisioned seller settings default to `include_alfares_catalog=false` and `include_community_catalog=false`; existing explicit user settings remain respected. See `docs/contracts/catalog-reseller-community-products.md`.
+> 2026-07-02 status note: Goal 23 supersedes the source-default portion of this Goal 22 draft. Newly provisioned seller settings now default to `include_alfares_catalog=true` and `include_community_catalog=false`; existing explicit user settings remain respected. See `docs/contracts/catalog-reseller-community-products.md`.
 
 ```yaml
 id: CONTRACT-CATALOG-USER-CATALOGS-V1
@@ -40,7 +40,7 @@ Add an idempotent settings record per Auth user.
 ```text
 catalog_user_settings
   user_id varchar(200) primary key
-  include_alfares_catalog boolean not null default false
+  include_alfares_catalog boolean not null default true
   source_application varchar(100) null
   first_seen_at timestamptz not null default now()
   created_at timestamptz not null default now()
@@ -49,7 +49,7 @@ catalog_user_settings
 
 Current Goal 23 default behavior:
 
-- Missing settings row is treated as `includeAlfaresCatalog=false`.
+- Missing settings row is treated as `includeAlfaresCatalog=true`.
 - Provisioning is idempotent and must not copy Alfares products into the user's private catalog.
 - Disabling Alfares products removes that source from the effective read/publish scope; it does not transfer ownership or grant edit/delete rights over Alfares product rows.
 
