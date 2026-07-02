@@ -1,3 +1,13 @@
+## 2026-07-02 - Goal 23 Alfares Default Source Correction
+
+Change: corrected the Goal 23 source contract so newly provisioned seller settings include Alfares products by default while community products remain opt-in. Added forward-only migration `scripts/migrations/20260702_catalog_alfares_default_enabled.sql`, changed Catalog service/entity defaults to `includeAlfaresCatalog=true`, and updated Goal 23 contract/planning/validation docs. Existing `catalog_user_settings` rows are intentionally not bulk-updated because `false` may represent an explicit seller choice.
+
+Validation evidence: `npm test -- --runInBand src/catalog-access/catalog-access.service.spec.ts src/products/products.service.spec.ts` passed with 2 suites and 35 tests; `npm run build` passed; `cd services/frontend && npm run build` passed with only the existing Next.js multiple-lockfile warning; focused `git diff --check` for the Goal 23 correction files passed.
+
+Boundary decision: no Warehouse, Orders, Payments, Auth, marketplace publication, customer data mutation, or destructive DB operation is included in this correction. The migration changes only the database default for future settings rows.
+
+Next action: apply the additive default migration, deploy Catalog backend/frontend, and then validate channel repository integrations.
+
 ## 2026-07-02 - Goal 22/23 Catalog Runtime Deployment
 
 Change: applied the fail-closed Catalog source model to production runtime. `catalog_user_settings` now exists with `include_alfares_catalog=false` and `include_community_catalog=false`; `products.resale_enabled=false` exists; owner-scope and resale indexes are present. Backend and frontend are deployed from `10c48de`.

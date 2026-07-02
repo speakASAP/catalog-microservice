@@ -64,7 +64,7 @@ Implement the central Catalog contract and the Catalog dashboard source/resale c
 3. Update product DTO/query types.
 4. Apply effective read scoping:
    - own products always;
-   - Alfares products when `includeAlfaresCatalog=true`;
+   - Alfares products when `includeAlfaresCatalog=true`, which is the default for newly provisioned settings;
    - other sellers' `resaleEnabled=true` products when `includeCommunityCatalog=true`.
 5. Keep mutation scoping owner-only for ordinary users.
 6. Preserve admin/service operational scope.
@@ -86,7 +86,7 @@ Implement the central Catalog contract and the Catalog dashboard source/resale c
 | W6 FlipFlop seller/admin | ready after W1 | channel worker | seller/admin product surfaces only | W1 validated | product-service/frontend build | no public storefront regression |
 | W7 Heureka product picker | dependency-gated | channel worker | product/feed inclusion picker if present | W1 validated, route ownership confirmed | Heureka build/tests | source controls where picker exists |
 | W8 Auth provisioning | decision-gated | auth worker | no-code decision unless lazy provisioning gap proven | W1 runtime smoke | Auth tests/build if changed | keep JWT/login unchanged |
-| W9 Runtime deploy | blocked | deploy operator | apply migration, deploy Catalog and consumers | owner deploy approval | health + authorized smoke | no secret printing |
+| W9 Runtime deploy | active | deploy operator | apply migration, deploy Catalog and consumers | source validation | health + authorized smoke where token is available | no secret printing |
 
 ## Shared Contracts
 

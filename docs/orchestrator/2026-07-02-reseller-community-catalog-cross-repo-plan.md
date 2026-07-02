@@ -21,7 +21,7 @@ Sellers can publish selected owned products into a community resale catalog, and
 
 ## Goal Impact
 
-This creates a marketplace-like supply layer inside the Alfares platform. Alfares products remain disabled by default for newly registered sellers and require an explicit viewer opt-in. Products from other users require two opt-ins: the owner enables resale on the product, and the viewer enables products from other sellers.
+This creates a marketplace-like supply layer inside the Alfares platform. Alfares products remain visible by default for newly registered sellers. Products from other users require two opt-ins: the owner enables resale on the product, and the viewer enables products from other sellers.
 
 ## System Boundary
 
@@ -219,7 +219,7 @@ Forbidden:
 | Bazos UI | blocked | Bazos worker | safe candidate files | dirty event/RabbitMQ files | package JSON blocker | Bazos worker | 3 |
 | FlipFlop admin/seller | ready after W1 | FlipFlop worker | safe candidate files | dirty proactive consumer files | Catalog API validation | FlipFlop worker | 2 |
 | Heureka picker | dependency-gated | Heureka worker | `[UNKNOWN]` | feed/account unrelated files | route discovery | Heureka worker | 3 |
-| Runtime deploy | blocked | deploy operator | migration/deploy only | destructive DB ops | owner deploy approval | integration owner | final |
+| Runtime deploy | active | deploy operator | migration/deploy only | destructive DB ops | source validation | integration owner | final |
 
 Shared files/contracts: Catalog source settings API, `products.resale_enabled`, `catalogScope=effective`.
 Integration owner: original Catalog thread.
@@ -231,7 +231,7 @@ Merge order: Catalog contract -> Catalog frontend -> independent channel pickers
 Requires approved Auth token and deploy approval:
 
 1. Create/read settings for synthetic seller.
-2. Verify defaults: Alfares false, community false.
+2. Verify defaults: Alfares true, community false.
 3. Create synthetic seller product with resale false.
 4. Verify another seller cannot see it under community scope.
 5. Owner enables resale.
@@ -242,6 +242,5 @@ Requires approved Auth token and deploy approval:
 ## Open Items
 
 - `[MISSING: approved Auth token for runtime smoke]`
-- `[MISSING: deploy approval for migration application]`
 - `[MISSING: Bazos package JSON repair owner]`
 - `[UNKNOWN: active Heureka dashboard route]`

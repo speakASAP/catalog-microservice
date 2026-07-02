@@ -4,10 +4,10 @@ import { CatalogAccessService } from './catalog-access.service';
 describe('CatalogAccessService', () => {
   const actor = { type: 'jwt' as const, sub: 'seller-1', roles: [], authMethod: 'auth-validate' as const };
 
-  it('provisions seller settings with Alfares and community disabled by default', async () => {
+  it('provisions seller settings with Alfares enabled and community disabled by default', async () => {
     const repository: any = {
       findOne: jest.fn(async () => null),
-      create: jest.fn((data) => data),
+      create: jest.fn((data) => ({ ...data })),
       save: jest.fn(async (data) => data),
     };
     const service = new CatalogAccessService(repository);
@@ -16,13 +16,13 @@ describe('CatalogAccessService', () => {
 
     expect(repository.create).toHaveBeenCalledWith(expect.objectContaining({
       userId: 'seller-1',
-      includeAlfaresCatalog: false,
+      includeAlfaresCatalog: true,
       includeCommunityCatalog: false,
       sourceApplication: 'catalog',
     }));
     expect(settings).toMatchObject({
       userId: 'seller-1',
-      includeAlfaresCatalog: false,
+      includeAlfaresCatalog: true,
       includeCommunityCatalog: false,
       sourceApplication: 'catalog',
       created: true,
@@ -51,6 +51,29 @@ describe('CatalogAccessService', () => {
       includeCommunityCatalog: true,
     }));
     expect(settings.includeCommunityCatalog).toBe(true);
+  });
+
+  it('creates settings during update with the source defaults when no row exists', async () => {
+    const repository: any = {
+      findOne: jest.fn(async () => null),
+      create: jest.fn((data) => ({ ...data })),
+      save: jest.fn(async (data) => data),
+    };
+    const service = new CatalogAccessService(repository);
+
+    const settings = await service.updateSettings(actor, { includeCommunityCatalog: true });
+
+    expect(repository.create).toHaveBeenCalledWith(expect.objectContaining({
+      userId: 'seller-1',
+      includeAlfaresCatalog: true,
+      includeCommunityCatalog: false,
+    }));
+    expect(settings).toMatchObject({
+      userId: 'seller-1',
+      includeAlfaresCatalog: true,
+      includeCommunityCatalog: true,
+      created: true,
+    });
   });
 
   it('rejects service actors for human source settings', async () => {
