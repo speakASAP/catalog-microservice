@@ -58,6 +58,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     ...(canAccessAdminSection
       ? [
           {
+            title: 'Quality Review',
+            href: '/dashboard/admin/product-review',
+            icon: 'QA',
+          },
+          {
             title: 'Admin',
             href: '/dashboard/admin',
             icon: '⚙️',

@@ -2,7 +2,7 @@
  * Products API - Catalog Microservice
  */
 
-import { apiClient } from './client';
+import { apiClient, type ApiResponse } from './client';
 
 export interface ProductMedia {
   id: string;
@@ -33,6 +33,8 @@ export interface Product {
     width?: number;
     height?: number;
   };
+  tags?: string[];
+  seoData?: Record<string, any> | null;
   isActive: boolean;
   lifecycle?: 'draft' | 'active' | 'archived' | 'needs_review';
   createdAt: string;
@@ -174,20 +176,35 @@ export interface ProductQuery {
   catalogSources?: ProductCatalogSource[];
 }
 
-export type ProductQualityReviewSeverity = 'blocking' | 'optional';
-export type ProductQualityReviewExportFormat = 'json' | 'csv' | 'markdown';
-
-export interface ProductQualityReviewQuery extends ProductQuery {
-  missingField?: string;
-  severity?: ProductQualityReviewSeverity;
+export interface PaginatedResponse<T> {
+  items: T[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
 }
 
-export interface ProductQualityReviewIssue {
+export type ProductQualityIssueSeverity = 'blocking' | 'warning';
+export type ProductQualityIssueSource = 'catalog.product_quality.v1' | 'goal02-readiness';
+
+export interface ProductQualityIssue {
   code: string;
-  field?: string;
-  severity: string;
   message: string;
-  source: string;
+  severity: ProductQualityIssueSeverity;
+  field?: string;
+  source?: ProductQualityIssueSource;
+}
+
+export interface ProductQualityReadiness {
+  productId: string;
+  sku: string;
+  lifecycle: Product['lifecycle'];
+  sellable: boolean;
+  publishable: boolean;
+  issues: ProductQualityIssue[];
+  checks: Record<string, boolean>;
 }
 
 export interface ProductQualityReviewItem {
@@ -201,25 +218,31 @@ export interface ProductQualityReviewItem {
   publishable: boolean;
   canActivate: boolean;
   completionScore: number;
-  blockingIssues: ProductQualityReviewIssue[];
+  blockingIssues: ProductQualityIssue[];
   blockingMissingFields: string[];
-  optionalOpportunities: ProductQualityReviewIssue[];
+  optionalOpportunities: ProductQualityIssue[];
   nextAction: string;
-  readiness?: Record<string, any>;
+  readiness: ProductQualityReadiness;
 }
 
-export interface ProductQualityReviewResponse {
-  policyId: string;
-  blockers: string[];
-  items: ProductQualityReviewItem[];
-  total: number;
-  page: number;
-  limit: number;
+export interface ProductQualityReviewQuery extends ProductQuery {
+  missingField?: string;
+  severity?: 'blocking' | 'optional';
+  categoryId?: string;
 }
 
-export interface ProductQualityReviewExportResponse {
+export interface ProductQualityReviewApiResponse extends ApiResponse<ProductQualityReviewItem[]> {
+  policyId?: string;
+  blockers?: string[];
+}
+
+export interface ProductQualityReviewExportQuery extends ProductQualityReviewQuery {
+  format?: 'json' | 'csv' | 'markdown';
+}
+
+export interface ProductQualityReviewExport {
   policyId: string;
-  format: ProductQualityReviewExportFormat;
+  format: 'json' | 'csv' | 'markdown';
   generatedAt: string;
   contentType: string;
   blockers: string[];
@@ -227,41 +250,21 @@ export interface ProductQualityReviewExportResponse {
   content: ProductQualityReviewItem[] | string;
 }
 
-export interface ProductQualityReviewProductPatch {
-  title?: string;
-  description?: string;
-  brand?: string;
-  manufacturer?: string;
-  ean?: string;
-  tags?: string[];
-  lifecycle?: Product['lifecycle'];
-  isActive?: boolean;
-}
-
-export interface ProductQualityReviewPricingPatch {
-  basePrice?: number;
-  salePrice?: number;
-  currency?: string;
-  isActive?: boolean;
-}
-
-export interface ProductQualityReviewCategoryPatch {
-  categoryId?: string;
-  categoryIds?: string[];
-  mode?: 'replace' | 'add';
-}
-
-export interface ProductQualityReviewBulkUpdateRequest {
+export interface ProductQualityBulkUpdateRequest {
   productIds: string[];
-  patch?: ProductQualityReviewProductPatch;
-  categoryPatch?: ProductQualityReviewCategoryPatch;
-  pricingPatch?: ProductQualityReviewPricingPatch;
+  patch?: Record<string, unknown>;
   attributePatch?: Record<string, unknown>;
+  categoryPatch?: {
+    categoryId?: string;
+    categoryIds?: string[];
+    mode?: 'replace' | 'add';
+  };
+  pricingPatch?: Record<string, unknown>;
   expectedMissingField?: string;
   humanReview?: string;
 }
 
-export interface ProductQualityReviewBulkUpdateResult {
+export interface ProductQualityBulkUpdateResult {
   productId: string;
   sku: string;
   title: string;
@@ -269,32 +272,27 @@ export interface ProductQualityReviewBulkUpdateResult {
   updated: boolean;
   blocked: boolean;
   skipped: boolean;
-  blockingIssues: ProductQualityReviewIssue[];
+  blockingIssues: ProductQualityIssue[];
   nextAction: string;
   quality: ProductQualityReviewItem;
 }
 
-export interface ProductQualityReviewBulkUpdateResponse {
+export interface ProductQualityBulkUpdateResponse {
   success: boolean;
   policyId: string;
   requestedProductIds: string[];
   blockers: string[];
-  totals: {
-    requested: number;
-    updated: number;
-    blocked: number;
-    skipped: number;
-  };
-  results: ProductQualityReviewBulkUpdateResult[];
+  totals: { requested: number; updated: number; blocked: number; skipped: number };
+  results: ProductQualityBulkUpdateResult[];
 }
 
-export interface ProductQualityReviewActivateRequest {
+export interface ProductQualityActivationRequest {
   productIds: string[];
   humanReview?: string;
   reason?: string;
 }
 
-export interface ProductQualityReviewActivationResult {
+export interface ProductQualityActivationResult {
   productId: string;
   sku: string;
   title: string;
@@ -303,33 +301,18 @@ export interface ProductQualityReviewActivationResult {
   blocked: boolean;
   lifecycleBefore: NonNullable<Product['lifecycle']>;
   lifecycleAfter: NonNullable<Product['lifecycle']>;
-  blockingIssues: ProductQualityReviewIssue[];
+  blockingIssues: ProductQualityIssue[];
   nextAction: string;
   quality: ProductQualityReviewItem;
 }
 
-export interface ProductQualityReviewActivationResponse {
+export interface ProductQualityActivationResponse {
   success: boolean;
   policyId: string;
   requestedProductIds: string[];
   blockers: string[];
-  totals: {
-    requested: number;
-    activated: number;
-    blocked: number;
-    unchanged: number;
-  };
-  results: ProductQualityReviewActivationResult[];
-}
-
-export interface PaginatedResponse<T> {
-  items: T[];
-  pagination: {
-    total: number;
-    page: number;
-    limit: number;
-    pages: number;
-  };
+  totals: { requested: number; activated: number; blocked: number; unchanged: number };
+  results: ProductQualityActivationResult[];
 }
 
 export interface BazosListingStatus {
@@ -683,6 +666,22 @@ export interface ProductWarehouseAvailabilityResponse {
   items: ProductWarehouseAvailabilityItem[];
 }
 
+function productQualityReviewQueryString(query?: ProductQualityReviewQuery | ProductQualityReviewExportQuery) {
+  const params = new URLSearchParams();
+  if (query?.page) params.append('page', query.page.toString());
+  if (query?.limit) params.append('limit', query.limit.toString());
+  if (query?.search) params.append('search', query.search);
+  if (query?.isActive !== undefined) params.append('isActive', query.isActive.toString());
+  if (query?.lifecycle) params.append('lifecycle', query.lifecycle);
+  if (query?.catalogScope) params.append('catalogScope', query.catalogScope);
+  if (query?.catalogSources) params.append('catalogSources', query.catalogSources.join(','));
+  if (query?.categoryId) params.append('categoryId', query.categoryId);
+  if (query?.missingField) params.append('missingField', query.missingField);
+  if (query?.severity) params.append('severity', query.severity);
+  if (query && 'format' in query && query.format) params.append('format', query.format);
+  return params.toString();
+}
+
 export const productsApi = {
   async getProducts(query?: ProductQuery) {
     const params = new URLSearchParams();
@@ -706,53 +705,30 @@ export const productsApi = {
     return apiClient.get<Product>(`/products/sku/${sku}`);
   },
 
-  async getProductQualityReview(query?: ProductQualityReviewQuery) {
-    const params = new URLSearchParams();
-    if (query?.page) params.append('page', query.page.toString());
-    if (query?.limit) params.append('limit', query.limit.toString());
-    if (query?.search) params.append('search', query.search);
-    if (query?.isActive !== undefined) params.append('isActive', query.isActive.toString());
-    if (query?.lifecycle) params.append('lifecycle', query.lifecycle);
-    if (query?.catalogScope) params.append('catalogScope', query.catalogScope);
-    if (query?.catalogSources) params.append('catalogSources', query.catalogSources.join(','));
-    if (query?.missingField) params.append('missingField', query.missingField);
-    if (query?.severity) params.append('severity', query.severity);
-
-    const queryString = params.toString();
-    return apiClient.get<ProductQualityReviewResponse>(`/products/review/quality${queryString ? `?${queryString}` : ''}`);
-  },
-
-  async exportProductQualityReview(query?: ProductQualityReviewQuery & { format?: ProductQualityReviewExportFormat }) {
-    const params = new URLSearchParams();
-    if (query?.page) params.append('page', query.page.toString());
-    if (query?.limit) params.append('limit', query.limit.toString());
-    if (query?.search) params.append('search', query.search);
-    if (query?.isActive !== undefined) params.append('isActive', query.isActive.toString());
-    if (query?.lifecycle) params.append('lifecycle', query.lifecycle);
-    if (query?.catalogScope) params.append('catalogScope', query.catalogScope);
-    if (query?.catalogSources) params.append('catalogSources', query.catalogSources.join(','));
-    if (query?.missingField) params.append('missingField', query.missingField);
-    if (query?.severity) params.append('severity', query.severity);
-    if (query?.format) params.append('format', query.format);
-
-    const queryString = params.toString();
-    return apiClient.get<ProductQualityReviewExportResponse>(`/products/review/quality/export${queryString ? `?${queryString}` : ''}`);
-  },
-
-  async bulkUpdateAfterQualityReview(data: ProductQualityReviewBulkUpdateRequest) {
-    return apiClient.post<ProductQualityReviewBulkUpdateResponse>('/products/review/bulk-update', data);
-  },
-
-  async activateAfterQualityReview(data: ProductQualityReviewActivateRequest) {
-    return apiClient.post<ProductQualityReviewActivationResponse>('/products/review/activate', data);
-  },
-
   async createProduct(data: Partial<Product>) {
     return apiClient.post<Product>('/products', data);
   },
 
   async updateProduct(id: string, data: Partial<Product>) {
     return apiClient.put<Product>(`/products/${id}`, data);
+  },
+
+  async getProductQualityReview(query?: ProductQualityReviewQuery): Promise<ProductQualityReviewApiResponse> {
+    const queryString = productQualityReviewQueryString(query);
+    return apiClient.get<ProductQualityReviewItem[]>(`/products/review/quality${queryString ? `?${queryString}` : ''}`) as Promise<ProductQualityReviewApiResponse>;
+  },
+
+  async exportProductQualityReview(query?: ProductQualityReviewExportQuery) {
+    const queryString = productQualityReviewQueryString(query);
+    return apiClient.get<ProductQualityReviewExport>(`/products/review/quality/export${queryString ? `?${queryString}` : ''}`);
+  },
+
+  async bulkUpdateProductQualityReview(data: ProductQualityBulkUpdateRequest) {
+    return apiClient.post<ProductQualityBulkUpdateResponse>('/products/review/bulk-update', data);
+  },
+
+  async activateProductQualityReview(data: ProductQualityActivationRequest) {
+    return apiClient.post<ProductQualityActivationResponse>('/products/review/activate', data);
   },
 
 
