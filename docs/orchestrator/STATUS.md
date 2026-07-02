@@ -1,3 +1,15 @@
+## 2026-07-02 - C1 Catalog/Admin Order And Delivery Statistics
+
+Change: extended the existing Orders-backed Catalog product sales statistics bridge and admin product panel for the C1 order/delivery statistics lane. Catalog now normalizes the current Orders product statistics response shape (`byChannel`, `byStatus`, `grossItemRevenue`, `lastOrderAt`) in addition to the older Catalog UI shape, renders product-level order status rows, and exposes lifecycle/payment/delivery aggregate slots only when Orders supplies product-scoped aggregate fields. When those fields are absent, the product page shows `[MISSING: Orders stats endpoint]` instead of using global Orders admin lifecycle summaries or inventing lifecycle/delivery counts.
+
+Boundary decision: Orders remains the lifecycle, order status, payment status, channel, and delivery exception authority. Catalog does not store order rows, infer delivery state from stock/listings, call global lifecycle summaries as product facts, mutate Orders/Warehouse/Payments, or touch product-quality/manual-overrides/product-relations/local-resale/canonical JSON work. No deployment or push was run.
+
+Validation evidence: `npm test -- --runInBand src/products/products.service.spec.ts` passed (1 suite, 39 tests); `git diff --check` passed; `npm run build` passed; `cd services/frontend && npm run build` passed with only the existing Next.js multiple-lockfile workspace-root warning.
+
+Blocker: `[MISSING: Orders stats endpoint]` for product-scoped lifecycle/payment/delivery aggregates and channel-level lifecycle/delivery exception counts. Current Orders endpoint still provides product sales/order status aggregate data; C1 delivery/lifecycle detail remains fail-soft until Orders adds the required product-scoped stats contract.
+
+Next action: add or approve the Orders-owned product lifecycle/payment/delivery aggregate endpoint, then rerun Catalog C1 validation and replace the fail-soft marker with real Orders data.
+
 ## 2026-07-02 - Goal 24/25 Deploy Recovery Follow-up
 
 Change: after k3s briefly returned `Ready`, removed only stuck `Terminating` application pod API records in `statex-apps` with `kubectl delete pod --force --grace-period=0` to free the single-node pod limit. No DB, MinIO, Redis, PVC, deployment, service, secret, configmap, or stateful volume was deleted.

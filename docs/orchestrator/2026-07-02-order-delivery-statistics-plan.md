@@ -40,3 +40,19 @@ Forbidden files:
 - admin product page shows Orders-backed sales and lifecycle metrics
 - missing Orders stats endpoint is reported as `[MISSING: Orders stats endpoint]`
 - frontend handles empty/error states without inventing data
+
+## C1 Catalog Outcome - 2026-07-02
+
+Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation
+
+- Vision: Catalog/admin operators need product-centric order and delivery visibility while Orders remains lifecycle authority.
+- Goal Impact: the product admin statistics panel now handles Orders product sales, order status, and future lifecycle/delivery aggregates in one fail-soft surface.
+- System: Catalog reads bounded Orders aggregates only; Orders remains order lifecycle/payment/channel/delivery source of truth.
+- Feature: product sales statistics normalization now accepts Orders `byChannel` and `byStatus`; lifecycle/payment/delivery panels render only when product-scoped Orders stats exist.
+- Task: C1 Catalog/admin statistics worker.
+- Execution Plan: extend existing Goal 17 product statistics bridge/client/UI; do not touch product quality/manual overrides/product relations/local resale/canonical JSON work; no deploy or push.
+- Coding Prompt: consume real Orders product aggregate fields when present; report missing lifecycle/delivery aggregate contract as `[MISSING: Orders stats endpoint]`.
+- Code: `src/products/products.service.ts`, `services/frontend/lib/api/products.ts`, `services/frontend/app/dashboard/products/[id]/page.tsx`, `src/products/products.service.spec.ts`.
+- Validation: `npm test -- --runInBand src/products/products.service.spec.ts`; `git diff --check`; `npm run build`; `cd services/frontend && npm run build`.
+
+Current blocker: `[MISSING: Orders stats endpoint]` for product-scoped lifecycle/payment/delivery aggregates and channel-level lifecycle/delivery exception counts. Catalog must not use global Orders admin lifecycle summaries as product-level evidence.
