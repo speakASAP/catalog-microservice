@@ -1,0 +1,4 @@
+"productId","sku","title","ownerScope","sourceScope","lifecycle","blockingMissingFields","optionalOpportunities","completionScore","canActivate","nextAction"
+"00000000-0000-4000-8000-000000000251","","Synthetic draft missing sellable fields","owner:synt...0001","own","draft","sku|description|price|image","missing_brand","29","false","resolve_blockers:sku,description,price,image"
+"00000000-0000-4000-8000-000000000252","SYN-READY-001","Synthetic ready product","alfares","alfares","active","","","100","true","ready_for_activation"
+"00000000-0000-4000-8000-000000000253","SYN-REVIEW-001","Synthetic review product with placeholder media","owner:synt...0002","community","needs_review","image","missing_manufacturer|missing_tags","77","false","resolve_blockers:image"

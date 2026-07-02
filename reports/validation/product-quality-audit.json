@@ -1,0 +1,154 @@
+{
+  "policyId": "catalog.product_quality.v1",
+  "contract": "catalog.product_quality.validation_report.v1",
+  "generatedAt": "2026-07-02T21:03:23.987Z",
+  "source": {
+    "mode": "synthetic",
+    "label": "synthetic/sanitized",
+    "synthetic": true
+  },
+  "safety": {
+    "readOnly": true,
+    "mutatesCatalog": false,
+    "mutatesWarehouse": false,
+    "mutatesMarketplace": false,
+    "ownerIdentifiersMasked": true
+  },
+  "blockers": [
+    "[MISSING: generated description state contract]",
+    "[MISSING: live Catalog API base/token; synthetic validation mode used]"
+  ],
+  "totals": {
+    "products": 3,
+    "blocked": 2,
+    "readyForActivation": 1,
+    "byLifecycle": {
+      "active": 1,
+      "draft": 1,
+      "needs_review": 1
+    },
+    "byBlockingField": {
+      "description": 1,
+      "image": 2,
+      "price": 1,
+      "sku": 1
+    }
+  },
+  "items": [
+    {
+      "productId": "00000000-0000-4000-8000-000000000251",
+      "sku": "",
+      "title": "Synthetic draft missing sellable fields",
+      "ownerScope": "owner:synt...0001",
+      "sourceScope": "own",
+      "lifecycle": "draft",
+      "isActive": false,
+      "publishable": false,
+      "canActivate": false,
+      "completionScore": 29,
+      "blockingIssues": [
+        {
+          "code": "missing_sku",
+          "field": "sku",
+          "severity": "blocking",
+          "message": "SKU is missing.",
+          "source": "catalog.product_quality.v1"
+        },
+        {
+          "code": "missing_description",
+          "field": "description",
+          "severity": "blocking",
+          "message": "Description is missing.",
+          "source": "catalog.product_quality.v1"
+        },
+        {
+          "code": "missing_current_price",
+          "field": "pricing",
+          "severity": "blocking",
+          "message": "Current positive price is missing.",
+          "source": "catalog.product_quality.v1"
+        },
+        {
+          "code": "missing_image",
+          "field": "media",
+          "severity": "blocking",
+          "message": "Product image is missing.",
+          "source": "catalog.product_quality.v1"
+        }
+      ],
+      "blockingMissingFields": [
+        "sku",
+        "description",
+        "price",
+        "image"
+      ],
+      "optionalOpportunities": [
+        {
+          "code": "missing_brand",
+          "field": "brand",
+          "severity": "warning",
+          "message": "Brand is missing.",
+          "source": "catalog.product_quality.v1"
+        }
+      ],
+      "nextAction": "resolve_blockers:sku,description,price,image"
+    },
+    {
+      "productId": "00000000-0000-4000-8000-000000000252",
+      "sku": "SYN-READY-001",
+      "title": "Synthetic ready product",
+      "ownerScope": "alfares",
+      "sourceScope": "alfares",
+      "lifecycle": "active",
+      "isActive": true,
+      "publishable": true,
+      "canActivate": true,
+      "completionScore": 100,
+      "blockingIssues": [],
+      "blockingMissingFields": [],
+      "optionalOpportunities": [],
+      "nextAction": "ready_for_activation"
+    },
+    {
+      "productId": "00000000-0000-4000-8000-000000000253",
+      "sku": "SYN-REVIEW-001",
+      "title": "Synthetic review product with placeholder media",
+      "ownerScope": "owner:synt...0002",
+      "sourceScope": "community",
+      "lifecycle": "needs_review",
+      "isActive": false,
+      "publishable": false,
+      "canActivate": false,
+      "completionScore": 77,
+      "blockingIssues": [
+        {
+          "code": "placeholder_image_only",
+          "field": "media",
+          "severity": "blocking",
+          "message": "Placeholder image media cannot satisfy activation.",
+          "source": "catalog.product_quality.v1"
+        }
+      ],
+      "blockingMissingFields": [
+        "image"
+      ],
+      "optionalOpportunities": [
+        {
+          "code": "missing_manufacturer",
+          "field": "manufacturer",
+          "severity": "warning",
+          "message": "Manufacturer is missing.",
+          "source": "catalog.product_quality.v1"
+        },
+        {
+          "code": "missing_tags",
+          "field": "tags",
+          "severity": "warning",
+          "message": "Tags are missing.",
+          "source": "catalog.product_quality.v1"
+        }
+      ],
+      "nextAction": "resolve_blockers:image"
+    }
+  ]
+}
