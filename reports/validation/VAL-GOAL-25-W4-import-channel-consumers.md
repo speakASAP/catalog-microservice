@@ -2,7 +2,7 @@
 
 ```yaml
 id: VAL-GOAL-25-W4-IMPORT-CHANNEL-CONSUMERS
-status: bazos-lane-complete-cross-channel-rollup-active
+status: w4-channel-consumers-complete-w5-deploy-readiness-gated
 created: 2026-07-02
 last_updated: 2026-07-03
 primary_repository: /home/ssf/Documents/Github/catalog-microservice
@@ -29,11 +29,11 @@ Execution Plan: W4 lane in `implementation-goals/GOAL-25-product-quality-review-
 
 Coding Prompt: delegated W4 prompt from thread `019f2358-4c0c-7a42-b68d-7d96846a9eb9`.
 
-Code: Bazos source changes were completed, pushed to `main`, and deployed by the Bazos worker. This Catalog orchestrator update only records status/report evidence; no Catalog backend source, Warehouse, Allegro, Aukro, FlipFlop, or Heureka source edits were made here.
+Code: all channel consumer lanes are now complete from remote subagent handoffs. Bazos was completed/deployed earlier; Allegro, Aukro, FlipFlop, and Heureka were completed, pushed, and validated in this Goal-driven subagent rollup. This Catalog orchestrator update records status/report evidence only; no Catalog backend source, Warehouse source, product deletion, stock ownership, or marketplace publication path was changed here.
 
-Validation: Bazos handoff evidence confirms whitespace diff check, focused shared tests, shared build, runtime secret mapping dry-run, pod-to-Catalog readiness/review smokes, production health, and deployment readiness. No Catalog deployment, production DB mutation, Warehouse mutation, product deletion, queue publish action, marketplace publication, or secret output was run by this Catalog closure.
+Validation: Bazos, Allegro, Aukro, FlipFlop, and Heureka handoff evidence confirms focused fail-closed tests/verifiers, builds, diff checks, and IPS gates where available. Bazos and Aukro include deployed/runtime health evidence; Allegro, FlipFlop, and Heureka latest commits were not deployed by this thread. No Catalog deployment, production DB mutation, Warehouse mutation, product deletion, queue publish action, marketplace publication, or secret output was run by this Catalog closure.
 
-State Update: Bazos consumer lane is complete and accepted for W5. Cross-channel rollup remains active for Allegro, Aukro, FlipFlop, Heureka, and final integration/deploy-readiness evidence.
+State Update: W4 channel consumer implementation and validation are complete for Bazos, Allegro, Aukro, FlipFlop, and Heureka. W5 remains deployment/runtime-smoke gated for latest source commits that are not deployed.
 
 ## Changed Files
 
@@ -84,15 +84,29 @@ No Warehouse source edit was required.
 
 ### Allegro
 
-Initial inspection found clean `main`; final inspection showed concurrent dirty Goal 25 files owned outside this worker.
+Status: complete, pushed, and accepted by the Catalog orchestrator for W4 source validation.
 
-Evidence from source inspection:
+Final handoff evidence:
 
-- `shared/clients/catalog-client.service.ts` has `getProductQualityPreflight`.
-- `services/allegro-service/src/allegro/catalog-sell-action/catalog-sell-action.service.ts` calls `assertCatalogQualityAllowsAllegro` before draft preparation and blocks status/edit/confirm when Catalog quality blocks remain.
-- `scripts/migrate-products-to-catalog.ts` maps missing offer stock through `Number(offer.stockQuantity || 0)` and Warehouse `stock/set` uses finite quantity else `0`.
+- Repository clean and synced on `main` at `5d189ee Guard Allegro mutations on Catalog quality`.
+- Deploy: not run in this subagent rollup.
+- Validation report: `/home/ssf/Documents/Github/allegro/docs/validation/2026-07-03-allegro-goal25-catalog-quality-blockers.md`.
+- Focused sell-action, publish-lifecycle, policy-engine, and offers Catalog-quality specs passed.
+- `services/allegro-service` build passed with `LOGGING_SERVICE_URL=http://logging-microservice:3367`.
+- `git diff --check`, `npm run ips:audit` (100/100), and `npm run ips:pre-coding` passed.
 
-No Allegro edit was made by this worker. W5 must integrate with the concurrent Allegro dirty files before staging.
+Implemented consumer contract:
+
+- Fails closed before Catalog-backed local draft creation.
+- Fails closed before sell-action prepare/edit/confirm.
+- Fails closed before lifecycle confirm/queue/execute.
+- Legacy publish-adjacent routes routed through lifecycle now inherit Catalog quality blocking.
+- Blocks on Catalog quality blocked, unknown, or unavailable states.
+
+Important boundary:
+
+- Allegro remains owner of marketplace accounts, local drafts, queueing, compliance, and Allegro publication lifecycle.
+- Remaining runtime unknowns: `[UNKNOWN: live authenticated runtime token]` and `[UNKNOWN: Catalog production readiness payload drift after this commit]`.
 
 ### Bazos
 
@@ -123,39 +137,78 @@ Important boundary:
 
 ### Aukro
 
-Initial inspection found clean `main`; final inspection showed concurrent dirty Goal 25 files owned outside this worker.
+Status: complete, pushed, and accepted by the Catalog orchestrator for W4 source validation.
 
-Evidence from source inspection:
+Final handoff evidence:
 
-- `shared/clients/catalog-client.service.ts` exposes Catalog quality/readiness support.
-- `services/aukro-service/src/aukro/offers/offers.service.ts` builds a Catalog quality snapshot, fails closed when unavailable, and calls `assertCatalogQualityAllowsDraft`.
-- UI status surfaces `catalogQualityCanActivate` and `blockingIssues`.
+- Repository clean and synced on `main` at `f276a8c docs: record catalog quality consumer validation`.
+- Relevant code/test commits present on `main`: `77d853d`, `12377ce`, `13c489a`.
+- Validation report: `/home/ssf/Documents/Github/aukro/12_validation/VAL-TASK-017-catalog-goal25-product-quality-blockers.md`.
+- Focused offer service spec passed.
+- `npm --prefix services/aukro-service run build` passed.
+- `npm --prefix services/aukro-service test` passed.
+- Strict doc audit, pre-coding gate, deployment-readiness gate, and `git diff --check` passed.
 
-No Aukro edit was made by this worker. W5 must integrate with the concurrent Aukro dirty files before staging.
+Implemented consumer contract:
+
+- Fails closed before Catalog-linked offer/draft direct create.
+- Fails closed before direct update/activation.
+- Fails closed before `syncFromCatalog` mutation paths.
+- Existing publish-adjacent policy checks include Catalog blocker evidence.
+- Blocks on mandatory blockers and unavailable readiness evidence.
+
+Important boundary:
+
+- Aukro remains owner of offer policy, executor behavior, marketplace account state, and queue/publication actions.
+- Subagent did not deploy; earlier Aukro report records deployed image `localhost:5000/aukro-service:4cdd671` and runtime health evidence.
 
 ### FlipFlop
 
-Initial inspection found dirty Goal 25 consumer work; final inspection showed `main...origin/main [ahead 1]` at `b1817e7 feat: consume catalog quality blockers`.
+Status: complete, pushed, and accepted by the Catalog orchestrator for W4 source validation.
 
-Evidence from source inspection:
+Final handoff evidence:
 
-- `services/product-service/src/products/catalog-product-quality.policy.ts` normalizes Catalog quality blockers.
-- `services/product-service/src/products/products.service.ts` adds Catalog quality blockers to catalog selection, offer policy, publish status, and native publish lifecycle.
-- `scripts/verify-catalog-product-quality-blockers.js` exists but must be executable validation before W5 accepts runtime readiness.
+- Repository clean and synced on `main` at `3462917 test: expand catalog quality blocker verification`.
+- Deploy: not run in this subagent rollup.
+- Validation reports: `/home/ssf/Documents/Github/flipflop/12_validation/VAL-TASK-004-catalog-product-quality-review-consumer.md` and `/home/ssf/Documents/Github/flipflop/implementation-goals/GOAL-25-catalog-product-quality-review-consumer.validation-report.md`.
+- `node scripts/verify-catalog-product-quality-blockers.js` passed and now covers policy normalization, product-service selection, offer filtering, publish dry-run/status, and reconciliation fail-closed paths.
+- Pre-coding gate, strict doc audit, `git diff --check`, shared build, product-service build, and frontend build passed.
 
-No FlipFlop edit was made by this worker.
+Implemented consumer contract:
+
+- Fails closed for Catalog quality blockers and lookup failures in seller/admin product selection.
+- Fails closed in offer filtering and publication/readiness policy.
+- Surfaces blocker state in seller/admin Catalog selection and publication-adjacent workflows.
+- EAN-only gaps remain non-blocking.
+
+Important boundary:
+
+- FlipFlop remains storefront, cart, checkout, order, payment, and UX owner.
+- Pre-existing follow-ups around safe reactivation policy and seller payout/order ownership are not blockers for the Goal 25 fail-closed consumer lane.
 
 ### Heureka
 
-Initial inspection found dirty `shared/clients/catalog-client.service.ts`; final inspection showed broader concurrent Goal 25 dirty files.
+Status: complete, pushed, and accepted by the Catalog orchestrator for W4 source validation.
 
-Evidence from source inspection:
+Final handoff evidence:
 
-- `shared/clients/catalog-client.service.ts` includes Catalog product quality review queue lookup helpers.
-- `services/heureka-service/src/heureka/feed/feed.service.ts` blocks feed preview when Heureka readiness is not ready/warning.
-- Current dirty feed/dashboard files likely extend quality-blocker propagation; W5 must validate the concurrent worker output before staging.
+- Repository clean and synced on `main` at `7ea1f79 docs: clarify heureka goal 25 report refresh`.
+- Deploy: not run in this subagent rollup.
+- Validation report: `/home/ssf/Documents/Github/heureka/reports/validation/VAL-GOAL-25-heureka-product-quality-consumer.md`.
+- Catalog client auth self-test, feed-readiness self-test, feed-preview-readonly self-test, dashboard-list-products self-test, and blocker-lane verifier passed.
+- `npm --prefix shared run build`, `LOGGING_SERVICE_URL=http://logging-microservice:3367 npm --prefix services/heureka-service run build`, and `git diff --check` passed.
 
-No Heureka edit was made by this worker.
+Implemented consumer contract:
+
+- Fails closed before feed inclusion when Catalog quality blockers or unavailable quality evidence remain.
+- Fails closed before read-only preview XML exposure and lifecycle feed generation.
+- Dashboard action state and readiness lane reporting expose Catalog quality blockers.
+- Preserves Heureka ownership of feed settings, XML, dashboard, reporting policy, and channel-specific readiness.
+
+Important boundary:
+
+- Heureka uses Catalog product-quality review evidence without redefining Catalog product truth.
+- Remaining W5 runtime blockers: `[UNKNOWN: live deployed Catalog product-quality review route status]` and `[MISSING: deploy approval]` for future Heureka rollout.
 
 ## Validation Evidence
 
@@ -205,32 +258,28 @@ Read-only inspection commands were also run across all seven repos with `git sta
 
 ## Dirty Worktree Caveats
 
-Final observed dirty worktrees after concurrent work:
+Final observed worktrees after subagent rollup:
 
-- `allegro`: dirty Goal 25 consumer files and `reports/validation/VAL-GOAL-25-allegro-catalog-quality-consumer.md`.
-- `aukro`: dirty Goal 25 blocker files and IPS artifacts.
-- `flipflop`: ahead one commit `b1817e7 feat: consume catalog quality blockers`.
-- `heureka`: dirty Goal 25 quality/feed/dashboard files and validation report.
+- `allegro`: clean `main...origin/main` at `5d189ee`.
+- `bazos`: clean/deployed handoff at `b3576a6`.
+- `aukro`: clean `main...origin/main` at `f276a8c`.
+- `flipflop`: clean `main...origin/main` at `3462917`.
+- `heureka`: clean `main...origin/main` at `7ea1f79`.
+- `catalog-microservice`: clean before this docs-only integration update at `6fa5e9a`.
 
-W5 must not stage all dirty files blindly. Stage by owner/workstream after inspecting diffs.
+No unrelated dirty worktree files were staged or reverted by this integration update.
 
 ## Remaining Blockers
 
-- `[MISSING: W5 integration review of concurrent Allegro/Aukro/FlipFlop/Heureka dirty worktrees]`
-- `[MISSING: full cross-service validation matrix after all W4 consumer changes are merged]`
-- `[MISSING: deploy approval]`
+- `[MISSING: owner approval for deploy/runtime smoke of latest non-deployed channel commits]`
 - `[MISSING: authorized runtime smoke token for protected Catalog/channel checks]`
-- `[MISSING: generated-description state contract]`
+- `[UNKNOWN: live Catalog production readiness payload drift for non-deployed Allegro/Heureka source commits]`
 
 ## Handoff For W5
 
 Recommended merge/order:
 
-1. Treat Bazos as complete and do not reopen the deployed consumer lane unless a regression appears.
-2. Integrate concurrent Allegro, Aukro, FlipFlop, and Heureka Goal 25 consumer outputs in repo-specific order, resolving only actual file overlaps.
-3. Re-run per-repo focused tests/builds, then Catalog validation:
-   - `npm test -- --runInBand src/products/products.service.spec.ts`
-   - `npm run build`
-   - `cd services/frontend && npm run build`
-   - `npm run validate:product-quality -- --format json --out reports/validation/product-quality-audit.json`
-4. Only after owner approval, run deployment/readiness gates and protected runtime smokes.
+1. Treat W4 channel consumers as complete for source validation: Bazos, Allegro, Aukro, FlipFlop, and Heureka.
+2. Do not reopen channel source lanes unless a regression appears or the Catalog contract changes.
+3. For W5, decide whether to deploy/runtime-smoke the latest non-deployed channel commits; do not publish/confirm/queue marketplace actions as part of smoke.
+4. Keep Warehouse stock quantity ownership and channel marketplace ownership boundaries intact.
