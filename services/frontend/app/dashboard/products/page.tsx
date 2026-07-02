@@ -31,7 +31,7 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [submittedSearch, setSubmittedSearch] = useState('');
-  const [activeFilter, setActiveFilter] = useState<ActiveFilter>('all');
+  const [activeFilter, setActiveFilter] = useState<ActiveFilter>('active');
   const [lifecycleFilter, setLifecycleFilter] = useState<LifecycleFilter>('all');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -175,7 +175,9 @@ export default function AdminProductsPage() {
           next.delete(id);
           return next;
         });
-        loadProducts();
+        setProducts((current) => current.filter((product) => product.id !== id));
+        setTotal((current) => Math.max(0, current - 1));
+        setBulkStatus(`Deleted "${title}".`);
       } else {
         alert(response.error?.message || 'Failed to delete product');
       }
