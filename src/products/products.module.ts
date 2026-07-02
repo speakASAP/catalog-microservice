@@ -8,6 +8,7 @@ import { CatalogAuthGuard } from '../auth/catalog-auth.guard';
 import { PricingModule } from '../pricing/pricing.module';
 import { ContentConnectorsModule } from '../content-connectors/content-connectors.module';
 import { ProductEventsModule } from '../product-events/product-events.module';
+import { CatalogAccessModule } from '../catalog-access/catalog-access.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ProductEventsModule } from '../product-events/product-events.module';
     PricingModule,
     ContentConnectorsModule,
     ProductEventsModule,
+    CatalogAccessModule,
   ],
   controllers: [ProductsController],
   providers: [ProductsService, CatalogAuthGuard],

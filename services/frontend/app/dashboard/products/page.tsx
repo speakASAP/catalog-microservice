@@ -8,8 +8,9 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { productsApi, Product, ProductQuery, PaginatedResponse, ProductWarehouseAvailabilityItem } from '@/lib/api/products';
+import { productsApi, Product, ProductQuery, PaginatedResponse, ProductWarehouseAvailabilityItem, CatalogSourceSettings } from '@/lib/api/products';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { useAuth } from '@/contexts/AuthContext';
 
 type ActiveFilter = 'all' | 'active' | 'inactive';
 type LifecycleFilter = 'all' | 'draft' | 'active' | 'archived' | 'needs_review';
@@ -38,8 +39,19 @@ function getPrimaryImage(product: Product) {
   return image ? { src: image.thumbnailUrl || image.url, alt: image.altText || image.title || product.title } : null;
 }
 
+function getProductSource(product: Product) {
+  if (!product.ownerUserId) {
+    return { label: 'Alfares', tone: 'bg-blue-100 text-blue-800' };
+  }
+  if (product.resaleEnabled) {
+    return { label: 'Seller shared', tone: 'bg-emerald-100 text-emerald-800' };
+  }
+  return { label: 'Private', tone: 'bg-gray-100 text-gray-700' };
+}
+
 export default function AdminProductsPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -55,6 +67,8 @@ export default function AdminProductsPage() {
   const [bulkStatus, setBulkStatus] = useState<string | null>(null);
   const [availabilityByProductId, setAvailabilityByProductId] = useState<Record<string, ProductWarehouseAvailabilityItem>>({});
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [catalogSettings, setCatalogSettings] = useState<CatalogSourceSettings | null>(null);
+  const [settingsSaving, setSettingsSaving] = useState(false);
 
   const query = useMemo<ProductQuery>(() => ({
     page,
@@ -62,6 +76,7 @@ export default function AdminProductsPage() {
     search: debouncedSearch || undefined,
     isActive: activeFilter === 'all' ? undefined : activeFilter === 'active',
     lifecycle: lifecycleFilter === 'all' ? undefined : lifecycleFilter,
+    catalogScope: 'effective',
   }), [activeFilter, debouncedSearch, lifecycleFilter, page]);
 
   const loadProducts = useCallback(async () => {
@@ -119,6 +134,17 @@ export default function AdminProductsPage() {
   }, [loadProducts]);
 
   useEffect(() => {
+    let mounted = true;
+    productsApi.provisionCatalogAccess('catalog').then((response) => {
+      if (!mounted) return;
+      if (response.success && response.data) {
+        setCatalogSettings(response.data);
+      }
+    }).catch(() => undefined);
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
     const timer = window.setTimeout(() => {
       setPage(1);
       setDebouncedSearch(search.trim());
@@ -136,6 +162,12 @@ export default function AdminProductsPage() {
   const selectedCount = allFilteredSelected ? total : selectedIds.size;
   const pageIds = products.map((product) => product.id);
   const currentPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
+  const canMutateProduct = useCallback((product: Product) => {
+    if (user?.isAdmin || user?.roles?.some((role) => role.includes('catalog-microservice:admin') || role === 'global:superadmin')) {
+      return true;
+    }
+    return Boolean(product.ownerUserId && (product.ownerUserId === user?.id || product.ownerUserId === user?.email));
+  }, [user?.email, user?.id, user?.isAdmin, user?.roles]);
 
   const toggleProductSelection = (id: string) => {
     if (allFilteredSelected) setAllFilteredSelected(false);
@@ -313,6 +345,22 @@ export default function AdminProductsPage() {
     setLifecycleFilter(value);
   };
 
+  const updateCatalogSource = async (field: 'includeAlfaresCatalog' | 'includeCommunityCatalog', value: boolean) => {
+    setSettingsSaving(true);
+    try {
+      const response = await productsApi.updateCatalogSettings({ [field]: value });
+      if (response.success && response.data) {
+        setCatalogSettings(response.data);
+        setPage(1);
+        await loadProducts();
+      } else {
+        alert(response.error?.message || 'Failed to update catalog source settings');
+      }
+    } finally {
+      setSettingsSaving(false);
+    }
+  };
+
   if (loading && products.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -383,6 +431,37 @@ export default function AdminProductsPage() {
               <option value="archived">Archived</option>
             </select>
           </label>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="text-sm font-extrabold uppercase tracking-wider text-gray-700">Catalog sources</h2>
+            <p className="text-sm text-gray-600">Your products are always included. Other sellers appear only when they enabled resale.</p>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <label className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-800">
+              <input
+                type="checkbox"
+                checked={catalogSettings?.includeAlfaresCatalog !== false}
+                disabled={settingsSaving || !catalogSettings}
+                onChange={(event) => updateCatalogSource('includeAlfaresCatalog', event.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              Alfares products
+            </label>
+            <label className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-800">
+              <input
+                type="checkbox"
+                checked={catalogSettings?.includeCommunityCatalog === true}
+                disabled={settingsSaving || !catalogSettings}
+                onChange={(event) => updateCatalogSource('includeCommunityCatalog', event.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              Other sellers
+            </label>
+          </div>
         </div>
       </div>
 
@@ -467,6 +546,9 @@ export default function AdminProductsPage() {
                       Available
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Source
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Status
                     </th>
                     <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
@@ -477,6 +559,7 @@ export default function AdminProductsPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {products.map((product) => {
                     const image = getPrimaryImage(product);
+                    const source = getProductSource(product);
 
                     return (
                       <tr key={product.id} className="hover:bg-blue-50/50 transition-colors">
@@ -542,6 +625,11 @@ export default function AdminProductsPage() {
                           })()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${source.tone}`}>
+                            {source.label}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex flex-wrap gap-2">
                             <span
                               className={`px-3 py-1.5 text-xs font-bold rounded-full shadow-sm ${
@@ -563,11 +651,11 @@ export default function AdminProductsPage() {
                             href={`/dashboard/products/${product.id}`}
                             className="text-blue-600 hover:text-blue-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-all"
                           >
-                            ✏️ Edit
+                            {canMutateProduct(product) ? '✏️ Edit' : 'View'}
                           </Link>
                           <button
                             onClick={() => handleDelete(product.id, product.title)}
-                            disabled={bulkBusy}
+                            disabled={bulkBusy || !canMutateProduct(product)}
                             className="text-red-600 hover:text-red-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-red-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             🗑️ Delete

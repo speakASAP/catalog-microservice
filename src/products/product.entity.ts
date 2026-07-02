@@ -31,6 +31,9 @@ export class Product {
   @Column({ name: 'owner_user_id', length: 200, nullable: true })
   ownerUserId: string | null;
 
+  @Column({ name: 'resale_enabled', default: false })
+  resaleEnabled: boolean;
+
   @Column({ length: 500 })
   title: string;
 

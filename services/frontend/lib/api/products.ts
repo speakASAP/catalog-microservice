@@ -19,6 +19,8 @@ export interface ProductMedia {
 export interface Product {
   id: string;
   sku: string;
+  ownerUserId?: string | null;
+  resaleEnabled?: boolean;
   title: string;
   description?: string;
   descriptionRich?: ProductContentDocument | null;
@@ -37,6 +39,16 @@ export interface Product {
   updatedAt: string;
   categories?: Array<{ id: string; name: string }>;
   media?: ProductMedia[];
+}
+
+export type ProductCatalogScope = 'own' | 'effective' | 'alfares' | 'community' | 'all';
+
+export interface CatalogSourceSettings {
+  userId: string;
+  includeAlfaresCatalog: boolean;
+  includeCommunityCatalog: boolean;
+  sourceApplication?: string | null;
+  created?: boolean;
 }
 
 export type ProductContentBlock =
@@ -157,6 +169,7 @@ export interface ProductQuery {
   search?: string;
   isActive?: boolean;
   lifecycle?: 'draft' | 'active' | 'archived' | 'needs_review';
+  catalogScope?: ProductCatalogScope;
 }
 
 export interface PaginatedResponse<T> {
@@ -468,6 +481,7 @@ export const productsApi = {
     if (query?.search) params.append('search', query.search);
     if (query?.isActive !== undefined) params.append('isActive', query.isActive.toString());
     if (query?.lifecycle) params.append('lifecycle', query.lifecycle);
+    if (query?.catalogScope) params.append('catalogScope', query.catalogScope);
 
     const queryString = params.toString();
     return apiClient.get<Product[] | PaginatedResponse<Product>>(`/products${queryString ? `?${queryString}` : ''}`);
@@ -575,5 +589,17 @@ export const productsApi = {
 
   async hardDeleteProduct(id: string) {
     return apiClient.delete(`/products/${id}/hard`);
+  },
+
+  async provisionCatalogAccess(sourceApplication = 'catalog') {
+    return apiClient.post<CatalogSourceSettings>('/catalog/access/provision', { sourceApplication });
+  },
+
+  async getCatalogSettings() {
+    return apiClient.get<CatalogSourceSettings>('/catalog/settings');
+  },
+
+  async updateCatalogSettings(data: Partial<Pick<CatalogSourceSettings, 'includeAlfaresCatalog' | 'includeCommunityCatalog' | 'sourceApplication'>>) {
+    return apiClient.put<CatalogSourceSettings>('/catalog/settings', data);
   },
 };

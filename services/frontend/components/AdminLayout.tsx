@@ -48,6 +48,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       href: '/dashboard/attributes',
       icon: '🏷️',
     },
+    {
+      title: 'Settings',
+      href: '/dashboard/settings',
+      icon: '☑️',
+    },
     ...(canAccessAdminSection
       ? [
           {
@@ -176,4 +181,3 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     </div>
   );
 }
-

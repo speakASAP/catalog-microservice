@@ -1,3 +1,13 @@
+## 2026-07-02 - Goal 22 W1 Catalog Backend Source
+
+Change: implemented Catalog-side private user catalog settings and Alfares resale opt-in source scope. Added `src/catalog-access/*`, additive migration `scripts/migrations/20260702_catalog_user_settings.sql`, and product access changes for `catalogScope=own|effective|alfares`. Human users now default to own products only; `effective` includes shared Alfares products only after `includeAlfaresCatalog=true`; shared Alfares products are read-only for ordinary users; publication flows return `alfares_catalog_opt_in_required` when a user tries to publish a shared product without opt-in.
+
+Validation evidence: `npm test -- --runInBand src/catalog-access/catalog-access.service.spec.ts` passed with 5 tests; `npm test -- --runInBand src/products/products.service.spec.ts` passed with 32 tests; `npm run build` passed; `git diff --check` passed.
+
+Boundary decision: no migration application, deployment, runtime smoke, secret/token read, production data mutation, Auth fanout, channel repo edits, Warehouse/Orders/Payments changes, or public FlipFlop storefront changes were performed. The first validation report path was renamed to `reports/validation/VAL-GOAL-22-user-catalog-access.md` because repo `.gitignore` ignores filenames containing `private`.
+
+Next action: review/stage the W1 source patch; then decide whether to run Catalog migration/deploy or start dependency-gated Catalog UI/Auth/channel workers.
+
 ## 2026-07-02 - Goal 22 Private User Catalogs And Alfares Resale Toggle Planning
 
 Change: created the Goal 22 planning package for private user catalogs across Catalog, Auth, Allegro, Bazos, Aukro, FlipFlop, and Heureka. The planned contract keeps `products.owner_user_id IS NULL` as Alfares shared catalog rows, keeps `products.owner_user_id=<Auth subject>` as private user rows, and adds `catalog_user_settings.include_alfares_catalog=false` as the default disabled resale setting. New users should see an empty private product list until they create/import products or explicitly enable Alfares shared products.

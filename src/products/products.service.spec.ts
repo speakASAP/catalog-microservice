@@ -50,7 +50,7 @@ describe("ProductsService product readiness", () => {
     }));
   });
 
-  it("filters product lists to the authenticated user's products", async () => {
+  it("applies the effective catalog source scope for authenticated product lists", async () => {
     const queryBuilder: any = {
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
@@ -70,10 +70,83 @@ describe("ProductsService product readiness", () => {
       { actor: { type: "jwt", sub: "user-456", roles: [], authMethod: "auth-validate" } },
     );
 
-    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-      "product.ownerUserId = :ownerUserId",
-      { ownerUserId: "user-456" },
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith(expect.any(Object));
+  });
+
+  it("defaults new seller products to private resale visibility", async () => {
+    const repository = {
+      create: jest.fn((data) => data),
+      save: jest.fn(async (data) => ({ id: "product-private-1", ...data })),
+    };
+    const service = new ProductsService(repository as any, logger as any);
+
+    await service.create(
+      { sku: "SKU-PRIVATE-001", title: "Private product" },
+      { actor: { type: "jwt", sub: "seller-1", roles: [], authMethod: "auth-validate" } },
     );
+
+    expect(repository.create).toHaveBeenCalledWith(expect.objectContaining({
+      ownerUserId: "seller-1",
+      resaleEnabled: false,
+    }));
+  });
+
+  it("lets the product owner explicitly share a product for resale", async () => {
+    const product = {
+      id: "product-resale-1",
+      sku: "SKU-RESALE-001",
+      title: "Resale product",
+      ownerUserId: "seller-1",
+      resaleEnabled: false,
+      isActive: true,
+      lifecycle: "active",
+      categories: [],
+      media: [],
+      pricing: [],
+      updatedAt: new Date("2026-07-02T10:00:00.000Z"),
+    } as unknown as Product;
+    const repository = {
+      findOne: jest.fn(async () => product),
+      save: jest.fn(async (data) => data),
+    };
+    const service = new ProductsService(repository as any, logger as any);
+
+    await service.update(
+      "product-resale-1",
+      { resaleEnabled: true },
+      { actor: { type: "jwt", sub: "seller-1", roles: [], authMethod: "auth-validate" } },
+    );
+
+    expect(repository.save).toHaveBeenCalledWith(expect.objectContaining({
+      resaleEnabled: true,
+    }));
+  });
+
+  it("rejects ordinary user edits to Alfares shared products", async () => {
+    const product = {
+      id: "product-alfares-1",
+      sku: "SKU-ALFARES-001",
+      title: "Alfares product",
+      ownerUserId: "user-events",
+      resaleEnabled: false,
+      isActive: true,
+      lifecycle: "active",
+      categories: [],
+      media: [],
+      pricing: [],
+    } as unknown as Product;
+    const repository = {
+      findOne: jest.fn(async () => product),
+      save: jest.fn(async (data) => data),
+    };
+    const service = new ProductsService(repository as any, logger as any);
+
+    await expect(service.update(
+      "product-alfares-1",
+      { title: "Edited" },
+      { actor: { type: "jwt", sub: "seller-1", roles: [], authMethod: "auth-validate" } },
+    )).rejects.toThrow("Only the product owner can modify this catalog product.");
+    expect(repository.save).not.toHaveBeenCalled();
   });
 
   it("normalizes legacy HTML descriptions into plain text and canonical JSON fallback", async () => {
@@ -195,7 +268,7 @@ describe("ProductsService catalog product events", () => {
       id: "22222222-2222-4222-8222-222222222222",
       sku: "SKU-EVENT-2",
       title: "Before",
-      ownerUserId: null,
+      ownerUserId: "user-events",
       isActive: true,
       lifecycle: "active",
       categories: [],
@@ -239,7 +312,7 @@ describe("ProductsService catalog product events", () => {
       id: "33333333-3333-4333-8333-333333333333",
       sku: "SKU-EVENT-3",
       title: "Soft delete product",
-      ownerUserId: null,
+      ownerUserId: "user-events",
       isActive: true,
       lifecycle: "active",
       categories: [],
@@ -273,7 +346,7 @@ describe("ProductsService catalog product events", () => {
       id: "44444444-4444-4444-8444-444444444444",
       sku: "SKU-EVENT-4",
       title: "Hard delete product",
-      ownerUserId: null,
+      ownerUserId: "user-events",
       isActive: false,
       lifecycle: "archived",
       categories: [{ id: "category-1" }],

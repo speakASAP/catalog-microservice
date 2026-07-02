@@ -1,11 +1,12 @@
-import { Injectable, NotFoundException, Optional } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere, In, IsNull, SelectQueryBuilder, EntityManager } from 'typeorm';
+import { Repository, FindOptionsWhere, In, IsNull, SelectQueryBuilder, EntityManager, Brackets } from 'typeorm';
 import { Product, ProductLifecycle } from "./product.entity";
 import { LoggerService } from '../logger/logger.service';
 import { PricingService } from '../pricing/pricing.service';
-import { CreateProductDto, UpdateProductDto, ProductQueryDto } from './dto';
+import { CreateProductDto, UpdateProductDto, ProductQueryDto, type ProductCatalogScope } from './dto';
 import type { CatalogActor } from '../auth/catalog-auth.guard';
+import { CatalogAccessService, type CatalogSourceSettings } from '../catalog-access/catalog-access.service';
 import axios from "axios";
 import { ContentRendererService } from '../content-connectors/content-renderer.service';
 import {
@@ -152,7 +153,10 @@ type CatalogStockPreflight = {
 
 type ProductAccessScope = {
   actor?: CatalogActor;
+  catalogScope?: ProductCatalogScope;
 };
+
+type ProductAccessIntent = 'read' | 'mutate';
 
 export type MarketplacePublicationChannel = 'allegro' | 'bazos' | 'aukro' | 'flipflop' | 'heureka';
 
@@ -206,6 +210,8 @@ export class ProductsService {
     private readonly contentRendererService?: ContentRendererService,
     @Optional()
     private readonly productEventPublisher?: ProductEventPublisherService,
+    @Optional()
+    private readonly catalogAccessService?: CatalogAccessService,
   ) {}
 
   private canAccessAllProducts(actor?: CatalogActor): boolean {
@@ -244,6 +250,109 @@ export class ProductsService {
     queryBuilder.andWhere('product.ownerUserId = :ownerUserId', { ownerUserId: actor?.sub });
   }
 
+  private async applyProductReadScope(
+    queryBuilder: SelectQueryBuilder<Product>,
+    scope: ProductAccessScope = {},
+    alias = 'product',
+  ): Promise<void> {
+    const actor = scope.actor;
+    const requestedScope = this.normalizeCatalogScope(scope.catalogScope, actor);
+
+    if (this.canAccessAllProducts(actor)) {
+      this.applyAdminRequestedSourceScope(queryBuilder, requestedScope, alias);
+      return;
+    }
+
+    const settings = await this.resolveCatalogSettings(actor);
+    const ownerParam = `${alias}OwnerUserId`;
+    const conditions: string[] = [];
+    const parameters: Record<string, unknown> = { [ownerParam]: actor?.sub };
+
+    const addOwn = () => conditions.push(`${alias}.ownerUserId = :${ownerParam}`);
+    const addAlfares = () => {
+      if (settings.includeAlfaresCatalog) {
+        conditions.push(`${alias}.ownerUserId IS NULL`);
+      }
+    };
+    const addCommunity = () => {
+      if (settings.includeCommunityCatalog) {
+        conditions.push(`(${alias}.ownerUserId IS NOT NULL AND ${alias}.ownerUserId != :${ownerParam} AND ${alias}.resaleEnabled = true)`);
+      }
+    };
+
+    if (requestedScope === 'own') {
+      addOwn();
+    } else if (requestedScope === 'alfares') {
+      addAlfares();
+    } else if (requestedScope === 'community') {
+      addCommunity();
+    } else {
+      addOwn();
+      addAlfares();
+      addCommunity();
+    }
+
+    if (!conditions.length) {
+      queryBuilder.andWhere('1 = 0');
+      return;
+    }
+
+    queryBuilder.andWhere(new Brackets((qb) => {
+      conditions.forEach((condition, index) => {
+        if (index === 0) {
+          qb.where(condition, parameters);
+        } else {
+          qb.orWhere(condition, parameters);
+        }
+      });
+    }));
+  }
+
+  private applyAdminRequestedSourceScope(
+    queryBuilder: SelectQueryBuilder<Product>,
+    requestedScope: ProductCatalogScope,
+    alias: string,
+  ): void {
+    if (requestedScope === 'alfares') {
+      queryBuilder.andWhere(`${alias}.ownerUserId IS NULL`);
+    } else if (requestedScope === 'community') {
+      queryBuilder.andWhere(`${alias}.ownerUserId IS NOT NULL AND ${alias}.resaleEnabled = true`);
+    }
+  }
+
+  private normalizeCatalogScope(scope: ProductCatalogScope | undefined, actor?: CatalogActor): ProductCatalogScope {
+    if (scope === 'own' || scope === 'effective' || scope === 'alfares' || scope === 'community') {
+      return scope;
+    }
+    if (scope === 'all' && this.canAccessAllProducts(actor)) {
+      return 'all';
+    }
+    return this.canAccessAllProducts(actor) ? 'all' : 'effective';
+  }
+
+  private async resolveCatalogSettings(actor?: CatalogActor): Promise<CatalogSourceSettings> {
+    if (actor?.type === 'jwt' && this.catalogAccessService) {
+      return this.catalogAccessService.getSettings(actor);
+    }
+    return this.catalogAccessService?.defaultSettings(actor) ?? {
+      userId: actor?.sub ?? 'anonymous',
+      includeAlfaresCatalog: true,
+      includeCommunityCatalog: false,
+      sourceApplication: null,
+      created: false,
+    };
+  }
+
+  private assertCanMutateProduct(product: Product, scope: ProductAccessScope = {}): void {
+    if (this.canAccessAllProducts(scope.actor)) {
+      return;
+    }
+    if (scope.actor?.type === 'jwt' && product.ownerUserId === scope.actor.sub) {
+      return;
+    }
+    throw new ForbiddenException('Only the product owner can modify this catalog product.');
+  }
+
   private async withProductTransaction<T>(
     work: (repository: Repository<Product>, manager?: EntityManager) => Promise<T>,
   ): Promise<T> {
@@ -261,15 +370,47 @@ export class ProductsService {
     repository: Repository<Product>,
     id: string,
     scope: ProductAccessScope = {},
+    intent: ProductAccessIntent = 'read',
   ): Promise<Product> {
-    const product = await repository.findOne({
-      where: this.productWhereWithOwner({ id }, scope.actor),
-      relations: ['categories', 'attributes', 'attributes.attribute', 'media', 'pricing'],
-    });
+    if (typeof (repository as any).createQueryBuilder !== 'function') {
+      const product = await repository.findOne({
+        where: this.productWhereWithOwner({ id }, scope.actor),
+        relations: ['categories', 'attributes', 'attributes.attribute', 'media', 'pricing'],
+      });
+      if (!product) {
+        this.logger.warn(`Product not found: ${id}`, 'ProductsService');
+        throw new NotFoundException(`Product with ID ${id} not found`);
+      }
+      if (intent === 'mutate') {
+        this.assertCanMutateProduct(product, scope);
+      }
+      return product;
+    }
+
+    const queryBuilder = repository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.categories', 'categories')
+      .leftJoinAndSelect('product.attributes', 'attributes')
+      .leftJoinAndSelect('attributes.attribute', 'attribute')
+      .leftJoinAndSelect('product.media', 'media')
+      .leftJoinAndSelect('product.pricing', 'pricing')
+      .where('product.id = :id', { id });
+
+    if (intent === 'mutate') {
+      this.applyOwnerScope(queryBuilder, scope.actor);
+    } else {
+      await this.applyProductReadScope(queryBuilder, scope);
+    }
+
+    const product = await queryBuilder.getOne();
 
     if (!product) {
       this.logger.warn(`Product not found: ${id}`, 'ProductsService');
       throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+
+    if (intent === 'mutate') {
+      this.assertCanMutateProduct(product, scope);
     }
 
     return product;
@@ -433,7 +574,7 @@ export class ProductsService {
 
     const saved = await this.withProductTransaction(async (repository, manager) => {
       const product = repository.create({
-        ...this.withLifecycleDefaults(this.withCanonicalContentDefaults(createProductDto)),
+        ...this.withResaleDefaults(this.withLifecycleDefaults(this.withCanonicalContentDefaults(createProductDto))),
         ownerUserId: this.resolveOwnerUserId(scope.actor),
       });
       const created = await repository.save(product);
@@ -456,7 +597,7 @@ export class ProductsService {
    * Find all products with pagination and filters
    */
   async findAll(query: ProductQueryDto, scope: ProductAccessScope = {}): Promise<{ items: Product[]; total: number; page: number; limit: number }> {
-    const { page = 1, limit = 20, search, isActive, lifecycle, categoryId } = query;
+    const { page = 1, limit = 20, search, isActive, lifecycle, categoryId, catalogScope } = query;
     const skip = (page - 1) * limit;
 
     this.logger.log(`Finding products: page=${page}, limit=${limit}, search=${search}`, 'ProductsService');
@@ -479,7 +620,7 @@ export class ProductsService {
       queryBuilder.andWhere("product.lifecycle = :lifecycle", { lifecycle });
     }
 
-    this.applyOwnerScope(queryBuilder, scope.actor);
+    await this.applyProductReadScope(queryBuilder, { ...scope, catalogScope });
 
     // Filter by category
     if (categoryId) {
@@ -518,10 +659,14 @@ export class ProductsService {
   async findBySku(sku: string, scope: ProductAccessScope = {}): Promise<Product | null> {
     this.logger.log(`Finding product by SKU: ${sku}`, 'ProductsService');
 
-    return this.productRepository.findOne({
-      where: this.productWhereWithOwner({ sku }, scope.actor),
-      relations: ['categories', 'media', 'pricing'],
-    });
+    const queryBuilder = this.productRepository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.categories', 'categories')
+      .leftJoinAndSelect('product.media', 'media')
+      .leftJoinAndSelect('product.pricing', 'pricing')
+      .where('product.sku = :sku', { sku });
+    await this.applyProductReadScope(queryBuilder, scope);
+    return queryBuilder.getOne();
   }
 
   async findIdentitiesByIds(productIds: string[]): Promise<Array<Pick<Product, 'id' | 'sku' | 'title'>>> {
@@ -593,9 +738,9 @@ export class ProductsService {
     this.logger.log(`Updating product: ${id}`, 'ProductsService');
 
     const updated = await this.withProductTransaction(async (repository, manager) => {
-      const product = await this.findOneWithRepository(repository, id, scope);
+      const product = await this.findOneWithRepository(repository, id, scope, 'mutate');
       const before = this.snapshotProductForEvent(product);
-      Object.assign(product, this.withLifecycleDefaults(this.withCanonicalContentDefaults(updateProductDto, product), product));
+      Object.assign(product, this.withResaleDefaults(this.withLifecycleDefaults(this.withCanonicalContentDefaults(updateProductDto, product), product), product));
 
       const saved = await repository.save(product);
       const after = this.snapshotProductForEvent(saved);
@@ -679,6 +824,17 @@ export class ProductsService {
       next.isActive = true;
     }
 
+    return next;
+  }
+
+  private withResaleDefaults<T extends Partial<Product>>(data: T, current?: Product): T {
+    const next = { ...data };
+    if (!current && next.resaleEnabled === undefined) {
+      next.resaleEnabled = false;
+    }
+    if (current?.ownerUserId === null && next.resaleEnabled === undefined) {
+      next.resaleEnabled = false;
+    }
     return next;
   }
 
@@ -2095,7 +2251,7 @@ export class ProductsService {
     this.logger.log(`Removing product: ${id}`, 'ProductsService');
 
     await this.withProductTransaction(async (repository, manager) => {
-      const product = await this.findOneWithRepository(repository, id, scope);
+      const product = await this.findOneWithRepository(repository, id, scope, 'mutate');
       const before = this.snapshotProductForEvent(product);
       product.isActive = false;
       product.lifecycle = "archived";
@@ -2114,7 +2270,7 @@ export class ProductsService {
     this.logger.log(`Hard deleting product: ${id}`, 'ProductsService');
 
     await this.withProductTransaction(async (repository, manager) => {
-      const product = await this.findOneWithRepository(repository, id, scope);
+      const product = await this.findOneWithRepository(repository, id, scope, 'mutate');
       const before = this.snapshotProductForEvent(product);
       const result = await repository.delete(this.productWhereWithOwner({ id }, scope.actor));
       if (result.affected === 0) {

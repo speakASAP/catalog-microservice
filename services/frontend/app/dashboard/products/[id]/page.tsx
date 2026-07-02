@@ -12,6 +12,7 @@ import AllegroPublishPanel from '@/components/AllegroPublishPanel';
 import ChannelSalesPanel from '@/components/ChannelSalesPanel';
 import MarketplaceFieldsPanel from '@/components/MarketplaceFieldsPanel';
 import ProductContentPreviewPanel from '@/components/ProductContentPreviewPanel';
+import { useAuth } from '@/contexts/AuthContext';
 
 
 const channelLabels: Record<string, string> = {
@@ -84,6 +85,7 @@ const getWarehouseRouteStatus = (availability: ProductWarehouseAvailabilityItem 
 export default function EditProductPage() {
   const router = useRouter();
   const params = useParams();
+  const { user } = useAuth();
   const productId = params.id as string;
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -106,6 +108,7 @@ export default function EditProductPage() {
     width: '',
     height: '',
     isActive: true,
+    resaleEnabled: false,
   });
 
 
@@ -173,6 +176,7 @@ export default function EditProductPage() {
           width: p.dimensionsCm?.width?.toString() || '',
           height: p.dimensionsCm?.height?.toString() || '',
           isActive: p.isActive !== false,
+          resaleEnabled: p.resaleEnabled === true,
         });
       }
     } catch (error) {
@@ -200,6 +204,10 @@ export default function EditProductPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canEditProduct) {
+      alert('Only the product owner can edit this catalog product.');
+      return;
+    }
     setSaving(true);
 
     try {
@@ -211,6 +219,7 @@ export default function EditProductPage() {
         manufacturer: formData.manufacturer || undefined,
         ean: formData.ean || undefined,
         isActive: formData.isActive,
+        resaleEnabled: formData.resaleEnabled,
       };
 
       if (formData.weightKg) {
@@ -270,6 +279,9 @@ export default function EditProductPage() {
   const warehouseRouteStatus = getWarehouseRouteStatus(warehouseAvailability);
   const warehouseRows = warehouseAvailability?.warehouses ?? [];
   const warehouseRoutes = warehouseAvailability?.logistics?.options ?? [];
+  const canEditProduct = Boolean(
+    product.ownerUserId && (product.ownerUserId === user?.id || product.ownerUserId === user?.email),
+  ) || Boolean(user?.isAdmin || user?.roles?.some((role) => role.includes('catalog-microservice:admin') || role === 'global:superadmin'));
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -279,6 +291,11 @@ export default function EditProductPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
+        {!canEditProduct && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+            This product is visible for resale, but only the owner can edit the catalog record.
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -426,6 +443,23 @@ export default function EditProductPage() {
                 className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
               <span className="text-sm font-semibold text-gray-700">Product is active</span>
+            </label>
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <input
+                type="checkbox"
+                name="resaleEnabled"
+                checked={formData.resaleEnabled}
+                disabled={!canEditProduct}
+                onChange={handleChange}
+                className="mt-1 w-5 h-5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+              />
+              <span>
+                <span className="block text-sm font-semibold text-gray-800">Available for resale by other sellers</span>
+                <span className="block text-sm text-gray-600">Other sellers can see this product only if they enable products from other sellers.</span>
+              </span>
             </label>
           </div>
         </div>
@@ -627,7 +661,7 @@ export default function EditProductPage() {
         <div className="flex gap-4 pt-6 border-t border-gray-200">
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || !canEditProduct}
             className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? <LoadingSpinner size="sm" /> : 'Save Changes'}

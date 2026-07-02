@@ -15,6 +15,7 @@ import { FlipFlopProjectionModule } from "./flipflop-projection/flipflop-project
 import { ImportReconciliationModule } from "./import-reconciliation/import-reconciliation.module";
 import { MarketplaceFieldsModule } from "./marketplace-fields/marketplace-fields.module";
 import { ContentConnectorsModule } from "./content-connectors/content-connectors.module";
+import { CatalogAccessModule } from "./catalog-access/catalog-access.module";
 
 /**
  * Main application module for Catalog Microservice
@@ -56,6 +57,7 @@ import { ContentConnectorsModule } from "./content-connectors/content-connectors
     ImportReconciliationModule,
     MarketplaceFieldsModule,
     ContentConnectorsModule,
+    CatalogAccessModule,
   ],
 })
 export class AppModule {}

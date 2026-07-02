@@ -3,6 +3,8 @@ import { Type, Transform } from 'class-transformer';
 import type { ProductLifecycle } from "../product.entity";
 import type { ProductContentDocument } from "../../content-connectors/content-document";
 
+export type ProductCatalogScope = 'own' | 'effective' | 'alfares' | 'community' | 'all';
+
 /**
  * DTO for creating a new product
  */
@@ -48,6 +50,10 @@ export class CreateProductDto {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  resaleEnabled?: boolean;
 
   @IsIn(["draft", "active", "archived", "needs_review"])
   @IsOptional()
@@ -116,6 +122,10 @@ export class UpdateProductDto {
   @IsOptional()
   isActive?: boolean;
 
+  @IsBoolean()
+  @IsOptional()
+  resaleEnabled?: boolean;
+
   @IsIn(["draft", "active", "archived", "needs_review"])
   @IsOptional()
   lifecycle?: ProductLifecycle;
@@ -169,4 +179,8 @@ export class ProductQueryDto {
   @IsOptional()
   @IsUUID()
   categoryId?: string;
+
+  @IsOptional()
+  @IsIn(['own', 'effective', 'alfares', 'community', 'all'])
+  catalogScope?: ProductCatalogScope;
 }

@@ -20,6 +20,7 @@ export default function CreateProductPage() {
     width: '',
     height: '',
     isActive: true,
+    resaleEnabled: false,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -43,6 +44,7 @@ export default function CreateProductPage() {
         manufacturer: formData.manufacturer || undefined,
         ean: formData.ean || undefined,
         isActive: formData.isActive,
+        resaleEnabled: formData.resaleEnabled,
       };
 
       if (formData.weightKg) {
@@ -237,6 +239,22 @@ export default function CreateProductPage() {
               <span className="text-sm font-semibold text-gray-700">Product is active</span>
             </label>
           </div>
+
+          <div className="md:col-span-2">
+            <label className="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <input
+                type="checkbox"
+                name="resaleEnabled"
+                checked={formData.resaleEnabled}
+                onChange={handleChange}
+                className="mt-1 w-5 h-5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+              />
+              <span>
+                <span className="block text-sm font-semibold text-gray-800">Available for resale by other sellers</span>
+                <span className="block text-sm text-gray-600">Other sellers can see this product only if they enable products from other sellers.</span>
+              </span>
+            </label>
+          </div>
         </div>
 
         <div className="flex gap-4 pt-6 border-t border-gray-200">
@@ -259,4 +277,3 @@ export default function CreateProductPage() {
     </div>
   );
 }
-
