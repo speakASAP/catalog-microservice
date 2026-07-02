@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsNumber, IsObject, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsArray, IsNumber, IsObject, IsOptional, IsString, Max, Min, ValidateNested } from 'class-validator';
 
 export class ProductRelationQueryDto {
   @IsOptional()
