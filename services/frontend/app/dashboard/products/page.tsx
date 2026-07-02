@@ -108,6 +108,8 @@ export default function AdminProductsPage() {
   }), [activeFilter, debouncedSearch, lifecycleFilter, page, pageSize, selectedCatalogSources]);
 
   const loadProducts = useCallback(async () => {
+    if (!catalogSettings) return;
+
     setLoading(true);
     try {
       const response = await productsApi.getProducts(query);
@@ -155,7 +157,7 @@ export default function AdminProductsPage() {
     } finally {
       setLoading(false);
     }
-  }, [query]);
+  }, [catalogSettings, query]);
 
   useEffect(() => {
     loadProducts();
