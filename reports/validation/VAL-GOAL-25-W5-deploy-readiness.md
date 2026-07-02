@@ -31,7 +31,7 @@ Code: no source code changed in W5; W4 code was already pushed in `b681c95`.
 
 Validation: exact command evidence below.
 
-State Update: W5 deployment completed. Remaining blocker is generated-description state contract.
+State Update: W5 deployment completed. Generated-description state contract is now resolved through `catalog.generated_description_state.v1` using `Product.descriptionRich`; cross-channel acceptance was refreshed on 2026-07-03.
 
 ## Preflight
 
@@ -154,7 +154,7 @@ Result:
 - Blocked: 45
 - Ready for activation: 15
 - Safety: read-only, no Catalog/Warehouse/Marketplace mutation
-- Remaining blocker: `[MISSING: generated-description state contract]`
+- Generated-description contract: RESOLVED through `catalog.generated_description_state.v1`; refreshed synthetic audit now has only the live API base/token marker when run without live credentials.
 
 ## Boundaries
 
@@ -166,10 +166,27 @@ Result:
 
 ## Blockers And Follow-Up
 
-- `[MISSING: generated-description state contract]` remains.
+- No Goal 25 product-quality contract blocker remains after generated-description state resolution.
 - Channel statuses block on marketplace/account auth where expected; this is not a Catalog deploy failure.
-- Heureka reports `catalog_quality_unavailable` for the sampled product alongside normal product blockers; investigate if this remains after the generated-description contract is defined.
+- Heureka feed readiness self-test passed in the 2026-07-03 cross-channel acceptance refresh. Live sampled-product readiness can still show ordinary product/account blockers, which are channel readiness outcomes rather than Catalog contract failures.
 
 ## Next Action
 
-Define the generated-description state contract, then rerun live product-quality and Heureka readiness validation.
+Goal 25 W5 can be treated as accepted for Catalog/Aukro/Bazos/Allegro/FlipFlop/Heureka source and runtime-health evidence. Next cross-service work should use live authorized smoke tokens only when owner-approved and keep marketplace/account blockers channel-owned.
+
+## 2026-07-03 Cross-Channel Acceptance Refresh
+
+Additional remote-only validation was run after the Aukro consumer deployment and generated-description contract resolution:
+
+| Scope | Evidence |
+|---|---|
+| Catalog focused tests | `npm test -- --runInBand src/products/products.service.spec.ts src/import-reconciliation/import-reconciliation.service.spec.ts` passed: 2 suites, 49 tests. |
+| Catalog build/report | `npm run build` passed; `npm run validate:product-quality -- --format json --out reports/validation/product-quality-audit.json` passed in synthetic read-only mode, products=3, blocked=2, readyForActivation=1. |
+| Allegro consumer | `LOGGING_SERVICE_URL=http://logging-microservice:3367 npx ts-node services/allegro-service/src/allegro/catalog-sell-action/catalog-sell-action.spec.ts` passed. |
+| Bazos consumer | `npm --prefix shared test -- bazos-catalog-sell-action.service.spec.ts publish-policy.service.spec.ts bazos-ad.service.spec.ts` passed: 3 suites, 67 tests. |
+| Aukro consumer | `npm --prefix services/aukro-service test -- --runInBand src/aukro/offers/offers.service.spec.ts` passed; deployed Aukro health returned HTTP 200 `status=ok` on image `localhost:5000/aukro-service:4cdd671`. |
+| Heureka consumer | `feed-readiness.self-test.ts` passed; shared build and Heureka service build passed after the active Goal 25 lookup broadening was reconciled on `main`. |
+| FlipFlop consumer | `node scripts/verify-catalog-product-quality-blockers.js` passed; shared build and product-service build passed after the active client syntax repair was reconciled on `main`. |
+| Runtime health | Catalog, Allegro, Bazos, Aukro, and Heureka public health endpoints returned HTTP 200; FlipFlop product-quality verification passed through its repo script rather than `/health`, which is not its public health route. |
+
+All listed checks preserved the boundary that Catalog owns product quality/readiness, Warehouse owns stock quantities, and channel services own marketplace publication/feed/account behavior.

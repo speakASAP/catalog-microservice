@@ -1,3 +1,13 @@
+## 2026-07-03 - Goal 25 W5 Cross-Channel Acceptance Refresh
+
+Change: refreshed W5 evidence after Aukro Goal 25 consumer deployment and generated-description state resolution. Catalog contract now resolves generated descriptions through `catalog.generated_description_state.v1` backed by `Product.descriptionRich`; channel consumer ownership boundaries remain unchanged.
+
+Validation evidence: Catalog product/import focused tests passed with 2 suites / 49 tests, Catalog build passed, synthetic `validate:product-quality` passed with products=3 blocked=2 readyForActivation=1, Allegro catalog sell-action spec passed, Bazos focused shared tests passed with 3 suites / 67 tests, Aukro focused service tests passed and runtime health returned HTTP 200 on image `localhost:5000/aukro-service:4cdd671`, Heureka feed readiness self-test plus shared/service builds passed, and FlipFlop product-quality blocker verification plus shared/product-service builds passed.
+
+Boundary: no marketplace publish/confirm/queue action, Warehouse mutation, production data mutation, Auth/RBAC change, or secret output was performed.
+
+Next action: keep Goal 25 accepted unless a live authorized smoke uncovers a runtime-only channel issue; marketplace/account blockers remain channel-owned.
+
 ## 2026-07-03 - Goal 25 Bazos Product Quality Consumer Lane Closed
 
 Change: accepted the Bazos channel consumer handoff for Catalog Goal 25 and marked that lane complete. Bazos is clean and synced on `main` at `b3576a6`, with Catalog product-quality blockers consumed before prepare, confirm, and publish-adjacent queue paths. Bazos-created Catalog products remain draft/non-active, and the runtime maps `CATALOG_INTERNAL_SERVICE_TOKEN` from the existing Auth secret for protected Catalog readiness calls.
