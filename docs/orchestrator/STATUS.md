@@ -1,3 +1,13 @@
+## 2026-07-02 - Goal 22/23 Catalog Runtime Deployment
+
+Change: applied the fail-closed Catalog source model to production runtime. `catalog_user_settings` now exists with `include_alfares_catalog=false` and `include_community_catalog=false`; `products.resale_enabled=false` exists; owner-scope and resale indexes are present. Backend and frontend are deployed from `10c48de`.
+
+Validation evidence: sequential migration rerun completed cleanly after an initial concurrent idempotent-index race; schema checks confirmed source defaults and indexes. `./scripts/deploy.sh` built/pushed `localhost:5000/catalog-microservice:10c48de`, rolled out successfully, and pod health returned `status=healthy`. `./scripts/deploy-frontend.sh` built/pushed `localhost:5000/catalog-frontend:10c48de` and rollout succeeded. Runtime smoke with a synthetic Auth user verified defaults false/false, effective product count 0 before opt-in, Alfares count 0 before opt-in, Alfares count 56 after explicit opt-in, and effective count 0 after disabling sources again.
+
+Boundary decision: no product rows were created or mutated, no customer data was printed, token/password values were not printed, no Warehouse/Orders/Payments code changed, no channel repo deploy happened, and no live marketplace mutation was run. One synthetic Auth user remains as smoke evidence until an owner cleanup/retention decision is made.
+
+Next action: integrate the deployed Catalog contract into Allegro, Aukro, Bazos, FlipFlop, and Heureka user-facing product pickers/callbacks, then run channel validation before any channel deploy.
+
 ## 2026-07-02 - Goal 23 Reseller Community Catalog Source
 
 Change: implemented the corrected seller-community resale model in Catalog. Alfares products are disabled by default, products from other sellers are disabled by default, and a seller-owned product is visible to other sellers only when the owner enables resale on that product. Added `products.resale_enabled`, `catalog_user_settings.include_alfares_catalog`, `catalog_user_settings.include_community_catalog`, protected source settings/provision endpoints, `catalogScope=own|effective|alfares|community|all`, owner-only mutation guards for non-owned visible products, Catalog dashboard source checkboxes, `/dashboard/settings`, product create/edit resale checkboxes, and Goal 23 contract/planning/validation docs.
