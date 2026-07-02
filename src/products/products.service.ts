@@ -4,7 +4,7 @@ import { Repository, FindOptionsWhere, In, IsNull, SelectQueryBuilder, EntityMan
 import { Product, ProductLifecycle } from "./product.entity";
 import { LoggerService } from '../logger/logger.service';
 import { PricingService } from '../pricing/pricing.service';
-import { CreateProductDto, UpdateProductDto, ProductQueryDto, type ProductCatalogScope } from './dto';
+import { CreateProductDto, UpdateProductDto, ProductQueryDto, type ProductCatalogScope, type ProductCatalogSource } from './dto';
 import type { CatalogActor } from '../auth/catalog-auth.guard';
 import { CatalogAccessService, type CatalogSourceSettings } from '../catalog-access/catalog-access.service';
 import axios from "axios";
@@ -154,6 +154,7 @@ type CatalogStockPreflight = {
 type ProductAccessScope = {
   actor?: CatalogActor;
   catalogScope?: ProductCatalogScope;
+  catalogSources?: ProductCatalogSource[];
 };
 
 type ProductAccessIntent = 'read' | 'mutate';
@@ -257,9 +258,10 @@ export class ProductsService {
   ): Promise<void> {
     const actor = scope.actor;
     const requestedScope = this.normalizeCatalogScope(scope.catalogScope, actor);
+    const requestedSources = this.normalizeCatalogSources(scope.catalogSources);
 
     if (this.canAccessAllProducts(actor)) {
-      this.applyAdminRequestedSourceScope(queryBuilder, requestedScope, alias);
+      this.applyAdminRequestedSourceScope(queryBuilder, requestedScope, alias, requestedSources);
       return;
     }
 
@@ -312,12 +314,45 @@ export class ProductsService {
     queryBuilder: SelectQueryBuilder<Product>,
     requestedScope: ProductCatalogScope,
     alias: string,
+    requestedSources?: ProductCatalogSource[] | null,
   ): void {
-    if (requestedScope === 'alfares') {
-      queryBuilder.andWhere(`${alias}.ownerUserId IS NULL`);
-    } else if (requestedScope === 'community') {
-      queryBuilder.andWhere(`${alias}.ownerUserId IS NOT NULL AND ${alias}.resaleEnabled = true`);
+    const sourceSet = requestedSources ? new Set(requestedSources) : null;
+    const shouldFilter = sourceSet || requestedScope === 'own' || requestedScope === 'alfares' || requestedScope === 'community';
+
+    if (!shouldFilter) {
+      return;
     }
+
+    const conditions: string[] = [];
+    if ((sourceSet && sourceSet.has('own')) || (!sourceSet && requestedScope === 'own')) {
+      conditions.push(`${alias}.ownerUserId IS NOT NULL AND ${alias}.resaleEnabled = false`);
+    }
+    if ((sourceSet && sourceSet.has('alfares')) || (!sourceSet && requestedScope === 'alfares')) {
+      conditions.push(`${alias}.ownerUserId IS NULL`);
+    }
+    if ((sourceSet && sourceSet.has('community')) || (!sourceSet && requestedScope === 'community')) {
+      conditions.push(`${alias}.ownerUserId IS NOT NULL AND ${alias}.resaleEnabled = true`);
+    }
+
+    if (!conditions.length) {
+      queryBuilder.andWhere('1 = 0');
+      return;
+    }
+
+    queryBuilder.andWhere(new Brackets((qb) => {
+      conditions.forEach((condition, index) => {
+        if (index === 0) qb.where(condition);
+        else qb.orWhere(condition);
+      });
+    }));
+  }
+
+  private normalizeCatalogSources(sources?: ProductCatalogSource[]): ProductCatalogSource[] | null {
+    if (!Array.isArray(sources)) {
+      return null;
+    }
+    const normalized = sources.filter((source): source is ProductCatalogSource => source === 'own' || source === 'alfares' || source === 'community');
+    return normalized.length ? Array.from(new Set(normalized)) : [];
   }
 
   private normalizeCatalogScope(scope: ProductCatalogScope | undefined, actor?: CatalogActor): ProductCatalogScope {
@@ -597,7 +632,7 @@ export class ProductsService {
    * Find all products with pagination and filters
    */
   async findAll(query: ProductQueryDto, scope: ProductAccessScope = {}): Promise<{ items: Product[]; total: number; page: number; limit: number }> {
-    const { page = 1, limit = 20, search, isActive, lifecycle, categoryId, catalogScope } = query;
+    const { page = 1, limit = 20, search, isActive, lifecycle, categoryId, catalogScope, catalogSources } = query;
     const skip = (page - 1) * limit;
 
     this.logger.log(`Finding products: page=${page}, limit=${limit}, search=${search}`, 'ProductsService');
@@ -620,7 +655,7 @@ export class ProductsService {
       queryBuilder.andWhere("product.lifecycle = :lifecycle", { lifecycle });
     }
 
-    await this.applyProductReadScope(queryBuilder, { ...scope, catalogScope });
+    await this.applyProductReadScope(queryBuilder, { ...scope, catalogScope, catalogSources });
 
     // Filter by category
     if (categoryId) {

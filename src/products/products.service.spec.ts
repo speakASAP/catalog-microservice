@@ -73,6 +73,92 @@ describe("ProductsService product readiness", () => {
     expect(queryBuilder.andWhere).toHaveBeenCalledWith(expect.any(Object));
   });
 
+  it("filters admin product lists to only selected catalog sources", async () => {
+    const queryBuilder: any = {
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      getManyAndCount: jest.fn(async () => [[], 0]),
+    };
+    const repository = {
+      createQueryBuilder: jest.fn(() => queryBuilder),
+    };
+    const service = new ProductsService(repository as any, logger as any);
+
+    await service.findAll(
+      { page: 1, limit: 20, catalogSources: ["alfares", "community"] },
+      { actor: { type: "jwt", sub: "admin-1", roles: ["global:superadmin"], authMethod: "auth-validate" } },
+    );
+
+    const bracket = queryBuilder.andWhere.mock.calls[0][0];
+    const bracketQueryBuilder = {
+      where: jest.fn().mockReturnThis(),
+      orWhere: jest.fn().mockReturnThis(),
+    };
+    bracket.whereFactory(bracketQueryBuilder);
+
+    expect(bracketQueryBuilder.where).toHaveBeenCalledWith("product.ownerUserId IS NULL");
+    expect(bracketQueryBuilder.orWhere).toHaveBeenCalledWith("product.ownerUserId IS NOT NULL AND product.resaleEnabled = true");
+    expect(bracketQueryBuilder.where).not.toHaveBeenCalledWith(expect.stringContaining("resaleEnabled = false"));
+  });
+
+  it("filters admin product lists to community products only", async () => {
+    const queryBuilder: any = {
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      getManyAndCount: jest.fn(async () => [[], 0]),
+    };
+    const repository = {
+      createQueryBuilder: jest.fn(() => queryBuilder),
+    };
+    const service = new ProductsService(repository as any, logger as any);
+
+    await service.findAll(
+      { page: 1, limit: 20, catalogSources: ["community"] },
+      { actor: { type: "jwt", sub: "admin-1", roles: ["global:superadmin"], authMethod: "auth-validate" } },
+    );
+
+    const bracket = queryBuilder.andWhere.mock.calls[0][0];
+    const bracketQueryBuilder = {
+      where: jest.fn().mockReturnThis(),
+      orWhere: jest.fn().mockReturnThis(),
+    };
+    bracket.whereFactory(bracketQueryBuilder);
+
+    expect(bracketQueryBuilder.where).toHaveBeenCalledWith("product.ownerUserId IS NOT NULL AND product.resaleEnabled = true");
+    expect(bracketQueryBuilder.orWhere).not.toHaveBeenCalled();
+  });
+
+  it("returns no products when an admin source filter selects no sources", async () => {
+    const queryBuilder: any = {
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      getManyAndCount: jest.fn(async () => [[], 0]),
+    };
+    const repository = {
+      createQueryBuilder: jest.fn(() => queryBuilder),
+    };
+    const service = new ProductsService(repository as any, logger as any);
+
+    await service.findAll(
+      { page: 1, limit: 20, catalogSources: [] },
+      { actor: { type: "jwt", sub: "admin-1", roles: ["global:superadmin"], authMethod: "auth-validate" } },
+    );
+
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith("1 = 0");
+  });
+
   it("defaults new seller products to private resale visibility", async () => {
     const repository = {
       create: jest.fn((data) => data),

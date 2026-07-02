@@ -42,6 +42,7 @@ export interface Product {
 }
 
 export type ProductCatalogScope = 'own' | 'effective' | 'alfares' | 'community' | 'all';
+export type ProductCatalogSource = 'own' | 'alfares' | 'community';
 
 export interface CatalogSourceSettings {
   userId: string;
@@ -170,6 +171,7 @@ export interface ProductQuery {
   isActive?: boolean;
   lifecycle?: 'draft' | 'active' | 'archived' | 'needs_review';
   catalogScope?: ProductCatalogScope;
+  catalogSources?: ProductCatalogSource[];
 }
 
 export interface PaginatedResponse<T> {
@@ -482,6 +484,7 @@ export const productsApi = {
     if (query?.isActive !== undefined) params.append('isActive', query.isActive.toString());
     if (query?.lifecycle) params.append('lifecycle', query.lifecycle);
     if (query?.catalogScope) params.append('catalogScope', query.catalogScope);
+    if (query?.catalogSources) params.append('catalogSources', query.catalogSources.join(','));
 
     const queryString = params.toString();
     return apiClient.get<Product[] | PaginatedResponse<Product>>(`/products${queryString ? `?${queryString}` : ''}`);

@@ -11,12 +11,13 @@ import { useRouter } from 'next/navigation';
 import { productsApi, Product, ProductQuery, PaginatedResponse, ProductWarehouseAvailabilityItem, CatalogSourceSettings } from '@/lib/api/products';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDashboardSidebarControls } from '@/contexts/DashboardSidebarContext';
 
 type ActiveFilter = 'all' | 'active' | 'inactive';
 type LifecycleFilter = 'all' | 'draft' | 'active' | 'archived' | 'needs_review';
 
-const PAGE_LIMIT = 20;
-const BULK_FETCH_LIMIT = 100;
+const DEFAULT_PAGE_SIZE = 50;
+const PAGE_SIZE_OPTIONS = [50, 100, 200] as const;
 
 function formatLifecycle(value?: Product['lifecycle']) {
   if (!value) return 'Active';
@@ -24,6 +25,24 @@ function formatLifecycle(value?: Product['lifecycle']) {
     .split('_')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
+}
+
+function getProductStatusBadge(product: Product) {
+  if (product.isActive === false) {
+    return { label: 'Inactive', tone: 'bg-red-100 text-red-800' };
+  }
+
+  if (product.lifecycle && product.lifecycle !== 'active') {
+    const lifecycleTone = product.lifecycle === 'needs_review'
+      ? 'bg-amber-100 text-amber-800'
+      : product.lifecycle === 'draft'
+        ? 'bg-gray-100 text-gray-700'
+        : 'bg-red-100 text-red-800';
+
+    return { label: formatLifecycle(product.lifecycle), tone: lifecycleTone };
+  }
+
+  return { label: 'Active', tone: 'bg-green-100 text-green-800' };
 }
 
 function formatQuantity(value?: number | null) {
@@ -52,6 +71,7 @@ function getProductSource(product: Product) {
 export default function AdminProductsPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { setSidebarControls } = useDashboardSidebarControls();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -59,10 +79,10 @@ export default function AdminProductsPage() {
   const [activeFilter, setActiveFilter] = useState<ActiveFilter>('active');
   const [lifecycleFilter, setLifecycleFilter] = useState<LifecycleFilter>('all');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [allFilteredSelected, setAllFilteredSelected] = useState(false);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [bulkStatus, setBulkStatus] = useState<string | null>(null);
   const [availabilityByProductId, setAvailabilityByProductId] = useState<Record<string, ProductWarehouseAvailabilityItem>>({});
@@ -70,14 +90,22 @@ export default function AdminProductsPage() {
   const [catalogSettings, setCatalogSettings] = useState<CatalogSourceSettings | null>(null);
   const [settingsSaving, setSettingsSaving] = useState(false);
 
+  const selectedCatalogSources = useMemo<ProductQuery['catalogSources']>(() => {
+    if (!catalogSettings) return undefined;
+    const sources: NonNullable<ProductQuery['catalogSources']> = [];
+    if (catalogSettings.includeAlfaresCatalog) sources.push('alfares');
+    if (catalogSettings.includeCommunityCatalog) sources.push('community');
+    return sources;
+  }, [catalogSettings]);
+
   const query = useMemo<ProductQuery>(() => ({
     page,
-    limit: PAGE_LIMIT,
+    limit: pageSize,
     search: debouncedSearch || undefined,
     isActive: activeFilter === 'all' ? undefined : activeFilter === 'active',
     lifecycle: lifecycleFilter === 'all' ? undefined : lifecycleFilter,
-    catalogScope: 'effective',
-  }), [activeFilter, debouncedSearch, lifecycleFilter, page]);
+    catalogSources: selectedCatalogSources,
+  }), [activeFilter, debouncedSearch, lifecycleFilter, page, pageSize, selectedCatalogSources]);
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
@@ -155,11 +183,10 @@ export default function AdminProductsPage() {
 
   useEffect(() => {
     setSelectedIds(new Set());
-    setAllFilteredSelected(false);
     setBulkStatus(null);
-  }, [activeFilter, lifecycleFilter, debouncedSearch]);
+  }, [activeFilter, lifecycleFilter, debouncedSearch, pageSize]);
 
-  const selectedCount = allFilteredSelected ? total : selectedIds.size;
+  const selectedCount = selectedIds.size;
   const pageIds = products.map((product) => product.id);
   const currentPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
   const canMutateProduct = useCallback((product: Product) => {
@@ -170,7 +197,6 @@ export default function AdminProductsPage() {
   }, [user?.email, user?.id, user?.isAdmin, user?.roles]);
 
   const toggleProductSelection = (id: string) => {
-    if (allFilteredSelected) setAllFilteredSelected(false);
     setSelectedIds((current) => {
       const next = new Set(current);
       if (next.has(id)) next.delete(id);
@@ -180,7 +206,6 @@ export default function AdminProductsPage() {
   };
 
   const toggleCurrentPageSelection = () => {
-    if (allFilteredSelected) setAllFilteredSelected(false);
     setSelectedIds((current) => {
       const next = new Set(current);
       if (currentPageSelected) {
@@ -194,34 +219,7 @@ export default function AdminProductsPage() {
 
   const clearSelection = () => {
     setSelectedIds(new Set());
-    setAllFilteredSelected(false);
     setBulkStatus(null);
-  };
-
-  const fetchFilteredProductIds = async () => {
-    const ids: string[] = [];
-    let currentPage = 1;
-    let pages = 1;
-
-    do {
-      const response = await productsApi.getProducts({
-        ...query,
-        page: currentPage,
-        limit: BULK_FETCH_LIMIT,
-      });
-
-      if (!response.success || !response.data) {
-        throw new Error(response.error?.message || 'Failed to load filtered products');
-      }
-
-      const data = response.data as PaginatedResponse<Product>;
-      const items = Array.isArray(response.data) ? response.data : data.items || [];
-      ids.push(...items.map((product) => product.id));
-      pages = response.pagination?.pages || data.pagination?.pages || 1;
-      currentPage += 1;
-    } while (currentPage <= pages);
-
-    return Array.from(new Set(ids));
   };
 
   const deleteProducts = async (ids: string[]) => {
@@ -273,7 +271,7 @@ export default function AdminProductsPage() {
     setBulkStatus('Preparing publication selection...');
 
     try {
-      const ids = allFilteredSelected ? await fetchFilteredProductIds() : Array.from(selectedIds);
+      const ids = Array.from(selectedIds);
       if (ids.length === 0) {
         setBulkStatus('No products matched the current selection.');
         return;
@@ -295,9 +293,7 @@ export default function AdminProductsPage() {
   const handleBulkDelete = async () => {
     if (selectedCount === 0 || bulkBusy) return;
 
-    const scopeLabel = allFilteredSelected
-      ? `all ${total} products matching the current filters`
-      : `${selectedIds.size} selected products`;
+    const scopeLabel = `${selectedIds.size} selected products`;
 
     if (!confirm(`Delete ${scopeLabel}? This archives the products and removes them from active catalog use.`)) {
       return;
@@ -307,7 +303,7 @@ export default function AdminProductsPage() {
     setBulkStatus('Preparing bulk delete...');
 
     try {
-      const ids = allFilteredSelected ? await fetchFilteredProductIds() : Array.from(selectedIds);
+      const ids = Array.from(selectedIds);
       if (ids.length === 0) {
         setBulkStatus('No products matched the current selection.');
         return;
@@ -315,7 +311,6 @@ export default function AdminProductsPage() {
 
       const result = await deleteProducts(ids);
       setSelectedIds(new Set());
-      setAllFilteredSelected(false);
       setBulkStatus(
         result.failed.length
           ? `Deleted ${result.deleted}; ${result.failed.length} failed.`
@@ -352,7 +347,6 @@ export default function AdminProductsPage() {
       if (response.success && response.data) {
         setCatalogSettings(response.data);
         setPage(1);
-        await loadProducts();
       } else {
         alert(response.error?.message || 'Failed to update catalog source settings');
       }
@@ -360,6 +354,104 @@ export default function AdminProductsPage() {
       setSettingsSaving(false);
     }
   };
+
+  const updatePageSize = (value: number) => {
+    setPage(1);
+    setPageSize(Math.min(200, Math.max(1, value)));
+  };
+
+  useEffect(() => {
+    setSidebarControls(
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-xs font-extrabold uppercase tracking-wider text-gray-700">Product filters</h2>
+          <p className="mt-1 text-[11px] leading-4 text-gray-500">Changes load the first matching page immediately.</p>
+        </div>
+
+        <label className="block">
+          <span className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-gray-600">Search</span>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search products..."
+            className="w-full rounded-lg border border-gray-300 px-2.5 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+          />
+        </label>
+
+        <fieldset className="space-y-2">
+          <legend className="text-[11px] font-bold uppercase tracking-wider text-gray-600">Status</legend>
+          {[
+            ['active', 'Active only'],
+            ['all', 'All statuses'],
+            ['inactive', 'Inactive only'],
+          ].map(([value, label]) => (
+            <label key={value} className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-gray-800">
+              <input
+                type="radio"
+                name="product-active-filter"
+                checked={activeFilter === value}
+                onChange={() => updateActiveFilter(value as ActiveFilter)}
+                disabled={bulkBusy}
+                className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              {label}
+            </label>
+          ))}
+        </fieldset>
+
+        <label className="block">
+          <span className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-gray-600">Type</span>
+          <select
+            value={lifecycleFilter}
+            onChange={(e) => updateLifecycleFilter(e.target.value as LifecycleFilter)}
+            disabled={bulkBusy}
+            className="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+          >
+            <option value="all">All types</option>
+            <option value="active">Active</option>
+            <option value="draft">Draft</option>
+            <option value="needs_review">Needs review</option>
+            <option value="archived">Archived</option>
+          </select>
+        </label>
+
+        <fieldset className="space-y-2 border-t border-gray-200 pt-4">
+          <legend className="text-[11px] font-bold uppercase tracking-wider text-gray-600">Catalog sources</legend>
+          <label className="flex cursor-pointer items-start gap-2 text-sm font-semibold text-gray-800">
+            <input
+              type="checkbox"
+              checked={catalogSettings?.includeAlfaresCatalog === true}
+              disabled={settingsSaving || !catalogSettings}
+              onChange={(event) => updateCatalogSource('includeAlfaresCatalog', event.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span>Alfares products</span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-2 text-sm font-semibold text-gray-800">
+            <input
+              type="checkbox"
+              checked={catalogSettings?.includeCommunityCatalog === true}
+              disabled={settingsSaving || !catalogSettings}
+              onChange={(event) => updateCatalogSource('includeCommunityCatalog', event.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+            />
+            <span>Other sellers</span>
+          </label>
+        </fieldset>
+      </div>,
+    );
+
+    return () => setSidebarControls(null);
+  }, [
+    activeFilter,
+    bulkBusy,
+    catalogSettings,
+    lifecycleFilter,
+    search,
+    setSidebarControls,
+    settingsSaving,
+  ]);
 
   if (loading && products.length === 0) {
     return (
@@ -392,79 +484,6 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
-      {/* Search and filters */}
-      <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(260px,2fr)_minmax(160px,1fr)_minmax(160px,1fr)] gap-3 lg:items-end">
-          <label className="block">
-            <span className="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-1">Search</span>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search products..."
-              className="w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-            />
-          </label>
-          <label className="block">
-            <span className="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-1">Status</span>
-            <select
-              value={activeFilter}
-              onChange={(e) => updateActiveFilter(e.target.value as ActiveFilter)}
-              className="w-full border-2 border-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all bg-white"
-            >
-              <option value="all">All statuses</option>
-              <option value="active">Active only</option>
-              <option value="inactive">Inactive only</option>
-            </select>
-          </label>
-          <label className="block">
-            <span className="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-1">Type</span>
-            <select
-              value={lifecycleFilter}
-              onChange={(e) => updateLifecycleFilter(e.target.value as LifecycleFilter)}
-              className="w-full border-2 border-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all bg-white"
-            >
-              <option value="all">All types</option>
-              <option value="active">Active</option>
-              <option value="draft">Draft</option>
-              <option value="needs_review">Needs review</option>
-              <option value="archived">Archived</option>
-            </select>
-          </label>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h2 className="text-sm font-extrabold uppercase tracking-wider text-gray-700">Catalog sources</h2>
-            <p className="text-sm text-gray-600">Your products are always included. Other sellers appear only when they enabled resale.</p>
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <label className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-800">
-              <input
-                type="checkbox"
-                checked={catalogSettings?.includeAlfaresCatalog === true}
-                disabled={settingsSaving || !catalogSettings}
-                onChange={(event) => updateCatalogSource('includeAlfaresCatalog', event.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              Alfares products
-            </label>
-            <label className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-800">
-              <input
-                type="checkbox"
-                checked={catalogSettings?.includeCommunityCatalog === true}
-                disabled={settingsSaving || !catalogSettings}
-                onChange={(event) => updateCatalogSource('includeCommunityCatalog', event.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-              />
-              Other sellers
-            </label>
-          </div>
-        </div>
-      </div>
-
       {/* Bulk actions */}
       {products.length > 0 && (
         <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
@@ -476,13 +495,12 @@ export default function AdminProductsPage() {
             <button
               type="button"
               onClick={() => {
-                setAllFilteredSelected(true);
                 setSelectedIds(new Set(pageIds));
               }}
-              disabled={bulkBusy || total === 0}
+              disabled={bulkBusy || pageIds.length === 0}
               className="px-4 py-2 bg-white border-2 border-blue-200 text-blue-700 rounded-xl font-semibold hover:bg-blue-50 hover:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Select all filtered ({total})
+              Select page ({pageIds.length})
             </button>
             <button
               type="button"
@@ -523,7 +541,7 @@ export default function AdminProductsPage() {
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-12">
                       <input
                         type="checkbox"
-                        checked={currentPageSelected || allFilteredSelected}
+                        checked={currentPageSelected}
                         onChange={toggleCurrentPageSelection}
                         disabled={bulkBusy}
                         className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -566,7 +584,7 @@ export default function AdminProductsPage() {
                         <td className="px-6 py-4">
                           <input
                             type="checkbox"
-                            checked={allFilteredSelected || selectedIds.has(product.id)}
+                            checked={selectedIds.has(product.id)}
                             onChange={() => toggleProductSelection(product.id)}
                             disabled={bulkBusy}
                             className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -630,20 +648,15 @@ export default function AdminProductsPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex flex-wrap gap-2">
-                            <span
-                              className={`px-3 py-1.5 text-xs font-bold rounded-full shadow-sm ${
-                                product.isActive
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-red-100 text-red-800'
-                              }`}
-                            >
-                              {product.isActive ? '✓ Active' : '✗ Inactive'}
-                            </span>
-                            <span className="px-3 py-1.5 text-xs font-bold rounded-full shadow-sm bg-gray-100 text-gray-700">
-                              {formatLifecycle(product.lifecycle)}
-                            </span>
-                          </div>
+                          {(() => {
+                            const status = getProductStatusBadge(product);
+
+                            return (
+                              <span className={`px-3 py-1.5 text-xs font-bold rounded-full shadow-sm ${status.tone}`}>
+                                {status.label}
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex items-center justify-end gap-3">
@@ -671,8 +684,25 @@ export default function AdminProductsPage() {
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="bg-gradient-to-r from-gray-50 to-blue-50 px-6 py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-t border-gray-200">
-                <div className="text-sm font-semibold text-gray-700">
-                  Showing {products.length} of {total} products
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <div className="text-sm font-semibold text-gray-700">
+                    Showing {products.length} of {total} products
+                  </div>
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                    <span>Per page</span>
+                    <select
+                      value={pageSize}
+                      onChange={(event) => updatePageSize(Number(event.target.value))}
+                      disabled={bulkBusy}
+                      className="rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-sm font-bold focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:opacity-50"
+                    >
+                      {PAGE_SIZE_OPTIONS.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
                 <div className="flex gap-3">
                   <button

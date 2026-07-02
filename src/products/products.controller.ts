@@ -16,7 +16,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
-import { CreateProductDto, UpdateProductDto, ProductQueryDto, type ProductCatalogScope } from './dto';
+import { CreateProductDto, UpdateProductDto, ProductQueryDto, type ProductCatalogScope, type ProductCatalogSource } from './dto';
 import { LoggerService } from '../logger/logger.service';
 import { CatalogAuthGuard } from '../auth/catalog-auth.guard';
 import type { CatalogAuthenticatedRequest } from '../auth/catalog-auth.guard';
@@ -33,8 +33,8 @@ export class ProductsController {
     private readonly logger: LoggerService,
   ) {}
 
-  private productScope(request?: CatalogAuthenticatedRequest, catalogScope?: ProductCatalogScope) {
-    return { actor: request?.catalogActor, catalogScope };
+  private productScope(request?: CatalogAuthenticatedRequest, catalogScope?: ProductCatalogScope, catalogSources?: ProductCatalogSource[]) {
+    return { actor: request?.catalogActor, catalogScope, catalogSources };
   }
 
   /**
@@ -72,7 +72,7 @@ export class ProductsController {
     @Req() request: CatalogAuthenticatedRequest,
   ) {
     this.logger.log(`GET /api/products with query: ${JSON.stringify(query)}`, 'ProductsController');
-    const result = await this.productsService.findAll(query, this.productScope(request, query.catalogScope));
+    const result = await this.productsService.findAll(query, this.productScope(request, query.catalogScope, query.catalogSources));
     return {
       success: true,
       data: result.items,

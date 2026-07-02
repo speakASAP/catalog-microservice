@@ -4,6 +4,7 @@ import type { ProductLifecycle } from "../product.entity";
 import type { ProductContentDocument } from "../../content-connectors/content-document";
 
 export type ProductCatalogScope = 'own' | 'effective' | 'alfares' | 'community' | 'all';
+export type ProductCatalogSource = 'own' | 'alfares' | 'community';
 
 /**
  * DTO for creating a new product
@@ -159,8 +160,8 @@ export class ProductQueryDto {
   @Type(() => Number)
   @IsNumber()
   @Min(1)
-  @Max(100)
-  limit?: number = 20;
+  @Max(200)
+  limit?: number = 50;
 
   @IsOptional()
   @IsString()
@@ -183,4 +184,15 @@ export class ProductQueryDto {
   @IsOptional()
   @IsIn(['own', 'effective', 'alfares', 'community', 'all'])
   catalogScope?: ProductCatalogScope;
+
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) {
+      return value.flatMap((item) => String(item).split(',')).map((item) => item.trim()).filter(Boolean);
+    }
+    return String(value ?? '').split(',').map((item) => item.trim()).filter(Boolean);
+  })
+  @IsArray()
+  @IsIn(['own', 'alfares', 'community'], { each: true })
+  catalogSources?: ProductCatalogSource[];
 }

@@ -8,8 +8,9 @@
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { DashboardSidebarProvider } from '@/contexts/DashboardSidebarContext';
 import { hasCatalogAdminAccess } from './AdminGuard';
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -20,6 +21,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarControls, setSidebarControls] = useState<ReactNode | null>(null);
   const canAccessAdminSection = hasCatalogAdminAccess(user?.email);
 
   const handleLogout = () => {
@@ -138,6 +140,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   </li>
                 ))}
               </ul>
+              {sidebarControls && (
+                <div className="mt-4 border-t border-gray-200 pt-4">
+                  {sidebarControls}
+                </div>
+              )}
             </nav>
 
             {/* User info and logout */}
@@ -175,7 +182,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
         {/* Main content */}
         <main className="flex-1 lg:ml-0 min-h-screen">
-          <div className="p-4 lg:p-5">{children}</div>
+          <div className="p-4 lg:p-5">
+            <DashboardSidebarProvider setSidebarControls={setSidebarControls}>
+              {children}
+            </DashboardSidebarProvider>
+          </div>
         </main>
       </div>
     </div>
