@@ -1796,3 +1796,31 @@ Runtime evidence:
 Remaining blocker:
 
 - `[MISSING: approved Holiday Discount selected category/tag allow-list]` remains intentional. `CATALOG_BPCP_HOLIDAY_ELIGIBLE_CATEGORY_IDS` and `CATALOG_BPCP_HOLIDAY_ELIGIBLE_TAGS` are explicitly present but empty in the Catalog config map until business values are approved.
+
+## 2026-07-03 - Holiday Discount Canary Allow-List Config
+
+Current focus: narrow the Catalog Holiday Discount allow-list to a single live canary product tag and prove the remaining runtime gate is the BPCP active window, not missing Catalog configuration.
+
+Intent Preservation Chain:
+
+- Vision: Business process changes should flow through BPCP and service-local contracts without broad accidental discount exposure.
+- Goal Impact: Catalog now has an explicit canary allow-list value for Holiday Discount validation.
+- System: Catalog owns product facts and allow-list evaluation; BPCP owns process window; FlipFlop owns monetary quote and order totals.
+- Feature: Holiday Discount selected product allow-list.
+- Task: configure `CATALOG_BPCP_HOLIDAY_ELIGIBLE_TAGS` to exact tag `allegro-offer:18106037370`, deploy Catalog, and verify canary/non-canary facts.
+- Execution Plan: use one exact product tag rather than broad tags like `allegro` or `published`; do not create orders or payments for quote smoke.
+- Coding Prompt: keep live discount fail-closed while BPCP process window remains future-dated.
+- Code: `f88ae2a chore: configure holiday discount canary allow-list`.
+- Validation: `npm run verify:bpcp-consumer` passed; `npm run build` passed; `git diff --check` passed; Catalog deploy succeeded.
+
+Runtime evidence:
+
+- Catalog image `localhost:5000/catalog-microservice:f88ae2a` rolled out successfully.
+- `/health` reports allow-list `tags=[allegro-offer:18106037370]`, `configured=true`, `missing=[]`, durable store `mode=durable`, `activeProjectionCount=1`, and projection blockers `[]`.
+- Canary Catalog product `ce4a51aa-2d12-4ab7-a965-7a36609d01fc` matches `matchedTags=[allegro-offer:18106037370]`, blockers `[]`, but `eligible=false` with `reasonCodes=[BPCP_PROCESS_WINDOW_INACTIVE]` because BPCP v1 is active only from `2026-12-01T00:00:00Z`.
+- Non-canary Catalog product `dbc51dde-fc66-4511-b178-f929183f4647` has no matched tags and remains ineligible with `PRODUCT_NOT_IN_HOLIDAY_ELIGIBILITY_SET`.
+
+Remaining blocker:
+
+- `[MISSING: non-mutating FlipFlop quote endpoint]` Existing FlipFlop order-service computes Holiday Discount only inside order creation, which has order/payment/stock side effects. Do not use live order creation as a quote smoke.
+- `[MISSING: BPCP active-window decision]` Applied Holiday Discount cannot be observed until BPCP v1 window opens or an approved canary-active process/version contract is implemented end to end.
