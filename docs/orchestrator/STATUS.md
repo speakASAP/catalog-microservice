@@ -1,3 +1,13 @@
+## 2026-07-02 - C1 Orders Source Contract Closed
+
+Change: Orders now implements the missing product-scoped `lifecycleStatistics` and `orderDeliveryStatistics` fields for `GET /api/orders/statistics/products/:productId`. Catalog already treats those fields as optional, aggregate-only, and fail-soft; no Catalog source change was required for this closure.
+
+Validation evidence: Catalog consumer revalidation passed with `npm test -- --runInBand src/products/products.service.spec.ts` (1 suite, 39 tests), `npm run build`, and `cd services/frontend && npm run build` with only the existing Next.js multiple-lockfile workspace-root warning. Orders validation passed with `git diff --check`, `npm run build`, `npm run verify:product-sales-statistics`, and full `npm test`.
+
+Deploy gate: live Catalog product-statistics smoke remains blocked until the Orders source contract is deployed/scaled in production after the Warehouse WH-G16 fulfillment-order deployment gate.
+
+Next action: after the Warehouse/Orders deployment wave, run protected Catalog product-statistics smoke and confirm `lifecycleStatistics.sourceStatus=available` from live Orders.
+
 ## 2026-07-02 - C1 Catalog/Admin Order And Delivery Statistics
 
 Change: extended the existing Orders-backed Catalog product sales statistics bridge and admin product panel for the C1 order/delivery statistics lane. Catalog now normalizes the current Orders product statistics response shape (`byChannel`, `byStatus`, `grossItemRevenue`, `lastOrderAt`) in addition to the older Catalog UI shape, renders product-level order status rows, and exposes lifecycle/payment/delivery aggregate slots only when Orders supplies product-scoped aggregate fields. When those fields are absent, the product page shows `[MISSING: Orders stats endpoint]` instead of using global Orders admin lifecycle summaries or inventing lifecycle/delivery counts.
@@ -6,9 +16,9 @@ Boundary decision: Orders remains the lifecycle, order status, payment status, c
 
 Validation evidence: `npm test -- --runInBand src/products/products.service.spec.ts` passed (1 suite, 39 tests); `git diff --check` passed; `npm run build` passed; `cd services/frontend && npm run build` passed with only the existing Next.js multiple-lockfile workspace-root warning.
 
-Blocker: `[MISSING: Orders stats endpoint]` for product-scoped lifecycle/payment/delivery aggregates and channel-level lifecycle/delivery exception counts. Current Orders endpoint still provides product sales/order status aggregate data; C1 delivery/lifecycle detail remains fail-soft until Orders adds the required product-scoped stats contract.
+Deploy gate: Orders source now provides the required product-scoped lifecycle/payment/delivery aggregates and channel-level lifecycle/delivery exception counts. C1 delivery/lifecycle detail remains fail-soft only until the Orders production deployment/scale-up and live Catalog product-statistics smoke complete.
 
-Next action: add or approve the Orders-owned product lifecycle/payment/delivery aggregate endpoint, then rerun Catalog C1 validation and replace the fail-soft marker with real Orders data.
+Next action: deploy/scale Orders after the Warehouse WH-G16 gate, then rerun Catalog C1 live smoke and confirm real Orders lifecycle/delivery aggregates render in the product admin panel.
 
 ## 2026-07-02 - Goal 24/25 Deploy Recovery Follow-up
 
