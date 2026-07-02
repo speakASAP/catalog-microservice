@@ -3,7 +3,7 @@
 ```yaml
 id: EP-CATALOG-22-PRIVATE-CATALOG-ACCESS
 status: active
-source_goal: implementation-goals/GOAL-22-private-catalog-access.md
+source_goal: implementation-goals/GOAL-22-user-catalog-access.md
 owner: Catalog integration owner
 created: 2026-07-02
 last_updated: 2026-07-02
@@ -15,7 +15,7 @@ branch: main
 Repository: `/home/ssf/Documents/Github/catalog-microservice`
 Preflight: clean `main`, head `6f444f7 feat: add catalog product event outbox`
 Docs-rag retrieval: `[MISSING: docs-rag JWT_TOKEN]`
-Cross-repo plan: `docs/orchestrator/2026-07-02-private-catalog-cross-repo-plan.md`
+Cross-repo plan: `docs/orchestrator/2026-07-02-user-catalog-cross-repo-plan.md`
 Contract: `docs/contracts/catalog-user-catalogs.md`
 
 ## Upstream Traceability

@@ -5,7 +5,7 @@ id: CONTRACT-CATALOG-USER-CATALOGS-V1
 status: draft
 owner: Catalog integration owner
 created: 2026-07-02
-source_goal: implementation-goals/GOAL-22-private-catalog-access.md
+source_goal: implementation-goals/GOAL-22-user-catalog-access.md
 ```
 
 ## Purpose
