@@ -111,5 +111,13 @@ The platform becomes a shared commerce network instead of isolated channel tools
 
 - `[MISSING: approved Auth token for authorized end-to-end smoke in every dashboard]`
 - `[UNKNOWN: final localized dashboard copy for every language]`
-- `[UNKNOWN: whether shop-assistant, chytrakoupe, and rent-a-box have personal-account product-source obligations in this first wave]`
+- Candidate review complete: `shop-assistant`, `chytrakoupe`, and `rent-a-box` are not seller/channel publication cabinets in this first wave; no Catalog source picker/resale controls are required there unless a later goal adds seller marketplace publication.
 - `[MISSING: explicit deploy gate for Allegro/Aukro/Bazos/Heureka channel images and FlipFlop immutable provenance check]`
+
+## Candidate Review Evidence
+
+| Repo | Decision | Evidence |
+|---|---|---|
+| `shop-assistant` | out of first-wave Catalog source controls | Product-search assistant with authenticated search/profile/dashboard work; no seller-owned marketplace publication cabinet found in source scan. |
+| `chytrakoupe` | out of first-wave Catalog source controls | Conversion storefront/customer auth slice; product discovery consumes existing product API, not seller source management. |
+| `rent-a-box` | out of first-wave Catalog source controls | Self-storage rental MVP with registration, rentals, contracts, PINs, and mock payment; not an e-commerce product resale surface. |
