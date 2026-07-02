@@ -445,7 +445,7 @@ async function loadRows(options) {
       label: "synthetic/sanitized",
       rows: syntheticRows(),
       policyId: POLICY_ID,
-      blockers: ["[MISSING: generated description state contract]"],
+      blockers: [],
       runBlockers: [],
     };
   }
@@ -461,7 +461,7 @@ async function loadRows(options) {
     label: "synthetic/sanitized",
     rows: syntheticRows(),
     policyId: POLICY_ID,
-    blockers: ["[MISSING: generated description state contract]"],
+    blockers: [],
     runBlockers: ["[MISSING: live Catalog API base/token; synthetic validation mode used]"],
   };
 }

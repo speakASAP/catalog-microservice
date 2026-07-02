@@ -361,7 +361,7 @@ describe("ProductsService product readiness", () => {
     const review = await service.getProductQualityReview({ page: 1, limit: 20 });
 
     expect(review.policyId).toBe("catalog.product_quality.v1");
-    expect(review.blockers).toContain("[MISSING: generated-description state contract]");
+    expect(review.blockers).toEqual([]);
     expect(review.total).toBe(1);
     expect(review.items[0]).toMatchObject({
       productId: "product-quality-1",
@@ -381,6 +381,57 @@ describe("ProductsService product readiness", () => {
       "missing_brand",
       "missing_manufacturer",
     ]));
+  });
+
+  it("uses canonical descriptionRich as the generated-description state contract", async () => {
+    const product = {
+      id: "product-quality-generated-description",
+      sku: "SKU-GENERATED-DESCRIPTION",
+      title: "Generated description product",
+      ownerUserId: null,
+      resaleEnabled: false,
+      isActive: true,
+      lifecycle: "active",
+      ean: null,
+      description: "",
+      descriptionRich: {
+        version: 1,
+        locale: "cs-CZ",
+        blocks: [{ type: "paragraph", text: "Generated canonical description." }],
+      },
+      brand: "",
+      manufacturer: "",
+      tags: [],
+      categories: [],
+      media: [{ type: "image", url: "https://cdn.example/image.jpg" }],
+      pricing: [{ isActive: true, basePrice: 199 }],
+    } as unknown as Product;
+    const queryBuilder: any = {
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      innerJoin: jest.fn().mockReturnThis(),
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      getMany: jest.fn(async () => [product]),
+    };
+    const repository = {
+      createQueryBuilder: jest.fn(() => queryBuilder),
+      count: jest.fn(async () => 1),
+    };
+    const service = new ProductsService(repository as any, logger as any);
+
+    const review = await service.getProductQualityReview({ page: 1, limit: 20 });
+
+    expect(review.blockers).toEqual([]);
+    expect(review.items[0].readiness.descriptionState).toMatchObject({
+      contract: "catalog.generated_description_state.v1",
+      source: "descriptionRich",
+      status: "generated",
+      coversMissingDescription: true,
+    });
+    expect(review.items[0].readiness.checks.hasDescription).toBe(true);
+    expect(review.items[0].blockingIssues.map((issue) => issue.code)).not.toContain("missing_description");
+    expect(review.items[0].blockingMissingFields).not.toContain("description");
   });
 
   it("fails closed when quality activation blockers remain", async () => {

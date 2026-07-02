@@ -60,7 +60,7 @@ export type ProductQualityIssue = {
 };
 
 const PRODUCT_QUALITY_POLICY_ID = 'catalog.product_quality.v1';
-const PRODUCT_QUALITY_MISSING_GENERATED_DESCRIPTION_STATE = '[MISSING: generated-description state contract]';
+const PRODUCT_QUALITY_GENERATED_DESCRIPTION_STATE_CONTRACT = 'catalog.generated_description_state.v1';
 
 export type ProductReadiness = {
   productId: string;
@@ -82,6 +82,12 @@ export type ProductReadiness = {
     hasTitle: boolean;
     hasDescriptionRich: boolean;
     hasNonPlaceholderImage: boolean;
+  };
+  descriptionState: {
+    contract: typeof PRODUCT_QUALITY_GENERATED_DESCRIPTION_STATE_CONTRACT;
+    source: 'description' | 'descriptionRich' | 'missing';
+    status: 'present' | 'generated' | 'missing';
+    coversMissingDescription: boolean;
   };
 };
 
@@ -993,7 +999,7 @@ export class ProductsService {
 
     return {
       policyId: PRODUCT_QUALITY_POLICY_ID,
-      blockers: [PRODUCT_QUALITY_MISSING_GENERATED_DESCRIPTION_STATE],
+      blockers: [],
       items: filtered.slice(start, start + limit),
       total: filtered.length,
       page,
@@ -1147,7 +1153,7 @@ export class ProductsService {
       success: finalResults.every((result) => result.success || result.skipped),
       policyId: PRODUCT_QUALITY_POLICY_ID,
       requestedProductIds: productIds,
-      blockers: [PRODUCT_QUALITY_MISSING_GENERATED_DESCRIPTION_STATE],
+      blockers: [],
       totals: {
         requested: productIds.length,
         updated: finalResults.filter((result) => result.updated).length,
@@ -1222,7 +1228,7 @@ export class ProductsService {
       success: blocked === 0,
       policyId: PRODUCT_QUALITY_POLICY_ID,
       requestedProductIds: productIds,
-      blockers: [PRODUCT_QUALITY_MISSING_GENERATED_DESCRIPTION_STATE],
+      blockers: [],
       totals: {
         requested: productIds.length,
         activated,
@@ -1386,7 +1392,8 @@ export class ProductsService {
     const hasCurrentPrice = await this.hasPositiveCurrentPrice(product);
     const hasCategory = Boolean(product.categories?.length);
     const hasDescriptionRich = Boolean(descriptionRichText.trim());
-    const hasDescription = Boolean(product.description?.trim() || hasDescriptionRich);
+    const descriptionState = this.resolveGeneratedDescriptionState(product, descriptionRichText);
+    const hasDescription = descriptionState.coversMissingDescription;
     const issues: ProductQualityIssue[] = [];
 
     if (lifecycle === "archived") {
@@ -1417,7 +1424,7 @@ export class ProductsService {
       issues.push({ code: "duplicate_sku", field: "sku", severity: "blocking", message: "SKU is shared by multiple products." });
     }
     if (!hasDescription) {
-      issues.push({ code: "missing_description", field: "description", severity: "blocking", message: `Description is required unless covered by ${PRODUCT_QUALITY_MISSING_GENERATED_DESCRIPTION_STATE}.` });
+      issues.push({ code: "missing_description", field: "description", severity: "blocking", message: `Description is required unless covered by ${PRODUCT_QUALITY_GENERATED_DESCRIPTION_STATE_CONTRACT}.` });
     }
     if (!hasCategory) {
       issues.push({ code: "missing_category", field: "categories", severity: "warning", message: "Product has no category." });
@@ -1459,6 +1466,37 @@ export class ProductsService {
         hasDescriptionRich,
         hasNonPlaceholderImage,
       },
+      descriptionState,
+    };
+  }
+
+  private resolveGeneratedDescriptionState(
+    product: Product,
+    descriptionRichText: string,
+  ): ProductReadiness['descriptionState'] {
+    if (descriptionRichText.trim()) {
+      return {
+        contract: PRODUCT_QUALITY_GENERATED_DESCRIPTION_STATE_CONTRACT,
+        source: 'descriptionRich',
+        status: 'generated',
+        coversMissingDescription: true,
+      };
+    }
+
+    if (product.description?.trim()) {
+      return {
+        contract: PRODUCT_QUALITY_GENERATED_DESCRIPTION_STATE_CONTRACT,
+        source: 'description',
+        status: 'present',
+        coversMissingDescription: true,
+      };
+    }
+
+    return {
+      contract: PRODUCT_QUALITY_GENERATED_DESCRIPTION_STATE_CONTRACT,
+      source: 'missing',
+      status: 'missing',
+      coversMissingDescription: false,
     };
   }
 

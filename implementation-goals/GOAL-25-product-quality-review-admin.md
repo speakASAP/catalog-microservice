@@ -1,6 +1,6 @@
 # Goal 25 - Product Quality Review Admin
 
-Status: planned
+Status: implemented
 
 ## Intent
 
@@ -27,7 +27,7 @@ Blocking fields for activation/publishability:
 
 - `sku`: present and unique within the owner/source scope.
 - `title`: present and non-empty.
-- `description` or `descriptionRich`: present, or explicitly covered by an in-progress/generated description state.
+- `description` or `descriptionRich`: present. `descriptionRich` is the generated/reviewed canonical description state source under `catalog.generated_description_state.v1`; pending generation without stored canonical content remains a blocker until a separate pending-state source exists.
 - current positive selling price: active `product_pricing` row with positive `salePrice` or `basePrice`.
 - at least one non-placeholder product image in `media` with `type=image`.
 - lifecycle: `active` only after blocking fields pass; otherwise `draft` for imports/new incomplete records or `needs_review` for existing records flagged by audit.

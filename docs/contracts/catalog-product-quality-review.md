@@ -5,7 +5,7 @@ id: CONTRACT-CATALOG-PRODUCT-QUALITY-REVIEW-v1
 status: source-slice-implemented
 owner: catalog contract owner
 created: 2026-07-02
-last_updated: 2026-07-02
+last_updated: 2026-07-03
 source_goal: implementation-goals/GOAL-25-product-quality-review-admin.md
 execution_plan: implementation-goals/GOAL-25-product-quality-review-admin-execution-plan.md
 completeness_level: backend-validation-frontend-source-validation
@@ -54,7 +54,7 @@ A product cannot be globally active or publishable while any of these checks fai
 |---|---|---|---|
 | SKU | non-empty SKU unique within owner/source scope | `missing_sku`, `duplicate_sku` | Current backend expression is `sku + ownerUserId`, with `ownerUserId IS NULL` as the Alfares shared source scope. |
 | Title | non-empty title after trimming | `missing_title` | Does not require marketplace-specific title optimization. |
-| Description | `description` or `descriptionRich` present, or generated-description workflow state proves pending/generated coverage | `missing_description` | Generated-description state source is `[MISSING: generated description state source]`; until proven, implementation must fail closed or add an explicit state under the execution plan. |
+| Description | `description` present, or `descriptionRich` contains normalized canonical content under `catalog.generated_description_state.v1` | `missing_description` | `descriptionRich` is the generated/reviewed canonical description state source. Pending generation without stored canonical content is not enough to satisfy the blocker until a separate pending-state source is added. |
 | Price | active current pricing row with positive `salePrice` or `basePrice` | `missing_current_price` | Backend evaluator reuses the existing current-price resolver path. |
 | Image | at least one media image with non-placeholder URL/object reference | `missing_image`, `placeholder_image_only` | Media must remain URL/object reference, never inline blob. |
 | Lifecycle | `active` only after all blocking checks pass; otherwise `draft` for incomplete imports/new records or `needs_review` for reviewed existing records | `invalid_lifecycle_for_quality` | Existing products should not be silently archived or deleted. |
@@ -172,7 +172,7 @@ Implemented response fields:
 
 - `policyId`: `catalog.product_quality.v1`
 - `requestedProductIds`
-- `blockers`: currently includes `[MISSING: generated-description state contract]`
+- `blockers`: empty when the deployed policy dependencies are available; missing dependency markers are reserved for runtime contract gaps
 - `totals`: requested, activated, blocked, unchanged
 - `results[]`: product id, sku, title, success/activated/blocked, lifecycle before/after, blockingIssues, nextAction, quality item
 
@@ -185,7 +185,7 @@ Implemented in W1-W3:
 - `POST /api/products/review/bulk-update`
 - `POST /api/products/review/activate`
 - shared `catalog.product_quality.v1` blocker evaluation extending the existing Goal 02 readiness diagnostics
-- fail-closed missing-description behavior because no generated-description state contract exists in the source
+- generated-description state contract `catalog.generated_description_state.v1`, using `descriptionRich` canonical content as the generated/reviewed description state source
 - activation gate that ignores draft/inactive status as promotion candidates but blocks archived products and mandatory data failures
 - guarded category, attribute, and pricing bulk delegation through existing Catalog services
 - `npm run validate:product-quality` JSON/Markdown/CSV reporting
@@ -194,7 +194,6 @@ Implemented in W1-W3:
 Deferred:
 
 - `[MISSING: importer draft gate and channel consumer implementation/validation]`
-- `[MISSING: generated-description state contract]`
 - `[MISSING: runtime deploy/smoke approval]`
 
 ## Validation Script Contract
@@ -240,6 +239,6 @@ Machine row minimum shape:
 ## Open Unknowns
 
 - `[MISSING: docs-rag JWT_TOKEN]`
-- `[MISSING: generated-description state contract]`
+- `[RESOLVED: generated-description state contract uses Product.descriptionRich under catalog.generated_description_state.v1]`
 - Admin route path: `/dashboard/admin/product-review`
 - `[UNKNOWN: production-safe unmasked owner report approval process]`
