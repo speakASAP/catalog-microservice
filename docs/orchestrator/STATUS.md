@@ -1,3 +1,13 @@
+## 2026-07-03 - Goal 25 Bazos Product Quality Consumer Lane Closed
+
+Change: accepted the Bazos channel consumer handoff for Catalog Goal 25 and marked that lane complete. Bazos is clean and synced on `main` at `b3576a6`, with Catalog product-quality blockers consumed before prepare, confirm, and publish-adjacent queue paths. Bazos-created Catalog products remain draft/non-active, and the runtime maps `CATALOG_INTERNAL_SERVICE_TOKEN` from the existing Auth secret for protected Catalog readiness calls.
+
+Validation evidence: Bazos durable report `reports/validation/2026-07-02-goal-25-bazos-product-quality-consumer.md` records `git diff --check` pass, Kubernetes ExternalSecret server dry-run pass, focused shared tests pass with 3 suites / 67 tests, shared build pass, `services/aukro-service` build pass from the Bazos monorepo command, pod-to-Catalog review endpoint HTTP 200, exact readiness endpoint HTTP 200 with issues array present, production health `status=ok`, and deployment ready=1 updated=1 available=1 on image `localhost:5000/bazos-service:b583b10`.
+
+Boundary decision: no Catalog deploy, Catalog source mutation outside status/report docs, production DB mutation, Warehouse stock ownership change, product deletion, channel publication, or secret output was run by this orchestrator closure. Existing unrelated dirty `src/product-relations/*` files were left untouched.
+
+Next action: continue Goal 25 cross-channel rollup for Allegro, Aukro, FlipFlop, Heureka, and final W5 integration after their handoffs are verified.
+
 ## 2026-07-02 - Goal 25 Product Quality Review Admin W1-W3
 
 Change: completed and pushed the product-quality admin source slice through W3. Catalog now has the Goal 25 review/export/bulk-update/activate backend API, `npm run validate:product-quality` report generation, and a protected admin UI at `/dashboard/admin/product-review` with filters, owner report export, explicit selection, guarded bulk update controls, and activation through the Catalog quality gate.
@@ -1601,4 +1611,18 @@ Remaining blockers:
 - `[MISSING: approved bundle checkout contract owned by FlipFlop/Orders/Payments]`.
 - `[MISSING: explicit discount/price presentation policy for bundle candidates]`.
 - `[MISSING: sufficient order_affinity backfill volume]`.
-- `[MISSING: runtime smoke for protected bundle-candidates endpoint after deploy]`.
+Runtime deployment evidence:
+
+- Commit `3ad60c3` was pushed and deployed as `localhost:5000/catalog-microservice:3ad60c3`.
+- Deploy script completed successfully; health returned `status=healthy`.
+- Protected runtime smoke called `GET /api/products/ebbdd4fa-5c73-481a-9d07-dbab3d20a150/bundle-candidates?limit=3&freeShippingThreshold=1000&currency=CZK` with internal service auth.
+- Smoke returned `200`, `success=true`, `count=1`, `relationType=order_affinity`, `source=marketing_order_affinity`.
+- Candidate product IDs matched the controlled Marketing canary relation: `ebbdd4fa-5c73-481a-9d07-dbab3d20a150` and `2d6e4b4c-02a4-4b1c-98c8-afa4ad46a32e`.
+- The canary products currently have no active current price rows, so candidate pricing returned blocker `[MISSING: current product price]`, `subtotal=null`, and no invented suggested bundle price.
+
+Remaining blockers:
+
+- `[MISSING: approved bundle checkout contract owned by FlipFlop/Orders/Payments]`.
+- `[MISSING: explicit discount/price presentation policy for bundle candidates]`.
+- `[MISSING: sufficient order_affinity backfill volume]`.
+- `[MISSING: current product price rows for canary/order-affinity products before presenting sellable bundle prices]`.
