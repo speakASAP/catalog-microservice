@@ -44,7 +44,7 @@ Initial read-only sweep started with Catalog and Warehouse clean; Allegro/Bazos/
 | catalog-microservice | dirty only with this worker's bounded W4 patch/report | `b4ae3bc docs: add goal 25 w4 consumer handoff` before patch | edited and validated |
 | warehouse-microservice | clean | `4d0fa85 chore: harden warehouse migration build output` | read-only validation only |
 | allegro | clean | `2e365ac feat: consume catalog quality blockers` | read-only validation only |
-| bazos | dirty after external changes to `.env.example`, `k8s/external-secret.yaml`, and Goal 25 execution plan | `bc1f7c6 feat: consume catalog quality blockers` | read-only validation only; no edits because dirty |
+| bazos | clean in final sweep; earlier transient dirty files resolved externally | `bc1f7c6 feat: consume catalog quality blockers` | read-only validation only |
 | aukro | clean | `b462ffd feat: consume catalog quality blockers` | read-only validation only |
 | flipflop | clean | `b1817e7 feat: consume catalog quality blockers` | read-only validation only |
 | heureka | clean | `761c9a3 feat: consume catalog quality blockers` | read-only validation only |
@@ -137,7 +137,7 @@ cd /home/ssf/Documents/Github/flipflop && node scripts/verify-catalog-product-qu
 - `[MISSING: generated-description state contract]`; existing W1-W3 blocker remains.
 - `[MISSING: docs-rag JWT_TOKEN]`; repository files were used directly.
 - `[UNKNOWN: live deployed Catalog product-quality route status]`; no runtime authenticated smoke was run.
-- `[UNKNOWN: Bazos external dirty changes]`; final Bazos worktree had external modifications to `.env.example`, `k8s/external-secret.yaml`, and its Goal 25 execution plan. This worker did not edit or revert them.
+- Bazos final status sweep was clean on `main` at `bc1f7c6`; earlier dirty changes resolved externally. This worker did not edit Bazos.
 
 ## Files Changed By This Worker
 
