@@ -1,6 +1,6 @@
 # Goal 25 - Product Quality Review Admin
 
-Status: implemented
+Status: complete
 
 ## Intent
 
@@ -111,3 +111,15 @@ This goal is safe to split only after the quality policy contract is written. Ba
 Integration owner: Catalog orchestrator in the original thread.
 Validation owner: Product quality validation worker.
 Merge order: W0 policy contract -> W1 backend evaluator/API -> W2 validation script/report -> W3 frontend admin review -> W4 import/channel consumers -> W5 final integration/deploy readiness.
+
+
+## Closure Evidence
+
+Goal 25 Product Quality Review Admin is closed as of 2026-07-03.
+
+- Catalog backend policy/API, validation/reporting, and admin review UI are implemented and source-validated.
+- Channel consumers Bazos, Aukro, Allegro, FlipFlop, and Heureka consume the stable Catalog blocker/readiness contract and fail closed on blocking or unavailable evidence.
+- Owner-approved runtime deploy/read smokes are recorded for the latest channel consumer state without marketplace publish, draft confirm, queue action, Warehouse mutation, production product mutation, destructive command, or secret output.
+- Durable evidence is recorded in `reports/validation/VAL-GOAL-25-W4-import-channel-consumers.md`, `docs/orchestrator/STATUS.md`, and `docs/IMPLEMENTATION_STATE.md`.
+
+Remaining non-Goal-25 work: authenticated draft/publish-path smokes are intentionally out of scope unless the owner approves a side-effect-safe scenario; unrelated channel worktree caveats are recorded in the final sweep.

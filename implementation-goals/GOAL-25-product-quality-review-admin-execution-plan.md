@@ -2,21 +2,21 @@
 
 ```yaml
 id: EP-CATALOG-25-PRODUCT-QUALITY-REVIEW-ADMIN
-status: w1-w4-source-validated-w5-deploy-readiness-active
+status: complete
 source_goal: implementation-goals/GOAL-25-product-quality-review-admin.md
 policy_contract: docs/contracts/catalog-product-quality-review.md
 cross_repo_plan: docs/orchestrator/2026-07-02-product-quality-review-admin-cross-repo-plan.md
 owner: catalog orchestrator
 created: 2026-07-02
 last_updated: 2026-07-03
-completeness_level: backend-validation-frontend-source-validation-all-channel-consumers-pushed
+completeness_level: backend-frontend-channel-consumers-runtime-smoked
 ```
 
 ## Metadata
 
 Branch: `main` currently has existing dirty work. Implementation should use an isolated branch or worktree after W0 is accepted and current Goal 24/source changes are isolated.
 
-Lifecycle state: W1 backend policy/API, W2 validation/reporting, W3 admin frontend, and W4 channel consumers are source-validated. Bazos and Aukro have deployed evidence; Allegro, FlipFlop, and Heureka latest Goal 25 source commits are pushed and source-validated but were not deployed by this thread. W5 deployment/runtime smoke remains owner/deploy-gated.
+Lifecycle state: complete. W1 backend policy/API, W2 validation/reporting, W3 admin frontend, W4 channel consumers, and W5 owner-approved deploy/read-smoke closure are complete. Bazos, Aukro, Allegro, FlipFlop, and Heureka have source validation and runtime evidence recorded; protected draft/publish action smokes remain intentionally out of scope unless a side-effect-safe owner-approved scenario is created.
 
 Filename note: this plan intentionally uses a product-quality-specific filename because `implementation-goals/GOAL-25-execution-plan.md` is already occupied by a concurrent dirty Goal 25 canonical-json propagation lane.
 
@@ -169,7 +169,8 @@ Completed source validation:
 Deferred validation:
 
 - W4 channel consumer validation rollup completed for Bazos, Allegro, Aukro, FlipFlop, and Heureka.
-- `[MISSING: runtime smoke/deploy approval]`
+- W5 owner-approved channel runtime deploy/read smoke completed for the latest previously non-deployed channel commits.
+- Protected authenticated draft/publish action smokes intentionally not run because they are side-effect-risk without a dedicated safe scenario.
 
 Runtime validation after explicit deploy approval only:
 
@@ -216,8 +217,8 @@ Workstreams:
 - W1 backend evaluator/API: dependency-gated on W0 acceptance; source ownership limited to backend products/media/pricing/auth conventions and focused tests.
 - W2 validation/reporting: source-validated; owns validation script and report artifacts.
 - W3 frontend admin: source-validated; owns dashboard route/components/API client only.
-- W4 import/channel consumers: complete. Bazos complete/deployed at `b3576a6`; Allegro complete/pushed at `5d189ee`; Aukro complete/pushed at `f276a8c`; FlipFlop complete/pushed at `3462917`; Heureka complete/pushed at `7ea1f79`.
-- W5 final integration: active in the orchestrator thread; owns conflict resolution, status updates, full validation, and deploy-readiness evidence.
+- W4 import/channel consumers: complete. Bazos complete/deployed at `b3576a6`; Allegro complete/deployed at `5d189ee`; Aukro complete/deployed evidence retained at `f276a8c` / image `4cdd671`; FlipFlop complete/runtime-smoked with Goal 25 source `3462917` included; Heureka complete/runtime-smoked with final observed deployed tag `cf14a73`.
+- W5 final integration: complete. Catalog docs record the owner-approved runtime smoke closure and final concurrent channel-state sweep.
 
 ## Agent Handoff Prompt
 
@@ -229,8 +230,8 @@ You are implementing Catalog Goal 25 Product Quality Review Admin. Work only on 
 - [x] Backend evaluator/API implemented
 - [x] Validation script/report implemented
 - [x] Frontend admin review UI implemented
-- [x] Import/channel consumer blockers verified (`Bazos, Allegro, Aukro, FlipFlop, Heureka complete; deploy/runtime smoke mixed and W5-gated`)
+- [x] Import/channel consumer blockers verified (`Bazos, Allegro, Aukro, FlipFlop, Heureka complete; W5 deploy/read-smoke closure recorded`)
 - [x] Focused backend tests complete
 - [x] W1/W2/W3 validation evidence collected
 - [x] Goal 25 contract/report documentation updated
-- [x] Deviations documented for deferred importer/channel consumers, generated-description state, and runtime deploy approval
+- [x] Deviations documented for generated-description state, side-effect-risk authenticated draft/publish smokes, and concurrent channel worktree caveats

@@ -1,3 +1,13 @@
+## 2026-07-03 - Goal 25 Product Quality Review Admin Closed
+
+Change: closed Catalog Goal 25 after the W5 runtime deploy/read-smoke closure and final channel-state sweep. The execution plan now marks Goal 25 complete, with backend policy/API, validation/reporting, admin UI, and all five channel consumer lanes accepted.
+
+Intent Preservation Chain: Vision - Catalog remains product truth for sellable content/readiness. Goal Impact - incomplete products and channel paths fail closed on mandatory quality blockers. System - Catalog owns quality/readiness while Warehouse/Auth/channel services keep their boundaries. Feature - Product Quality Review Admin and `catalog.product_quality.v1` consumer adoption. Task - close W5 from recorded runtime evidence. Execution Plan - `implementation-goals/GOAL-25-product-quality-review-admin-execution-plan.md`. Coding Prompt - docs-only closure, no deployment or mutation. Code - status/goal/plan docs only. Validation - `git diff --check` and prior runtime evidence in `reports/validation/VAL-GOAL-25-W4-import-channel-consumers.md`.
+
+Boundary decision: no Catalog deploy, production data mutation, Warehouse mutation, marketplace publish, draft confirm, queue action, destructive command, or secret output was performed for this closure. Side-effect-risk authenticated draft/publish-path smokes remain out of scope unless separately approved with a safe scenario.
+
+Next action: No Goal 25 action needed.
+
 ## 2026-07-03 - Goal 25 Live Authorized Smoke Refresh
 
 Change: aligned Allegro runtime with Goal 25 source commit `5d189ee` and reran protected Catalog live smokes. Allegro service, api-gateway, settings, imports, and frontend rollouts completed on image tag `5d189ee`.
