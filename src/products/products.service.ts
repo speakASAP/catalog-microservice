@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere, In, IsNull, SelectQueryBuilder } from 'typeorm';
+import { Repository, FindOptionsWhere, In, IsNull, SelectQueryBuilder, EntityManager } from 'typeorm';
 import { Product, ProductLifecycle } from "./product.entity";
 import { LoggerService } from '../logger/logger.service';
 import { PricingService } from '../pricing/pricing.service';
@@ -14,6 +14,12 @@ import {
   descriptionDocumentToPlainText,
   normalizeDescriptionDocument,
 } from '../content-connectors/content-document';
+import { ProductEventPublisherService } from '../product-events/product-event-publisher.service';
+import type {
+  CatalogProductEventInput,
+  CatalogProductEventProductSnapshot,
+  CatalogProductEventType,
+} from '../product-events/product-event.types';
 
 type ProductQualitySeverity = "blocking" | "warning";
 
@@ -198,6 +204,8 @@ export class ProductsService {
     private readonly pricingService?: PricingService,
     @Optional()
     private readonly contentRendererService?: ContentRendererService,
+    @Optional()
+    private readonly productEventPublisher?: ProductEventPublisherService,
   ) {}
 
   private canAccessAllProducts(actor?: CatalogActor): boolean {
@@ -236,17 +244,209 @@ export class ProductsService {
     queryBuilder.andWhere('product.ownerUserId = :ownerUserId', { ownerUserId: actor?.sub });
   }
 
+  private async withProductTransaction<T>(
+    work: (repository: Repository<Product>, manager?: EntityManager) => Promise<T>,
+  ): Promise<T> {
+    const manager = (this.productRepository as any).manager as EntityManager | undefined;
+    if (manager?.transaction && manager?.getRepository) {
+      return manager.transaction(async (transactionManager) =>
+        work(transactionManager.getRepository(Product), transactionManager),
+      );
+    }
+
+    return work(this.productRepository, undefined);
+  }
+
+  private async findOneWithRepository(
+    repository: Repository<Product>,
+    id: string,
+    scope: ProductAccessScope = {},
+  ): Promise<Product> {
+    const product = await repository.findOne({
+      where: this.productWhereWithOwner({ id }, scope.actor),
+      relations: ['categories', 'attributes', 'attributes.attribute', 'media', 'pricing'],
+    });
+
+    if (!product) {
+      this.logger.warn(`Product not found: ${id}`, 'ProductsService');
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+
+    return product;
+  }
+
+  private async recordProductEvents(
+    manager: EntityManager | undefined,
+    events: CatalogProductEventInput[],
+  ): Promise<void> {
+    if (!this.productEventPublisher || events.length === 0) {
+      return;
+    }
+
+    await this.productEventPublisher.recordProductEvents(manager, events);
+  }
+
+  private productEventInput(
+    eventType: CatalogProductEventType,
+    product: CatalogProductEventProductSnapshot,
+    scope: ProductAccessScope,
+    changedFields: string[],
+    change: Record<string, unknown>,
+  ): CatalogProductEventInput {
+    return {
+      eventType,
+      productId: product.id,
+      product,
+      actor: scope.actor,
+      changedFields: Array.from(new Set(changedFields)).sort(),
+      change,
+    };
+  }
+
+  private productUpdateEvents(
+    before: CatalogProductEventProductSnapshot,
+    after: CatalogProductEventProductSnapshot,
+    changedFields: string[],
+    scope: ProductAccessScope,
+    operation: string,
+  ): CatalogProductEventInput[] {
+    const events: CatalogProductEventInput[] = [
+      this.productEventInput('catalog.product.updated.v1', after, scope, changedFields, {
+        operation,
+        before,
+        after,
+      }),
+    ];
+
+    const archivedTransition = !this.isArchivedForEvent(before) && this.isArchivedForEvent(after);
+    if (archivedTransition) {
+      events.push(...this.productArchiveEvents(before, after, scope, operation));
+    }
+
+    if (!this.sameCategoryIds(before.categoryIds, after.categoryIds)) {
+      events.push(this.productEventInput('catalog.product.category_changed.v1', after, scope, ['categories'], {
+        operation,
+        beforeCategoryIds: before.categoryIds,
+        afterCategoryIds: after.categoryIds,
+        addedCategoryIds: after.categoryIds.filter((id) => !before.categoryIds.includes(id)),
+        removedCategoryIds: before.categoryIds.filter((id) => !after.categoryIds.includes(id)),
+      }));
+    }
+
+    if (!archivedTransition && this.isSellableForEvent(before) !== this.isSellableForEvent(after)) {
+      events.push(this.sellabilityChangedEvent(before, after, scope, operation));
+    }
+
+    return events;
+  }
+
+  private productArchiveEvents(
+    before: CatalogProductEventProductSnapshot,
+    after: CatalogProductEventProductSnapshot,
+    scope: ProductAccessScope,
+    operation: string,
+  ): CatalogProductEventInput[] {
+    const events = [
+      this.productEventInput('catalog.product.archived.v1', after, scope, ['isActive', 'lifecycle'], {
+        operation,
+        before,
+        after,
+      }),
+    ];
+
+    if (this.isSellableForEvent(before) !== this.isSellableForEvent(after)) {
+      events.push(this.sellabilityChangedEvent(before, after, scope, operation));
+    }
+
+    return events;
+  }
+
+  private sellabilityChangedEvent(
+    before: CatalogProductEventProductSnapshot,
+    after: CatalogProductEventProductSnapshot,
+    scope: ProductAccessScope,
+    operation: string,
+  ): CatalogProductEventInput {
+    return this.productEventInput('catalog.product.sellability_changed.v1', after, scope, ['isActive', 'lifecycle'], {
+      operation,
+      beforeSellable: this.isSellableForEvent(before),
+      afterSellable: this.isSellableForEvent(after),
+      beforeLifecycle: before.lifecycle,
+      afterLifecycle: after.lifecycle,
+      beforeIsActive: before.isActive,
+      afterIsActive: after.isActive,
+    });
+  }
+
+  private snapshotProductForEvent(product: Product): CatalogProductEventProductSnapshot {
+    return {
+      id: product.id,
+      sku: product.sku,
+      title: product.title,
+      ownerUserId: product.ownerUserId ?? null,
+      lifecycle: product.lifecycle ?? null,
+      isActive: product.isActive !== false,
+      categoryIds: (product.categories || []).map((category) => category.id).filter(Boolean).sort(),
+      updatedAt: product.updatedAt instanceof Date
+        ? product.updatedAt.toISOString()
+        : product.updatedAt
+          ? String(product.updatedAt)
+          : null,
+    };
+  }
+
+  private changedProductFields(
+    updateProductDto: UpdateProductDto,
+    before: CatalogProductEventProductSnapshot,
+    after: CatalogProductEventProductSnapshot,
+  ): string[] {
+    const fields = new Set(Object.keys(updateProductDto));
+    if (before.lifecycle !== after.lifecycle) {
+      fields.add('lifecycle');
+    }
+    if (before.isActive !== after.isActive) {
+      fields.add('isActive');
+    }
+    if (!this.sameCategoryIds(before.categoryIds, after.categoryIds)) {
+      fields.add('categories');
+    }
+    return Array.from(fields).sort();
+  }
+
+  private isArchivedForEvent(product: CatalogProductEventProductSnapshot): boolean {
+    return product.lifecycle === 'archived' || product.isActive === false;
+  }
+
+  private isSellableForEvent(product: CatalogProductEventProductSnapshot): boolean {
+    return product.isActive !== false && product.lifecycle === 'active';
+  }
+
+  private sameCategoryIds(left: string[], right: string[]): boolean {
+    return left.length === right.length && left.every((id, index) => id === right[index]);
+  }
+
   /**
    * Create a new product
    */
   async create(createProductDto: CreateProductDto, scope: ProductAccessScope = {}): Promise<Product> {
     this.logger.log(`Creating product with SKU: ${createProductDto.sku}`, 'ProductsService');
 
-    const product = this.productRepository.create({
-      ...this.withLifecycleDefaults(this.withCanonicalContentDefaults(createProductDto)),
-      ownerUserId: this.resolveOwnerUserId(scope.actor),
+    const saved = await this.withProductTransaction(async (repository, manager) => {
+      const product = repository.create({
+        ...this.withLifecycleDefaults(this.withCanonicalContentDefaults(createProductDto)),
+        ownerUserId: this.resolveOwnerUserId(scope.actor),
+      });
+      const created = await repository.save(product);
+      const snapshot = this.snapshotProductForEvent(created);
+      await this.recordProductEvents(manager, [
+        this.productEventInput('catalog.product.upserted.v1', snapshot, scope, Object.keys(createProductDto), {
+          operation: 'create',
+          before: null,
+          after: snapshot,
+        }),
+      ]);
+      return created;
     });
-    const saved = await this.productRepository.save(product);
 
     this.logger.log(`Product created: ${saved.id}`, 'ProductsService');
     return saved;
@@ -309,18 +509,7 @@ export class ProductsService {
    */
   async findOne(id: string, scope: ProductAccessScope = {}): Promise<Product> {
     this.logger.log(`Finding product: ${id}`, 'ProductsService');
-
-    const product = await this.productRepository.findOne({
-      where: this.productWhereWithOwner({ id }, scope.actor),
-      relations: ['categories', 'attributes', 'attributes.attribute', 'media', 'pricing'],
-    });
-
-    if (!product) {
-      this.logger.warn(`Product not found: ${id}`, 'ProductsService');
-      throw new NotFoundException(`Product with ID ${id} not found`);
-    }
-
-    return product;
+    return this.findOneWithRepository(this.productRepository, id, scope);
   }
 
   /**
@@ -403,10 +592,17 @@ export class ProductsService {
   async update(id: string, updateProductDto: UpdateProductDto, scope: ProductAccessScope = {}): Promise<Product> {
     this.logger.log(`Updating product: ${id}`, 'ProductsService');
 
-    const product = await this.findOne(id, scope);
-    Object.assign(product, this.withLifecycleDefaults(this.withCanonicalContentDefaults(updateProductDto, product), product));
+    const updated = await this.withProductTransaction(async (repository, manager) => {
+      const product = await this.findOneWithRepository(repository, id, scope);
+      const before = this.snapshotProductForEvent(product);
+      Object.assign(product, this.withLifecycleDefaults(this.withCanonicalContentDefaults(updateProductDto, product), product));
 
-    const updated = await this.productRepository.save(product);
+      const saved = await repository.save(product);
+      const after = this.snapshotProductForEvent(saved);
+      const changedFields = this.changedProductFields(updateProductDto, before, after);
+      await this.recordProductEvents(manager, this.productUpdateEvents(before, after, changedFields, scope, 'update'));
+      return saved;
+    });
     this.logger.log(`Product updated: ${id}`, 'ProductsService');
 
     return updated;
@@ -1898,10 +2094,15 @@ export class ProductsService {
   async remove(id: string, scope: ProductAccessScope = {}): Promise<void> {
     this.logger.log(`Removing product: ${id}`, 'ProductsService');
 
-    const product = await this.findOne(id, scope);
-    product.isActive = false;
-    product.lifecycle = "archived";
-    await this.productRepository.save(product);
+    await this.withProductTransaction(async (repository, manager) => {
+      const product = await this.findOneWithRepository(repository, id, scope);
+      const before = this.snapshotProductForEvent(product);
+      product.isActive = false;
+      product.lifecycle = "archived";
+      const saved = await repository.save(product);
+      const after = this.snapshotProductForEvent(saved);
+      await this.recordProductEvents(manager, this.productArchiveEvents(before, after, scope, 'soft_delete'));
+    });
 
     this.logger.log(`Product deactivated: ${id}`, 'ProductsService');
   }
@@ -1912,10 +2113,21 @@ export class ProductsService {
   async hardRemove(id: string, scope: ProductAccessScope = {}): Promise<void> {
     this.logger.log(`Hard deleting product: ${id}`, 'ProductsService');
 
-    const result = await this.productRepository.delete(this.productWhereWithOwner({ id }, scope.actor));
-    if (result.affected === 0) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
-    }
+    await this.withProductTransaction(async (repository, manager) => {
+      const product = await this.findOneWithRepository(repository, id, scope);
+      const before = this.snapshotProductForEvent(product);
+      const result = await repository.delete(this.productWhereWithOwner({ id }, scope.actor));
+      if (result.affected === 0) {
+        throw new NotFoundException(`Product with ID ${id} not found`);
+      }
+      await this.recordProductEvents(manager, [
+        this.productEventInput('catalog.product.deleted.v1', before, scope, ['id'], {
+          operation: 'hard_delete',
+          before,
+          after: null,
+        }),
+      ]);
+    });
 
     this.logger.log(`Product deleted: ${id}`, 'ProductsService');
   }

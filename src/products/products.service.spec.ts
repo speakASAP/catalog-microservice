@@ -145,6 +145,168 @@ describe("ProductsService product readiness", () => {
 });
 
 
+describe("ProductsService catalog product events", () => {
+  const logger = {
+    log: jest.fn(),
+    warn: jest.fn(),
+  };
+
+  const actor = { type: "jwt" as const, sub: "user-events", roles: ["catalog:authenticated"], authMethod: "auth-validate" as const };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("records a product upserted event when creating a product", async () => {
+    const repository = {
+      create: jest.fn((data) => data),
+      save: jest.fn(async (data) => ({
+        id: "11111111-1111-4111-8111-111111111111",
+        updatedAt: new Date("2026-07-02T10:00:00.000Z"),
+        categories: [],
+        ...data,
+      })),
+    };
+    const productEvents: any = { recordProductEvents: jest.fn(async (_manager: any, _events: any[]) => []) };
+    const service = new ProductsService(repository as any, logger as any, undefined, undefined, productEvents as any);
+
+    await service.create({ sku: "SKU-EVENT-1", title: "Event product" }, { actor });
+
+    expect(productEvents.recordProductEvents).toHaveBeenCalledWith(undefined, [
+      expect.objectContaining({
+        eventType: "catalog.product.upserted.v1",
+        productId: "11111111-1111-4111-8111-111111111111",
+        actor,
+        product: expect.objectContaining({
+          sku: "SKU-EVENT-1",
+          title: "Event product",
+          ownerUserId: "user-events",
+          lifecycle: "active",
+          isActive: true,
+          categoryIds: [],
+        }),
+        changedFields: ["sku", "title"],
+      }),
+    ]);
+  });
+
+  it("records update, archive, and sellability events when an update archives a product", async () => {
+    const product = {
+      id: "22222222-2222-4222-8222-222222222222",
+      sku: "SKU-EVENT-2",
+      title: "Before",
+      ownerUserId: null,
+      isActive: true,
+      lifecycle: "active",
+      categories: [],
+      media: [],
+      pricing: [],
+      updatedAt: new Date("2026-07-02T10:00:00.000Z"),
+    } as unknown as Product;
+    const repository = {
+      findOne: jest.fn(async () => product),
+      save: jest.fn(async (data) => ({
+        ...data,
+        updatedAt: new Date("2026-07-02T10:05:00.000Z"),
+      })),
+    };
+    const productEvents: any = { recordProductEvents: jest.fn(async (_manager: any, _events: any[]) => []) };
+    const service = new ProductsService(repository as any, logger as any, undefined, undefined, productEvents as any);
+
+    await service.update(product.id, { lifecycle: "archived" }, { actor });
+
+    const events = productEvents.recordProductEvents.mock.calls[0][1];
+    expect(events.map((event: any) => event.eventType)).toEqual([
+      "catalog.product.updated.v1",
+      "catalog.product.archived.v1",
+      "catalog.product.sellability_changed.v1",
+    ]);
+    expect(events[0]).toMatchObject({
+      changedFields: ["isActive", "lifecycle"],
+      product: expect.objectContaining({ lifecycle: "archived", isActive: false }),
+      change: expect.objectContaining({ operation: "update" }),
+    });
+    expect(events[2].change).toMatchObject({
+      beforeSellable: true,
+      afterSellable: false,
+      beforeLifecycle: "active",
+      afterLifecycle: "archived",
+    });
+  });
+
+  it("records archived and sellability events when soft deleting a product", async () => {
+    const product = {
+      id: "33333333-3333-4333-8333-333333333333",
+      sku: "SKU-EVENT-3",
+      title: "Soft delete product",
+      ownerUserId: null,
+      isActive: true,
+      lifecycle: "active",
+      categories: [],
+      media: [],
+      pricing: [],
+      updatedAt: new Date("2026-07-02T10:00:00.000Z"),
+    } as unknown as Product;
+    const repository = {
+      findOne: jest.fn(async () => product),
+      save: jest.fn(async (data) => ({
+        ...data,
+        updatedAt: new Date("2026-07-02T10:10:00.000Z"),
+      })),
+    };
+    const productEvents: any = { recordProductEvents: jest.fn(async (_manager: any, _events: any[]) => []) };
+    const service = new ProductsService(repository as any, logger as any, undefined, undefined, productEvents as any);
+
+    await service.remove(product.id, { actor });
+
+    const events = productEvents.recordProductEvents.mock.calls[0][1];
+    expect(events.map((event: any) => event.eventType)).toEqual([
+      "catalog.product.archived.v1",
+      "catalog.product.sellability_changed.v1",
+    ]);
+    expect(events[0].change).toMatchObject({ operation: "soft_delete" });
+    expect(events[1].change).toMatchObject({ beforeSellable: true, afterSellable: false });
+  });
+
+  it("records a deleted event with the final product snapshot when hard deleting a product", async () => {
+    const product = {
+      id: "44444444-4444-4444-8444-444444444444",
+      sku: "SKU-EVENT-4",
+      title: "Hard delete product",
+      ownerUserId: null,
+      isActive: false,
+      lifecycle: "archived",
+      categories: [{ id: "category-1" }],
+      media: [],
+      pricing: [],
+      updatedAt: new Date("2026-07-02T10:00:00.000Z"),
+    } as unknown as Product;
+    const repository = {
+      findOne: jest.fn(async () => product),
+      delete: jest.fn(async () => ({ affected: 1 })),
+    };
+    const productEvents: any = { recordProductEvents: jest.fn(async (_manager: any, _events: any[]) => []) };
+    const service = new ProductsService(repository as any, logger as any, undefined, undefined, productEvents as any);
+
+    await service.hardRemove(product.id, { actor });
+
+    expect(repository.delete).toHaveBeenCalledWith({ id: product.id, ownerUserId: actor.sub });
+    expect(productEvents.recordProductEvents).toHaveBeenCalledWith(undefined, [
+      expect.objectContaining({
+        eventType: "catalog.product.deleted.v1",
+        productId: product.id,
+        product: expect.objectContaining({
+          sku: "SKU-EVENT-4",
+          lifecycle: "archived",
+          categoryIds: ["category-1"],
+        }),
+        change: expect.objectContaining({ operation: "hard_delete", after: null }),
+      }),
+    ]);
+  });
+});
+
+
 describe("ProductsService Bazos draft action", () => {
   const logger = {
     log: jest.fn(),

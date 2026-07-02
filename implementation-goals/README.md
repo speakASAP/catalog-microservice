@@ -128,3 +128,5 @@ production deployment without owner approval
 17. `GOAL-17-product-marketplace-sales-statistics.md` - Orders-backed product marketplace sales statistics.
 18. `GOAL-18-marketplace-field-profiles.md` - Marketplace-specific product profile fields and overrides.
 19. `GOAL-19-canonical-content-connectors.md` - Canonical JSON product descriptions, connector renderers, and previews.
+20. `GOAL-20-bulk-marketplace-publication.md` - Bulk marketplace publication dispatch.
+21. `GOAL-21-catalog-product-events.md` - Catalog product event contract and durable outbox producer foundation.

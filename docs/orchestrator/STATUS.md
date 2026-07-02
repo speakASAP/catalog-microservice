@@ -1,3 +1,13 @@
+## 2026-07-02 - Goal 21 Catalog Product Events Outbox
+
+Change: implemented the Catalog-side product event contract and durable outbox producer foundation. Added `docs/contracts/catalog-events.md`, `implementation-goals/GOAL-21-catalog-product-events.md`, `implementation-goals/GOAL-21-execution-plan.md`, `reports/validation/GOAL-21-pre-coding-gate.md`, `reports/validation/VAL-GOAL-21-catalog-product-events.md`, `scripts/migrations/20260702_catalog_product_event_outbox.sql`, and `src/product-events/*`. `ProductsService` now records outbox event intents transactionally for product create/update/soft-delete/archive/hard-delete paths when the event publisher is injected.
+
+Validation evidence: `npm test -- --runInBand src/products/products.service.spec.ts` passed with 1 suite and 28 tests; `npm run build` passed; `git diff --check` passed; direct changed-file control-character scan passed.
+
+Boundary decision: Catalog remains product-truth owner only. No stock quantities/reservations/movements, channel publishing/compliance, Orders/Payments behavior, deploy scripts, secrets, production data mutation, migration application, RabbitMQ publisher runtime, or deployment was changed. Full runtime publishing remains blocked on `[MISSING: owner-approved Catalog event publisher runtime wiring and broker deployment contract]`. Migration and runtime health/readiness counters are also not applied/wired in this lane.
+
+Next action: review and commit source scope, then plan the runtime publisher/migration/health-counter lane separately before any deployment.
+
 ## 2026-06-30 - Goal 19 Runtime Deployment And Preview Smoke
 
 Change: deployed Goal 19 from isolated Catalog and Aukro worktrees to avoid unrelated dirty Goal 20/admin/auth changes. Catalog commit `03e3e6e` is live after applying additive `products.description_rich` migration and verifying the GIN index. Allegro commit `df078df`, Bazos commit `10514ac`, Aukro isolated commit `5fc56aa`, and FlipFlop commits `1580942`, `0c199ce`, and `e4f8781` are deployed.
