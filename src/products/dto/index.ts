@@ -213,6 +213,36 @@ export class ProductQualityReviewExportQueryDto extends ProductQualityReviewQuer
   format?: 'json' | 'csv' | 'markdown';
 }
 
+export class ProductQualityReviewBulkUpdateDto {
+  @IsArray()
+  @IsUUID('4', { each: true })
+  productIds: string[];
+
+  @IsObject()
+  @IsOptional()
+  patch?: Partial<UpdateProductDto>;
+
+  @IsObject()
+  @IsOptional()
+  attributePatch?: Record<string, unknown>;
+
+  @IsObject()
+  @IsOptional()
+  categoryPatch?: Record<string, unknown>;
+
+  @IsObject()
+  @IsOptional()
+  pricingPatch?: Record<string, unknown>;
+
+  @IsString()
+  @IsOptional()
+  expectedMissingField?: string;
+
+  @IsString()
+  @IsOptional()
+  humanReview?: string;
+}
+
 export class ProductQualityReviewActivateDto {
   @IsArray()
   @IsUUID('4', { each: true })

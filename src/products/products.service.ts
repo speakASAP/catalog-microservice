@@ -9,6 +9,7 @@ import {
   UpdateProductDto,
   ProductQueryDto,
   ProductQualityReviewActivateDto,
+  ProductQualityReviewBulkUpdateDto,
   ProductQualityReviewExportQueryDto,
   ProductQualityReviewQueryDto,
   type ProductCatalogScope,
@@ -133,6 +134,33 @@ export type ProductQualityActivationResponse = {
     unchanged: number;
   };
   results: ProductQualityActivationResult[];
+};
+
+export type ProductQualityBulkUpdateResult = {
+  productId: string;
+  sku: string;
+  title: string;
+  success: boolean;
+  updated: boolean;
+  blocked: boolean;
+  skipped: boolean;
+  blockingIssues: ProductQualityReviewIssue[];
+  nextAction: string;
+  quality: ProductQualityReviewItem;
+};
+
+export type ProductQualityBulkUpdateResponse = {
+  success: boolean;
+  policyId: typeof PRODUCT_QUALITY_POLICY_ID;
+  requestedProductIds: string[];
+  blockers: string[];
+  totals: {
+    requested: number;
+    updated: number;
+    blocked: number;
+    skipped: number;
+  };
+  results: ProductQualityBulkUpdateResult[];
 };
 
 
@@ -905,6 +933,7 @@ export class ProductsService {
       const product = await this.findOneWithRepository(repository, id, scope, 'mutate');
       const before = this.snapshotProductForEvent(product);
       Object.assign(product, this.withResaleDefaults(this.withLifecycleDefaults(this.withCanonicalContentDefaults(updateProductDto, product), product), product));
+      await this.assertProductQualityAllowsActivation(product, updateProductDto);
 
       const saved = await repository.save(product);
       const after = this.snapshotProductForEvent(saved);
@@ -990,6 +1019,85 @@ export class ProductsService {
       blockers: review.blockers,
       items: review.items,
       content: review.items,
+    };
+  }
+
+  async bulkUpdateProductsAfterQualityReview(
+    data: ProductQualityReviewBulkUpdateDto,
+    scope: ProductAccessScope = {},
+  ): Promise<ProductQualityBulkUpdateResponse> {
+    const productIds = this.normalizeBulkProductIds(data?.productIds || []);
+    if (!productIds.length) {
+      throw new BadRequestException('Product quality bulk update requires at least one product id');
+    }
+
+    if (productIds.length > 50 && data?.humanReview !== 'explicit') {
+      throw new BadRequestException('Updating more than 50 products requires humanReview: explicit');
+    }
+
+    if (data?.pricingPatch && Object.keys(data.pricingPatch).length > 0) {
+      throw new BadRequestException('Product quality pricingPatch must use the existing guarded pricing path. [MISSING: Goal 25 pricing bulk delegation implementation]');
+    }
+    if (data?.attributePatch && Object.keys(data.attributePatch).length > 0) {
+      throw new BadRequestException('Product quality attributePatch is not implemented in W1. [MISSING: Goal 25 attribute bulk update implementation]');
+    }
+    if (data?.categoryPatch && Object.keys(data.categoryPatch).length > 0) {
+      throw new BadRequestException('Product quality categoryPatch is not implemented in W1. [MISSING: Goal 25 category bulk update implementation]');
+    }
+
+    const patch = this.allowedProductQualityBulkPatch(data?.patch || {});
+    if (Object.keys(patch).length === 0) {
+      throw new BadRequestException('Product quality bulk update requires at least one allowlisted product patch field');
+    }
+
+    const results: ProductQualityBulkUpdateResult[] = [];
+    for (const productId of productIds) {
+      const product = await this.findOneWithRepository(this.productRepository, productId, scope, 'mutate');
+      const beforeQuality = await this.buildProductQualityReviewItem(product);
+      if (data?.expectedMissingField && !this.qualityItemHasField(beforeQuality, data.expectedMissingField)) {
+        results.push({
+          productId: product.id,
+          sku: product.sku,
+          title: product.title,
+          success: false,
+          updated: false,
+          blocked: false,
+          skipped: true,
+          blockingIssues: beforeQuality.blockingIssues,
+          nextAction: `skipped_expected_missing_field:${data.expectedMissingField}`,
+          quality: beforeQuality,
+        });
+        continue;
+      }
+
+      const saved = await this.update(product.id, patch, scope);
+      const quality = await this.buildProductQualityReviewItem(saved);
+      results.push({
+        productId: saved.id,
+        sku: saved.sku,
+        title: saved.title,
+        success: true,
+        updated: true,
+        blocked: false,
+        skipped: false,
+        blockingIssues: quality.blockingIssues,
+        nextAction: quality.nextAction,
+        quality,
+      });
+    }
+
+    return {
+      success: results.every((result) => result.success || result.skipped),
+      policyId: PRODUCT_QUALITY_POLICY_ID,
+      requestedProductIds: productIds,
+      blockers: [PRODUCT_QUALITY_MISSING_GENERATED_DESCRIPTION_STATE],
+      totals: {
+        requested: productIds.length,
+        updated: results.filter((result) => result.updated).length,
+        blocked: results.filter((result) => result.blocked).length,
+        skipped: results.filter((result) => result.skipped).length,
+      },
+      results,
     };
   }
 
@@ -1118,15 +1226,17 @@ export class ProductsService {
 
     if (!next.lifecycle) {
       if (next.isActive === false) {
-        next.lifecycle = "archived";
+        next.lifecycle = current ? "archived" : "draft";
       } else if (next.isActive === true && current?.lifecycle === "archived") {
         next.lifecycle = "active";
       } else if (!current) {
-        next.lifecycle = "active";
+        next.lifecycle = "draft";
       }
     }
 
     if (next.lifecycle === "archived") {
+      next.isActive = false;
+    } else if (next.lifecycle === "draft" && !current && next.isActive === undefined) {
       next.isActive = false;
     } else if (next.lifecycle === "active" && next.isActive === undefined) {
       next.isActive = true;
@@ -1471,6 +1581,49 @@ export class ProductsService {
       return 'alfares';
     }
     return product.resaleEnabled ? 'community' : 'own';
+  }
+
+  private allowedProductQualityBulkPatch(patch: Partial<UpdateProductDto>): Partial<UpdateProductDto> {
+    const allowedKeys: Array<keyof UpdateProductDto> = [
+      'title',
+      'description',
+      'descriptionRich',
+      'brand',
+      'manufacturer',
+      'ean',
+      'weightKg',
+      'dimensionsCm',
+      'seoData',
+      'tags',
+      'resaleEnabled',
+      'lifecycle',
+      'isActive',
+    ];
+    const allowed: Partial<UpdateProductDto> = {};
+    for (const key of allowedKeys) {
+      if (Object.prototype.hasOwnProperty.call(patch, key)) {
+        (allowed as any)[key] = (patch as any)[key];
+      }
+    }
+    return allowed;
+  }
+
+  private qualityItemHasField(item: ProductQualityReviewItem, expectedMissingField: string): boolean {
+    const expected = expectedMissingField.trim();
+    return [...item.blockingIssues, ...item.optionalOpportunities].some((issue) =>
+      issue.code === expected || issue.field === expected || this.productQualityFieldKey(issue) === expected,
+    );
+  }
+
+  private async assertProductQualityAllowsActivation(product: Product, patch: Partial<UpdateProductDto>): Promise<void> {
+    const requestsActivation = patch.lifecycle === 'active' || patch.isActive === true;
+    if (!requestsActivation) {
+      return;
+    }
+    const quality = await this.buildProductQualityReviewItem(product);
+    if (!quality.canActivate) {
+      throw new BadRequestException(`Product cannot be activated until quality blockers are resolved: ${quality.blockingMissingFields.join(',')}`);
+    }
   }
 
   private productQualityReviewCsv(items: ProductQualityReviewItem[]): string {
