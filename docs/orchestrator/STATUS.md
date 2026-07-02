@@ -1,12 +1,12 @@
-## 2026-07-02 - Goal 25 Canonical JSON Propagation Runtime Closed Except Auth Positive Smoke
+## 2026-07-02 - Goal 25 Canonical JSON Propagation Runtime Closed
 
 Change: confirmed the canonical JSON/manual marketplace override slice after the k3s recovery. The additive `manual_overrides`/`source_state` migration is applied, Catalog backend and frontend are available `1/1`, and the deployed marketplace-fields route is reachable behind Auth.
 
-Validation evidence: `https://catalog.alfares.cz/health` returned HTTP 200 with `status=healthy` and product event outbox health `up`; `https://catalog.alfares.cz/` returned HTTP 200; anonymous `GET /api/products/00000000-0000-4000-8000-000000000001/marketplace-fields/bazos` returned protected HTTP 401 `Missing or invalid Authorization header`; post-recovery backend logs showed no fresh Goal 25 schema/relation errors.
+Validation evidence: `https://catalog.alfares.cz/health` returned HTTP 200 with `status=healthy` and product event outbox health `up`; `https://catalog.alfares.cz/` returned HTTP 200; anonymous `GET /api/products/00000000-0000-4000-8000-000000000001/marketplace-fields/bazos` returned protected HTTP 401 `Missing or invalid Authorization header`; post-recovery backend logs showed no fresh Goal 25 schema/relation errors; authenticated in-pod read-only smoke used `CATALOG_INTERNAL_SERVICE_TOKEN` without printing token values and returned HTTP 200 `success=true` for product `8edc51f2-bed2-433f-8a3c-5738b49a02e1` on `bazos` with `propagationStatus=current`, `fieldCount=10`, `manualFieldCount=0`, `staleFieldCount=0`, `profileHasManualOverrides=true`, and `profileHasSourceState=true`.
 
-Boundary decision: no product rows, listing rows, Orders, Warehouse, Payments, channel publication, queueing, confirmation, or external marketplace state were mutated. No token values were printed. Authenticated positive marketplace-fields smoke remains `[MISSING: approved Auth token]`.
+Boundary decision: no product rows, listing rows, Orders, Warehouse, Payments, channel publication, queueing, confirmation, or external marketplace state were mutated. No token values were printed.
 
-Next action: run the authenticated positive marketplace-fields smoke when an approved operator/Auth token is available; otherwise continue with the next non-secret workstream.
+Next action: continue with channel consumer adoption or stricter renderer source-hash comparison after consumers are ready.
 
 ## 2026-07-02 - Goal 24/25 Runtime Recovery And Smoke Closed
 
