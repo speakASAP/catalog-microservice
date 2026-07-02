@@ -1790,6 +1790,48 @@ Remaining blockers:
 - `[UNKNOWN: whether current live Orders history should contain paid multi-product rows or whether upstream order capture is still empty]`.
 
 
+## 2026-07-03 - Goal 24 Synthetic Non-Production Replay Proof
+
+Current focus: use the owner-approved synthetic/non-production replay fixture path to prove Marketing can produce a non-empty order-affinity candidate batch without mutating live Orders, Catalog, Warehouse, Payments, checkout, or marketplace data.
+
+Intent Preservation Chain:
+
+- Vision: Order-affinity replay should be demonstrable without inventing production order history or leaking private data.
+- Goal Impact: The non-empty replay logic is now proven with synthetic input while the live central Orders publish gate remains correctly blocked on real qualifying rows.
+- System: Marketing owns replay aggregation; Catalog owns relation persistence; Orders owns real replay facts; Warehouse/Payments/checkout remain untouched.
+- Feature: Synthetic non-production order-affinity dry-run.
+- Task: Run Marketing `backfill:order-affinity` from a `/tmp` JSON fixture in dry-run mode only.
+- Execution Plan: Use only synthetic Orders-created envelopes with product IDs, channel, currency, quantities, synthetic event IDs, and synthetic order IDs; do not publish or print customer/address/payment/provider data.
+- Coding Prompt: Prove candidate generation with `--dry-run`; do not mutate Catalog relations or live Orders rows.
+- Code: no source change; operational evidence recorded in Catalog docs.
+- Validation: Marketing CLI returned a non-empty dry-run summary.
+
+Evidence:
+
+- Command: `npm run backfill:order-affinity -- --file /tmp/goal24-synthetic-order-affinity-fixture.json --run-id goal24-synthetic-nonprod-20260703 --limit=10 --dry-run --pretty`.
+- Result: `mode=dry-run`, `inputRecords=2`, `acceptedCreatedEvents=2`, `rejectedRecords=0`, `skippedEvents=0`, `aggregatePairs=2`, `totalPairEvidence=4`.
+- Candidate direction 1: `ce4a51aa-2d12-4ab7-a965-7a36609d01fc -> dbc51dde-fc66-4511-b178-f929183f4647`, `score=2`, `confidence=0.65`, `source=marketing_order_affinity`.
+- Candidate direction 2: `dbc51dde-fc66-4511-b178-f929183f4647 -> ce4a51aa-2d12-4ab7-a965-7a36609d01fc`, `score=2`, `confidence=0.65`, `source=marketing_order_affinity`.
+- No `--publish` flag was used and no Catalog write was attempted.
+
+Boundary decision:
+
+- This closes only the synthetic/non-production replay proof path.
+- It does not close central Orders historical replay publish because the live read-only aggregate count still shows 0 paid multi-product Orders rows.
+- No customer data, address data, payment data, provider data, order-row dump, stock/reservation mutation, checkout mutation, Catalog relation mutation, deployment, or secret output occurred.
+
+Remaining blockers:
+
+- `[MISSING: qualifying historical paid multi-product Orders rows for non-empty central Orders replay evidence]`.
+- `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill from live central Orders]`.
+- `[MISSING: pruning/replacement semantics for stale affinity rows]`.
+- `[MISSING: Catalog bundle ownership decision: read-only candidate, standalone bundle aggregate, or product-like SKU]`.
+- `[MISSING: Orders bundle create-order contract and bundle identity representation beyond normal line items]`.
+- `[MISSING: Warehouse bundle reservation contract for stock and fulfillment effects]`.
+- `[MISSING: Payments metadata policy for bundle/free-shipping evidence without making Payments pricing truth]`.
+- `[MISSING: approved real checkout smoke scope]`.
+
+
 ## 2026-07-03 - Goal 25 W5 Channel Runtime Deploy Smoke Closure
 
 Current focus: close the owner-approved runtime deployment/read-smoke gate for the latest Goal 25 channel consumer commits.

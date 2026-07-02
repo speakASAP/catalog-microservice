@@ -56,6 +56,29 @@ Reported command results:
 - Marketing `npx tsx --test --test-concurrency=1 test/order-affinity-backfill.test.ts`: passed, 3/3 tests.
 - Catalog `npm test -- --runInBand src/product-relations/product-relations.service.spec.ts`: passed, 7/7 tests.
 - Live read-only Marketing dry-run against internal Orders URL: `inputRecords=0`, `acceptedCreatedEvents=0`, `aggregatePairs=0`, `candidates=[]`.
+- Owner-approved synthetic/non-production fixture dry-run: Marketing accepted 2 synthetic Orders-created events, rejected 0, skipped 0, produced 2 directed candidates, and did not publish to Catalog.
+
+## Synthetic Non-Production Replay Proof
+
+Command:
+
+```bash
+npm run backfill:order-affinity -- --file /tmp/goal24-synthetic-order-affinity-fixture.json --run-id goal24-synthetic-nonprod-20260703 --limit=10 --dry-run --pretty
+```
+
+Result:
+
+- `mode=dry-run`
+- `inputRecords=2`
+- `acceptedCreatedEvents=2`
+- `rejectedRecords=0`
+- `skippedEvents=0`
+- `aggregatePairs=2`
+- `totalPairEvidence=4`
+- Candidate pair `ce4a51aa-2d12-4ab7-a965-7a36609d01fc -> dbc51dde-fc66-4511-b178-f929183f4647`: `score=2`, `confidence=0.65`, `source=marketing_order_affinity`.
+- Candidate pair `dbc51dde-fc66-4511-b178-f929183f4647 -> ce4a51aa-2d12-4ab7-a965-7a36609d01fc`: `score=2`, `confidence=0.65`, `source=marketing_order_affinity`.
+
+Boundary: no `--publish`, no Catalog relation write, no live Orders row mutation, no Warehouse/Payments/checkout mutation, no deployment, no secret output, and no customer/address/payment/provider data.
 
 ## Local Validation
 
@@ -94,8 +117,8 @@ Blocked ecosystem bundle selling:
 ## Blockers
 
 - `[MISSING: docs-rag JWT_TOKEN]`
-- `[MISSING: qualifying historical paid multi-product Orders rows for non-empty replay evidence]`
-- `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`
+- `[MISSING: qualifying historical paid multi-product Orders rows for non-empty central Orders replay evidence]`
+- `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill from live central Orders]`
 - `[MISSING: pruning/replacement semantics for stale affinity rows]`
 - `[MISSING: Catalog bundle ownership decision: read-only candidate, standalone bundle aggregate, or product-like SKU]`
 - `[MISSING: Orders bundle create-order contract and bundle identity representation beyond normal line items]`
