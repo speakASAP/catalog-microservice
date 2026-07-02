@@ -183,7 +183,7 @@ export class BpcpProcessEventConsumerService implements OnModuleInit, OnModuleDe
       const parsed = JSON.parse(message.content.toString('utf8'));
       const event = parseBpcpProcessEventEnvelope(parsed);
       const result = this.projection.applyEvent(event);
-      if (result.applied || result.duplicate) {
+      if (result.applied) {
         this.applied += 1;
         this.lastAppliedEventId = event.id;
       }
