@@ -2,21 +2,21 @@
 
 ```yaml
 id: EP-CATALOG-25-PRODUCT-QUALITY-REVIEW-ADMIN
-status: w1-w3-source-validated-w4-bazos-complete-rollup-active
+status: w1-w4-source-validated-w5-deploy-readiness-active
 source_goal: implementation-goals/GOAL-25-product-quality-review-admin.md
 policy_contract: docs/contracts/catalog-product-quality-review.md
 cross_repo_plan: docs/orchestrator/2026-07-02-product-quality-review-admin-cross-repo-plan.md
 owner: catalog orchestrator
 created: 2026-07-02
 last_updated: 2026-07-03
-completeness_level: backend-validation-frontend-source-validation-bazos-consumer-deployed
+completeness_level: backend-validation-frontend-source-validation-all-channel-consumers-pushed
 ```
 
 ## Metadata
 
 Branch: `main` currently has existing dirty work. Implementation should use an isolated branch or worktree after W0 is accepted and current Goal 24/source changes are isolated.
 
-Lifecycle state: W1 backend policy/API, W2 validation/reporting, and W3 admin frontend are source-validated on `main`. W4 Bazos channel consumer is complete, pushed, deployed, and accepted from worker handoff; Allegro, Aukro, FlipFlop, Heureka, and final W5 rollup remain active. Catalog runtime smoke and deployment remain owner/deploy-gated.
+Lifecycle state: W1 backend policy/API, W2 validation/reporting, W3 admin frontend, and W4 channel consumers are source-validated. Bazos and Aukro have deployed evidence; Allegro, FlipFlop, and Heureka latest Goal 25 source commits are pushed and source-validated but were not deployed by this thread. W5 deployment/runtime smoke remains owner/deploy-gated.
 
 Filename note: this plan intentionally uses a product-quality-specific filename because `implementation-goals/GOAL-25-execution-plan.md` is already occupied by a concurrent dirty Goal 25 canonical-json propagation lane.
 
@@ -168,7 +168,7 @@ Completed source validation:
 
 Deferred validation:
 
-- `[MISSING: W4 Allegro/Aukro/FlipFlop/Heureka consumer validation rollup]`
+- W4 channel consumer validation rollup completed for Bazos, Allegro, Aukro, FlipFlop, and Heureka.
 - `[MISSING: runtime smoke/deploy approval]`
 
 Runtime validation after explicit deploy approval only:
@@ -216,7 +216,7 @@ Workstreams:
 - W1 backend evaluator/API: dependency-gated on W0 acceptance; source ownership limited to backend products/media/pricing/auth conventions and focused tests.
 - W2 validation/reporting: source-validated; owns validation script and report artifacts.
 - W3 frontend admin: source-validated; owns dashboard route/components/API client only.
-- W4 import/channel consumers: Bazos complete/deployed from thread `019f24ae-a219-72e3-a6bc-50568228fdd1`; remaining channel handoffs are dependency-gated on their worker validation evidence.
+- W4 import/channel consumers: complete. Bazos complete/deployed at `b3576a6`; Allegro complete/pushed at `5d189ee`; Aukro complete/pushed at `f276a8c`; FlipFlop complete/pushed at `3462917`; Heureka complete/pushed at `7ea1f79`.
 - W5 final integration: active in the orchestrator thread; owns conflict resolution, status updates, full validation, and deploy-readiness evidence.
 
 ## Agent Handoff Prompt
@@ -229,7 +229,7 @@ You are implementing Catalog Goal 25 Product Quality Review Admin. Work only on 
 - [x] Backend evaluator/API implemented
 - [x] Validation script/report implemented
 - [x] Frontend admin review UI implemented
-- [ ] Import/channel consumer blockers verified (`Bazos complete/deployed; Allegro/Aukro/FlipFlop/Heureka rollup pending`)
+- [x] Import/channel consumer blockers verified (`Bazos, Allegro, Aukro, FlipFlop, Heureka complete; deploy/runtime smoke mixed and W5-gated`)
 - [x] Focused backend tests complete
 - [x] W1/W2/W3 validation evidence collected
 - [x] Goal 25 contract/report documentation updated

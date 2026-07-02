@@ -1,3 +1,13 @@
+## 2026-07-03 - Goal 25 W4 Cross-Channel Subagent Rollup Complete
+
+Change: completed the Goal-driven subagent rollup for all Catalog product-quality channel consumers. Allegro, Aukro, FlipFlop, and Heureka returned clean pushed handoffs after the previously accepted Bazos lane. W4 channel consumer implementation/validation is now complete; W5 remains limited to deploy-readiness/runtime smoke decisions where source commits are not deployed.
+
+Validation evidence: Allegro `5d189ee` guards local draft creation, sell-action prepare/edit/confirm, lifecycle confirm/queue/execute, and legacy publish-adjacent routes with focused sell-action/lifecycle/policy/offers specs and service build passing. Aukro `f276a8c` records direct create/update/sync plus publish-adjacent fail-closed coverage with service spec, service build, full service test, IPS gates, and diff check passing. FlipFlop `3462917` expands blocker verification across policy normalization, selection, offer filtering, publish dry-run/status, reconciliation, shared/product-service/frontend builds, IPS gates, and diff check. Heureka `7ea1f79` refreshes validation after feed/dashboard/source checks passed with shared/service builds and blocker-lane verifier. Bazos remains complete/deployed at `b3576a6` with image `localhost:5000/bazos-service:b583b10`.
+
+Boundary: no Catalog deploy, Catalog backend source mutation, marketplace publish/confirm/queue action, Warehouse mutation, production data mutation, Auth/RBAC change, destructive command, or secret output was performed in this subagent rollup. Channel deployment state is mixed: Bazos/Aukro have deployed evidence; Allegro/Heureka/FlipFlop source validation is complete but this thread did not run deploys.
+
+Next action: run owner-approved W5 deployment/runtime smoke only for channels whose latest Goal 25 commits are not yet deployed, or keep Goal 25 source accepted if deployment is intentionally deferred.
+
 ## 2026-07-03 - Goal 25 W5 Cross-Channel Acceptance Refresh
 
 Change: refreshed W5 evidence after Aukro Goal 25 consumer deployment and generated-description state resolution. Catalog contract now resolves generated descriptions through `catalog.generated_description_state.v1` backed by `Product.descriptionRich`; channel consumer ownership boundaries remain unchanged.
@@ -1666,3 +1676,39 @@ Remaining blockers:
 - `[MISSING: approved bundle checkout contract owned by FlipFlop/Orders/Payments]`.
 - `[MISSING: explicit discount/price presentation policy for bundle candidates]`.
 - `[MISSING: sufficient order_affinity backfill volume]`.
+
+
+## 2026-07-03 - Active FlipFlop Order-Affinity Backfill Evidence
+
+Current focus: Prove the live FlipFlop product-detail recommendations can use Catalog-owned purchase-affinity relations for active mapped products.
+
+Intent Preservation Chain:
+
+- Vision: Real purchase-derived relationships should power buy-together presentation for live storefront products through Catalog relation truth.
+- Goal Impact: The first active FlipFlop mapped product pair now has Catalog `order_affinity` rows and price-complete bundle candidates.
+- System: Catalog owns product relation and pricing facts; FlipFlop owns local sellable product mapping and buy-together presentation; Orders/Payments/Warehouse remain unchanged.
+- Feature: Controlled active-product order-affinity backfill.
+- Task: Upsert two directed `marketing_order_affinity` rows for active FlipFlop Catalog product IDs and validate related-products plus bundle-candidates readback.
+- Execution Plan: Use protected Catalog internal batch API from the Catalog pod; do not print secrets; do not mutate checkout, warehouse, payments, marketplace listings, bundle SKUs, or order data.
+- Coding Prompt: Use bounded evidence with an idempotency key and record exact product IDs, relation source, pricing summary, and blockers.
+- Code: runtime data only; documentation evidence in this status entry.
+- Validation: protected Catalog readback returned HTTP 200 for related-products and bundle-candidates in both directions.
+
+Runtime mutation evidence:
+
+- Protected `POST /api/internal/product-relations/order-affinity/batch` used idempotency key `codex-active-flipflop-affinity-20260703-001`.
+- Batch result: HTTP `201`, `success=true`, `total=2`, `upserted=2`, `updated=0`, `failed=0`.
+- Relation `ce4a51aa-2d12-4ab7-a965-7a36609d01fc -> dbc51dde-fc66-4511-b178-f929183f4647`: `relationType=order_affinity`, `source=marketing_order_affinity`, `score=2`, `confidence=0.7`.
+- Relation `dbc51dde-fc66-4511-b178-f929183f4647 -> ce4a51aa-2d12-4ab7-a965-7a36609d01fc`: `relationType=order_affinity`, `source=marketing_order_affinity`, `score=2`, `confidence=0.7`.
+
+Readback evidence:
+
+- `GET /api/products/ce4a51aa-2d12-4ab7-a965-7a36609d01fc/related?relationType=order_affinity` returned one relation to `dbc51dde-fc66-4511-b178-f929183f4647`.
+- `GET /api/products/dbc51dde-fc66-4511-b178-f929183f4647/related?relationType=order_affinity` returned one relation to `ce4a51aa-2d12-4ab7-a965-7a36609d01fc`.
+- Bundle-candidates for both directions returned one candidate containing both Catalog product IDs.
+- Pricing summary for both directions: `currency=CZK`, `subtotal=1998`, `freeShippingThreshold=1000`, `suggestedBundlePrice=1998`, `topUpAmount=0`, `freeShippingEligible=true`, `blockers=[]`.
+
+Remaining blockers:
+
+- `[MISSING: automated order-affinity backfill/replay over historical Orders events]`.
+- `[MISSING: approved bundle checkout contract owned by FlipFlop/Orders/Payments]` for future server-authoritative bundle pricing beyond current display/intent flow.
