@@ -2,7 +2,7 @@
 
 ```yaml
 id: CATALOG-EVENTS-PRODUCTS-V1
-status: draft_runtime_wiring_blocked
+status: source_runtime_publisher_ready_runtime_enablement_blocked
 owner: catalog orchestrator
 created: 2026-07-02
 last_updated: 2026-07-02
@@ -21,8 +21,8 @@ Catalog remains the authority for product identity, lifecycle, sellable content,
 - Exchange: `catalog.events`
 - Exchange type: `topic`
 - Delivery intent: persistent messages after durable outbox commit
-- Runtime publisher: `[MISSING: RabbitMQ replay worker wiring for catalog_product_event_outbox]`
-- Dead-letter target: `catalog.events.dlx` with queue `catalog.events.dlq` once the runtime publisher is wired
+- Runtime publisher: `ProductEventOutboxPublisherService`, disabled by default until broker URL/client dependency/runtime migration/deploy are owner-wired
+- Dead-letter target: outbox status `dead_letter`; broker DLX/queue binding remains `[MISSING: catalog.events.dlx/catalog.events.dlq broker topology]`
 
 ## Envelope
 
@@ -105,9 +105,19 @@ Outbox statuses:
 ## DLQ Rules
 
 - Retry transient broker failures with exponential or configured delay until `maxAttempts`.
-- Move non-retryable payload validation failures to `dead_letter` and route to `catalog.events.dlq` when the broker publisher exists.
+- Move non-retryable payload validation failures to `dead_letter` without changing the original envelope.
+- Move retryable failures to `dead_letter` after `attempts >= maxAttempts`.
 - Failed rows must retain `lastError`, `attempts`, and `nextAttemptAt` without losing the original envelope.
+- AMQP publish uses exchange `catalog.events`, routing key equal to `eventType`, durable/persistent JSON messages, `messageId=eventId`, and bounded headers.
 - DLQ replay requires operator review because channel services may have already observed later product events.
+
+## Runtime Publisher Configuration
+
+- `CATALOG_EVENT_PUBLISHER_ENABLED=false` keeps the worker in safe disabled mode and does not claim rows.
+- `CATALOG_EVENTS_RABBITMQ_URL` is the preferred broker URL; `RABBITMQ_URL` is accepted as a fallback.
+- `CATALOG_EVENT_OUTBOX_BATCH_SIZE`, `CATALOG_EVENT_OUTBOX_REPLAY_INTERVAL_MS`, `CATALOG_EVENT_OUTBOX_RETRY_DELAY_MS`, `CATALOG_EVENT_OUTBOX_RETRY_MAX_DELAY_MS`, and `CATALOG_EVENT_OUTBOX_MAX_ATTEMPTS` bound replay behavior.
+- Current package scope intentionally does not add RabbitMQ dependencies. Runtime enablement remains blocked on `[MISSING: amqplib package in Catalog runtime image or approved equivalent broker client]`.
+- Runtime enablement remains blocked on `[MISSING: catalog_product_event_outbox migration application]` and `[MISSING: Catalog deployment/env wiring for CATALOG_EVENTS_RABBITMQ_URL or RABBITMQ_URL]`.
 
 ## Subscription By Category
 
@@ -123,4 +133,4 @@ Consumers must treat category filtering as routing optimization, not authorizati
 
 ## Current Runtime Gap
 
-This lane intentionally lands the durable outbox and producer foundation only. Full RabbitMQ replay, health/readiness counters, and DLQ wiring remain blocked on `[MISSING: owner-approved Catalog event publisher runtime wiring and broker deployment contract]`.
+This lane adds source-level RabbitMQ replay worker, bounded health/readiness counters, and fail-closed runtime configuration. Production use still requires `[MISSING: catalog_product_event_outbox migration application]`, `[MISSING: Catalog RabbitMQ runtime env/client dependency wiring]`, `[MISSING: catalog.events broker topology/DLQ binding]`, and a no-downtime deploy by the integration owner.

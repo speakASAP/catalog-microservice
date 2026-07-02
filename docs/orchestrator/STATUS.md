@@ -1,3 +1,15 @@
+## 2026-07-02 - Goal 22 Private User Catalogs And Alfares Resale Toggle Planning
+
+Change: created the Goal 22 planning package for private user catalogs across Catalog, Auth, Allegro, Bazos, Aukro, FlipFlop, and Heureka. The planned contract keeps `products.owner_user_id IS NULL` as Alfares shared catalog rows, keeps `products.owner_user_id=<Auth subject>` as private user rows, and adds `catalog_user_settings.include_alfares_catalog=false` as the default disabled resale setting. New users should see an empty private product list until they create/import products or explicitly enable Alfares shared products.
+
+Validation/planning evidence: local IPS standards and repo-local Catalog agent instructions were read; remote Catalog preflight was clean on `main` at `6f444f7`; cross-repo preflight found `auth-microservice` ahead of origin by 4 commits, `allegro`, `bazos`, and `flipflop` already dirty with unrelated catalog-event/proactive-consumer work, and `aukro`/`heureka` dirty in `reports/validation/ips-pre-coding-gate.json`. Bazos gateway validation has a current JSON parse blocker in `services/api-gateway/package.json`. Sub-agent explorers completed read-only Catalog, Auth, and sales-point investigations. No code, production migration, runtime data, deploy script, secret, Warehouse/Orders/Payments behavior, or channel repo file was changed in this planning step.
+
+Parallel execution state: W0 contract/planning is active in the original thread. W1 Catalog backend implementation is ready now and owns `src/catalog-access/**`, `src/products/**`, `src/app.module.ts`, `scripts/migrations/20260702_catalog_user_settings.sql`, and Goal 22 validation docs. W2 Catalog frontend, W3 Auth provisioning decision, W4 sales-point repo workers, W5 FlipFlop seller/public boundary, W6 migration/deploy, and W7 cross-repo runtime validation are dependency-gated or final integration as defined in `docs/orchestrator/2026-07-02-private-catalog-cross-repo-plan.md`.
+
+Boundary decision: first durable guarantee is Catalog lazy provisioning, not Auth distributed fanout. Sales points must forward the human bearer token and use Catalog effective scope for user-facing product pickers. Ordinary users must not edit/delete Alfares shared products even when resale is enabled.
+
+Next action: implement W1 Catalog backend source with focused tests; do not deploy or start channel code workers until the Catalog API contract is validated.
+
 ## 2026-07-02 - Goal 21 Catalog Product Events Outbox
 
 Change: implemented the Catalog-side product event contract and durable outbox producer foundation. Added `docs/contracts/catalog-events.md`, `implementation-goals/GOAL-21-catalog-product-events.md`, `implementation-goals/GOAL-21-execution-plan.md`, `reports/validation/GOAL-21-pre-coding-gate.md`, `reports/validation/VAL-GOAL-21-catalog-product-events.md`, `scripts/migrations/20260702_catalog_product_event_outbox.sql`, and `src/product-events/*`. `ProductsService` now records outbox event intents transactionally for product create/update/soft-delete/archive/hard-delete paths when the event publisher is injected.

@@ -10,7 +10,7 @@ export class HealthController {
    * GET /health (no api prefix)
    */
   @Get('health')
-  getHealth() {
+  async getHealth() {
     return this.healthService.getHealth();
   }
 
@@ -19,8 +19,8 @@ export class HealthController {
    * GET /ready
    */
   @Get('ready')
-  getReady() {
-    return { ready: true };
+  async getReady() {
+    return this.healthService.getReady();
   }
 }
 
