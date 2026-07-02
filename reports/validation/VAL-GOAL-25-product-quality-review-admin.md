@@ -1,143 +1,105 @@
-# VAL-GOAL-25: Product Quality Review Admin Backend Policy/API
+# VAL-GOAL-25 Product Quality Review Admin
 
 ```yaml
 id: VAL-GOAL-25-PRODUCT-QUALITY-REVIEW-ADMIN
-status: passed-source-slice
+status: source-implemented-w1
 created: 2026-07-02
-repository: /home/ssf/Documents/Github/catalog-microservice
+last_updated: 2026-07-02
+repository: /home/ssf/Documents/Github/catalog-goal25-product-quality-review-admin
+branch: feature/catalog-goal-25-product-quality-review-admin
 source_goal: implementation-goals/GOAL-25-product-quality-review-admin.md
-execution_plan: implementation-goals/GOAL-25-product-quality-review-admin-execution-plan.md
 policy_contract: docs/contracts/catalog-product-quality-review.md
+execution_plan: implementation-goals/GOAL-25-product-quality-review-admin-execution-plan.md
 ```
 
-## Intent Preservation Chain
+## Intent Compliance Report
 
-Vision: Catalog remains the Statex product truth service for identity, sellable content, media, pricing, and publication readiness.
+Vision: Catalog remains the Statex product truth service for product identity, sellable content, media references, pricing records, and publication readiness.
 
-Goal Impact: Incomplete products now have a stable backend blocker contract and cannot be activated through the review endpoint until mandatory sellable data passes.
+Goal Impact: incomplete newly created products now stay draft/non-publishable by default; operators get guarded review queue/export/activation/update backend surfaces for fixing quality gaps.
 
-System: Catalog owns quality/readiness. Warehouse remains stock owner. Auth remains identity/RBAC owner. Channel services remain publication/compliance owners.
+System: Catalog owns quality/readiness policy; Warehouse stock ownership, Auth identity/RBAC ownership, and channel publication/compliance ownership remain external.
 
-Feature: Product Quality Review backend policy/API.
+Feature: Product Quality Review Admin backend W1.
 
-Task: Implement W1 backend evaluator/API first so channel consumer workers can later consume `catalog.product_quality.v1`.
+Task: implement the backend evaluator/API gap after W0 contract acceptance.
 
 Execution Plan: `implementation-goals/GOAL-25-product-quality-review-admin-execution-plan.md`.
 
-Coding Prompt: Delegated Goal 25 backend worker prompt from orchestrator thread `019f2354-8881-7533-87e6-77347d42eb2e`.
+Coding Prompt: W1 backend-only implementation in isolated remote worktree; no frontend, migrations, deployment, product-relations, or channel repo edits.
 
-Code: `src/products/products.service.ts`, `src/products/products.controller.ts`, `src/products/dto/index.ts`, `src/products/products.service.spec.ts`.
+Code: `src/products/dto/index.ts`, `src/products/products.controller.ts`, `src/products/products.service.ts`, `src/products/products.service.spec.ts`.
 
-Validation: this report.
+Validation: focused product service spec, backend build, and diff check passed.
 
-State Update: `[MISSING: orchestrator-owned docs/IMPLEMENTATION_STATE.md and docs/orchestrator/STATUS.md update after concurrent dirty state is integrated]`.
+State Update: this report records W1 source evidence; final orchestrator state/status update remains W5-owned.
 
-## Implemented Contract
+## Implemented
 
-Policy id: `catalog.product_quality.v1`.
+- Added `POST /api/products/review/bulk-update` DTO/controller/service path.
+- Added allowlisted product field bulk patching with actor-scoped mutation reuse.
+- Fail-closed unsupported W1 patches:
+  - `[MISSING: Goal 25 pricing bulk delegation implementation]`
+  - `[MISSING: Goal 25 attribute bulk update implementation]`
+  - `[MISSING: Goal 25 category bulk update implementation]`
+- Added `expectedMissingField` guard so bulk updates can target products that still have the expected issue.
+- Added activation safety check to ordinary product updates when a patch requests `lifecycle=active` or `isActive=true`.
+- Changed incomplete product create defaults to `lifecycle=draft`, `isActive=false`.
+- Updated focused tests for draft default, review activation, bulk patch allowlist, and fail-closed pricing patch.
 
-Authenticated endpoints:
+## Not Implemented
 
-- `GET /api/products/review/quality`
-- `GET /api/products/review/quality/export`
-- `POST /api/products/review/activate`
+- Validation script/report command `npm run validate:product-quality`.
+- Frontend admin review page/menu/bulk editor.
+- Category and attribute bulk update execution.
+- Pricing patch delegation to the existing guarded pricing path.
+- Importer/channel consumer changes.
+- Runtime deploy/smoke.
 
-Stable review item fields:
+## Boundary Check
 
-- `productId`, `sku`, `title`
-- `ownerScope` masked by default
-- `sourceScope`: `own`, `alfares`, or `community`
-- `lifecycle`, `isActive`, `publishable`, `canActivate`
-- `completionScore`
-- `blockingIssues[]`
-- `blockingMissingFields[]`
-- `optionalOpportunities[]`
-- `nextAction`
-- `readiness`
+- `CAT-INV-001`: preserved; Catalog quality policy remains central.
+- `CAT-INV-002`: preserved; no Catalog stock quantity ownership was added.
+- `CAT-INV-003`: preserved; endpoints use existing Catalog Auth guard/RBAC conventions.
+- `CAT-INV-005`: preserved; no marketplace publish or compliance behavior added.
+- `CAT-INV-006`: preserved; no delete path changed.
+- `CAT-INV-007`: preserved; pricing patch fails closed until guarded pricing delegation is implemented.
+- `CAT-INV-008`: preserved; media remains URL/object reference based.
+- `CAT-INV-009`: preserved; endpoints are additive.
+- `CAT-INV-010`: preserved; controller emits audit write metadata for bulk update and activation.
 
-Mandatory blocker codes implemented:
-
-- `missing_sku`
-- `duplicate_sku`
-- `missing_title`
-- `missing_description`
-- `missing_current_price`
-- `missing_image`
-- `placeholder_image_only`
-- `archived_product`
-
-SKU uniqueness scope: `sku + ownerUserId`, with `ownerUserId IS NULL` as the Alfares shared source scope.
-
-Generated-description state: `[MISSING: generated-description state contract]`; backend fails closed on missing descriptions.
-
-Activation behavior:
-
-- Promotes products to `lifecycle=active` and `isActive=true` only when mandatory blockers pass.
-- Allows `draft`/inactive products to be activation candidates when mandatory data passes.
-- Blocks archived products.
-- Requires `humanReview: explicit` for activation requests over 10 product IDs.
-- Does not publish to channels or call marketplace actions.
-
-## Boundary Evidence
-
-- `CAT-INV-001`: Catalog now owns the global product-quality blocker contract.
-- `CAT-INV-002`: no stock or quantity fields were added to Catalog products.
-- `CAT-INV-003`: new endpoints use existing `CatalogAuthGuard` and `RequireCatalogRoles('catalog:authenticated')`.
-- `CAT-INV-005`: activation is Catalog lifecycle only; no Bazos/Allegro/Aukro/FlipFlop/Heureka publish action is called.
-- `CAT-INV-006`: no hard delete path changed.
-- `CAT-INV-007`: pricing mutations were not added; existing pricing guard remains untouched.
-- `CAT-INV-008`: image checks use media URL/reference rows only.
-- `CAT-INV-009`: existing product reads remain additive/backward compatible.
-- `CAT-INV-010`: activation endpoint records existing audit metadata for product group activation.
-
-## Validation Commands
+## Validation Evidence
 
 ```bash
 npm test -- --runInBand src/products/products.service.spec.ts
-# result: passed
-# suites: 1 passed, 1 total
-# tests: 37 passed, 37 total
+# PASS, 1 suite, 40 tests
 
 npm run build
-# result: passed
+# PASS
 
 git diff --check
-# result: passed
+# PASS, no output
 ```
 
-## Deferred Scope
-
-- `[MISSING: bulk update endpoint implementation]`
-- `[MISSING: validate:product-quality script/reporting implementation]`
-- `[MISSING: admin frontend product review page]`
-- `[MISSING: importer draft gate and channel consumer implementation]`
-- `[MISSING: generated-description state contract]`
-- `[MISSING: owner approval to deploy Catalog]`
-- `[MISSING: approved Auth token for protected runtime smoke]`
+Validation note: the isolated worktree had no local `node_modules`, so validation temporarily used an untracked symlink to the existing remote dependency install at `/home/ssf/Documents/Github/catalog-microservice/node_modules`. The symlink was removed after validation.
 
 ## Dirty Worktree Caveat
 
-Concurrent unrelated dirty files were present during this worker's final validation and were not touched by the Goal 25 source patch:
+Implementation was done in isolated worktree `/home/ssf/Documents/Github/catalog-goal25-product-quality-review-admin` on branch `feature/catalog-goal-25-product-quality-review-admin`. The original `/home/ssf/Documents/Github/catalog-microservice` main worktree was not edited by W1.
 
-- `docs/IMPLEMENTATION_STATE.md`
-- `docs/orchestrator/STATUS.md`
-- `reports/validation/VAL-GOAL-24-product-relations.md`
-- `docs/orchestrator/2026-07-02-local-resale-toggle-and-flipflop-seller-plan.md`
-- `reports/validation/VAL-2026-07-02-local-resale-toggle-catalog-contract.md`
+## Remaining Blockers
 
-Earlier in the session, `k8s/configmap.yaml` was dirty with event-publisher config changes; by final validation that file was no longer dirty in `git status`. This worker did not edit deployment or Kubernetes files.
+- `[MISSING: scripts/pre_coding_gate.py]`
+- `[MISSING: scripts/strict_doc_audit.py]`
+- `[MISSING: docs-rag JWT_TOKEN]`
+- `[MISSING: generated description state source]`
+- `[MISSING: Goal 25 pricing bulk delegation implementation]`
+- `[MISSING: Goal 25 attribute bulk update implementation]`
+- `[MISSING: Goal 25 category bulk update implementation]`
+- `[MISSING: W2 validate:product-quality script]`
+- `[MISSING: W3 frontend admin review UI]`
+- `[MISSING: W4 import/channel consumer validation]`
 
-## Deployment
+## Next Action
 
-Not deployed. No migration, runtime smoke, Kubernetes change, channel repo change, Warehouse mutation, product delete, or marketplace publication was run.
-
-## Orchestrator Handoff
-
-Catalog blocker contract is stable enough for channel consumer planning against `catalog.product_quality.v1`.
-
-Recommended merge/next order:
-
-1. Integrate this backend policy/API source slice with the current concurrent docs/status changes.
-2. Dispatch channel consumer workers to read `GET /api/products/review/quality` or product-level readiness as appropriate.
-3. Implement W2 validation script/reporting and W3 admin UI in separate workers.
-4. Keep W4 importer/channel runtime changes dependency-gated until the backend source slice is accepted.
+Start W2 validation/reporting or W3 frontend only after W1 is reviewed, or continue W1 to wire category/attribute/pricing bulk delegation if the orchestrator wants backend completeness before parallel UI work.

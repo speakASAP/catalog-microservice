@@ -14,7 +14,7 @@ describe("ProductsService product readiness", () => {
     jest.clearAllMocks();
   });
 
-  it("defaults created products to active lifecycle while preserving isActive compatibility", async () => {
+  it("defaults incomplete created products to draft lifecycle and non-publishable state", async () => {
     const repository = {
       create: jest.fn((data) => data),
       save: jest.fn(async (data) => ({ id: "product-1", ...data })),
@@ -25,11 +25,11 @@ describe("ProductsService product readiness", () => {
 
     expect(repository.create).toHaveBeenCalledWith(expect.objectContaining({
       sku: "SKU-001",
-      lifecycle: "active",
-      isActive: true,
+      lifecycle: "draft",
+      isActive: false,
     }));
-    expect(product.lifecycle).toBe("active");
-    expect(product.isActive).toBe(true);
+    expect(product.lifecycle).toBe("draft");
+    expect(product.isActive).toBe(false);
   });
 
   it("assigns new products to the authenticated catalog user", async () => {
@@ -441,6 +441,53 @@ describe("ProductsService product readiness", () => {
     });
   });
 
+  it("applies allowlisted product quality bulk updates and fail-closes unsupported patches", async () => {
+    const product = {
+      id: "product-quality-bulk",
+      sku: "SKU-BULK",
+      title: "Bulk product",
+      ownerUserId: "seller-1",
+      resaleEnabled: false,
+      isActive: false,
+      lifecycle: "draft",
+      ean: null,
+      description: "Needs brand",
+      descriptionRich: null,
+      brand: "",
+      manufacturer: "",
+      tags: [],
+      categories: [],
+      media: [{ type: "image", url: "https://cdn.example/image.jpg" }],
+      pricing: [{ isActive: true, basePrice: 120 }],
+    } as unknown as Product;
+    const repository = {
+      findOne: jest.fn(async () => product),
+      count: jest.fn(async () => 1),
+      save: jest.fn(async (data) => ({ ...data })),
+    };
+    const service = new ProductsService(repository as any, logger as any);
+
+    const result = await service.bulkUpdateProductsAfterQualityReview(
+      {
+        productIds: ["product-quality-bulk"],
+        expectedMissingField: "brand",
+        patch: { brand: "Acme", sku: "SHOULD-NOT-BULK-EDIT" },
+      },
+      { actor: { type: "jwt", sub: "seller-1", roles: [], authMethod: "auth-validate" } },
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.totals.updated).toBe(1);
+    expect(repository.save).toHaveBeenCalledWith(expect.objectContaining({
+      brand: "Acme",
+      sku: "SKU-BULK",
+    }));
+    await expect(service.bulkUpdateProductsAfterQualityReview(
+      { productIds: ["product-quality-bulk"], pricingPatch: { basePrice: 1 } },
+      { actor: { type: "jwt", sub: "seller-1", roles: [], authMethod: "auth-validate" } },
+    )).rejects.toThrow("guarded pricing path");
+  });
+
 
 });
 
@@ -481,8 +528,8 @@ describe("ProductsService catalog product events", () => {
           sku: "SKU-EVENT-1",
           title: "Event product",
           ownerUserId: "user-events",
-          lifecycle: "active",
-          isActive: true,
+          lifecycle: "draft",
+          isActive: false,
           categoryIds: [],
         }),
         changedFields: ["sku", "title"],

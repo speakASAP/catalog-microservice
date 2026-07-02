@@ -21,6 +21,7 @@ import {
   UpdateProductDto,
   ProductQueryDto,
   ProductQualityReviewActivateDto,
+  ProductQualityReviewBulkUpdateDto,
   ProductQualityReviewExportQueryDto,
   ProductQualityReviewQueryDto,
   type ProductCatalogScope,
@@ -168,6 +169,32 @@ export class ProductsController {
     this.logger.log("GET /api/products/review/quality/export", "ProductsController");
     const report = await this.productsService.exportProductQualityReview(query, this.productScope(request, query.catalogScope, query.catalogSources));
     return { success: true, data: report };
+  }
+
+  /**
+   * Apply guarded bulk product updates from product quality review
+   * POST /api/products/review/bulk-update
+   */
+  @Post("review/bulk-update")
+  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
+  async bulkUpdateAfterQualityReview(
+    @Body() data: ProductQualityReviewBulkUpdateDto,
+    @Req() request: CatalogAuthenticatedRequest,
+  ) {
+    this.logger.log("POST /api/products/review/bulk-update", "ProductsController");
+    const result = await this.productsService.bulkUpdateProductsAfterQualityReview(data, this.productScope(request));
+    this.logger.auditCatalogWrite(request, {
+      action: 'product_quality_review_bulk_update',
+      resourceType: 'product_group',
+      resourceId: 'product-quality-review-bulk-update',
+      metadata: {
+        productCount: result.requestedProductIds.length,
+        updated: result.totals.updated,
+        blocked: result.totals.blocked,
+      },
+    });
+    return { success: result.success, data: result };
   }
 
   /**
