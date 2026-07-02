@@ -1561,3 +1561,5 @@ Intent chain:
 - Validation: npm run verify:bpcp-consumer passed; focused BPCP projection Jest passed 3/3; npm run build passed; full npm test -- --runInBand passed 13 suites / 111 tests; git diff --check passed.
 
 Boundary decision: Catalog consumes BPCP publication state and exposes eligibility facts only. It does not calculate the 10 percent discount, write product prices, call checkout, emit customer notifications, or become the BPCP process registry.
+
+Runtime deployment evidence: deployed image `localhost:5000/catalog-microservice:50e3c0c` rolled out successfully. BPCP `holiday-discount-2026:1` was validated and published through the BPCP API, then `POST /api/events/outbox/dispatch?limit=10` dispatched 3/3 pending process events to RabbitMQ. Catalog `/ready` on pod `catalog-microservice-5998ff94b4-srh8h` reported `bpcpProcessEvents.consumer.connection.status=up`, `missing=[]`, `received=1`, `applied=1`, `signatureFailures=0`, `lastAppliedEventId=holiday-discount-2026:1:process.published:3`, and `activeProjectionCount=1`. Remaining blocker is `[MISSING: final holiday eligibility fact schema or configured category/tag allow-list]`.
