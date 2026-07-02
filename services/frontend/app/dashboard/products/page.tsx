@@ -8,7 +8,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { productsApi, Product, ProductQuery, PaginatedResponse } from '@/lib/api/products';
+import { productsApi, Product, ProductQuery, PaginatedResponse, ProductWarehouseAvailabilityItem } from '@/lib/api/products';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 type ActiveFilter = 'all' | 'active' | 'inactive';
@@ -23,6 +23,10 @@ function formatLifecycle(value?: Product['lifecycle']) {
     .split('_')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
+}
+
+function formatQuantity(value?: number | null) {
+  return new Intl.NumberFormat('en-US').format(Math.max(0, Math.floor(Number(value) || 0)));
 }
 
 function getPrimaryImage(product: Product) {
@@ -49,6 +53,8 @@ export default function AdminProductsPage() {
   const [allFilteredSelected, setAllFilteredSelected] = useState(false);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [bulkStatus, setBulkStatus] = useState<string | null>(null);
+  const [availabilityByProductId, setAvailabilityByProductId] = useState<Record<string, ProductWarehouseAvailabilityItem>>({});
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
 
   const query = useMemo<ProductQuery>(() => ({
     page,
@@ -64,18 +70,41 @@ export default function AdminProductsPage() {
       const response = await productsApi.getProducts(query);
       if (response.success && response.data) {
         const data = response.data as PaginatedResponse<Product>;
+        let nextProducts: Product[] = [];
+
         if (Array.isArray(response.data)) {
-          setProducts(response.data);
+          nextProducts = response.data;
           setTotalPages(response.pagination?.pages || 1);
           setTotal(response.pagination?.total ?? response.data.length);
         } else if (data.items) {
-          setProducts(data.items);
+          nextProducts = data.items;
           setTotalPages(response.pagination?.pages || data.pagination?.pages || 1);
           setTotal(response.pagination?.total ?? data.pagination?.total ?? data.items.length);
         } else {
-          setProducts([]);
           setTotalPages(1);
           setTotal(0);
+        }
+
+        setProducts(nextProducts);
+        setAvailabilityByProductId({});
+
+        if (nextProducts.length > 0) {
+          setAvailabilityLoading(true);
+          try {
+            const availabilityResponse = await productsApi.getAvailabilityBatch(nextProducts.map((product) => product.id));
+            if (availabilityResponse.success && availabilityResponse.data) {
+              const nextAvailability = Object.fromEntries(
+                availabilityResponse.data.items.map((item) => [item.productId, item]),
+              );
+              setAvailabilityByProductId(nextAvailability);
+            }
+          } catch (availabilityError) {
+            console.error('Failed to load product availability:', availabilityError);
+          } finally {
+            setAvailabilityLoading(false);
+          }
+        } else {
+          setAvailabilityLoading(false);
         }
       }
     } catch (error) {
@@ -435,6 +464,9 @@ export default function AdminProductsPage() {
                       Brand
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Available
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Status
                     </th>
                     <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
@@ -490,6 +522,24 @@ export default function AdminProductsPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                           {product.brand || '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {(() => {
+                            const availability = availabilityByProductId[product.id];
+                            const available = availability?.totalAvailable ?? 0;
+                            return (
+                              <div className="space-y-1">
+                                <div className={`text-base font-extrabold ${available > 0 ? 'text-emerald-700' : 'text-red-700'}`}>
+                                  {availabilityLoading && !availability ? 'Loading...' : `${formatQuantity(available)} pcs`}
+                                </div>
+                                {availability && (
+                                  <div className="text-xs font-medium text-gray-500">
+                                    {formatQuantity(availability.totalQuantity)} total / {formatQuantity(availability.totalReserved)} reserved
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex flex-wrap gap-2">
