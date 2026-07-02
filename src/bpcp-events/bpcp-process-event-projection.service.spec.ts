@@ -72,6 +72,17 @@ describe('BPCP process event projection', () => {
     expect(facts.reasonCodes).toContain('HOLIDAY_DISCOUNT_ELIGIBLE');
   });
 
+  it('deduplicates replayed process events by event id', () => {
+    const service = new BpcpProcessEventProjectionService(logger as any);
+
+    service.applyEvent(event());
+    service.applyEvent(event());
+    const status = service.getStatus();
+
+    expect(status.appliedEvents).toBe(1);
+    expect(status.duplicateEvents).toBe(1);
+  });
+
   it('removes eligibility after pause or retire events', () => {
     process.env.CATALOG_BPCP_HOLIDAY_ELIGIBLE_CATEGORY_IDS = 'category-1';
     const service = new BpcpProcessEventProjectionService(logger as any);

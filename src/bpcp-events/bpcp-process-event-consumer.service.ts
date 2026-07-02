@@ -43,7 +43,7 @@ type BpcpConsumerStatus = {
     status: 'disabled' | 'up' | 'down';
     exchange: string;
     queue: string;
-    routingKey: string;
+    routingKeys: string[];
     urlConfigured: boolean;
     signingSecretConfigured: boolean;
     missing: string[];
@@ -108,7 +108,7 @@ export class BpcpProcessEventConsumerService implements OnModuleInit, OnModuleDe
         status: config.enabled ? (this.channel ? 'up' : 'down') : 'disabled',
         exchange: config.exchange,
         queue: config.queue,
-        routingKey: config.routingKey,
+        routingKeys: config.routingKeys,
         urlConfigured: Boolean(config.url),
         signingSecretConfigured: Boolean(config.signingSecret),
         missing: config.missing,
@@ -156,12 +156,14 @@ export class BpcpProcessEventConsumerService implements OnModuleInit, OnModuleDe
         'x-dead-letter-routing-key': config.deadLetterRoutingKey,
       },
     });
-    await channel.bindQueue(config.queue, config.exchange, config.routingKey);
+    for (const routingKey of config.routingKeys) {
+      await channel.bindQueue(config.queue, config.exchange, routingKey);
+    }
     await channel.prefetch(config.prefetch);
     await channel.consume(config.queue, (message) => this.handleMessage(message, config.signingSecret), { noAck: false });
     this.lastError = null;
     this.logger.log(
-      `BPCP process event consumer bound ${config.exchange}:${config.routingKey} -> ${config.queue}`,
+      `BPCP process event consumer bound ${config.exchange}:${config.routingKeys.join(',')} -> ${config.queue}`,
       'BpcpProcessEventConsumerService',
     );
   }
@@ -180,9 +182,11 @@ export class BpcpProcessEventConsumerService implements OnModuleInit, OnModuleDe
       }
       const parsed = JSON.parse(message.content.toString('utf8'));
       const event = parseBpcpProcessEventEnvelope(parsed);
-      this.projection.applyEvent(event);
-      this.applied += 1;
-      this.lastAppliedEventId = event.id;
+      const result = this.projection.applyEvent(event);
+      if (result.applied || result.duplicate) {
+        this.applied += 1;
+        this.lastAppliedEventId = event.id;
+      }
       this.channel?.ack(message);
     } catch (error: unknown) {
       this.rejected += 1;
@@ -222,11 +226,16 @@ export class BpcpProcessEventConsumerService implements OnModuleInit, OnModuleDe
     const url = optionalEnv('CATALOG_BPCP_EVENTS_RABBITMQ_URL') ?? optionalEnv('RABBITMQ_URL');
     const signingSecret = optionalEnv('BPCP_PROCESS_SIGNING_SECRET') ?? optionalEnv('CATALOG_BPCP_PROCESS_SIGNING_SECRET');
     const exchange = optionalEnv('CATALOG_BPCP_EVENTS_EXCHANGE') ?? 'bpcp.events';
-    const routingKey = optionalEnv('CATALOG_BPCP_EVENTS_ROUTING_KEY') ?? 'bpcp.process.published.v1';
-    const queue = optionalEnv('CATALOG_BPCP_EVENTS_QUEUE') ?? 'catalog.bpcp.process-published.v1';
+    const legacyRoutingKey = optionalEnv('CATALOG_BPCP_EVENTS_ROUTING_KEY');
+    const routingKeys = listEnv('CATALOG_BPCP_EVENTS_ROUTING_KEYS', legacyRoutingKey ? [legacyRoutingKey] : [
+      'bpcp.process.published.v1',
+      'bpcp.process.paused.v1',
+      'bpcp.process.retired.v1',
+    ]);
+    const queue = optionalEnv('CATALOG_BPCP_EVENTS_QUEUE') ?? 'catalog.bpcp.process-lifecycle.v1';
     const deadLetterExchange = optionalEnv('CATALOG_BPCP_EVENTS_DLX') ?? 'catalog.bpcp.events.dlx';
-    const deadLetterQueue = optionalEnv('CATALOG_BPCP_EVENTS_DLQ') ?? 'catalog.bpcp.process-published.v1.dlq';
-    const deadLetterRoutingKey = optionalEnv('CATALOG_BPCP_EVENTS_DLQ_ROUTING_KEY') ?? 'catalog.bpcp.process-published.v1.dead';
+    const deadLetterQueue = optionalEnv('CATALOG_BPCP_EVENTS_DLQ') ?? 'catalog.bpcp.process-lifecycle.v1.dlq';
+    const deadLetterRoutingKey = optionalEnv('CATALOG_BPCP_EVENTS_DLQ_ROUTING_KEY') ?? 'catalog.bpcp.process-lifecycle.v1.dead';
     const prefetch = positiveInt(process.env.CATALOG_BPCP_EVENTS_PREFETCH, 5);
     const missing: string[] = [];
 
@@ -243,7 +252,7 @@ export class BpcpProcessEventConsumerService implements OnModuleInit, OnModuleDe
       missing.push('[MISSING: amqplib package in Catalog runtime image or approved equivalent broker client]');
     }
 
-    return { enabled, url, signingSecret, exchange, routingKey, queue, deadLetterExchange, deadLetterQueue, deadLetterRoutingKey, prefetch, missing };
+    return { enabled, url, signingSecret, exchange, routingKeys, queue, deadLetterExchange, deadLetterQueue, deadLetterRoutingKey, prefetch, missing };
   }
 
   private hasAmqpClient(): boolean {
@@ -293,6 +302,14 @@ export class BpcpProcessEventConsumerService implements OnModuleInit, OnModuleDe
 
 function parseBoolean(value: string | undefined): boolean {
   return ['1', 'true', 'yes', 'on'].includes((value || '').trim().toLowerCase());
+}
+
+function listEnv(name: string, fallback: string[] = []): string[] {
+  const value = process.env[name]?.trim();
+  if (!value || value.startsWith('[MISSING:')) {
+    return fallback;
+  }
+  return value.split(',').map((item) => item.trim()).filter(Boolean);
 }
 
 function optionalEnv(name: string): string | null {

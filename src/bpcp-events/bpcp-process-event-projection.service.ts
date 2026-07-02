@@ -28,20 +28,27 @@ type ProductFacts = {
 @Injectable()
 export class BpcpProcessEventProjectionService {
   private readonly projections = new Map<string, ProcessProjection>();
+  private readonly seenEventIds = new Set<string>();
+  private duplicateEvents = 0;
   private appliedEvents = 0;
   private ignoredEvents = 0;
   private lastAppliedEvent: ProcessProjection | null = null;
 
   constructor(private readonly logger: LoggerService) {}
 
-  applyEvent(event: BpcpProcessEventEnvelope): void {
+  applyEvent(event: BpcpProcessEventEnvelope): { applied: boolean; duplicate: boolean } {
+    if (this.seenEventIds.has(event.id)) {
+      this.duplicateEvents += 1;
+      return { applied: false, duplicate: true };
+    }
+    this.seenEventIds.add(event.id);
     if (!this.supportedProcessIds().includes(event.processId)) {
       this.ignoredEvents += 1;
       this.logger.warn(
         `Ignoring unsupported BPCP process event ${event.processId}:${event.version}`,
         'BpcpProcessEventProjectionService',
       );
-      return;
+      return { applied: false, duplicate: false };
     }
 
     const key = this.key(event.processId, event.version);
@@ -61,12 +68,12 @@ export class BpcpProcessEventProjectionService {
         lastEventType: event.type,
         updatedAt: event.occurredAt,
       };
-      return;
+      return { applied: true, duplicate: false };
     }
 
     if (event.type !== 'process.published' || event.status !== 'active') {
       this.ignoredEvents += 1;
-      return;
+      return { applied: false, duplicate: false };
     }
 
     const projection = {
@@ -85,6 +92,7 @@ export class BpcpProcessEventProjectionService {
     this.projections.set(key, projection);
     this.appliedEvents += 1;
     this.lastAppliedEvent = projection;
+    return { applied: true, duplicate: false };
   }
 
   getStatus() {
@@ -94,6 +102,7 @@ export class BpcpProcessEventProjectionService {
       activeProjectionCount: this.projections.size,
       appliedEvents: this.appliedEvents,
       ignoredEvents: this.ignoredEvents,
+      duplicateEvents: this.duplicateEvents,
       lastAppliedEvent: this.lastAppliedEvent,
       projections: Array.from(this.projections.values()).sort((a, b) => `${a.processId}:${a.version}`.localeCompare(`${b.processId}:${b.version}`)),
       blockers: this.blockers(),
@@ -169,6 +178,7 @@ export class BpcpProcessEventProjectionService {
     if (listEnv('CATALOG_BPCP_HOLIDAY_ELIGIBLE_CATEGORY_IDS').length === 0 && listEnv('CATALOG_BPCP_HOLIDAY_ELIGIBLE_TAGS').length === 0) {
       blockers.push('[MISSING: final holiday eligibility fact schema or configured category/tag allow-list]');
     }
+    blockers.push('[MISSING: durable BPCP event dedupe/projection store]');
     return blockers;
   }
 

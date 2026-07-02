@@ -9,6 +9,9 @@ const checks = [
     patterns: [
       'CATALOG_BPCP_EVENTS_CONSUMER_ENABLED',
       'bpcp.process.published.v1',
+      'bpcp.process.paused.v1',
+      'bpcp.process.retired.v1',
+      'routingKeys',
       'x-bpcp-signature',
       'x-dead-letter-exchange',
     ],
@@ -19,6 +22,8 @@ const checks = [
       'catalog.discount-eligibility-facts.v1',
       'holiday-discount-2026',
       '[MISSING: final holiday eligibility fact schema or configured category/tag allow-list]',
+      '[MISSING: durable BPCP event dedupe/projection store]',
+      'seenEventIds',
     ],
   },
   {
@@ -26,7 +31,8 @@ const checks = [
     patterns: [
       'CATALOG_BPCP_EVENTS_CONSUMER_ENABLED: "true"',
       'CATALOG_BPCP_EVENTS_EXCHANGE: "bpcp.events"',
-      'CATALOG_BPCP_EVENTS_ROUTING_KEY: "bpcp.process.published.v1"',
+      'CATALOG_BPCP_EVENTS_ROUTING_KEYS: "bpcp.process.published.v1,bpcp.process.paused.v1,bpcp.process.retired.v1"',
+      'CATALOG_BPCP_EVENTS_QUEUE: "catalog.bpcp.process-lifecycle.v1"',
     ],
   },
   {
@@ -41,7 +47,9 @@ const checks = [
     file: 'docs/business-process-control-plane/HOLIDAY_DISCOUNT_ADOPTION.md',
     patterns: [
       'catalog.discount-eligibility-facts.v1',
-      'catalog.bpcp.process-published.v1',
+      'catalog.bpcp.process-lifecycle.v1',
+      'bpcp.process.paused.v1',
+      'bpcp.process.retired.v1',
     ],
   },
 ];
