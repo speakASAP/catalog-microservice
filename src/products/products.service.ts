@@ -1,10 +1,19 @@
-import { ForbiddenException, Injectable, NotFoundException, Optional } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, In, IsNull, SelectQueryBuilder, EntityManager, Brackets } from 'typeorm';
 import { Product, ProductLifecycle } from "./product.entity";
 import { LoggerService } from '../logger/logger.service';
 import { PricingService } from '../pricing/pricing.service';
-import { CreateProductDto, UpdateProductDto, ProductQueryDto, type ProductCatalogScope, type ProductCatalogSource } from './dto';
+import {
+  CreateProductDto,
+  UpdateProductDto,
+  ProductQueryDto,
+  ProductQualityReviewActivateDto,
+  ProductQualityReviewExportQueryDto,
+  ProductQualityReviewQueryDto,
+  type ProductCatalogScope,
+  type ProductCatalogSource,
+} from './dto';
 import type { CatalogActor } from '../auth/catalog-auth.guard';
 import { CatalogAccessService, type CatalogSourceSettings } from '../catalog-access/catalog-access.service';
 import axios from "axios";
@@ -31,6 +40,9 @@ export type ProductQualityIssue = {
   field?: string;
 };
 
+const PRODUCT_QUALITY_POLICY_ID = 'catalog.product_quality.v1';
+const PRODUCT_QUALITY_MISSING_GENERATED_DESCRIPTION_STATE = '[MISSING: generated-description state contract]';
+
 export type ProductReadiness = {
   productId: string;
   sku: string;
@@ -47,7 +59,80 @@ export type ProductReadiness = {
     hasDescription: boolean;
     duplicateSku: boolean;
     duplicateEan: boolean;
+    hasSku: boolean;
+    hasTitle: boolean;
+    hasDescriptionRich: boolean;
+    hasNonPlaceholderImage: boolean;
   };
+};
+
+export type ProductQualityReviewIssue = ProductQualityIssue & {
+  source: typeof PRODUCT_QUALITY_POLICY_ID | 'goal02-readiness';
+};
+
+export type ProductQualityReviewItem = {
+  productId: string;
+  sku: string;
+  title: string;
+  ownerScope: string;
+  sourceScope: ProductCatalogSource;
+  lifecycle: ProductLifecycle;
+  isActive: boolean;
+  publishable: boolean;
+  canActivate: boolean;
+  completionScore: number;
+  blockingIssues: ProductQualityReviewIssue[];
+  blockingMissingFields: string[];
+  optionalOpportunities: ProductQualityReviewIssue[];
+  nextAction: string;
+  readiness: ProductReadiness;
+};
+
+export type ProductQualityReviewResponse = {
+  policyId: typeof PRODUCT_QUALITY_POLICY_ID;
+  blockers: string[];
+  items: ProductQualityReviewItem[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
+export type ProductQualityReviewExport = {
+  policyId: typeof PRODUCT_QUALITY_POLICY_ID;
+  format: 'json' | 'csv' | 'markdown';
+  generatedAt: string;
+  contentType: string;
+  blockers: string[];
+  items: ProductQualityReviewItem[];
+  content: ProductQualityReviewItem[] | string;
+};
+
+export type ProductQualityActivationResult = {
+  productId: string;
+  sku: string;
+  title: string;
+  success: boolean;
+  activated: boolean;
+  blocked: boolean;
+  lifecycleBefore: ProductLifecycle;
+  lifecycleAfter: ProductLifecycle;
+  blockingIssues: ProductQualityReviewIssue[];
+  nextAction: string;
+  quality: ProductQualityReviewItem;
+};
+
+export type ProductQualityActivationResponse = {
+  success: boolean;
+  policyId: typeof PRODUCT_QUALITY_POLICY_ID;
+  requestedProductIds: string[];
+  blockers: string[];
+  totals: {
+    requested: number;
+    activated: number;
+    blocked: number;
+    unchanged: number;
+  };
+  results: ProductQualityActivationResult[];
 };
 
 
@@ -795,6 +880,150 @@ export class ProductsService {
     return this.buildReadiness(product, duplicateSummary);
   }
 
+  async getProductQualityReview(
+    query: ProductQualityReviewQueryDto = {},
+    scope: ProductAccessScope = {},
+  ): Promise<ProductQualityReviewResponse> {
+    const page = Math.max(1, Number(query.page || 1));
+    const limit = Math.min(Math.max(1, Number(query.limit || 50)), 200);
+    const products = await this.findProductsForQualityReview(query, scope);
+    const items: ProductQualityReviewItem[] = [];
+
+    for (const product of products) {
+      items.push(await this.buildProductQualityReviewItem(product));
+    }
+
+    const filtered = items.filter((item) => this.matchesProductQualityReviewFilter(item, query));
+    const start = (page - 1) * limit;
+
+    return {
+      policyId: PRODUCT_QUALITY_POLICY_ID,
+      blockers: [PRODUCT_QUALITY_MISSING_GENERATED_DESCRIPTION_STATE],
+      items: filtered.slice(start, start + limit),
+      total: filtered.length,
+      page,
+      limit,
+    };
+  }
+
+  async exportProductQualityReview(
+    query: ProductQualityReviewExportQueryDto = {},
+    scope: ProductAccessScope = {},
+  ): Promise<ProductQualityReviewExport> {
+    const format = query.format || 'json';
+    const review = await this.getProductQualityReview({ ...query, page: 1, limit: 200 }, scope);
+    const generatedAt = new Date().toISOString();
+
+    if (format === 'csv') {
+      return {
+        policyId: PRODUCT_QUALITY_POLICY_ID,
+        format,
+        generatedAt,
+        contentType: 'text/csv',
+        blockers: review.blockers,
+        items: review.items,
+        content: this.productQualityReviewCsv(review.items),
+      };
+    }
+
+    if (format === 'markdown') {
+      return {
+        policyId: PRODUCT_QUALITY_POLICY_ID,
+        format,
+        generatedAt,
+        contentType: 'text/markdown',
+        blockers: review.blockers,
+        items: review.items,
+        content: this.productQualityReviewMarkdown(review.items, generatedAt),
+      };
+    }
+
+    return {
+      policyId: PRODUCT_QUALITY_POLICY_ID,
+      format: 'json',
+      generatedAt,
+      contentType: 'application/json',
+      blockers: review.blockers,
+      items: review.items,
+      content: review.items,
+    };
+  }
+
+  async activateProductsAfterQualityReview(
+    data: ProductQualityReviewActivateDto,
+    scope: ProductAccessScope = {},
+  ): Promise<ProductQualityActivationResponse> {
+    const productIds = this.normalizeBulkProductIds(data?.productIds || []);
+    if (!productIds.length) {
+      throw new BadRequestException('Product quality activation requires at least one product id');
+    }
+
+    if (productIds.length > 10 && data?.humanReview !== 'explicit') {
+      throw new BadRequestException('Activating more than 10 products requires humanReview: explicit');
+    }
+
+    const results: ProductQualityActivationResult[] = [];
+    for (const productId of productIds) {
+      const product = await this.findOneWithRepository(this.productRepository, productId, scope, 'mutate');
+      const quality = await this.buildProductQualityReviewItem(product);
+      const lifecycleBefore = this.resolveLifecycle(product);
+
+      if (!quality.canActivate) {
+        results.push({
+          productId: product.id,
+          sku: product.sku,
+          title: product.title,
+          success: false,
+          activated: false,
+          blocked: true,
+          lifecycleBefore,
+          lifecycleAfter: lifecycleBefore,
+          blockingIssues: quality.blockingIssues,
+          nextAction: quality.nextAction,
+          quality,
+        });
+        continue;
+      }
+
+      const alreadyActive = lifecycleBefore === 'active' && product.isActive !== false;
+      const saved = alreadyActive
+        ? product
+        : await this.update(product.id, { lifecycle: 'active', isActive: true }, scope);
+      const refreshedQuality = alreadyActive ? quality : await this.buildProductQualityReviewItem(saved);
+      const lifecycleAfter = this.resolveLifecycle(saved);
+
+      results.push({
+        productId: saved.id,
+        sku: saved.sku,
+        title: saved.title,
+        success: true,
+        activated: !alreadyActive,
+        blocked: false,
+        lifecycleBefore,
+        lifecycleAfter,
+        blockingIssues: [],
+        nextAction: alreadyActive ? 'already_active' : 'activated',
+        quality: refreshedQuality,
+      });
+    }
+
+    const activated = results.filter((result) => result.activated).length;
+    const blocked = results.filter((result) => result.blocked).length;
+    return {
+      success: blocked === 0,
+      policyId: PRODUCT_QUALITY_POLICY_ID,
+      requestedProductIds: productIds,
+      blockers: [PRODUCT_QUALITY_MISSING_GENERATED_DESCRIPTION_STATE],
+      totals: {
+        requested: productIds.length,
+        activated,
+        blocked,
+        unchanged: results.filter((result) => result.success && !result.activated).length,
+      },
+      results,
+    };
+  }
+
   async getQualityAudit(scope: ProductAccessScope = {}): Promise<ProductIdentifierAudit> {
     const missingEanRows = await this.productRepository
       .createQueryBuilder("product")
@@ -929,19 +1158,22 @@ export class ProductsService {
     return product.isActive === false ? "archived" : "active";
   }
 
-  private buildReadiness(
+  private async buildReadiness(
     product: Product,
     duplicateSummary: { duplicateSku: boolean; duplicateEan: boolean },
-  ): ProductReadiness {
+  ): Promise<ProductReadiness> {
     const lifecycle = this.resolveLifecycle(product);
+    const descriptionRichText = descriptionDocumentToPlainText(product.descriptionRich);
+    const hasSku = Boolean(product.sku?.trim());
+    const hasTitle = Boolean(product.title?.trim());
     const hasEan = Boolean(product.ean?.trim());
     const hasMedia = Boolean(product.media?.length);
     const hasPlaceholderMedia = Boolean(product.media?.some((media) => this.isPlaceholderMedia(media)));
-    const hasCurrentPrice = Boolean(
-      product.pricing?.some((price) => price.isActive && Number(price.salePrice ?? price.basePrice) > 0),
-    );
+    const hasNonPlaceholderImage = Boolean(product.media?.some((media) => this.isProductImageMedia(media) && !this.isPlaceholderMedia(media)));
+    const hasCurrentPrice = await this.hasPositiveCurrentPrice(product);
     const hasCategory = Boolean(product.categories?.length);
-    const hasDescription = Boolean(product.description?.trim());
+    const hasDescriptionRich = Boolean(descriptionRichText.trim());
+    const hasDescription = Boolean(product.description?.trim() || hasDescriptionRich);
     const issues: ProductQualityIssue[] = [];
 
     if (lifecycle === "archived") {
@@ -956,17 +1188,23 @@ export class ProductsService {
     if (!product.isActive) {
       issues.push({ code: "inactive_product", field: "isActive", severity: "blocking", message: "Inactive products are not sellable." });
     }
+    if (!hasSku) {
+      issues.push({ code: "missing_sku", field: "sku", severity: "blocking", message: "SKU is required for activation and publishability." });
+    }
+    if (!hasTitle) {
+      issues.push({ code: "missing_title", field: "title", severity: "blocking", message: "Title is required for activation and publishability." });
+    }
     if (!hasEan) {
       issues.push({ code: "missing_ean", field: "ean", severity: "warning", message: "EAN is missing." });
     }
     if (duplicateSummary.duplicateEan) {
-      issues.push({ code: "duplicate_ean", field: "ean", severity: "blocking", message: "EAN is shared by multiple products." });
+      issues.push({ code: "duplicate_ean", field: "ean", severity: "warning", message: "EAN is shared by multiple products." });
     }
     if (duplicateSummary.duplicateSku) {
       issues.push({ code: "duplicate_sku", field: "sku", severity: "blocking", message: "SKU is shared by multiple products." });
     }
     if (!hasDescription) {
-      issues.push({ code: "missing_description", field: "description", severity: "warning", message: "Description is missing." });
+      issues.push({ code: "missing_description", field: "description", severity: "blocking", message: `Description is required unless covered by ${PRODUCT_QUALITY_MISSING_GENERATED_DESCRIPTION_STATE}.` });
     }
     if (!hasCategory) {
       issues.push({ code: "missing_category", field: "categories", severity: "warning", message: "Product has no category." });
@@ -976,6 +1214,11 @@ export class ProductsService {
     }
     if (hasPlaceholderMedia) {
       issues.push({ code: "placeholder_media", field: "media", severity: "warning", message: "Product media appears to use a placeholder reference." });
+    }
+    if (!hasNonPlaceholderImage && hasPlaceholderMedia) {
+      issues.push({ code: "placeholder_image_only", field: "media", severity: "blocking", message: "Placeholder image media cannot satisfy product quality activation." });
+    } else if (!hasNonPlaceholderImage) {
+      issues.push({ code: "missing_image", field: "media", severity: "blocking", message: "At least one non-placeholder image is required for activation and publishability." });
     }
     if (!hasCurrentPrice) {
       issues.push({ code: "missing_current_price", field: "pricing", severity: "blocking", message: "Product has no active positive price." });
@@ -998,13 +1241,249 @@ export class ProductsService {
         hasDescription,
         duplicateSku: duplicateSummary.duplicateSku,
         duplicateEan: duplicateSummary.duplicateEan,
+        hasSku,
+        hasTitle,
+        hasDescriptionRich,
+        hasNonPlaceholderImage,
       },
     };
+  }
+
+  private async findProductsForQualityReview(
+    query: ProductQualityReviewQueryDto,
+    scope: ProductAccessScope,
+  ): Promise<Product[]> {
+    const { search, isActive, lifecycle, categoryId, catalogScope, catalogSources } = query;
+    const queryBuilder = this.productRepository.createQueryBuilder('product');
+
+    if (search) {
+      queryBuilder.where(
+        '(product.title ILIKE :search OR product.sku ILIKE :search OR product.brand ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    if (isActive !== undefined) {
+      queryBuilder.andWhere('product.isActive = :isActive', { isActive });
+    }
+
+    if (lifecycle) {
+      queryBuilder.andWhere('product.lifecycle = :lifecycle', { lifecycle });
+    }
+
+    await this.applyProductReadScope(queryBuilder, { ...scope, catalogScope, catalogSources });
+
+    if (categoryId) {
+      queryBuilder
+        .innerJoin('product.categories', 'category')
+        .andWhere('category.id = :categoryId', { categoryId });
+    }
+
+    return queryBuilder
+      .leftJoinAndSelect('product.categories', 'categories')
+      .leftJoinAndSelect('product.media', 'media')
+      .leftJoinAndSelect('product.pricing', 'pricing')
+      .orderBy('product.updatedAt', 'DESC')
+      .getMany();
+  }
+
+  private async buildProductQualityReviewItem(product: Product): Promise<ProductQualityReviewItem> {
+    const duplicateSummary = await this.getDuplicateSummaryForProduct(product);
+    const readiness = await this.buildReadiness(product, duplicateSummary);
+    const blockingIssues = this.productQualityActivationBlockers(readiness).map((issue) => this.asProductQualityReviewIssue(issue));
+    const optionalOpportunities = this.productQualityOptionalOpportunities(product, readiness);
+    const blockingMissingFields = Array.from(new Set(blockingIssues.map((issue) => this.productQualityFieldKey(issue))));
+
+    return {
+      productId: product.id,
+      sku: product.sku,
+      title: product.title,
+      ownerScope: this.maskOwnerScope(product.ownerUserId),
+      sourceScope: this.productSourceScope(product),
+      lifecycle: readiness.lifecycle,
+      isActive: product.isActive !== false,
+      publishable: readiness.publishable,
+      canActivate: blockingIssues.length === 0,
+      completionScore: this.productQualityCompletionScore(blockingIssues, optionalOpportunities),
+      blockingIssues,
+      blockingMissingFields,
+      optionalOpportunities,
+      nextAction: this.productQualityNextAction(blockingIssues),
+      readiness,
+    };
+  }
+
+  private productQualityActivationBlockers(readiness: ProductReadiness): ProductQualityIssue[] {
+    return readiness.issues.filter((issue) => {
+      if (issue.severity !== 'blocking') {
+        return false;
+      }
+      return !['draft_product', 'needs_review', 'inactive_product'].includes(issue.code);
+    });
+  }
+
+  private productQualityOptionalOpportunities(product: Product, readiness: ProductReadiness): ProductQualityReviewIssue[] {
+    const opportunities = readiness.issues
+      .filter((issue) => issue.severity !== 'blocking')
+      .map((issue) => this.asProductQualityReviewIssue(issue, 'goal02-readiness'));
+
+    if (!product.brand?.trim()) {
+      opportunities.push(this.asProductQualityReviewIssue({
+        code: 'missing_brand',
+        field: 'brand',
+        severity: 'warning',
+        message: 'Brand is missing.',
+      }));
+    }
+    if (!product.manufacturer?.trim()) {
+      opportunities.push(this.asProductQualityReviewIssue({
+        code: 'missing_manufacturer',
+        field: 'manufacturer',
+        severity: 'warning',
+        message: 'Manufacturer is missing.',
+      }));
+    }
+    if (!Array.isArray(product.tags) || product.tags.length === 0) {
+      opportunities.push(this.asProductQualityReviewIssue({
+        code: 'missing_tags',
+        field: 'tags',
+        severity: 'warning',
+        message: 'Tags are missing.',
+      }));
+    }
+
+    return opportunities;
+  }
+
+  private asProductQualityReviewIssue(
+    issue: ProductQualityIssue,
+    source: typeof PRODUCT_QUALITY_POLICY_ID | 'goal02-readiness' = PRODUCT_QUALITY_POLICY_ID,
+  ): ProductQualityReviewIssue {
+    return { ...issue, source };
+  }
+
+  private matchesProductQualityReviewFilter(item: ProductQualityReviewItem, query: ProductQualityReviewQueryDto): boolean {
+    const missingField = String(query.missingField || '').trim();
+    if (missingField && missingField !== 'any') {
+      const issues = query.severity === 'optional' ? item.optionalOpportunities : item.blockingIssues;
+      if (!issues.some((issue) => issue.code === missingField || issue.field === missingField || this.productQualityFieldKey(issue) === missingField)) {
+        return false;
+      }
+    }
+
+    if (query.severity === 'blocking') {
+      return item.blockingIssues.length > 0;
+    }
+    if (query.severity === 'optional') {
+      return item.optionalOpportunities.length > 0;
+    }
+    return true;
+  }
+
+  private productQualityCompletionScore(
+    blockingIssues: ProductQualityReviewIssue[],
+    optionalOpportunities: ProductQualityReviewIssue[],
+  ): number {
+    const requiredFields = new Set(['sku', 'title', 'description', 'price', 'image']);
+    for (const issue of blockingIssues) {
+      requiredFields.delete(this.productQualityFieldKey(issue));
+    }
+    const requiredScore = (requiredFields.size / 5) * 85;
+    const optionalPenalty = Math.min(optionalOpportunities.length * 3, 15);
+    return Math.max(0, Math.round(requiredScore + 15 - optionalPenalty));
+  }
+
+  private productQualityNextAction(blockingIssues: ProductQualityReviewIssue[]): string {
+    if (!blockingIssues.length) {
+      return 'ready_for_activation';
+    }
+    const fields = Array.from(new Set(blockingIssues.map((issue) => this.productQualityFieldKey(issue)))).join(',');
+    return `resolve_blockers:${fields}`;
+  }
+
+  private productQualityFieldKey(issue: ProductQualityIssue): string {
+    if (issue.code === 'missing_current_price') {
+      return 'price';
+    }
+    if (issue.code === 'missing_image' || issue.code === 'placeholder_image_only') {
+      return 'image';
+    }
+    return issue.field || issue.code;
+  }
+
+  private maskOwnerScope(ownerUserId: string | null | undefined): string {
+    if (!ownerUserId) {
+      return 'alfares';
+    }
+    const value = String(ownerUserId);
+    if (value.length <= 8) {
+      return 'owner:masked';
+    }
+    return `owner:${value.slice(0, 4)}...${value.slice(-4)}`;
+  }
+
+  private productSourceScope(product: Product): ProductCatalogSource {
+    if (!product.ownerUserId) {
+      return 'alfares';
+    }
+    return product.resaleEnabled ? 'community' : 'own';
+  }
+
+  private productQualityReviewCsv(items: ProductQualityReviewItem[]): string {
+    const rows = [
+      ['productId', 'sku', 'title', 'ownerScope', 'sourceScope', 'lifecycle', 'blockingMissingFields', 'optionalOpportunities', 'completionScore', 'canActivate', 'nextAction'],
+      ...items.map((item) => [
+        item.productId,
+        item.sku,
+        item.title,
+        item.ownerScope,
+        item.sourceScope,
+        item.lifecycle,
+        item.blockingMissingFields.join('|'),
+        item.optionalOpportunities.map((issue) => issue.code).join('|'),
+        String(item.completionScore),
+        String(item.canActivate),
+        item.nextAction,
+      ]),
+    ];
+    return rows.map((row) => row.map((value) => this.csvCell(value)).join(',')).join('\n');
+  }
+
+  private productQualityReviewMarkdown(items: ProductQualityReviewItem[], generatedAt: string): string {
+    const lines = [
+      '# Product Quality Review',
+      '',
+      `Generated at: ${generatedAt}`,
+      '',
+      '| Product | SKU | Lifecycle | Blockers | Next action |',
+      '|---|---|---|---|---|',
+    ];
+    for (const item of items) {
+      lines.push(`| ${this.markdownCell(item.title)} | ${this.markdownCell(item.sku)} | ${item.lifecycle} | ${this.markdownCell(item.blockingMissingFields.join(', ') || 'none')} | ${this.markdownCell(item.nextAction)} |`);
+    }
+    return lines.join('\n');
+  }
+
+  private csvCell(value: unknown): string {
+    return `"${String(value ?? '').replace(/"/g, '""')}"`;
+  }
+
+  private markdownCell(value: unknown): string {
+    return String(value ?? '').replace(/\|/g, '\\|').replace(/\n/g, ' ');
   }
 
   private isPlaceholderMedia(media: { url?: string; title?: string; altText?: string }): boolean {
     const value = [media.url, media.title, media.altText].filter(Boolean).join(" ").toLowerCase();
     return ["placeholder", "no-image", "missing-image", "image-coming-soon"].some((marker) => value.includes(marker));
+  }
+
+  private isProductImageMedia(media: { type?: string; url?: string; thumbnailUrl?: string }): boolean {
+    return String(media.type || '').toLowerCase() === 'image' && Boolean((media.url || media.thumbnailUrl || '').trim());
+  }
+
+  private async hasPositiveCurrentPrice(product: Product): Promise<boolean> {
+    const price = await this.resolveCurrentPrice(product);
+    return Number.isFinite(price) && Number(price) > 0;
   }
 
   private async getDuplicateSummaryForProduct(product: Product): Promise<{ duplicateSku: boolean; duplicateEan: boolean }> {

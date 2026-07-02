@@ -94,3 +94,65 @@ Result:
 - Row count after migration: `0`.
 - Deployment: not run.
 - Runtime API smoke: not run because the application code is not deployed.
+
+## Deploy Attempt And Runtime Block Evidence
+
+Date: 2026-07-02
+
+Approved action: deploy and continue validation after additive migrations.
+
+Additional validation before deploy:
+
+- `npm test -- --runInBand src/product-relations/product-relations.service.spec.ts src/marketplace-fields/marketplace-fields.service.spec.ts`: passed, 2 suites and 8 tests.
+- `npm run build`: passed.
+- `cd services/frontend && npm run build`: passed with the existing Next.js multiple-lockfile warning only.
+- `git diff --check`: passed.
+
+Additional migrations applied and verified:
+
+- `scripts/migrations/20260702_marketplace_manual_overrides.sql`: `product_marketplace_profiles.manual_overrides` and `source_state` columns exist; GIN indexes exist.
+- `scripts/migrations/20260702_catalog_product_event_outbox.sql`: `catalog_product_event_outbox` table exists with 9 indexes and 0 rows.
+
+Deploy evidence:
+
+- `./scripts/deploy.sh` built and pushed `localhost:5000/catalog-microservice:9f89315` and completed its initial rollout/health phase.
+- `./scripts/deploy-frontend.sh` built and pushed `localhost:5000/catalog-frontend:a8b1675` and completed its initial rollout phase.
+- A concurrent Catalog deploy later advanced the repository/runtime target to a newer intermediate commit; final runtime state could not be stabilized inside this session because the Kubernetes node became unavailable.
+
+Runtime evidence before infrastructure failure:
+
+- `https://catalog.alfares.cz/health`: initially returned HTTP 200.
+- Anonymous `GET /api/products/00000000-0000-4000-8000-000000000001/related`: initially returned HTTP 401, preserving the protected endpoint boundary.
+
+Current runtime blocker:
+
+- `kubectl get nodes`: `alfares NotReady`.
+- `kubectl -n statex-apps get deploy catalog-microservice catalog-frontend`: both report `0/1` available.
+- External `https://catalog.alfares.cz/health`: HTTP 503 `no available server`.
+- k3s journal repeatedly reports `Waiting for containerd startup` for `/run/k3s/containerd/containerd.sock`.
+- `systemctl restart k3s` and `sudo -n systemctl restart k3s` are unavailable to the current SSH user because interactive admin authentication is required.
+
+Boundary check update:
+
+- No relation rows or outbox rows were inserted.
+- No Orders/Payments/Warehouse mutation was run.
+- No marketplace/channel publication was run.
+- No secrets or token values were printed.
+- No destructive process kill or forced k3s restart workaround was performed.
+
+Remaining blockers:
+
+- `[MISSING: operator-level k3s/containerd recovery]`
+- `[MISSING: completed Catalog rollout after node readiness]`
+- `[MISSING: protected non-mutating related-products runtime smoke after rollout]`
+
+## Recovery Follow-up Evidence
+
+Date: 2026-07-02
+
+- k3s briefly returned `active` and node `alfares Ready`.
+- Stuck `Terminating` application pod API records in `statex-apps` were force-deleted to free pod slots. DB, MinIO, Redis, PVCs, deployments, services, secrets, configmaps, and volumes were not deleted.
+- Catalog pods moved from unschedulable `Too many pods` to scheduled `ContainerCreating`, but still have no pod IPs and no service endpoints.
+- `kube-system` pods such as `coredns`, `metrics-server`, and `local-path-provisioner` are also stuck in `ContainerCreating`.
+- External Catalog health currently returns Cloudflare HTTP 521.
+- Remaining blocker is node runtime/CNI/containerd recovery requiring operator/root access, not Catalog source validation.

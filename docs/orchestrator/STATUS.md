@@ -1,3 +1,27 @@
+## 2026-07-02 - Goal 24/25 Deploy Recovery Follow-up
+
+Change: after k3s briefly returned `Ready`, removed only stuck `Terminating` application pod API records in `statex-apps` with `kubectl delete pod --force --grace-period=0` to free the single-node pod limit. No DB, MinIO, Redis, PVC, deployment, service, secret, configmap, or stateful volume was deleted.
+
+Validation evidence: pod slots freed enough for Catalog pods to move from unschedulable `Too many pods` to scheduled `ContainerCreating`, but Catalog backend/frontend endpoints remained empty. `kube-system` pods including `coredns`, `metrics-server`, and `local-path-provisioner` are also stuck in `ContainerCreating`, proving the remaining outage is k3s/containerd/CNI node runtime recovery, not Catalog application code.
+
+Current runtime state: `systemctl is-active k3s` returns `active` and `kubectl get nodes` returns `alfares Ready`, but most pods are still `ContainerCreating`/init states without pod IPs; external `https://catalog.alfares.cz/health` returns Cloudflare HTTP 521. k3s logs show node relationship/status-manager errors for old pods and container runtime `NotFound` cleanup errors after the unclean restart.
+
+Boundary decision: no root-level service restart, no host process kill, no secret/token read, no product/order/payment/warehouse mutation, and no marketplace publication was performed. Remaining repair requires operator-level access to restart/clean k3s/containerd/CNI state safely.
+
+Next action: use an operator/root-capable session to repair k3s/containerd/CNI, then rerun Catalog rollout, external health, anonymous 401 guard, and protected non-mutating related-products smoke.
+
+## 2026-07-02 - Goal 24/25 Catalog Deploy Attempt And Infrastructure Block
+
+Change: after owner approval, applied the additive Goal 25 migration `scripts/migrations/20260702_marketplace_manual_overrides.sql` and the already-present product event outbox migration `scripts/migrations/20260702_catalog_product_event_outbox.sql` in addition to the previously applied Goal 24 `product_relations` migration. Backend source validation passed for product-relations and marketplace-fields focused Jest, backend `npm run build`, frontend `npm run build`, and `git diff --check`. Catalog backend deploy built and pushed `localhost:5000/catalog-microservice:9f89315` successfully; Catalog frontend deploy built and pushed `localhost:5000/catalog-frontend:a8b1675` successfully. A concurrent Catalog deploy later advanced the repo/runtime target to `363f50c`/intermediate deployment state.
+
+Validation evidence: DB schema verification confirmed `product_relations` exists with 7 indexes, 9 constraints, and 0 rows; `product_marketplace_profiles.manual_overrides` and `source_state` exist with their GIN indexes; `catalog_product_event_outbox` exists with 9 indexes and 0 rows. External runtime checks initially returned Catalog `/health` 200 and protected related-products anonymous request 401 as expected.
+
+Infrastructure block: during final rollout validation, the single-node k3s cluster moved to `NotReady`; `kubectl get nodes` reports `alfares NotReady`, Catalog backend/frontend deployments report `0/1` available, and external `https://catalog.alfares.cz/health` returns HTTP 503 `no available server`. k3s logs show repeated `Waiting for containerd startup` against `/run/k3s/containerd/containerd.sock`; `systemctl restart k3s` and `sudo -n systemctl restart k3s` are not available to this SSH user because interactive admin authentication is required. No destructive process kill or credential workaround was performed.
+
+Boundary decision: migrations were additive only and inserted no relation/outbox rows. No Orders/Payments/Warehouse mutation, no bundle checkout behavior, no marketplace publication, no secret/token printing, and no forced k3s restart/kill was performed. Protected in-pod relation endpoint smoke remains blocked by Kubernetes node/runtime readiness, not by source build validation.
+
+Next action: restore k3s/node readiness with an operator account that can restart or repair k3s/containerd, let the active Catalog rollout finish, then rerun Catalog health, frontend, anonymous 401 guard, and protected non-mutating related-products smoke.
+
 ## 2026-07-02 - Goal 24 Product Relations Runtime Migration
 
 Change: applied additive Catalog migration `scripts/migrations/20260702_product_relation_scores.sql` to `catalog_db` after owner approval. The migration created `product_relations`, relation constraints, and relation indexes. It does not ingest Orders, create bundles, change checkout, mutate stock, publish to channels, or insert relation rows.

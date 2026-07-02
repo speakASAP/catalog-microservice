@@ -296,8 +296,149 @@ describe("ProductsService product readiness", () => {
       "missing_description",
       "missing_category",
       "missing_media",
+      "missing_image",
       "missing_current_price",
     ]));
+    expect(readiness.issues.find((issue) => issue.code === "missing_description")?.severity).toBe("blocking");
+  });
+
+  it("returns a Goal 25 product quality review item with mandatory blockers", async () => {
+    const product = {
+      id: "product-quality-1",
+      sku: "SKU-QUALITY-001",
+      title: "Quality product",
+      ownerUserId: "seller-quality-1234",
+      resaleEnabled: false,
+      isActive: true,
+      lifecycle: "active",
+      ean: null,
+      description: "",
+      descriptionRich: null,
+      brand: "",
+      manufacturer: "",
+      tags: [],
+      categories: [],
+      media: [{ type: "image", url: "https://cdn.example/placeholder.jpg", title: "placeholder" }],
+      pricing: [],
+    } as unknown as Product;
+    const queryBuilder: any = {
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      innerJoin: jest.fn().mockReturnThis(),
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      getMany: jest.fn(async () => [product]),
+    };
+    const repository = {
+      createQueryBuilder: jest.fn(() => queryBuilder),
+      count: jest.fn(async () => 1),
+    };
+    const service = new ProductsService(repository as any, logger as any);
+
+    const review = await service.getProductQualityReview({ page: 1, limit: 20 });
+
+    expect(review.policyId).toBe("catalog.product_quality.v1");
+    expect(review.blockers).toContain("[MISSING: generated-description state contract]");
+    expect(review.total).toBe(1);
+    expect(review.items[0]).toMatchObject({
+      productId: "product-quality-1",
+      ownerScope: "owner:sell...1234",
+      sourceScope: "own",
+      canActivate: false,
+    });
+    expect(review.items[0].blockingIssues.map((issue) => issue.code)).toEqual(expect.arrayContaining([
+      "missing_description",
+      "placeholder_image_only",
+      "missing_current_price",
+    ]));
+    expect(review.items[0].blockingMissingFields).toEqual(expect.arrayContaining(["description", "image", "price"]));
+    expect(review.items[0].optionalOpportunities.map((issue) => issue.code)).toEqual(expect.arrayContaining([
+      "missing_ean",
+      "missing_category",
+      "missing_brand",
+      "missing_manufacturer",
+    ]));
+  });
+
+  it("fails closed when quality activation blockers remain", async () => {
+    const product = {
+      id: "product-quality-blocked",
+      sku: "SKU-BLOCKED",
+      title: "Blocked product",
+      ownerUserId: "seller-1",
+      resaleEnabled: false,
+      isActive: false,
+      lifecycle: "draft",
+      ean: null,
+      description: "",
+      descriptionRich: null,
+      categories: [],
+      media: [],
+      pricing: [],
+    } as unknown as Product;
+    const repository = {
+      findOne: jest.fn(async () => product),
+      count: jest.fn(async () => 1),
+      save: jest.fn(async (data) => data),
+    };
+    const service = new ProductsService(repository as any, logger as any);
+
+    const result = await service.activateProductsAfterQualityReview(
+      { productIds: ["product-quality-blocked"] },
+      { actor: { type: "jwt", sub: "seller-1", roles: [], authMethod: "auth-validate" } },
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.totals.blocked).toBe(1);
+    expect(repository.save).not.toHaveBeenCalled();
+    expect(result.results[0].blockingIssues.map((issue) => issue.code)).toEqual(expect.arrayContaining([
+      "missing_description",
+      "missing_image",
+      "missing_current_price",
+    ]));
+  });
+
+  it("activates draft products only after mandatory quality blockers pass", async () => {
+    const product = {
+      id: "product-quality-ready",
+      sku: "SKU-READY",
+      title: "Ready product",
+      ownerUserId: "seller-1",
+      resaleEnabled: false,
+      isActive: false,
+      lifecycle: "draft",
+      ean: null,
+      description: "Ready description",
+      descriptionRich: null,
+      categories: [],
+      media: [{ type: "image", url: "https://cdn.example/image.jpg" }],
+      pricing: [{ isActive: true, basePrice: 120 }],
+    } as unknown as Product;
+    const repository = {
+      findOne: jest.fn(async () => product),
+      count: jest.fn(async () => 1),
+      save: jest.fn(async (data) => ({ ...data })),
+    };
+    const service = new ProductsService(repository as any, logger as any);
+
+    const result = await service.activateProductsAfterQualityReview(
+      { productIds: ["product-quality-ready"] },
+      { actor: { type: "jwt", sub: "seller-1", roles: [], authMethod: "auth-validate" } },
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.totals.activated).toBe(1);
+    expect(repository.save).toHaveBeenCalledWith(expect.objectContaining({
+      lifecycle: "active",
+      isActive: true,
+    }));
+    expect(result.results[0]).toMatchObject({
+      success: true,
+      activated: true,
+      blocked: false,
+      lifecycleBefore: "draft",
+      lifecycleAfter: "active",
+    });
   });
 
 

@@ -16,7 +16,16 @@ import {
   Req,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
-import { CreateProductDto, UpdateProductDto, ProductQueryDto, type ProductCatalogScope, type ProductCatalogSource } from './dto';
+import {
+  CreateProductDto,
+  UpdateProductDto,
+  ProductQueryDto,
+  ProductQualityReviewActivateDto,
+  ProductQualityReviewExportQueryDto,
+  ProductQualityReviewQueryDto,
+  type ProductCatalogScope,
+  type ProductCatalogSource,
+} from './dto';
 import { LoggerService } from '../logger/logger.service';
 import { CatalogAuthGuard } from '../auth/catalog-auth.guard';
 import type { CatalogAuthenticatedRequest } from '../auth/catalog-auth.guard';
@@ -116,6 +125,75 @@ export class ProductsController {
     this.logger.log("GET /api/products/audits/quality", "ProductsController");
     const audit = await this.productsService.getQualityAudit(this.productScope(request));
     return { success: true, data: audit };
+  }
+
+  /**
+   * Get product quality review queue
+   * GET /api/products/review/quality
+   */
+  @Get("review/quality")
+  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
+  async qualityReview(
+    @Query() query: ProductQualityReviewQueryDto,
+    @Req() request: CatalogAuthenticatedRequest,
+  ) {
+    this.logger.log("GET /api/products/review/quality", "ProductsController");
+    const result = await this.productsService.getProductQualityReview(query, this.productScope(request, query.catalogScope, query.catalogSources));
+    return {
+      success: true,
+      data: result.items,
+      policyId: result.policyId,
+      blockers: result.blockers,
+      pagination: {
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+        pages: Math.ceil(result.total / result.limit),
+      },
+    };
+  }
+
+  /**
+   * Export product quality review report
+   * GET /api/products/review/quality/export
+   */
+  @Get("review/quality/export")
+  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
+  async qualityReviewExport(
+    @Query() query: ProductQualityReviewExportQueryDto,
+    @Req() request: CatalogAuthenticatedRequest,
+  ) {
+    this.logger.log("GET /api/products/review/quality/export", "ProductsController");
+    const report = await this.productsService.exportProductQualityReview(query, this.productScope(request, query.catalogScope, query.catalogSources));
+    return { success: true, data: report };
+  }
+
+  /**
+   * Activate products after product quality review
+   * POST /api/products/review/activate
+   */
+  @Post("review/activate")
+  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
+  async activateAfterQualityReview(
+    @Body() data: ProductQualityReviewActivateDto,
+    @Req() request: CatalogAuthenticatedRequest,
+  ) {
+    this.logger.log("POST /api/products/review/activate", "ProductsController");
+    const result = await this.productsService.activateProductsAfterQualityReview(data, this.productScope(request));
+    this.logger.auditCatalogWrite(request, {
+      action: 'product_quality_review_activate',
+      resourceType: 'product_group',
+      resourceId: 'product-quality-review-activate',
+      metadata: {
+        productCount: result.requestedProductIds.length,
+        activated: result.totals.activated,
+        blocked: result.totals.blocked,
+      },
+    });
+    return { success: result.success, data: result };
   }
 
   /**

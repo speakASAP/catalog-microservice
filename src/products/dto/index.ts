@@ -196,3 +196,33 @@ export class ProductQueryDto {
   @IsIn(['own', 'alfares', 'community'], { each: true })
   catalogSources?: ProductCatalogSource[];
 }
+
+export class ProductQualityReviewQueryDto extends ProductQueryDto {
+  @IsOptional()
+  @IsString()
+  missingField?: string;
+
+  @IsOptional()
+  @IsIn(['blocking', 'optional'])
+  severity?: 'blocking' | 'optional';
+}
+
+export class ProductQualityReviewExportQueryDto extends ProductQualityReviewQueryDto {
+  @IsOptional()
+  @IsIn(['json', 'csv', 'markdown'])
+  format?: 'json' | 'csv' | 'markdown';
+}
+
+export class ProductQualityReviewActivateDto {
+  @IsArray()
+  @IsUUID('4', { each: true })
+  productIds: string[];
+
+  @IsString()
+  @IsOptional()
+  humanReview?: string;
+
+  @IsString()
+  @IsOptional()
+  reason?: string;
+}

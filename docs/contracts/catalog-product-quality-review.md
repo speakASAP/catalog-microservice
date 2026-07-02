@@ -2,13 +2,13 @@
 
 ```yaml
 id: CONTRACT-CATALOG-PRODUCT-QUALITY-REVIEW-v1
-status: draft
+status: source-slice-implemented
 owner: catalog contract owner
 created: 2026-07-02
 last_updated: 2026-07-02
 source_goal: implementation-goals/GOAL-25-product-quality-review-admin.md
 execution_plan: implementation-goals/GOAL-25-product-quality-review-admin-execution-plan.md
-completeness_level: pre-coding
+completeness_level: backend-policy-api-slice
 ```
 
 ## Intent Preservation Chain
@@ -21,17 +21,17 @@ System: Catalog owns product truth and readiness. Warehouse owns stock quantitie
 
 Feature: Product Quality Review Admin exposes a mandatory product-quality policy, review queue, owner report, guarded bulk updates, and activation gate.
 
-Task: Implement Goal 25 only after this policy contract and execution plan are accepted by the pre-coding gate.
+Task: Implement the backend Product Quality Review policy/API first so channel consumers can later rely on a stable Catalog blocker contract.
 
 Execution Plan: `implementation-goals/GOAL-25-product-quality-review-admin-execution-plan.md`.
 
 Coding Prompt: Worker prompts are defined in `docs/orchestrator/2026-07-02-product-quality-review-admin-cross-repo-plan.md` and refined by the execution plan.
 
-Code: `[MISSING: implementation not started]`.
+Code: `src/products/products.service.ts`, `src/products/products.controller.ts`, `src/products/dto/index.ts`, `src/products/products.service.spec.ts`.
 
-Validation: `[MISSING: source validation not run because W0 is planning only]`.
+Validation: `reports/validation/VAL-GOAL-25-product-quality-review-admin.md`.
 
-State Update: `[MISSING: implementation state update after W1-W5 evidence]`.
+State Update: `[MISSING: orchestrator-owned docs/IMPLEMENTATION_STATE.md and docs/orchestrator/STATUS.md update after concurrent dirty state is integrated]`.
 
 ## Policy Version
 
@@ -52,10 +52,10 @@ A product cannot be globally active or publishable while any of these checks fai
 
 | Field | Pass condition | Failure code | Notes |
 |---|---|---|---|
-| SKU | non-empty SKU unique within owner/source scope | `missing_sku`, `duplicate_sku` | Scope source is `[UNKNOWN: final owner/source uniqueness expression]`; implementation must inspect existing owner/source fields before coding. |
+| SKU | non-empty SKU unique within owner/source scope | `missing_sku`, `duplicate_sku` | Current backend expression is `sku + ownerUserId`, with `ownerUserId IS NULL` as the Alfares shared source scope. |
 | Title | non-empty title after trimming | `missing_title` | Does not require marketplace-specific title optimization. |
 | Description | `description` or `descriptionRich` present, or generated-description workflow state proves pending/generated coverage | `missing_description` | Generated-description state source is `[MISSING: generated description state source]`; until proven, implementation must fail closed or add an explicit state under the execution plan. |
-| Price | active current pricing row with positive `salePrice` or `basePrice` | `missing_price`, `invalid_price` | Must reuse Goal 03 deterministic current-price and mass-pricing guard behavior. |
+| Price | active current pricing row with positive `salePrice` or `basePrice` | `missing_current_price` | Backend evaluator reuses the existing current-price resolver path. |
 | Image | at least one media image with non-placeholder URL/object reference | `missing_image`, `placeholder_image_only` | Media must remain URL/object reference, never inline blob. |
 | Lifecycle | `active` only after all blocking checks pass; otherwise `draft` for incomplete imports/new records or `needs_review` for reviewed existing records | `invalid_lifecycle_for_quality` | Existing products should not be silently archived or deleted. |
 
@@ -82,7 +82,7 @@ If a channel requires one of these fields, implement that as channel-specific re
 
 ## Additive API Contract
 
-Goal 25 may add authenticated routes under the existing Catalog API surface. Exact controller paths must follow existing route conventions after W1 inspection.
+Goal 25 adds authenticated routes under the existing Catalog API surface. These are additive and do not change existing product read envelopes.
 
 ### Review Queue
 
@@ -166,6 +166,34 @@ Behavior:
 - Returns per-product blockers for failures.
 - Requires human review marker when the execution plan or existing safety policy requires it.
 - Must not publish to marketplaces or call channel publish actions.
+- Bulk activation of more than 10 product IDs requires `humanReview: "explicit"`.
+
+Implemented response fields:
+
+- `policyId`: `catalog.product_quality.v1`
+- `requestedProductIds`
+- `blockers`: currently includes `[MISSING: generated-description state contract]`
+- `totals`: requested, activated, blocked, unchanged
+- `results[]`: product id, sku, title, success/activated/blocked, lifecycle before/after, blockingIssues, nextAction, quality item
+
+## Backend Source Slice Status
+
+Implemented in this slice:
+
+- `GET /api/products/review/quality`
+- `GET /api/products/review/quality/export`
+- `POST /api/products/review/activate`
+- shared `catalog.product_quality.v1` blocker evaluation extending the existing Goal 02 readiness diagnostics
+- fail-closed missing-description behavior because no generated-description state contract exists in the source
+- activation gate that ignores draft/inactive status as promotion candidates but blocks archived products and mandatory data failures
+
+Deferred:
+
+- `[MISSING: bulk update endpoint implementation]`
+- `[MISSING: validate:product-quality script/reporting implementation]`
+- `[MISSING: admin frontend product review page]`
+- `[MISSING: importer draft gate and channel consumer implementation]`
+- `[MISSING: generated-description state contract]`
 
 ## Validation Script Contract
 
@@ -210,7 +238,6 @@ Machine row minimum shape:
 ## Open Unknowns
 
 - `[MISSING: docs-rag JWT_TOKEN]`
-- `[MISSING: generated description state source]`
-- `[UNKNOWN: final owner/source uniqueness expression for SKU]`
+- `[MISSING: generated-description state contract]`
 - `[UNKNOWN: final admin route path, /dashboard/admin/product-review or /dashboard/product-review]`
 - `[UNKNOWN: production-safe unmasked owner report approval process]`

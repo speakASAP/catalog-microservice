@@ -2,21 +2,21 @@
 
 ```yaml
 id: EP-CATALOG-25-PRODUCT-QUALITY-REVIEW-ADMIN
-status: draft
+status: backend-policy-api-slice-implemented
 source_goal: implementation-goals/GOAL-25-product-quality-review-admin.md
 policy_contract: docs/contracts/catalog-product-quality-review.md
 cross_repo_plan: docs/orchestrator/2026-07-02-product-quality-review-admin-cross-repo-plan.md
 owner: catalog orchestrator
 created: 2026-07-02
 last_updated: 2026-07-02
-completeness_level: pre-coding
+completeness_level: partial-source-validation
 ```
 
 ## Metadata
 
 Branch: `main` currently has existing dirty work. Implementation should use an isolated branch or worktree after W0 is accepted and current Goal 24/source changes are isolated.
 
-Lifecycle state: planning-only W0. No product source, frontend source, migration, deployment, or runtime mutation is authorized by this execution plan until the pre-coding gate passes.
+Lifecycle state: W1 backend policy/API source slice implemented without deployment. Frontend, validation script, importer/channel consumers, runtime smoke, and deployment remain dependency-gated.
 
 Filename note: this plan intentionally uses a product-quality-specific filename because `implementation-goals/GOAL-25-execution-plan.md` is already occupied by a concurrent dirty Goal 25 canonical-json propagation lane.
 
@@ -159,6 +159,18 @@ cd services/frontend && npm run build
 npm run validate:product-quality -- --format json --out reports/validation/product-quality-audit.json
 ```
 
+W1 source-slice validation completed in `reports/validation/VAL-GOAL-25-product-quality-review-admin.md`:
+
+- `npm test -- --runInBand src/products/products.service.spec.ts` passed, 1 suite / 37 tests.
+- `npm run build` passed.
+- `git diff --check` passed.
+
+Deferred validation:
+
+- `[MISSING: validate:product-quality script/reporting implementation]`
+- `[MISSING: frontend build for admin review UI because UI is not implemented in this slice]`
+- `[MISSING: runtime smoke/deploy approval]`
+
 Runtime validation after explicit deploy approval only:
 
 ```bash
@@ -213,12 +225,12 @@ You are implementing Catalog Goal 25 Product Quality Review Admin. Work only on 
 
 ## Completion Checklist
 
-- [ ] W0 pre-coding gate accepted
-- [ ] Backend evaluator/API implemented
-- [ ] Validation script/report implemented
+- [x] W0 pre-coding gate accepted
+- [x] Backend evaluator/API implemented
+- [ ] Validation script/report implemented (`[MISSING: validate:product-quality script/reporting implementation]`)
 - [ ] Frontend admin review UI implemented
 - [ ] Import/channel consumer blockers verified
-- [ ] Tests complete
-- [ ] Validation evidence collected
-- [ ] Documentation updated
-- [ ] Deviations documented
+- [x] Focused backend tests complete
+- [x] W1 validation evidence collected
+- [x] Goal 25 contract/report documentation updated
+- [x] Deviations documented for deferred bulk update, validation script, frontend, importer/channel consumers, generated-description state, and runtime deploy approval
