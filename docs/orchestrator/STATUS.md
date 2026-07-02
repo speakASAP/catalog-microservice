@@ -1768,3 +1768,31 @@ Final sweep addendum:
 - Heureka was observed clean at `cf14a73 fix: recognize zero-stock feed exclusions` with live service/api-gateway deployments on tag `cf14a73`, superseding the earlier `7ea1f79` deploy evidence from this run.
 - FlipFlop was observed at `c0d20d7 chore: update generatedAt timestamp in orders readiness smoke report`; live deployments remained ready=1 updated=1 available=1. Untracked `services/frontend/lib/hooks/useVisiblePolling.ts` was unrelated and left untouched.
 - Aukro retained unrelated dirty `services/aukro-service/src/ui/ui.controller.ts` polling fields and was left untouched.
+
+## 2026-07-03 - Holiday Discount Durable BPCP Projection Store
+
+Current focus: close the Catalog runtime hardening gap for BPCP process lifecycle replay and local projection recovery.
+
+Intent Preservation Chain:
+
+- Vision: Catalog remains product fact owner while BPCP remains business process control-plane owner.
+- Goal Impact: Holiday Discount process state now survives Catalog pod restarts through a durable local projection store.
+- System: BPCP publishes signed lifecycle events over RabbitMQ; Catalog consumes lifecycle events, deduplicates event ids, stores active projections, and exposes fail-closed eligibility facts.
+- Feature: Durable BPCP event dedupe/projection store and explicit Holiday eligibility allow-list contract.
+- Task: add `catalog_bpcp_process_event_dedupe`, `catalog_bpcp_process_projection`, async durable apply path, runtime status, and `catalog.holiday-discount-eligibility-allow-list.v1`.
+- Execution Plan: implement additive code and SQL migration, validate locally in repo, apply idempotent migration, deploy Catalog only, replay bounded BPCP published event, and verify duplicate replay is not re-applied.
+- Coding Prompt: do not invent selected Holiday categories/tags; keep discount facts fail-closed until owner-approved allow-list values are configured.
+- Code: `edcef42 feat: add durable BPCP catalog projection store`.
+- Validation: `npm run verify:bpcp-consumer` passed; focused BPCP projection Jest passed 4/4; full `npm test -- --runInBand` passed 13 suites / 117 tests; `npm run build` passed; `git diff --check` passed.
+
+Runtime evidence:
+
+- Applied additive SQL migration `scripts/migrations/20260703_bpcp_process_projection_store.sql` to `catalog_db`; created `catalog_bpcp_process_event_dedupe` and `catalog_bpcp_process_projection`.
+- Deployed image `localhost:5000/catalog-microservice:edcef42`; rollout succeeded and current pod `catalog-microservice-8576945df6-fdq22` is running.
+- BPCP bounded replay dispatched `holiday-discount-2026:1:process.published:3` through `bpcp.events` / `bpcp.process.published.v1`.
+- Catalog `/ready` reports consumer `status=up`, `received=2`, `applied=1`, `rejected=0`, `signatureFailures=0`, durable store `mode=durable`, `ready=true`, `activeProjectionCount=1`, and `duplicateEvents=1` after duplicate replay.
+- DB readback: dedupe row count `1`; projection row `holiday-discount-2026:1:active:holiday-discount-2026:1:process.published:3`.
+
+Remaining blocker:
+
+- `[MISSING: approved Holiday Discount selected category/tag allow-list]` remains intentional. `CATALOG_BPCP_HOLIDAY_ELIGIBLE_CATEGORY_IDS` and `CATALOG_BPCP_HOLIDAY_ELIGIBLE_TAGS` are explicitly present but empty in the Catalog config map until business values are approved.
