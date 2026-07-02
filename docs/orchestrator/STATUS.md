@@ -1,6 +1,6 @@
 ## 2026-07-02 - Goal 23 Alfares Default Source Correction
 
-Change: corrected the Goal 23 source contract so newly provisioned seller settings include Alfares products by default while community products remain opt-in. Added forward-only migration `scripts/migrations/20260702_catalog_alfares_default_enabled.sql`, changed Catalog service/entity defaults to `includeAlfaresCatalog=true`, and updated Goal 23 contract/planning/validation docs. Existing `catalog_user_settings` rows are intentionally not bulk-updated because `false` may represent an explicit seller choice.
+Change: restored the Goal 23 source contract after an erroneous default-on change. Newly provisioned seller settings must keep Alfares products disabled by default while community products remain opt-in. The legacy-named migration `scripts/migrations/20260702_catalog_alfares_default_enabled.sql` now preserves `include_alfares_catalog DEFAULT false`, Catalog service/entity defaults are `includeAlfaresCatalog=false`, and Goal 23 contract/planning/validation docs are aligned. Existing `catalog_user_settings` rows are intentionally not bulk-updated because true or false may represent an explicit seller choice.
 
 Validation evidence: `npm test -- --runInBand src/catalog-access/catalog-access.service.spec.ts src/products/products.service.spec.ts` passed with 2 suites and 35 tests; `npm run build` passed; `cd services/frontend && npm run build` passed with only the existing Next.js multiple-lockfile warning; focused `git diff --check` for the Goal 23 correction files passed.
 

@@ -36,7 +36,7 @@ created: 2026-07-02
 
 ## Expected Assertions
 
-- Settings default: Alfares true, community false.
+- Settings default: Alfares false, community false.
 - Seller product create: owner assigned, resale false.
 - Seller product update: owner can enable resale.
 - Shared/non-owned product mutation: forbidden for ordinary seller.

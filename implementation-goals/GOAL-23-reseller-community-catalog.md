@@ -14,7 +14,7 @@ A registered seller can add products to the Alfares Catalog under their own iden
 
 ## Goal Impact
 
-Product owners can increase sales reach, and other sellers can expand their assortment without sourcing every product manually. Alfares products are available by default, other sellers' products are hidden unless the viewer enables that source, and a seller's product is hidden from other sellers unless the owner enables resale.
+Product owners can increase sales reach, and other sellers can expand their assortment without sourcing every product manually. Alfares products are hidden by default unless the viewer explicitly enables that source, other sellers' products are hidden unless the viewer enables that source, and a seller's product is hidden from other sellers unless the owner enables resale.
 
 ## System
 
@@ -26,7 +26,7 @@ Product owners can increase sales reach, and other sellers can expand their asso
 ## Feature
 
 - Add `products.resale_enabled=false` by default.
-- Add `catalog_user_settings.include_alfares_catalog=true` and `include_community_catalog=false`.
+- Add `catalog_user_settings.include_alfares_catalog=false` and `include_community_catalog=false`.
 - Add Catalog settings/provision endpoints.
 - Extend product reads with `catalogScope=own|effective|alfares|community|all`.
 - Let owners mark a product as available for resale.

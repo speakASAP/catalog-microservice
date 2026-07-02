@@ -1,6 +1,6 @@
 # Catalog User Catalogs Contract
 
-> 2026-07-02 status note: Goal 23 supersedes the source-default portion of this Goal 22 draft. Newly provisioned seller settings now default to `include_alfares_catalog=true` and `include_community_catalog=false`; existing explicit user settings remain respected. See `docs/contracts/catalog-reseller-community-products.md`.
+> 2026-07-02 status note: Goal 23 extends this Goal 22 draft with community resale, while preserving the source-default requirement. Newly provisioned seller settings default to `include_alfares_catalog=false` and `include_community_catalog=false`; existing explicit user settings remain respected. See `docs/contracts/catalog-reseller-community-products.md`.
 
 ```yaml
 id: CONTRACT-CATALOG-USER-CATALOGS-V1

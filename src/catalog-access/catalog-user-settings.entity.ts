@@ -11,7 +11,7 @@ export class CatalogUserSettings {
   @PrimaryColumn({ name: 'user_id', length: 200 })
   userId: string;
 
-  @Column({ name: 'include_alfares_catalog', default: true })
+  @Column({ name: 'include_alfares_catalog', default: false })
   includeAlfaresCatalog: boolean;
 
   @Column({ name: 'include_community_catalog', default: false })
