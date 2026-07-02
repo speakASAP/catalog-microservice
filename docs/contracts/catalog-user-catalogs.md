@@ -191,7 +191,7 @@ The first durable guarantee should be Catalog-side lazy provisioning:
 1. User registers or logs in through hosted Auth on any sales point.
 2. Sales point callback stores the Auth token/session using its existing hosted Auth pattern.
 3. The dashboard calls `POST /api/catalog/access/provision` or `GET /api/catalog/settings`.
-4. Catalog creates a settings row if missing and returns `includeAlfaresCatalog=true`.
+4. Catalog creates a settings row if missing and returns `includeAlfaresCatalog=false` until the user explicitly enables that source.
 5. Product selection calls `GET /api/products?catalogScope=effective` unless the UI explicitly requests private-only products.
 
 Auth-side post-registration fanout can be added later, but Catalog lazy provisioning avoids a distributed transaction between Auth and Catalog and covers OAuth/contact-code/login users as well as first-time email/password registrations.
@@ -214,10 +214,10 @@ Auth-side post-registration fanout can be added later, but Catalog lazy provisio
 
 | Case | Expected Result |
 |---|---|
-| New user settings | `includeAlfaresCatalog=true`; effective product list includes Alfares products and own products. |
+| New user settings | `includeAlfaresCatalog=false`; the dashboard exposes a source option, and the effective product list starts with own products only. |
 | User creates product | Product has `owner_user_id=<user id>` and is visible to that user. |
 | Second user reads product | Not found or excluded from list. |
-| Shared Alfares product, setting false | Hidden from list/detail and blocked from publication after the user explicitly disables Alfares products. |
+| Shared Alfares product, setting false | Hidden from list/detail and blocked from publication until the user explicitly enables Alfares products. |
 | Shared Alfares product, setting true | Visible in effective scope and eligible for channel draft/publish if stock/readiness/channel policy pass. |
 | Ordinary user edits shared product | Forbidden. |
 | Admin/service reads shared product | Existing operational access preserved. |

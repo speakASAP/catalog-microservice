@@ -64,7 +64,7 @@ Implement the central Catalog contract and the Catalog dashboard source/resale c
 3. Update product DTO/query types.
 4. Apply effective read scoping:
    - own products always;
-   - Alfares products when `includeAlfaresCatalog=true`, which is the default for newly provisioned settings;
+   - Alfares products only when `includeAlfaresCatalog=true` after explicit user opt-in;
    - other sellers' `resaleEnabled=true` products when `includeCommunityCatalog=true`.
 5. Keep mutation scoping owner-only for ordinary users.
 6. Preserve admin/service operational scope.

@@ -45,7 +45,7 @@ Product owners can increase sales reach, and other sellers can expand their asso
 
 ## Acceptance Criteria
 
-- New settings default to Alfares enabled and community disabled.
+- New settings default to Alfares disabled and community disabled, with visible dashboard controls to enable each source.
 - Seller-created products get `owner_user_id=<Auth subject>` and `resale_enabled=false`.
 - Product owner can set `resale_enabled=true`.
 - Other sellers can see only resale-enabled seller products when their community source checkbox is enabled.
