@@ -2,7 +2,7 @@
  * Products API - Catalog Microservice
  */
 
-import { apiClient } from './client';
+import { apiClient, type ApiResponse } from './client';
 
 export interface ProductMedia {
   id: string;
@@ -33,6 +33,8 @@ export interface Product {
     width?: number;
     height?: number;
   };
+  tags?: string[];
+  seoData?: Record<string, any> | null;
   isActive: boolean;
   lifecycle?: 'draft' | 'active' | 'archived' | 'needs_review';
   createdAt: string;
@@ -182,6 +184,106 @@ export interface PaginatedResponse<T> {
     limit: number;
     pages: number;
   };
+}
+
+export type ProductQualityIssueSeverity = 'blocking' | 'warning';
+export type ProductQualityIssueSource = 'catalog.product_quality.v1' | 'goal02-readiness';
+
+export interface ProductQualityIssue {
+  code: string;
+  message: string;
+  severity: ProductQualityIssueSeverity;
+  field?: string;
+  source?: ProductQualityIssueSource;
+}
+
+export interface ProductQualityReadiness {
+  productId: string;
+  sku: string;
+  lifecycle: Product['lifecycle'];
+  sellable: boolean;
+  publishable: boolean;
+  issues: ProductQualityIssue[];
+  checks: Record<string, boolean>;
+}
+
+export interface ProductQualityReviewItem {
+  productId: string;
+  sku: string;
+  title: string;
+  ownerScope: string;
+  sourceScope: ProductCatalogSource;
+  lifecycle: NonNullable<Product['lifecycle']>;
+  isActive: boolean;
+  publishable: boolean;
+  canActivate: boolean;
+  completionScore: number;
+  blockingIssues: ProductQualityIssue[];
+  blockingMissingFields: string[];
+  optionalOpportunities: ProductQualityIssue[];
+  nextAction: string;
+  readiness: ProductQualityReadiness;
+}
+
+export interface ProductQualityReviewQuery extends ProductQuery {
+  missingField?: string;
+  severity?: 'blocking' | 'optional';
+  categoryId?: string;
+}
+
+export interface ProductQualityReviewApiResponse extends ApiResponse<ProductQualityReviewItem[]> {
+  policyId?: string;
+  blockers?: string[];
+}
+
+export interface ProductQualityReviewExportQuery extends ProductQualityReviewQuery {
+  format?: 'json' | 'csv' | 'markdown';
+}
+
+export interface ProductQualityReviewExport {
+  policyId: string;
+  format: 'json' | 'csv' | 'markdown';
+  generatedAt: string;
+  contentType: string;
+  blockers: string[];
+  items: ProductQualityReviewItem[];
+  content: ProductQualityReviewItem[] | string;
+}
+
+export interface ProductQualityBulkUpdateRequest {
+  productIds: string[];
+  patch?: Record<string, unknown>;
+  attributePatch?: Record<string, unknown>;
+  categoryPatch?: {
+    categoryId?: string;
+    categoryIds?: string[];
+    mode?: 'replace' | 'add';
+  };
+  pricingPatch?: Record<string, unknown>;
+  expectedMissingField?: string;
+  humanReview?: string;
+}
+
+export interface ProductQualityBulkUpdateResult {
+  productId: string;
+  sku: string;
+  title: string;
+  success: boolean;
+  updated: boolean;
+  blocked: boolean;
+  skipped: boolean;
+  blockingIssues: ProductQualityIssue[];
+  nextAction: string;
+  quality: ProductQualityReviewItem;
+}
+
+export interface ProductQualityBulkUpdateResponse {
+  success: boolean;
+  policyId: string;
+  requestedProductIds: string[];
+  blockers: string[];
+  totals: { requested: number; updated: number; blocked: number; skipped: number };
+  results: ProductQualityBulkUpdateResult[];
 }
 
 export interface BazosListingStatus {
@@ -535,6 +637,22 @@ export interface ProductWarehouseAvailabilityResponse {
   items: ProductWarehouseAvailabilityItem[];
 }
 
+function productQualityReviewQueryString(query?: ProductQualityReviewQuery | ProductQualityReviewExportQuery) {
+  const params = new URLSearchParams();
+  if (query?.page) params.append('page', query.page.toString());
+  if (query?.limit) params.append('limit', query.limit.toString());
+  if (query?.search) params.append('search', query.search);
+  if (query?.isActive !== undefined) params.append('isActive', query.isActive.toString());
+  if (query?.lifecycle) params.append('lifecycle', query.lifecycle);
+  if (query?.catalogScope) params.append('catalogScope', query.catalogScope);
+  if (query?.catalogSources) params.append('catalogSources', query.catalogSources.join(','));
+  if (query?.categoryId) params.append('categoryId', query.categoryId);
+  if (query?.missingField) params.append('missingField', query.missingField);
+  if (query?.severity) params.append('severity', query.severity);
+  if (query && 'format' in query && query.format) params.append('format', query.format);
+  return params.toString();
+}
+
 export const productsApi = {
   async getProducts(query?: ProductQuery) {
     const params = new URLSearchParams();
@@ -564,6 +682,20 @@ export const productsApi = {
 
   async updateProduct(id: string, data: Partial<Product>) {
     return apiClient.put<Product>(`/products/${id}`, data);
+  },
+
+  async getProductQualityReview(query?: ProductQualityReviewQuery): Promise<ProductQualityReviewApiResponse> {
+    const queryString = productQualityReviewQueryString(query);
+    return apiClient.get<ProductQualityReviewItem[]>(`/products/review/quality${queryString ? `?${queryString}` : ''}`) as Promise<ProductQualityReviewApiResponse>;
+  },
+
+  async exportProductQualityReview(query?: ProductQualityReviewExportQuery) {
+    const queryString = productQualityReviewQueryString(query);
+    return apiClient.get<ProductQualityReviewExport>(`/products/review/quality/export${queryString ? `?${queryString}` : ''}`);
+  },
+
+  async bulkUpdateProductQualityReview(data: ProductQualityBulkUpdateRequest) {
+    return apiClient.post<ProductQualityBulkUpdateResponse>('/products/review/bulk-update', data);
   },
 
 

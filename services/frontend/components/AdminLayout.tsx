@@ -58,6 +58,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     ...(canAccessAdminSection
       ? [
           {
+            title: 'Quality Review',
+            href: '/dashboard/admin/product-review',
+            icon: 'QA',
+          },
+          {
             title: 'Admin',
             href: '/dashboard/admin',
             icon: '⚙️',
@@ -69,6 +74,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const isActive = (href: string) => {
     if (href === '/dashboard') {
       return pathname === '/dashboard';
+    }
+    if (href === '/dashboard/admin') {
+      return pathname === '/dashboard/admin';
     }
     return pathname.startsWith(href);
   };
