@@ -71,11 +71,11 @@ The platform becomes a shared commerce network instead of isolated channel tools
 
 | Workstream | Status | Owner role | Scope | Allowed files | Forbidden files | Expected output | Validation evidence |
 |---|---|---|---|---|---|---|---|
-| WS-CATALOG | ready now / integration owner | Catalog backend+frontend verifier | Confirm source settings, effective scope, resale flag, dashboard controls, and docs consistency. | `catalog-microservice/src/catalog-access/**`, `src/products/**`, `services/frontend/**`, docs/reports if needed | Auth JWT shape, Warehouse/Orders/Payments, secrets, production DB mutation | Matrix proving R1-R5 at shared source. | focused Catalog tests/build or exact blocker. |
-| WS-BAZOS-HEUREKA | running read-only audit | Channel UI verifier | Bazos and Heureka dashboards/product pickers. | read-only first; code only after orchestrator assigns disjoint files | dirty unrelated files, deploy scripts, secrets | Present/missing/unknown matrix. | file evidence and commands. |
-| WS-ALLEGRO-AUKRO | running read-only audit | Channel UI verifier | Allegro and Aukro dashboards/product pickers. | read-only first; code only after orchestrator assigns disjoint files | dirty unrelated files, deploy scripts, secrets | Present/missing/unknown matrix. | file evidence and commands. |
-| WS-FLIPFLOP-CANDIDATES | running read-only audit | Channel/storefront classifier | FlipFlop plus shop-assistant, chytrakoupe, rent-a-box classification. | read-only first; code only after orchestrator assigns disjoint files | active unrelated FlipFlop GOAL-12 files, deploy scripts, secrets | In-scope/out-of-scope decision and matrix. | file evidence and commands. |
-| WS-INTEGRATION | final integration | Orchestrator | Merge audit results, update plan/status, decide if code changes/deploys are needed. | docs/orchestrator, validation reports, narrowly assigned code gaps | uncoordinated shared schema/contract edits | Final status, blockers, validation summary. | cross-repo git status and validation results. |
+| WS-CATALOG | source+runtime verified | Catalog backend+frontend verifier | Confirm source settings, effective scope, resale flag, dashboard controls, and docs consistency. | `catalog-microservice/src/catalog-access/**`, `src/products/**`, `services/frontend/**`, docs/reports if needed | Auth JWT shape, Warehouse/Orders/Payments, secrets, production DB mutation | Matrix proving R1-R5 at shared source. | Catalog backend/frontend builds, focused tests, live health, protected API 401 checks. |
+| WS-BAZOS-HEUREKA | source pushed / runtime gated | Channel UI verifier | Bazos and Heureka dashboards/product pickers. | read-only first; code only after orchestrator assigns disjoint files | dirty unrelated files, deploy scripts, secrets | Present/missing/unknown matrix. | Bazos `9f8f2bb` pushed, Heureka `bf467cd` pushed; live deploy alignment remains gated. |
+| WS-ALLEGRO-AUKRO | source pushed / runtime gated | Channel UI verifier | Allegro and Aukro dashboards/product pickers. | read-only first; code only after orchestrator assigns disjoint files | dirty unrelated files, deploy scripts, secrets | Present/missing/unknown matrix. | Allegro `9258129` pushed, Aukro `f237fda` pushed; live deploy alignment remains gated. |
+| WS-FLIPFLOP-CANDIDATES | source committed / runtime provenance gated | Channel/storefront classifier | FlipFlop plus shop-assistant, chytrakoupe, rent-a-box classification. | read-only first; code only after orchestrator assigns disjoint files | active unrelated FlipFlop GOAL-12 files, deploy scripts, secrets | In-scope/out-of-scope decision and matrix. | FlipFlop `30a5e6c` is in `main`; current live images use `latest`/GOAL-12 tag without immutable commit provenance. |
+| WS-INTEGRATION | source integration complete / deploy gated | Orchestrator | Merge audit results, update plan/status, decide if code changes/deploys are needed. | docs/orchestrator, validation reports, narrowly assigned code gaps | uncoordinated shared schema/contract edits | Final status, blockers, validation summary. | cross-repo git status and validation results. |
 
 ## Merge And Deployment Order
 
@@ -83,14 +83,16 @@ The platform becomes a shared commerce network instead of isolated channel tools
 2. Per-channel dashboard UI/API verification or small disjoint fixes.
 3. Integration documentation update across affected repos.
 4. Validation gates per repo.
-5. Deploy only after repo preflight, validation evidence, and deploy gate. No deploy is implied by this initial audit plan.
+5. Deploy only after repo preflight, validation evidence, and explicit deploy gate. Current source commits are pushed, but no channel deploy is implied by this plan update.
 
 ## Known Dirty Worktree Caveats At Plan Creation
 
-- `bazos`: branch ahead by one commit and `services/aukro-service/src/ui/ui.assets.ts` is dirty; do not overwrite unless owning that exact UI fix.
-- `heureka`, `allegro`, `aukro`: branch ahead by one commit; inspect before new commits or deploys.
-- `flipflop`: active unrelated GOAL-12 upsell/product-detail edits are present; do not touch or revert them.
-- `catalog-microservice`: clean at initial preflight.
+- `bazos`: source pushed to `9f8f2bb`; unrelated `docs/orchestrator/2026-07-02-related-products-order-affinity-plan.md` remains untracked; live runtime still uses image `33eaf4d`.
+- `heureka`: source pushed to `bf467cd`; live images still show older `43e890b`.
+- `allegro`: source pushed to `9258129`; live images still show older `ec6f97a`.
+- `aukro`: source pushed to `f237fda`; `reports/validation/ips-pre-coding-gate.json` remains dirty from an unrelated related-products gate; live image still shows older `dc5a362`.
+- `flipflop`: active unrelated GOAL-12 upsell/product-detail edits are present and deployed under a GOAL-12 product-service tag; do not touch or revert them for Catalog source work.
+- `catalog-microservice`: source clean at `66c97e2`; runtime backend image `d2a2f66` and frontend `latest` are running.
 - Adjacent candidates are classified before code changes.
 
 ## Validation Matrix
@@ -107,7 +109,7 @@ The platform becomes a shared commerce network instead of isolated channel tools
 
 ## Open Items
 
-- `[UNKNOWN: exact runtime Auth token for authorized end-to-end smoke in every dashboard]`
+- `[MISSING: approved Auth token for authorized end-to-end smoke in every dashboard]`
 - `[UNKNOWN: final localized dashboard copy for every language]`
 - `[UNKNOWN: whether shop-assistant, chytrakoupe, and rent-a-box have personal-account product-source obligations in this first wave]`
-- `[MISSING: sub-agent audit results for each channel dashboard]`
+- `[MISSING: explicit deploy gate for Allegro/Aukro/Bazos/Heureka channel images and FlipFlop immutable provenance check]`
