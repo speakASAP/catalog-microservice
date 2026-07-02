@@ -39,7 +39,7 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [submittedSearch, setSubmittedSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<ActiveFilter>('active');
   const [lifecycleFilter, setLifecycleFilter] = useState<LifecycleFilter>('all');
   const [page, setPage] = useState(1);
@@ -53,10 +53,10 @@ export default function AdminProductsPage() {
   const query = useMemo<ProductQuery>(() => ({
     page,
     limit: PAGE_LIMIT,
-    search: submittedSearch || undefined,
+    search: debouncedSearch || undefined,
     isActive: activeFilter === 'all' ? undefined : activeFilter === 'active',
     lifecycle: lifecycleFilter === 'all' ? undefined : lifecycleFilter,
-  }), [activeFilter, lifecycleFilter, page, submittedSearch]);
+  }), [activeFilter, debouncedSearch, lifecycleFilter, page]);
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
@@ -90,10 +90,19 @@ export default function AdminProductsPage() {
   }, [loadProducts]);
 
   useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setPage(1);
+      setDebouncedSearch(search.trim());
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
     setSelectedIds(new Set());
     setAllFilteredSelected(false);
     setBulkStatus(null);
-  }, [activeFilter, lifecycleFilter, submittedSearch]);
+  }, [activeFilter, lifecycleFilter, debouncedSearch]);
 
   const selectedCount = allFilteredSelected ? total : selectedIds.size;
   const pageIds = products.map((product) => product.id);
@@ -265,12 +274,6 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPage(1);
-    setSubmittedSearch(search.trim());
-  };
-
   const updateActiveFilter = (value: ActiveFilter) => {
     setPage(1);
     setActiveFilter(value);
@@ -293,19 +296,19 @@ export default function AdminProductsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-xl shadow-lg p-5 text-white">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
-            <h1 className="text-4xl md:text-5xl font-extrabold mb-2">📦 Products</h1>
-            <p className="text-xl text-blue-50">
+            <h1 className="text-2xl md:text-3xl font-extrabold leading-tight">📦 Products</h1>
+            <p className="text-sm md:text-base text-blue-50">
               Manage products ({total} total)
             </p>
           </div>
           <Link
             href="/dashboard/products/new"
-            className="bg-white text-blue-600 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 text-center"
+            className="bg-white text-blue-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-50 transition-all shadow-md hover:shadow-lg text-center"
           >
             ➕ New Product
           </Link>
@@ -313,29 +316,24 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Search and filters */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 space-y-4">
-        <form onSubmit={handleSearch} className="flex flex-col lg:flex-row gap-3">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search products..."
-            className="flex-1 border-2 border-gray-300 rounded-xl px-5 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-          />
-          <button
-            type="submit"
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105"
-          >
-            🔍 Search
-          </button>
-        </form>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(260px,2fr)_minmax(160px,1fr)_minmax(160px,1fr)] gap-3 lg:items-end">
           <label className="block">
-            <span className="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-2">Status</span>
+            <span className="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-1">Search</span>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search products..."
+              className="w-full border-2 border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+            />
+          </label>
+          <label className="block">
+            <span className="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-1">Status</span>
             <select
               value={activeFilter}
               onChange={(e) => updateActiveFilter(e.target.value as ActiveFilter)}
-              className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all bg-white"
+              className="w-full border-2 border-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all bg-white"
             >
               <option value="all">All statuses</option>
               <option value="active">Active only</option>
@@ -343,11 +341,11 @@ export default function AdminProductsPage() {
             </select>
           </label>
           <label className="block">
-            <span className="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-2">Type</span>
+            <span className="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-1">Type</span>
             <select
               value={lifecycleFilter}
               onChange={(e) => updateLifecycleFilter(e.target.value as LifecycleFilter)}
-              className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all bg-white"
+              className="w-full border-2 border-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all bg-white"
             >
               <option value="all">All types</option>
               <option value="active">Active</option>
