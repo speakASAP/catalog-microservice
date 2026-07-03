@@ -67,7 +67,11 @@ Result: `MISSING scripts/pre_coding_gate.py` and `MISSING scripts/strict_doc_aud
 - `[MISSING: FlipFlop adoption contract for catalog.bundle.v1 read/display before ecosystem checkout]`
 - `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`
 - `[MISSING: owner-approved Rung 2 live pending-order smoke plan if production order/reservation evidence is required]`
-- `[MISSING: channel-specific external marketplace bundle publication policies]`
+- `[RESOLVED/NARROWED: Catalog fail-closed external marketplace bundle publication policy defined in docs/contracts/catalog-bundle-marketplace-publication-policy.md]`
+- `[MISSING: Allegro-owned catalog.bundle.v1 external publication policy handoff]`
+- `[MISSING: Bazos-owned catalog.bundle.v1 external publication policy handoff]`
+- `[MISSING: Aukro-owned catalog.bundle.v1 external publication policy handoff]`
+- `[MISSING: Heureka-owned catalog.bundle.v1 feed publication policy handoff]`
 
 ## Parallel Execution
 

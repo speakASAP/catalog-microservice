@@ -95,4 +95,8 @@ Resolved/narrowed:
 Still blocked:
 
 - `[MISSING: owner-approved Rung 2 live pending-order smoke plan if production order/reservation evidence is required]`
-- `[MISSING: channel-specific external marketplace bundle publication policies]`
+- `[RESOLVED/NARROWED: Catalog fail-closed external marketplace bundle publication policy defined in docs/contracts/catalog-bundle-marketplace-publication-policy.md]`
+- `[MISSING: Allegro-owned catalog.bundle.v1 external publication policy handoff]`
+- `[MISSING: Bazos-owned catalog.bundle.v1 external publication policy handoff]`
+- `[MISSING: Aukro-owned catalog.bundle.v1 external publication policy handoff]`
+- `[MISSING: Heureka-owned catalog.bundle.v1 feed publication policy handoff]`

@@ -260,7 +260,11 @@ FlipFlop:
 
 Marketplace/channel services:
 
-- `[MISSING: channel-specific external marketplace bundle publication policies]`
+- `[RESOLVED/NARROWED: Catalog fail-closed external marketplace bundle publication policy defined in docs/contracts/catalog-bundle-marketplace-publication-policy.md]`
+- `[MISSING: Allegro-owned catalog.bundle.v1 external publication policy handoff]`
+- `[MISSING: Bazos-owned catalog.bundle.v1 external publication policy handoff]`
+- `[MISSING: Aukro-owned catalog.bundle.v1 external publication policy handoff]`
+- `[MISSING: Heureka-owned catalog.bundle.v1 feed publication policy handoff]`
 - Must not publish a Catalog bundle as a marketplace listing or offer without a channel-owned publication policy.
 
 ## Parallel Execution And Merge Order
@@ -307,4 +311,8 @@ Still blocked before runtime selling:
 - `[RESOLVED: FlipFlop catalog.bundle.v1 read/display adoption merged in FlipFlop commit 5911523]`
 - `[RESOLVED: owner-approved Rung 1 non-mutating real checkout smoke passed against active catalog.bundle.v1 bundle e38ce03c-d18b-40a4-9898-f82a3f77dc0b]`
 - `[MISSING: owner-approved Rung 2 live pending-order smoke plan if production order/reservation evidence is required]`
-- `[MISSING: channel-specific external marketplace bundle publication policies]`
+- `[RESOLVED/NARROWED: Catalog fail-closed external marketplace bundle publication policy defined in docs/contracts/catalog-bundle-marketplace-publication-policy.md]`
+- `[MISSING: Allegro-owned catalog.bundle.v1 external publication policy handoff]`
+- `[MISSING: Bazos-owned catalog.bundle.v1 external publication policy handoff]`
+- `[MISSING: Aukro-owned catalog.bundle.v1 external publication policy handoff]`
+- `[MISSING: Heureka-owned catalog.bundle.v1 feed publication policy handoff]`

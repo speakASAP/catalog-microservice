@@ -19,7 +19,11 @@ Remaining blockers:
 
 - `[RESOLVED: owner-approved Rung 1 non-mutating real checkout smoke passed against active catalog.bundle.v1 bundle e38ce03c-d18b-40a4-9898-f82a3f77dc0b]`
 - `[MISSING: owner-approved Rung 2 live pending-order smoke plan if production order/reservation evidence is required]`
-- `[MISSING: channel-specific external marketplace bundle publication policies]`
+- `[RESOLVED/NARROWED: Catalog fail-closed external marketplace bundle publication policy defined in docs/contracts/catalog-bundle-marketplace-publication-policy.md]`
+- `[MISSING: Allegro-owned catalog.bundle.v1 external publication policy handoff]`
+- `[MISSING: Bazos-owned catalog.bundle.v1 external publication policy handoff]`
+- `[MISSING: Aukro-owned catalog.bundle.v1 external publication policy handoff]`
+- `[MISSING: Heureka-owned catalog.bundle.v1 feed publication policy handoff]`
 - `[MISSING: qualifying historical paid multi-product Orders rows for non-empty central Orders replay evidence]`
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill from live central Orders]`
 

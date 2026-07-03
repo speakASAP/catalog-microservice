@@ -74,7 +74,11 @@ No migration was applied, no deployment was run, no runtime DB mutation was made
 - `[RESOLVED: Payments bounded bundle metadata allowlist merged and validated]`
 - `[RESOLVED: FlipFlop catalog.bundle.v1 read/display adoption merged and validated]`
 - `[RESOLVED: owner-approved Rung 1 non-mutating real checkout smoke passed against active catalog.bundle.v1 bundle e38ce03c-d18b-40a4-9898-f82a3f77dc0b]`
-- `[MISSING: channel-specific external marketplace bundle publication policies]`
+- `[RESOLVED/NARROWED: Catalog fail-closed external marketplace bundle publication policy defined in docs/contracts/catalog-bundle-marketplace-publication-policy.md]`
+- `[MISSING: Allegro-owned catalog.bundle.v1 external publication policy handoff]`
+- `[MISSING: Bazos-owned catalog.bundle.v1 external publication policy handoff]`
+- `[MISSING: Aukro-owned catalog.bundle.v1 external publication policy handoff]`
+- `[MISSING: Heureka-owned catalog.bundle.v1 feed publication policy handoff]`
 
 ## Runtime Deployment Evidence
 
