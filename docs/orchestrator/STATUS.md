@@ -17,7 +17,8 @@ Boundary decision: no Catalog source, migrations, Kubernetes manifests, deployme
 
 Remaining blockers:
 
-- `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`
+- `[RESOLVED/NARROWED: Rung 1 Orders and Payments non-mutating validators passed with real Catalog product IDs and runtime credentials; full real-bundle smoke still requires an active catalog.bundle.v1 target bundle]`
+- `[MISSING: owner-approved active catalog.bundle.v1 target bundle for full Rung 1 real checkout smoke]`
 - `[MISSING: owner-approved Rung 2 live pending-order smoke plan if production order/reservation evidence is required]`
 - `[MISSING: channel-specific external marketplace bundle publication policies]`
 - `[MISSING: qualifying historical paid multi-product Orders rows for non-empty central Orders replay evidence]`
@@ -1819,7 +1820,7 @@ Parallel execution:
 - `ready now`: Catalog relation API maintenance. Validation: focused product-relations Jest plus `git diff --check`.
 - `dependency-gated`: non-empty historical affinity publish. Blockers: qualifying rows, owner-reviewed mutation window, and pruning/replacement semantics.
 - `complete`: Catalog standalone bundle aggregate contract/API/runtime. Scope: `docs/contracts/catalog-bundle-aggregate-v1.md` defines `catalog.bundle.v1`; source implementation, additive migration, deployment, and protected runtime smoke are complete.
-- `dependency-gated`: real ecosystem bundle selling. Completed prerequisites: Orders additive bundleEvidence metadata, Warehouse component-line reservation sign-off, Payments metadata allowlist, and FlipFlop presentation adoption. Blocker: owner-approved Rung 1 smoke credentials and target products.
+- `dependency-gated`: real ecosystem bundle selling. Completed prerequisites: Orders additive bundleEvidence metadata, Warehouse component-line reservation sign-off, Payments metadata allowlist, and FlipFlop presentation adoption. Completed downstream validator evidence: Orders/Payments Rung 1 non-mutating contract-shape smoke passed. Blocker: owner-approved active catalog.bundle.v1 target bundle for full Rung 1 real checkout smoke.
 
 Remaining blockers:
 
@@ -1832,7 +1833,8 @@ Remaining blockers:
 - `[RESOLVED: Orders additive bundleEvidence metadata contract on create-order and idempotent replay merged in Orders commit 18892a5]`.
 - `[RESOLVED: Warehouse component-line reservation sign-off merged in Warehouse commit ae8c8fe and retained on main 74870b0]`.
 - `[RESOLVED: Payments bounded bundle metadata allowlist test covering free-shipping evidence merged in Payments commit aa79fa2]`.
-- `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`.
+- `[RESOLVED/NARROWED: Rung 1 Orders and Payments non-mutating validators passed with real Catalog product IDs and runtime credentials; full real-bundle smoke still requires an active catalog.bundle.v1 target bundle]`
+- `[MISSING: owner-approved active catalog.bundle.v1 target bundle for full Rung 1 real checkout smoke]`.
 - `[UNKNOWN: whether current live Orders history should contain paid multi-product rows or whether upstream order capture is still empty]`.
 
 
@@ -1877,7 +1879,8 @@ Remaining blockers:
 - `[RESOLVED: Orders additive bundleEvidence metadata contract on create-order and idempotent replay merged in Orders commit 18892a5]`.
 - `[RESOLVED: Warehouse component-line reservation sign-off merged in Warehouse commit ae8c8fe and retained on main 74870b0]`.
 - `[RESOLVED: Payments bounded bundle metadata allowlist test covering free-shipping evidence merged in Payments commit aa79fa2]`.
-- `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`.
+- `[RESOLVED/NARROWED: Rung 1 Orders and Payments non-mutating validators passed with real Catalog product IDs and runtime credentials; full real-bundle smoke still requires an active catalog.bundle.v1 target bundle]`
+- `[MISSING: owner-approved active catalog.bundle.v1 target bundle for full Rung 1 real checkout smoke]`.
 
 
 ## 2026-07-03 - Goal 24 Allegro Affinity Live Catalog Publish
@@ -2152,5 +2155,6 @@ Remaining blockers:
 - `[RESOLVED: Orders additive bundleEvidence metadata contract on create-order and idempotent replay merged in Orders commit 18892a5]`
 - `[RESOLVED: Warehouse component-line reservation sign-off merged in Warehouse commit ae8c8fe and retained on main 74870b0]`
 - `[RESOLVED: Payments bounded bundle metadata allowlist test covering free-shipping evidence merged in Payments commit aa79fa2]`
-- `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`
+- `[RESOLVED/NARROWED: Rung 1 Orders and Payments non-mutating validators passed with real Catalog product IDs and runtime credentials; full real-bundle smoke still requires an active catalog.bundle.v1 target bundle]`
+- `[MISSING: owner-approved active catalog.bundle.v1 target bundle for full Rung 1 real checkout smoke]`
 - `[MISSING: owner-approved Rung 2 live pending-order smoke plan if production order/reservation evidence is required]`

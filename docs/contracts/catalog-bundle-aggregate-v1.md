@@ -305,6 +305,7 @@ Still blocked before runtime selling:
 - `[RESOLVED: Warehouse component-line reservation sign-off merged in Warehouse commit ae8c8fe and retained on main 74870b0]`
 - `[RESOLVED: Payments bounded bundle metadata allowlist test covering free-shipping evidence merged in Payments commit aa79fa2]`
 - `[RESOLVED: FlipFlop catalog.bundle.v1 read/display adoption merged in FlipFlop commit 5911523]`
-- `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`
+- `[RESOLVED/NARROWED: Rung 1 Orders and Payments non-mutating validators passed with real Catalog product IDs and runtime credentials; full real-bundle smoke still requires an active catalog.bundle.v1 target bundle]`
+- `[MISSING: owner-approved active catalog.bundle.v1 target bundle for full Rung 1 real checkout smoke]`
 - `[MISSING: owner-approved Rung 2 live pending-order smoke plan if production order/reservation evidence is required]`
 - `[MISSING: channel-specific external marketplace bundle publication policies]`
