@@ -83,7 +83,7 @@ Result: passed before this report was staged. Final staged validation must rerun
 
 Current remote heads after the latest dependency reconciliation:
 
-- Payments `d5ee11b docs: record fiobanka refund upload deploy gate` on committed `main` retains accepted authenticated polling evidence and adds a future Fiobanka refund/reversal runtime packet. It remains source/docs/verifier only: completed-transfer refund/reversal, exact payment/order/provider identity hashes, named runtime validation owner, Payments/provider rollback owner, Orders correction approval, Warehouse cleanup approval, channel cleanup approval, side-effectful rollback idempotency keys, and live provider/bank evidence remain missing.
+- Payments `d5ee11b docs: record fiobanka refund upload deploy gate` on committed `main` retains accepted authenticated polling evidence and adds a future Fiobanka refund/reversal runtime packet. It remains source/docs/verifier only: completed-transfer refund/reversal, exact payment/order/provider identity hashes, Payments/provider rollback owner, Orders correction approval, Warehouse cleanup approval, channel cleanup approval, side-effectful rollback idempotency keys, and live provider/bank evidence remain missing.
 - Orders `e3f6e18 docs: preserve goal24 orders cleanup packet`: retains cleanup idempotency runtime evidence and adds cleanup state-matrix documentation on `main`. Live cleanup mutation remains separately gated by the exact run packet, selected state, and owner-approved side-effect acknowledgements.
 - Catalog `main` records this as dependency-gated evidence only. It does not approve live checkout, provider call, webhook replay, refund/cancel/reversal, Orders mutation, Warehouse mutation, deploy, migration, DB mutation, marketplace/feed mutation, raw bank payload, token value, or secret output.
 
@@ -306,5 +306,13 @@ Decision: `[RESOLVED/NARROWED: deployed FlipFlop bundle-preserving fixture gate 
 Catalog consumed FlipFlop `85ecb11 docs: record goal24 autonomous approval decision` after the final Payments deploy-head sync. The autonomy approval resolves only coordination authority for Codex continuation; it does not create bank/refund authority, exact provider proof, Orders side-effect acknowledgements, Warehouse target rows/window/max quantity, Fiobanka payment-order Vault write tokens, or final redacted runtime evidence.
 
 [RESOLVED/NARROWED: owner delegated autonomous Goal 24 continuation to Codex, but integration validation keeps new Fiobanka paid/provider side effects hard-stopped until bank/refund authority, exact Orders/Warehouse packet, and redacted provider proof exist]
+
+No Catalog checkout, payment, provider call, refund/reversal, Orders/Warehouse/channel mutation, deploy, migration, DB write, secret/token output, or raw customer/order/payment/provider evidence occurred.
+
+## FlipFlop Runtime Ownership Sync - 2026-07-04
+
+Catalog consumed FlipFlop `2e2c368 docs: narrow goal24 runtime ownership`. Runtime validation owner and FlipFlop channel cleanup executor are source-governance narrowed to the Codex Goal 24 integration thread for future source-controlled coordination only. This does not create Auth admin actor/token proof, human Payments/provider bank/refund authority, exact provider proof, Orders side-effect acknowledgements, Warehouse target rows/window/max quantity, Fiobanka payment-order Vault write tokens, or final redacted runtime evidence.
+
+[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner and FlipFlop channel cleanup executor for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, and redacted evidence path exist]
 
 No Catalog checkout, payment, provider call, refund/reversal, Orders/Warehouse/channel mutation, deploy, migration, DB write, secret/token output, or raw customer/order/payment/provider evidence occurred.
