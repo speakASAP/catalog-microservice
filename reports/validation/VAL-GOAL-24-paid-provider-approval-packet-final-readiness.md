@@ -344,3 +344,12 @@ Sanitized Payments readback on deployed image `localhost:5000/payments-microserv
 Decision: this strengthens the fail-closed boundary for full completed-payment Fiobanka paid/refund smoke. Stop-before-paid evidence remains resolved/narrowed, but completed-payment rollback remains blocked by `[MISSING: Vault properties FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK and FIO_BANKA_PAYMENT_ORDER_TOKEN_EUR for owner-approved payment-order upload]`, `[MISSING: FIO_BANKA_REFUND_UPLOAD_ENABLED=true for an owner-approved exact future refund upload window]`, `[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]`, and exact future payment/idempotency evidence. Runtime transaction-polling/read-token readiness must not be treated as refund/reversal authority.
 
 No live checkout, payment, refund upload, provider call, Orders/Warehouse/channel mutation, deploy, migration, DB write, secret output, raw provider payload, or raw order/payment evidence occurred.
+
+
+## 2026-07-04 FlipFlop Channel Supersession Consumption
+
+Catalog consumed FlipFlop `5202c15 merge goal24 channel cleanup owner supersession` and FlipFlop `1a79c6a docs: supersede goal24 channel cleanup owner blockers`. [RESOLVED/NARROWED: Codex Goal 24 integration thread supersedes earlier FlipFlop channel executor/runtime owner blockers; channel cleanup runtime remains blocked until bank/refund authority, exact provider proof, Orders side-effect acknowledgements, Warehouse target facts, Auth token source, and final redacted evidence path exist]
+
+This report keeps the final paid/provider smoke blocked. The consumed FlipFlop head only updates channel cleanup source-governance state; it does not authorize checkout, provider, refund/cancel/reversal, Orders, Warehouse, channel cleanup, deploy, migration, secret/token output, or raw evidence capture.
+
+Validation commands for this Catalog lane: `npm run verify:goal24-refund-cancel-rollback-execution-approval`, `npm run build`, and `git diff --check`.

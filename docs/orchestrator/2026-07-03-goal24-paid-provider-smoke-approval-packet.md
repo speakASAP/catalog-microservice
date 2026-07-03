@@ -143,6 +143,18 @@ Parallel execution state:
 
 Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation.
 
+
+## 2026-07-04 FlipFlop Channel Cleanup Owner Supersession Consumption
+
+Catalog consumed FlipFlop `5202c15 merge goal24 channel cleanup owner supersession` and FlipFlop `1a79c6a docs: supersede goal24 channel cleanup owner blockers` as dependency evidence only.
+
+[RESOLVED/NARROWED: Codex Goal 24 integration thread supersedes earlier FlipFlop channel executor/runtime owner blockers; channel cleanup runtime remains blocked until bank/refund authority, exact provider proof, Orders side-effect acknowledgements, Warehouse target facts, Auth token source, and final redacted evidence path exist]
+
+This supersedes historical missing runtime validation owner / FlipFlop channel cleanup executor wording from earlier packet sections. Codex owns source-controlled coordination and stop authority only; it does not provide Auth token material, bank/refund authority, provider proof, exact Orders/Warehouse cleanup facts, concrete rollback run id/cleanup idempotency keys, Fiobanka payment-order Vault write tokens, or final redacted evidence.
+
+Report: `reports/validation/VAL-GOAL-24-flipflop-channel-supersession-consumption-2026-07-04.md`.
+
+
 ## Non-Approval Boundaries
 
 This packet does not approve:
