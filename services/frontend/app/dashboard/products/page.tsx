@@ -93,7 +93,7 @@ export default function AdminProductsPage() {
 
   const selectedCatalogSources = useMemo<ProductQuery['catalogSources']>(() => {
     if (!catalogSettings) return undefined;
-    const sources: NonNullable<ProductQuery['catalogSources']> = [];
+    const sources: NonNullable<ProductQuery['catalogSources']> = ['own'];
     if (catalogSettings.includeAlfaresCatalog) sources.push('alfares');
     if (catalogSettings.includeCommunityCatalog) sources.push('community');
     return sources;
