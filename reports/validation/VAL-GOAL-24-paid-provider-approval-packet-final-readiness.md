@@ -84,10 +84,21 @@ Result: passed before this report was staged. Final staged validation must rerun
 
 Current remote heads were refreshed after the original readiness report:
 
-- Payments `2614bb5 docs: record goal24 fiobank qr smoke`: validates a synthetic Fiobanka bank-transfer payment shape and QR page creation path in the deployed Payments pod. It creates only a pending low-value payment record and does not prove paid completion, provider/bank callback, refund/cancel rollback, Orders update, Warehouse cleanup, or live bundle checkout safety.
+- Payments `124256f docs: record goal24 fiobank paid callback smoke`: validates a synthetic Fiobanka bank-transfer payment shape, QR page creation path, and owner-approved synthetic completed callback through the deployed `/webhooks/fiobanka` route. It proves matched-payment completion without manual payment-state bypass, but does not prove real bank-originated callback/signature authenticity, refund/cancel rollback, Orders update, Warehouse cleanup, or live bundle checkout safety.
 - Orders `62f5d62 Merge goal24 orders rollback gate`: records that Orders can express rollback choreography only after Payments proves provider refund/cancel/reversal and the owner-approved runtime packet defines Orders cancellation actor/reason/side-effect acknowledgements plus Warehouse cleanup semantics.
 
 Decision: these newer heads improve source/runtime-readiness documentation but do not remove the live paid/provider blockers below.
+
+## 2026-07-03 Coordinator Reconciliation Refresh
+
+Current upstream evidence consumed by Catalog:
+
+- Orders `62f5d62 Merge goal24 orders rollback gate`: merged source/docs evidence that Orders can express completed, failed, and cancelled payment-status effects and owner-approved cancellation cleanup, but it still requires Payments-owned provider refund/cancel/reversal proof before any paid rollback.
+- Warehouse `ee65ee4 docs: verify bundle component rollback evidence`: `origin/main` source evidence verifies component-line hold, release, fulfill/decrement, cancel, expire, and return behavior. This resolves/narrows Warehouse lifecycle semantics as source evidence only; approved stock window, max quantity, and live canary remain missing.
+- FlipFlop `23a901d Merge remote-tracking branch origin/main`: durable Catalog `bundleId` remains display/evidence-only. Runtime checkout submission of `bundleEvidence` and live paid/provider smoke remain blocked.
+- Payments `2614bb5 docs: record goal24 fiobank qr smoke`: pushed main records pending Fiobanka QR smoke only. Additional local uncommitted Payments docs/status evidence records an owner-approved synthetic Fiobanka completed callback through `/webhooks/fiobanka`; Catalog treats this as dependency-gated, not final owner packet evidence, because it is not pushed and still records `[MISSING: real Fiobanka bank-originated callback/signature evidence beyond the current non-empty-signature placeholder verifier]` plus refund/cancel rollback blockers.
+
+Decision: upstream packets narrow source and route-level readiness but do not complete the owner-approved paid/provider checkout packet. Catalog must not reconcile this as live-smoke approval until pushed Payments owner evidence, provider-specific refund/cancel rollback, Orders/Warehouse cleanup semantics for the selected state, active checkout central Orders UUID propagation, and all approval-packet fields are present.
 
 ## Remaining Runtime Blockers
 
@@ -101,6 +112,7 @@ Decision: these newer heads improve source/runtime-readiness documentation but d
 - `[MISSING: runtime verification of Payments Orders service token/role]`
 - `[MISSING: sanitized evidence policy approved for paid/provider smoke]`
 - `[MISSING: approved Warehouse stock hold/release window and max quantity]`
+- `[MISSING: real Fiobanka bank-originated callback/signature evidence beyond the current non-empty-signature placeholder verifier]`
 - `[MISSING: owner-approved refund/cancel rollback plan proving provider refund or cancellation plus Orders/Warehouse cleanup]`
 - `[MISSING: hard stop authority for paid/provider smoke]`
 - `[MISSING: dedicated paid/provider smoke owner]`
