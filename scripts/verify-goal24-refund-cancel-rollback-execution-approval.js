@@ -72,7 +72,7 @@ for (const marker of [
   '[MISSING: named FlipFlop channel cleanup executor]',
   'FlipFlop `236488d docs: record goal24 discount fixture preflight blocker`',
   'Orders `a1f1428 Merge goal24 orders idempotency runtime evidence`',
-  'Payments `f5c078a docs: record deployed fiobanka polling match`',
+  'Payments `9917793 docs: reclassify fiobanka rollback authenticity`',
 ]) {
   assert(report.includes(marker) || state.includes(marker) || status.includes(marker), `current exact linked paid-flow gate missing marker: ${marker}`);
 }
