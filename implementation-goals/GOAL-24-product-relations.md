@@ -63,7 +63,8 @@ Follow-up read-only evidence on 2026-07-03 confirmed the Orders replay endpoint,
 
 ## Blockers
 
-- `[MISSING: docs-rag JWT_TOKEN]`
+- `[RESOLVED: docs-rag JWT_TOKEN available in live docs-rag pod and accepted for retrieval auth]`
+- `[MISSING: docs-rag indexed Catalog Goal 24 order-affinity context]`
 - `[MISSING: scripts/pre_coding_gate.py]`
 - `[MISSING: scripts/strict_doc_audit.py]`
 - `[MISSING: qualifying historical paid multi-product Orders rows for non-empty replay evidence]`

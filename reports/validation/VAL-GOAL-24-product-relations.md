@@ -47,7 +47,8 @@ Result: passed. No whitespace errors were reported for the tracked dirty diff.
 
 - `scripts/pre_coding_gate.py`: `[MISSING: scripts/pre_coding_gate.py]`
 - `scripts/strict_doc_audit.py`: `[MISSING: scripts/strict_doc_audit.py]`
-- docs-rag retrieval: `[MISSING: docs-rag JWT_TOKEN]`
+- docs-rag retrieval auth: `[RESOLVED: live docs-rag pod JWT_TOKEN accepted; retrieval returned HTTP 200]`
+- docs-rag retrieval content: `[MISSING: docs-rag indexed Catalog Goal 24 order-affinity context]`
 - Source scope: allowed files only for this task, except concurrent unrelated dirty files already present or appearing during the session were not touched.
 - Sensitive data: no secrets, tokens, raw production data, live DB rows, or private logs read or printed.
 - Runtime/database: additive migration `scripts/migrations/20260702_product_relation_scores.sql` was applied to `catalog_db` after owner approval. Schema verification confirmed `product_relations`, 7 indexes, 9 constraints, and 0 rows. No deployment or runtime API smoke was run.
@@ -59,6 +60,17 @@ Result: passed. No whitespace errors were reported for the tracked dirty diff.
 - No Warehouse, Orders, Payments, channel repo, deployment, Kubernetes, Dockerfile, `.env`, generated output, deletion, or pricing flow was changed by this task.
 - Existing product read envelopes remain unchanged; relation endpoints are additive.
 - Relation writes are protected by `CatalogAuthGuard`, restricted to admin/internal roles, and audited through `LoggerService.auditCatalogWrite`.
+
+
+## 2026-07-03 Docs-RAG JWT Access Evidence
+
+Sanitized commands/results:
+
+- Live docs-rag pod environment check: JWT_TOKEN_PRESENT; token value was not printed.
+- POST /retrieval/agent-context query catalog-microservice Goal 24 order affinity blockers: HTTP 200, response keys query, context, sources, estimatedTokens, bytes=110, contextChars=0, snippetCount=0.
+- Fallback POST /retrieval/search query catalog-microservice Goal 24 order affinity blockers product relations: HTTP 200, response keys query, results, total, results=0, snippetCount=0.
+
+Conclusion: `[MISSING: docs-rag JWT_TOKEN]` is resolved for Goal 24 access. Remaining blocker: `[MISSING: docs-rag indexed Catalog Goal 24 order-affinity context]` because retrieval authenticated successfully but returned no indexed chunks for the bounded topic.
 
 ## Blockers
 

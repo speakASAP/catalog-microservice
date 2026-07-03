@@ -154,9 +154,21 @@ Blocked ecosystem bundle selling:
 - FlipFlop-local bundle intent does not answer whether Catalog should own a durable bundle aggregate or product-like SKU.
 - Orders, Warehouse, and Payments need explicit contracts before real ecosystem bundle selling can move beyond local FlipFlop intent.
 
+
+## 2026-07-03 Docs-RAG JWT Access Evidence
+
+Sanitized commands/results:
+
+- Live docs-rag pod environment check: JWT_TOKEN_PRESENT; token value was not printed.
+- POST /retrieval/agent-context query catalog-microservice Goal 24 order affinity blockers: HTTP 200, response keys query, context, sources, estimatedTokens, bytes=110, contextChars=0, snippetCount=0.
+- Fallback POST /retrieval/search query catalog-microservice Goal 24 order affinity blockers product relations: HTTP 200, response keys query, results, total, results=0, snippetCount=0.
+
+Conclusion: `[MISSING: docs-rag JWT_TOKEN]` is resolved for Goal 24 access. Remaining blocker: `[MISSING: docs-rag indexed Catalog Goal 24 order-affinity context]` because retrieval authenticated successfully but returned no indexed chunks for the bounded topic.
+
 ## Blockers
 
-- `[MISSING: docs-rag JWT_TOKEN]`
+- `[RESOLVED: docs-rag JWT_TOKEN available in live docs-rag pod and accepted for retrieval auth]`
+- `[MISSING: docs-rag indexed Catalog Goal 24 order-affinity context]`
 - `[MISSING: qualifying historical paid multi-product Orders rows for non-empty central Orders replay evidence]`
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill from live central Orders]`
 - `[MISSING: pruning/replacement semantics for stale affinity rows]`
