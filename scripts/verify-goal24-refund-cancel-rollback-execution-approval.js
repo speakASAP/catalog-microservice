@@ -23,6 +23,9 @@ const requiredMarkers = [
   '[MISSING: FlipFlop runtime readback showing the exact smoke order acknowledged as status=refunded and paymentStatus=refunded after manual refund]',
   '[RESOLVED/NARROWED: sanitized runtime readback found completed Fiobanka provider-payment evidence but no central Orders or FlipFlop exact-order linkage for the retained Goal 24 payment]',
   '[RESOLVED: owner accepted owner-confirmed manual Fiobanka refund as sufficient Goal 24 closeout without exact order linkage]',
+  '[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]',
+  '[MISSING: named admin/actor or approved token-handling path for guarded discount-code generation]',
+  '[MISSING: named runtime validation owner for the exact side-effectful smoke]',
   '[RESOLVED/NARROWED: runtime readback found no linked central Orders or FlipFlop state, so no Orders/Warehouse post-paid correction is required for this evidence-only closeout]',
   'For Fiobanka QR, the only currently source-supported side-effect-safe rollback is stop-before-paid',
   'A refund alone is not Warehouse return evidence.',
@@ -43,6 +46,8 @@ for (const [label, source] of [
   assert(source.includes('[RESOLVED/NARROWED: owner-confirmed manual Fiobanka refund was executed through the external refund service; automated Payments Fiobanka refund remains fail-closed]'), `${label} missing owner-confirmed manual refund execution marker`);
   assert(source.includes('[RESOLVED: owner accepted owner-confirmed manual Fiobanka refund as sufficient Goal 24 closeout without exact order linkage]'), `${label} missing owner accepted no-linkage closeout marker`);
   assert(source.includes('[RESOLVED/NARROWED: sanitized runtime readback found completed Fiobanka provider-payment evidence but no central Orders or FlipFlop exact-order linkage for the retained Goal 24 payment]'), `${label} missing sanitized no-linkage readback marker`);
+  assert(source.includes('[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]'), `${label} missing renewed execution window blocker`);
+  assert(source.includes('[MISSING: named admin/actor or approved token-handling path for guarded discount-code generation]'), `${label} missing discount fixture admin/token blocker`);
   assert(source.includes('[RESOLVED/NARROWED: runtime readback found no linked central Orders or FlipFlop state, so no Orders/Warehouse post-paid correction is required for this evidence-only closeout]'), `${label} missing no correction required marker`);
   assert(source.includes('No live checkout, provider call, webhook replay, refund/cancel/reversal, Orders mutation, Warehouse mutation, channel cleanup, deploy, migration, DB mutation, or secret output occurred'), `${label} missing non-mutation boundary`);
 }
@@ -59,6 +64,18 @@ assert(!packet.includes('[MISSING: runtime FIO_BANKA_API_KEY read-token configur
 assert(!report.includes('[MISSING: runtime FIO_BANKA_API_KEY read-token configuration and owner-approved polling run evidence]'), 'validation report still has stale runtime polling-token blocker');
 assert(report.includes('Retained Evidence Closeout Supersession'), 'validation report missing retained evidence closeout supersession section');
 assert(report.includes('future-only gates for new linked paid/provider smokes'), 'validation report must mark exact-linkage blockers as future-only after closeout');
+
+for (const marker of [
+  '[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]',
+  '[MISSING: named admin/actor or approved token-handling path for guarded discount-code generation]',
+  '[MISSING: named runtime validation owner for the exact side-effectful smoke]',
+  '[MISSING: named FlipFlop channel cleanup executor]',
+  'FlipFlop `236488d docs: record goal24 discount fixture preflight blocker`',
+  'Orders `a1f1428 Merge goal24 orders idempotency runtime evidence`',
+  'Payments `f5c078a docs: record deployed fiobanka polling match`',
+]) {
+  assert(report.includes(marker) || state.includes(marker) || status.includes(marker), `current exact linked paid-flow gate missing marker: ${marker}`);
+}
 console.log('Goal 24 refund/cancel rollback execution approval gate verified');
 
 for (const marker of ['[RESOLVED/NARROWED: sanitized runtime readback found completed Fiobanka provider-payment evidence but no central Orders or FlipFlop exact-order linkage for the retained Goal 24 payment]', '[RESOLVED: owner accepted owner-confirmed manual Fiobanka refund as sufficient Goal 24 closeout without exact order linkage]', '[RESOLVED/NARROWED: runtime readback found no linked central Orders or FlipFlop state, so no Orders/Warehouse post-paid correction is required for this evidence-only closeout]', 'completed Fiobanka rows checked: `2`', 'Orders lookup', 'FlipFlop readback']) {

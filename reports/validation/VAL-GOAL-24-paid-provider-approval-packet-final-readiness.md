@@ -77,17 +77,48 @@ Result: passed before this report was staged. Final staged validation must rerun
 Current remote heads after the latest dependency reconciliation:
 
 - Payments `f5c078a docs: record deployed fiobanka polling match` on current `main` retains the `27f3f73` polling-match status and the `9718efd` official Fio JSON API fix: source/runtime evidence uses the official Fio JSON API default, `FIO_BANKA_LOOKBACK_DAYS=31` bounded default lookback, distinct `FIO_BANKA_API_KEY_CZK` and `FIO_BANKA_API_KEY_EUR` inputs, and redacted owner-approved polling evidence for retained variable-symbol hash `d7512419521d2cab`. The CZK official endpoint returned HTTP `200`, `transactionCount=1`, `matchCount=1`, amount `1`, currency `CZK`, `tokenOutput=false`, and `rawPayloadOutput=false`; EUR returned no match. This resolves/narrows runtime token delivery, owner-approved read-only polling execution, and a real bank-originated polling match for the Fiobanka polling path only.
-- Orders `adddafb Merge goal24 orders cleanup idempotency key contract`: retains the cleanup idempotency source contract on `main`. Migration/deploy execution and any live cleanup mutation remain separately gated.
+- Orders `a1f1428 Merge goal24 orders idempotency runtime evidence`: retains the cleanup idempotency source/runtime evidence on `main`. Migration/deploy execution and any live cleanup mutation remain separately gated.
 - Catalog `main` records this as dependency-gated evidence only. It does not approve live checkout, provider call, webhook replay, refund/cancel/reversal, Orders mutation, Warehouse mutation, deploy, migration, DB mutation, marketplace/feed mutation, raw bank payload, token value, or secret output.
 
 Current retained-evidence closeout blockers: none for exact order linkage, because the owner accepted the owner-confirmed manual Fiobanka refund as sufficient Goal 24 closeout without exact order linkage and runtime readback found no linked central Orders or FlipFlop state requiring Orders/Warehouse correction. Future-only runtime gates remain: `[MISSING: official/native Fio Banka callback signature contract if provider-authentic bank-originated signed callbacks are required]`, `[MISSING: sanitized exact-order linkage between the manual refund confirmation and a completed Goal 24 paid-smoke order]`, `[MISSING: FlipFlop runtime readback showing an exact linked smoke order acknowledged as status=refunded and paymentStatus=refunded after manual refund]`, `[MISSING: owner-approved post-paid Orders/Warehouse correction packet for an exact linked completed payment state]`, and `[MISSING: named live-run executor/runtime validation owner for live paid/provider bundle smoke]`.
+
+
+## 2026-07-04 Exact Linked Paid-Smoke Continuation Hard Stop
+
+Current remote time readback was `2026-07-04T00:00:06+02:00`, after the prior approval window `2026-07-03T21:48:12+02:00` through `2026-07-03T23:59:59+02:00`. Catalog therefore must not run a side-effectful paid/provider checkout under the expired approval id.
+
+FlipFlop `9a4bf90 docs: approve goal24 discount fixture gate` records the owner-approved discount/price fixture path for a future exact linked paid/provider smoke: checkout-authoritative total `<= 300 CZK`, deterministic fixed discount `1698 CZK`, one use, short expiry, and Goal 24 correlation. Runtime preflight stopped before side effects because the guarded discount-code generation endpoint returned `401 Unauthorized` without a named admin/actor or approved token-handling path.
+
+Current hard stops before any new paid/provider attempt:
+
+- `[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]`.
+- `[MISSING: named admin/actor or approved token-handling path for guarded discount-code generation]`.
+- `[MISSING: named runtime validation owner for the exact side-effectful smoke]`.
+- `[MISSING: named FlipFlop channel cleanup executor]`.
+
+Boundary: no discount code, checkout, order, payment, provider call, Warehouse reservation, Orders mutation, DB write, deploy, migration, secret/token output, or raw customer/order/payment/provider evidence was created by this continuation.
+
+
+## 2026-07-03 Exact Linked Paid-Flow Discount Fixture Preflight
+
+Current upstream heads after retained-evidence closeout:
+
+- FlipFlop `236488d docs: record goal24 discount fixture preflight blocker`: owner-approved server-validated discount/price fixture path is documented for a future exact linked paid/provider smoke, with fixed `1698 CZK` discount intended to keep checkout-authoritative total at `300 CZK`; runtime preflight stopped before side effects because guarded discount-code generation returned `401 Unauthorized` without an admin actor/token path, and the prior approval window was effectively expired.
+- Payments `f5c078a docs: record deployed fiobanka polling match`: deployed service-level polling match remains resolved/narrowed for the retained Fiobanka variable-symbol hash without token/raw payload output.
+- Orders `a1f1428 Merge goal24 orders idempotency runtime evidence`: cleanup idempotency runtime evidence is merged; any live cleanup remains gated by exact run packet and owner-approved side-effect acknowledgements.
+
+Retained evidence closeout remains complete: `[RESOLVED: owner accepted owner-confirmed manual Fiobanka refund as sufficient Goal 24 closeout without exact order linkage]`.
+
+Future exact linked paid/provider smoke hard stops remain: `[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]`; `[MISSING: named admin/actor or approved token-handling path for guarded discount-code generation]`; `[MISSING: named runtime validation owner for the exact side-effectful smoke]`; `[MISSING: named FlipFlop channel cleanup executor]`.
+
+Decision: Catalog must not execute live checkout, discount-code generation, order creation, provider payment, Warehouse reservation, Orders cleanup, channel cleanup, deploy, migration, DB write, or secret/token output until those exact fields are source-controlled and owner-approved.
 
 ## Repository State Observed
 
 - Catalog: clean `main...origin/main` before this reconciliation at `cc08e4f docs: mark goal24 intermediate payments head superseded`; this report is refreshed by the final reconciliation commit.
 - Heureka: clean `main...origin/main` at `712c3b0 chore: expose orders lifecycle ui verifier`.
-- Payments: clean `main...origin/main` at `9718efd fix: use fio json api for polling`. This supersedes `1d503fa`, `472f07f`, `2563864`, `c5b2ba7`, and `7cfb431` in source/docs by retaining selected-provider callback evidence, provider rollback packet, Fiobanka rollback boundary, source-only refund/cancel rollback plan, source-level HMAC hardening, deployed-runtime HMAC closure evidence, and the provider-authenticity decision. Runtime HMAC presence, distinct currency-specific polling tokens, and redacted real CZK polling match evidence are verified without token/raw payload output; provider-specific refund/cancel/reversal execution approval, Orders/Warehouse mutation, deploy, migration, raw bank payload, and secret output remain blocked.
-- Orders: clean `main...origin/main` at `adddafb Merge goal24 orders cleanup idempotency key contract`. This supersedes `3a5f3f9` by consuming Warehouse `3043cad` cleanup-operation semantics while preserving runtime target-packet, Payments token, provider rollback execution, Warehouse stock window/max quantity, and owner approval blockers.
+- Payments: clean `main...origin/main` at `f5c078a docs: record deployed fiobanka polling match`. This supersedes `1d503fa`, `472f07f`, `2563864`, `c5b2ba7`, and `7cfb431` in source/docs by retaining selected-provider callback evidence, provider rollback packet, Fiobanka rollback boundary, source-only refund/cancel rollback plan, source-level HMAC hardening, deployed-runtime HMAC closure evidence, and the provider-authenticity decision. Runtime HMAC presence, distinct currency-specific polling tokens, and redacted real CZK polling match evidence are verified without token/raw payload output; provider-specific refund/cancel/reversal execution approval, Orders/Warehouse mutation, deploy, migration, raw bank payload, and secret output remain blocked.
+- Orders: clean `main...origin/main` at `a1f1428 Merge goal24 orders idempotency runtime evidence`. This supersedes `3a5f3f9` by consuming Warehouse `3043cad` cleanup-operation semantics while preserving runtime target-packet, Payments token, provider rollback execution, Warehouse stock window/max quantity, and owner approval blockers.
 - Warehouse: clean `main...origin/main` at `b3c793a Merge goal24 warehouse cleanup approval packet`. This retains `0b4c41b` source-policy cleanup operation evidence for reserved-only, fulfilled/stock-decremented, return, partial, and unknown component states and adds internal delivery smoke documentation without removing paid/provider rollback hard stops.
 
 
