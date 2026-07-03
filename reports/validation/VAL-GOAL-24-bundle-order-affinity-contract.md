@@ -117,7 +117,10 @@ New blockers:
 - `[RESOLVED: durable Marketing backfill run ledger, complete-snapshot proof, and idempotency key registry]`
 - `[RESOLVED: Allegro-owned protected replay endpoint so future runs do not require a temporary SQL export]`
 - `[RESOLVED: scheduled dry-run matrix for central Orders, FlipFlop, Allegro, and Aukro zero-row dry-run]`
-- `[MISSING: Bazos protected replay endpoint compatible with Marketing marketplace replay contract]`
+- `[RESOLVED: Bazos protected replay endpoint compatible with Marketing marketplace replay contract]`
+- `[MISSING: Bazos paid order history source]`
+- `[MISSING: Bazos persisted order item replay source]`
+- `[MISSING: Bazos order item ingestion contract]`
 - `[MISSING: non-empty real Aukro multi-Catalog-product replay evidence]`
 - `[MISSING: owner-approved Aukro recurring schedule activation policy]`
 - `[RESOLVED: Catalog source/window scoped stale-affinity replacement API]`
@@ -203,7 +206,7 @@ Merge order: Marketing ledger worker handoff, marketplace producer worker handof
 
 ## Next Action
 
-Continue non-Allegro producer closure: Bazos needs a compatible protected replay endpoint, Aukro needs non-empty real multi-product evidence plus owner schedule activation approval, and any future replace-window/publish needs owner-reviewed source/window approval.
+Continue non-Allegro producer closure: Bazos endpoint compatibility is resolved but Bazos still needs a paid order history source, persisted item replay source, and order item ingestion contract; Aukro needs non-empty real multi-product evidence plus owner schedule activation approval; any future replace-window/publish needs owner-reviewed source/window approval.
 
 
 ## Bundle Commerce Contract Decision Refresh

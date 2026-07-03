@@ -123,7 +123,10 @@ Allegro first version:
 Other marketplace services must define their own paid/processable status mapping before joining the schedule:
 
 - `[MISSING: Aukro paid multi-product replay eligibility mapping]`
-- `[MISSING: Bazos paid multi-product replay eligibility mapping]`
+- `[RESOLVED: Bazos protected replay endpoint compatible with Marketing marketplace replay contract]`
+- `[MISSING: Bazos paid order history source]`
+- `[MISSING: Bazos persisted order item replay source]`
+- `[MISSING: Bazos order item ingestion contract]`
 - `[MISSING: FlipFlop paid multi-product replay eligibility mapping]`
 
 ## Marketing Scheduler And Idempotency Contract
@@ -224,10 +227,12 @@ Merge order: W1 Allegro producer complete, W2 Marketing parser complete, W3 Mark
 - `[RESOLVED: durable Marketing backfill run ledger, complete-snapshot proof, and idempotency key registry]`
 - `[RESOLVED: Allegro-owned protected replay endpoint so future runs do not require a temporary SQL export]`
 - `[RESOLVED: scheduled dry-run matrix for central Orders, FlipFlop, Allegro, and Aukro zero-row dry-run]`
-- `[MISSING: Bazos protected replay endpoint compatible with Marketing marketplace replay contract]`
+- `[RESOLVED: Bazos protected replay endpoint compatible with Marketing marketplace replay contract]`
 - `[MISSING: non-empty real Aukro multi-Catalog-product replay evidence]`
 - `[MISSING: owner-approved Aukro recurring schedule activation policy]`
 - `[MISSING: Aukro paid multi-product replay eligibility mapping]`
-- `[MISSING: Bazos paid multi-product replay eligibility mapping]`
+- `[MISSING: Bazos paid order history source]`
+- `[MISSING: Bazos persisted order item replay source]`
+- `[MISSING: Bazos order item ingestion contract]`
 - `[MISSING: FlipFlop paid multi-product replay eligibility mapping]`
 - `[UNKNOWN: whether marketplace services other than Allegro currently have paid multi-product orders mapped to Catalog product ids]`
