@@ -82,11 +82,11 @@ for (const marker of [
   '[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, Fiobanka payment-order Vault write tokens, and redacted evidence path exist]',
   '[RESOLVED/NARROWED: deployed FlipFlop bundle-preserving fixture gate and renewed runtime quote evidence passed before checkout]',
   '[RESOLVED/NARROWED: runtime config readback shows PAYMENT_SUCCESS_URL and PAYMENT_CANCEL_URL resolve to approved FlipFlop payment-result URLs without secret output]',
-  'FlipFlop `b09153d docs: record goal24 auth actor readback`',
-  'FlipFlop `b09153d docs: record goal24 auth actor readback`',
-  'FlipFlop `b09153d docs: record goal24 auth actor readback`',
+  'FlipFlop `1e5102b docs: supersede goal24 runtime owner blockers`',
+  'FlipFlop `1e5102b docs: supersede goal24 runtime owner blockers`',
+  'FlipFlop `1e5102b docs: supersede goal24 runtime owner blockers`',
   'Orders `e3f6e18 docs: preserve goal24 orders cleanup packet`',
-  'Payments `443605e docs: sync goal24 runtime validation owner`',
+  'Payments `e631ebd docs: sync goal24 flipflop supersession head`',
   '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; max quantity and live hold/release window remain missing]',
 ]) {
   assert(report.includes(marker) || state.includes(marker) || status.includes(marker), `current exact linked paid-flow gate missing marker: ${marker}`);
