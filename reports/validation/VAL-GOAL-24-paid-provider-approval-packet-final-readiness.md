@@ -333,3 +333,13 @@ Catalog consumed FlipFlop `1e5102b docs: supersede goal24 runtime owner blockers
 Remaining hard stops: `[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]`; `[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]`; `[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]`; `[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]`; `[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]`; `[MISSING: owner-approved Warehouse stock hold/release window, max quantity, target rows]`; `[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]`.
 
 No Catalog checkout, discount-code creation, payment, provider call, refund/reversal, Orders/Warehouse/channel mutation, deploy, migration, DB write, secret/token output, raw email/user id/DB row, or raw customer/order/payment/provider evidence occurred.
+
+## 2026-07-04 Payments Refund Upload Runtime Gate Sync
+
+Catalog consumed Payments `bf96f5d docs: record fiobanka refund upload runtime gate` as the current Payments refund-upload evidence head.
+
+Sanitized Payments readback on deployed image `localhost:5000/payments-microservice:038c8e3` records `FIO_BANKA_API_KEY_CZK/EUR` and `FIO_BANKA_WEBHOOK_SECRET` present without values, while `FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK/EUR` are absent and `FIO_BANKA_REFUND_UPLOAD_ENABLED=false`.
+
+Decision: this strengthens the fail-closed boundary for full completed-payment Fiobanka paid/refund smoke. Stop-before-paid evidence remains resolved/narrowed, but completed-payment rollback remains blocked by `[MISSING: Vault properties FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK and FIO_BANKA_PAYMENT_ORDER_TOKEN_EUR for owner-approved payment-order upload]`, `[MISSING: FIO_BANKA_REFUND_UPLOAD_ENABLED=true for an owner-approved exact future refund upload window]`, `[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]`, and exact future payment/idempotency evidence. Runtime transaction-polling/read-token readiness must not be treated as refund/reversal authority.
+
+No live checkout, payment, refund upload, provider call, Orders/Warehouse/channel mutation, deploy, migration, DB write, secret output, raw provider payload, or raw order/payment evidence occurred.
