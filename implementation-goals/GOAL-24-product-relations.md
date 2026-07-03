@@ -75,7 +75,7 @@ Follow-up read-only evidence on 2026-07-03 confirmed the Orders replay endpoint,
 - `[RESOLVED/NARROWED: Bazos paid order history source implemented as local paid projection fields]`
 - `[RESOLVED/NARROWED: Bazos persisted order item replay source implemented as bounded itemSnapshots]`
 - `[RESOLVED/NARROWED: Bazos order item ingestion contract implemented for source item lines or linked Bazos ads with Catalog product IDs]`
-- `[MISSING: live Bazos paid multi-product order replay evidence]`
+- `[RESOLVED: live Bazos paid multi-product order replay evidence via budget source dry-run goal24-bazos-budget-paid-source-20260703-001]`
 - `[MISSING: owner approval to activate recurring Bazos affinity publish after live dry-run evidence]`
 - `[MISSING: non-empty real Aukro multi-Catalog-product replay evidence]`
 - `[MISSING: owner-approved Aukro recurring schedule activation policy]`

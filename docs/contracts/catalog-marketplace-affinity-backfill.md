@@ -127,7 +127,7 @@ Other marketplace services must define their own paid/processable status mapping
 - `[RESOLVED/NARROWED: Bazos paid order history source implemented as local paid projection fields]`
 - `[RESOLVED/NARROWED: Bazos persisted order item replay source implemented as bounded itemSnapshots]`
 - `[RESOLVED/NARROWED: Bazos order item ingestion contract implemented for source item lines or linked Bazos ads with Catalog product IDs]`
-- `[MISSING: live Bazos paid multi-product order replay evidence]`
+- `[RESOLVED: live Bazos paid multi-product order replay evidence via budget source dry-run goal24-bazos-budget-paid-source-20260703-001]`
 - `[MISSING: owner approval to activate recurring Bazos affinity publish after live dry-run evidence]`
 - `[MISSING: FlipFlop paid multi-product replay eligibility mapping]`
 
@@ -236,7 +236,7 @@ Merge order: W1 Allegro producer complete, W2 Marketing parser complete, W3 Mark
 - `[RESOLVED/NARROWED: Bazos paid order history source implemented as local paid projection fields]`
 - `[RESOLVED/NARROWED: Bazos persisted order item replay source implemented as bounded itemSnapshots]`
 - `[RESOLVED/NARROWED: Bazos order item ingestion contract implemented for source item lines or linked Bazos ads with Catalog product IDs]`
-- `[MISSING: live Bazos paid multi-product order replay evidence]`
+- `[RESOLVED: live Bazos paid multi-product order replay evidence via budget source dry-run goal24-bazos-budget-paid-source-20260703-001]`
 - `[MISSING: owner approval to activate recurring Bazos affinity publish after live dry-run evidence]`
 - `[MISSING: FlipFlop paid multi-product replay eligibility mapping]`
 - `[UNKNOWN: whether marketplace services other than Allegro currently have paid multi-product orders mapped to Catalog product ids]`

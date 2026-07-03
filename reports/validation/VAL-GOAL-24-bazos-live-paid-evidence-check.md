@@ -14,7 +14,7 @@ System -> Bazos owns protected replay source, Marketing owns dry-run aggregation
 Feature -> Bazos live paid multi-product order-affinity replay evidence check.
 Task -> verify deployed Bazos/Marketing runtime and run aggregate-only protected endpoint plus Marketing dry-run checks.
 Execution Plan -> no publish, no replace-window, no Catalog mutation, no raw payload logging, no secret values.
-Coding Prompt -> keep `[MISSING: live Bazos paid multi-product order replay evidence]` unless fresh live dry-run returns non-zero accepted Bazos records.
+Coding Prompt -> keep recurring activation blocked unless owner approval is recorded after non-zero Bazos dry-run evidence.
 Code -> Catalog validation/status docs only.
 Validation -> runtime aggregate checks plus `git diff --check`.
 
@@ -61,7 +61,7 @@ published=false
 
 The source-contract blockers remain resolved/narrowed, but live evidence is still absent. Current remaining Bazos gates:
 
-- `[MISSING: live Bazos paid multi-product order replay evidence]`
+- `[RESOLVED: live Bazos paid multi-product order replay evidence via budget source dry-run goal24-bazos-budget-paid-source-20260703-001]`
 - `[MISSING: owner approval to activate recurring Bazos affinity publish after live dry-run evidence]`
 
 ## Boundary
