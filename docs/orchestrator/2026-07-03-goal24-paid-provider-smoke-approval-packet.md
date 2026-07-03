@@ -117,7 +117,7 @@ Retained manual-refund evidence is closed by owner acceptance without exact orde
 
 The prior approval window expired at `2026-07-03T23:59:59+02:00`; remote continuation readback was `2026-07-04T00:00:06+02:00`. The old approval id must not be reused for a new side-effectful checkout/payment attempt.
 
-Catalog reconciles FlipFlop `31845ef docs: close goal24 channel cleanup packet`, Payments `038c8e3 test: keep fiobanka refund tokens fail closed`, and Orders `e3f6e18 docs: preserve goal24 orders cleanup packet` as dependency evidence only. FlipFlop records an owner-approved server-validated discount/price fixture path for a future exact linked paid/provider smoke, but runtime preflight stopped before side effects because guarded discount-code generation returned `401 Unauthorized` without a named admin/actor or approved token-handling path.
+Catalog reconciles FlipFlop `31845ef docs: close goal24 channel cleanup packet`, Payments `d5ee11b docs: record fiobanka refund upload deploy gate`, and Orders `e3f6e18 docs: preserve goal24 orders cleanup packet` as dependency evidence only. FlipFlop records an owner-approved server-validated discount/price fixture path for a future exact linked paid/provider smoke, but runtime preflight stopped before side effects because guarded discount-code generation returned `401 Unauthorized` without a named admin/actor or approved token-handling path.
 
 Current hard stops before any exact linked paid/provider attempt:
 
@@ -130,7 +130,7 @@ Boundary: no discount code, checkout, order, payment, provider call, Warehouse r
 
 ## 2026-07-04 Stale-Head Reconciliation
 
-Catalog consumed the orchestrator-provided clean heads: Catalog `c52600d`, Orders `e3f6e18 docs: preserve goal24 orders cleanup packet`, Payments `038c8e3 test: keep fiobanka refund tokens fail closed`, Warehouse `46a66dc docs: define goal24 warehouse cleanup packet`, and FlipFlop `31845ef docs: close goal24 channel cleanup packet`. These are read-only readiness inputs only; they do not approve side-effectful checkout, provider, Orders, Warehouse, channel, deploy, migration, or DB mutation.
+Catalog consumed the orchestrator-provided clean heads: Catalog `c52600d`, Orders `e3f6e18 docs: preserve goal24 orders cleanup packet`, Payments `d5ee11b docs: record fiobanka refund upload deploy gate`, Warehouse `46a66dc docs: define goal24 warehouse cleanup packet`, and FlipFlop `31845ef docs: close goal24 channel cleanup packet`. These are read-only readiness inputs only; they do not approve side-effectful checkout, provider, Orders, Warehouse, channel, deploy, migration, or DB mutation.
 
 Parallel execution state:
 
@@ -319,7 +319,7 @@ State Update: Catalog may now mark the original stop-before-paid smoke and Order
 
 ## 2026-07-04 Payments Fiobanka Refund Upload Gate Reconciliation
 
-Payments `038c8e3 test: keep fiobanka refund tokens fail closed` is deployed as `localhost:5000/payments-microservice:038c8e3`; sanitized runtime readback shows `FIO_BANKA_REFUND_UPLOAD_ENABLED=false`, `FIO_BANKA_API_KEY_CZK/EUR` present without values, and `FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK/EUR` absent. Fiobanka completed-transfer refund upload is source-defined only as guarded `PENDING_AUTHORIZATION` after Internetbanking authorization; it is not completed refund evidence and remains blocked by [MISSING: Vault properties FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK and FIO_BANKA_PAYMENT_ORDER_TOKEN_EUR for owner-approved payment-order upload].
+Payments `d5ee11b docs: record fiobanka refund upload deploy gate` is deployed as `localhost:5000/payments-microservice:038c8e3`; sanitized runtime readback shows `FIO_BANKA_REFUND_UPLOAD_ENABLED=false`, `FIO_BANKA_API_KEY_CZK/EUR` present without values, and `FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK/EUR` absent. Fiobanka completed-transfer refund upload is source-defined only as guarded `PENDING_AUTHORIZATION` after Internetbanking authorization; it is not completed refund evidence and remains blocked by [MISSING: Vault properties FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK and FIO_BANKA_PAYMENT_ORDER_TOKEN_EUR for owner-approved payment-order upload].
 
 Current decision: full paid/refund remains dependency-gated. Catalog must not treat a Fiobanka payment-order upload acknowledgement as refund/reversal completion, must not proceed without the missing Vault write-token properties and exact future linked payment packet, and must still require Orders/Warehouse/channel cleanup approvals before any completed-payment smoke.
 
