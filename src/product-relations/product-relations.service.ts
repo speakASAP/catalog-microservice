@@ -42,12 +42,23 @@ type OrderAffinityBatchItemInput = {
   evidence?: unknown;
 };
 
+type OrderAffinityWindowInput = {
+  sourceOwner?: unknown;
+  channel?: unknown;
+  windowStart?: unknown;
+  windowEnd?: unknown;
+  runId?: unknown;
+  completeSnapshot?: unknown;
+};
+
 export type OrderAffinityBatchInput = {
   source?: unknown;
   idempotencyKey?: unknown;
   generatedAt?: unknown;
   items?: unknown;
 };
+
+export type ReplaceOrderAffinityWindowInput = OrderAffinityBatchInput & OrderAffinityWindowInput;
 
 export type ProductRelationResponse = {
   id: string;
@@ -82,6 +93,29 @@ export type OrderAffinityBatchResponse = {
     failed: number;
   };
   items: OrderAffinityBatchItemResult[];
+};
+
+type OrderAffinityWindow = {
+  sourceOwner: string;
+  channel: string;
+  windowStart: string;
+  windowEnd: string;
+  runId: string;
+};
+
+type PrunedOrderAffinityRelation = {
+  relationId: string;
+  sourceProductId: string;
+  targetProductId: string;
+};
+
+export type ReplaceOrderAffinityWindowResponse = OrderAffinityBatchResponse & {
+  window: OrderAffinityWindow;
+  completeSnapshot: true;
+  summary: OrderAffinityBatchResponse['summary'] & {
+    pruned: number;
+  };
+  prunedRelations: PrunedOrderAffinityRelation[];
 };
 
 type BundleCandidateProductSummary = {
@@ -242,6 +276,67 @@ export class ProductRelationsService {
 
     const result = await this.upsertRelationWithStatus(sourceProductId, targetProductId, data, scope);
     return result.relation;
+  }
+
+  async replaceOrderAffinityWindow(
+    data: ReplaceOrderAffinityWindowInput,
+    scope: ProductRelationAccessScope = {},
+  ): Promise<ReplaceOrderAffinityWindowResponse> {
+    const window = this.normalizeOrderAffinityWindowInput(data);
+    const batch = this.normalizeOrderAffinityBatchInput(data, { allowEmptyItems: true });
+    const items: OrderAffinityBatchItemResult[] = [];
+    const retainedRelationIds = new Set<string>();
+
+    for (const [index, item] of batch.items.entries()) {
+      let sourceProductId: string | undefined;
+      let targetProductId: string | undefined;
+      try {
+        sourceProductId = this.normalizeUuid(item.sourceProductId, 'items.sourceProductId');
+        targetProductId = this.normalizeUuid(item.targetProductId, 'items.targetProductId');
+        const result = await this.upsertRelationWithStatus(sourceProductId, targetProductId, {
+          relationType: ORDER_AFFINITY_RELATION_TYPE,
+          source: MARKETING_ORDER_AFFINITY_SOURCE,
+          score: item.score,
+          confidence: item.confidence,
+          evidence: this.evidenceWithOrderAffinityWindow(item.evidence, window),
+        }, scope);
+        retainedRelationIds.add(result.relation.id);
+        items.push({
+          index,
+          sourceProductId,
+          targetProductId,
+          status: result.status,
+          relation: result.relation,
+        });
+      } catch (error) {
+        items.push({
+          index,
+          sourceProductId,
+          targetProductId,
+          status: 'failed',
+          error: this.errorMessage(error),
+        });
+      }
+    }
+
+    const prunedRelations = await this.pruneStaleOrderAffinityWindowRelations(window, retainedRelationIds);
+
+    return {
+      source: MARKETING_ORDER_AFFINITY_SOURCE,
+      idempotencyKey: batch.idempotencyKey,
+      generatedAt: batch.generatedAt,
+      window,
+      completeSnapshot: true,
+      summary: {
+        total: items.length,
+        upserted: items.filter((item) => item.status === 'upserted').length,
+        updated: items.filter((item) => item.status === 'updated').length,
+        failed: items.filter((item) => item.status === 'failed').length,
+        pruned: prunedRelations.length,
+      },
+      items,
+      prunedRelations,
+    };
   }
 
   async upsertOrderAffinityBatch(
@@ -435,7 +530,10 @@ export class ProductRelationsService {
     };
   }
 
-  private normalizeOrderAffinityBatchInput(data: OrderAffinityBatchInput) {
+  private normalizeOrderAffinityBatchInput(
+    data: OrderAffinityBatchInput,
+    options: { allowEmptyItems?: boolean } = {},
+  ) {
     if (!data || Array.isArray(data) || typeof data !== 'object') {
       throw new BadRequestException('Order affinity batch payload must be an object');
     }
@@ -450,7 +548,7 @@ export class ProductRelationsService {
     if (!Array.isArray(data.items)) {
       throw new BadRequestException('items must be an array');
     }
-    if (data.items.length === 0) {
+    if (!options.allowEmptyItems && data.items.length === 0) {
       throw new BadRequestException('items must not be empty');
     }
     if (data.items.length > MAX_ORDER_AFFINITY_BATCH_ITEMS) {
@@ -462,6 +560,89 @@ export class ProductRelationsService {
       generatedAt: this.normalizeOptionalIsoTimestamp(data.generatedAt, 'generatedAt'),
       items: data.items.map((item) => this.normalizeOrderAffinityBatchItem(item)),
     };
+  }
+
+  private normalizeOrderAffinityWindowInput(data: ReplaceOrderAffinityWindowInput): OrderAffinityWindow {
+    if (!data || Array.isArray(data) || typeof data !== 'object') {
+      throw new BadRequestException('Order affinity window payload must be an object');
+    }
+    if (data.completeSnapshot !== true) {
+      throw new BadRequestException('completeSnapshot must be true for order-affinity window replacement');
+    }
+    const windowStart = this.normalizeRequiredIsoTimestamp(data.windowStart, 'windowStart');
+    const windowEnd = this.normalizeRequiredIsoTimestamp(data.windowEnd, 'windowEnd');
+    if (Date.parse(windowEnd) <= Date.parse(windowStart)) {
+      throw new BadRequestException('windowEnd must be after windowStart');
+    }
+    return {
+      sourceOwner: this.normalizeToken(
+        data.sourceOwner,
+        'sourceOwner',
+        this.sourcePattern,
+        'sourceOwner must be a lowercase source token',
+      ),
+      channel: this.normalizeToken(
+        data.channel,
+        'channel',
+        this.sourcePattern,
+        'channel must be a lowercase source token',
+      ),
+      windowStart,
+      windowEnd,
+      runId: this.normalizeRequiredString(data.runId, 'runId'),
+    };
+  }
+
+  private evidenceWithOrderAffinityWindow(
+    evidence: unknown,
+    window: OrderAffinityWindow,
+  ): ProductRelationEvidence {
+    return {
+      ...this.validateEvidence(evidence),
+      orderAffinityWindow: { ...window },
+    };
+  }
+
+  private async pruneStaleOrderAffinityWindowRelations(
+    window: OrderAffinityWindow,
+    retainedRelationIds: Set<string>,
+  ): Promise<PrunedOrderAffinityRelation[]> {
+    const existingRelations = await this.relationRepository.find({
+      where: {
+        relationType: ORDER_AFFINITY_RELATION_TYPE,
+        source: MARKETING_ORDER_AFFINITY_SOURCE,
+      },
+    });
+    const staleRelations = existingRelations.filter((relation) => (
+      !retainedRelationIds.has(relation.id) &&
+      this.relationMatchesOrderAffinityWindow(relation, window)
+    ));
+
+    for (const relation of staleRelations) {
+      await this.relationRepository.delete(relation.id);
+    }
+
+    return staleRelations.map((relation) => ({
+      relationId: relation.id,
+      sourceProductId: relation.sourceProductId,
+      targetProductId: relation.targetProductId,
+    }));
+  }
+
+  private relationMatchesOrderAffinityWindow(
+    relation: ProductRelation,
+    window: OrderAffinityWindow,
+  ): boolean {
+    const evidenceWindow = relation.evidence?.orderAffinityWindow;
+    if (!evidenceWindow || Array.isArray(evidenceWindow) || typeof evidenceWindow !== 'object') {
+      return false;
+    }
+    const candidate = evidenceWindow as Record<string, unknown>;
+    return candidate.sourceOwner === window.sourceOwner &&
+      candidate.channel === window.channel &&
+      candidate.windowStart === window.windowStart &&
+      candidate.windowEnd === window.windowEnd &&
+      candidate.runId === window.runId;
   }
 
   private normalizeOrderAffinityBatchItem(value: unknown): OrderAffinityBatchItemInput {
@@ -482,6 +663,22 @@ export class ProductRelationsService {
     if (value === undefined || value === null || value === '') {
       return undefined;
     }
+    if (typeof value !== 'string' || value.trim().length === 0 || value.trim().length > 200) {
+      throw new BadRequestException(`${field} must be a non-empty string up to 200 characters`);
+    }
+    return value.trim();
+  }
+
+  private normalizeRequiredIsoTimestamp(value: unknown, field: string): string {
+    const normalized = this.normalizeRequiredString(value, field);
+    const timestamp = Date.parse(normalized);
+    if (!Number.isFinite(timestamp)) {
+      throw new BadRequestException(`${field} must be an ISO timestamp`);
+    }
+    return normalized;
+  }
+
+  private normalizeRequiredString(value: unknown, field: string): string {
     if (typeof value !== 'string' || value.trim().length === 0 || value.trim().length > 200) {
       throw new BadRequestException(`${field} must be a non-empty string up to 200 characters`);
     }

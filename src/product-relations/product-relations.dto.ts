@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsInt, IsNumber, IsObject, IsOptional, IsString, Max, Min, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, IsInt, IsNumber, IsObject, IsOptional, IsString, Max, Min, ValidateNested } from 'class-validator';
 
 export class ProductRelationQueryDto {
   @IsOptional()
@@ -93,4 +93,24 @@ export class UpsertOrderAffinityBatchDto {
   @ValidateNested({ each: true })
   @Type(() => UpsertOrderAffinityBatchItemDto)
   items: UpsertOrderAffinityBatchItemDto[];
+}
+
+export class ReplaceOrderAffinityWindowDto extends UpsertOrderAffinityBatchDto {
+  @IsString()
+  sourceOwner: string;
+
+  @IsString()
+  channel: string;
+
+  @IsString()
+  windowStart: string;
+
+  @IsString()
+  windowEnd: string;
+
+  @IsString()
+  runId: string;
+
+  @IsBoolean()
+  completeSnapshot: boolean;
 }

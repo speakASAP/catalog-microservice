@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put, Query, Req, Use
 import { CatalogAuthGuard, type CatalogAuthenticatedRequest } from '../auth/catalog-auth.guard';
 import { RequireCatalogRoles } from '../auth/catalog-auth.decorator';
 import { LoggerService } from '../logger/logger.service';
-import { ProductBundleCandidateQueryDto, ProductRelationQueryDto, UpsertOrderAffinityBatchDto, UpsertProductRelationDto } from './product-relations.dto';
+import { ProductBundleCandidateQueryDto, ProductRelationQueryDto, ReplaceOrderAffinityWindowDto, UpsertOrderAffinityBatchDto, UpsertProductRelationDto } from './product-relations.dto';
 import { ProductRelationsService } from './product-relations.service';
 
 const PRODUCT_RELATION_ADMIN_ROLES = [
@@ -103,6 +103,44 @@ export class InternalOrderAffinityRelationsController {
     private readonly productRelationsService: ProductRelationsService,
     private readonly logger: LoggerService,
   ) {}
+
+  @Post('replace-window')
+  @RequireCatalogRoles(...PRODUCT_RELATION_ADMIN_ROLES)
+  async replaceWindow(
+    @Body() data: ReplaceOrderAffinityWindowDto,
+    @Req() request: CatalogAuthenticatedRequest,
+  ) {
+    this.logger.log(
+      'POST /api/internal/product-relations/order-affinity/replace-window',
+      'InternalOrderAffinityRelationsController',
+    );
+    const result = await this.productRelationsService.replaceOrderAffinityWindow(data, {
+      actor: request.catalogActor,
+    });
+
+    this.logger.auditCatalogWrite(request, {
+      action: 'replace_window',
+      resourceType: 'product_relation',
+      resourceId: result.idempotencyKey ?? result.window.runId,
+      metadata: {
+        source: result.source,
+        idempotencyKey: result.idempotencyKey,
+        generatedAt: result.generatedAt,
+        sourceOwner: result.window.sourceOwner,
+        channel: result.window.channel,
+        windowStart: result.window.windowStart,
+        windowEnd: result.window.windowEnd,
+        runId: result.window.runId,
+        total: result.summary.total,
+        upserted: result.summary.upserted,
+        updated: result.summary.updated,
+        failed: result.summary.failed,
+        pruned: result.summary.pruned,
+      },
+    });
+
+    return { success: true, data: result };
+  }
 
   @Post('batch')
   @RequireCatalogRoles(...PRODUCT_RELATION_ADMIN_ROLES)

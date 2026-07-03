@@ -317,4 +317,117 @@ describe('ProductRelationsService', () => {
       targetProductC,
     ]);
   });
+
+  it('replaces a complete order-affinity window and prunes only matching stale rows', async () => {
+    const window = {
+      sourceOwner: 'allegro-service',
+      channel: 'allegro',
+      windowStart: '2026-07-01T00:00:00.000Z',
+      windowEnd: '2026-07-03T00:00:00.000Z',
+      runId: 'marketplace-affinity-allegro-20260703',
+    };
+    const retainedRelation = relationRow({
+      id: 'rel-retained',
+      targetProductId: targetProductA,
+      source: 'marketing_order_affinity',
+      evidence: { orderAffinityWindow: window },
+    });
+    const staleRelation = relationRow({
+      id: 'rel-stale',
+      targetProductId: targetProductB,
+      source: 'marketing_order_affinity',
+      evidence: { orderAffinityWindow: window },
+    });
+    const otherWindowRelation = relationRow({
+      id: 'rel-other-window',
+      targetProductId: targetProductC,
+      source: 'marketing_order_affinity',
+      evidence: { orderAffinityWindow: { ...window, channel: 'aukro' } },
+    });
+    const legacyRelation = relationRow({
+      id: 'rel-legacy',
+      targetProductId: hiddenTargetProduct,
+      source: 'marketing_order_affinity',
+      evidence: { sourceSystem: 'marketing-microservice' },
+    });
+    const repository = {
+      findOne: jest.fn(async ({ where }) => (
+        where.targetProductId === targetProductA ? retainedRelation : null
+      )),
+      create: jest.fn((data) => relationRow(data)),
+      save: jest.fn(async (data) => data),
+      find: jest.fn(async () => [
+        retainedRelation,
+        staleRelation,
+        otherWindowRelation,
+        legacyRelation,
+      ]),
+      delete: jest.fn(async () => ({ affected: 1 })),
+    };
+    const productsService = {
+      findOne: jest.fn(async (id: string) => ({ id })),
+    };
+    const service = new ProductRelationsService(repository as any, productsService as any);
+
+    const result = await service.replaceOrderAffinityWindow({
+      source: 'marketing_order_affinity',
+      idempotencyKey: 'marketing_order_affinity:allegro:2026-07-01:2026-07-03:1',
+      generatedAt: '2026-07-03T10:00:00.000Z',
+      completeSnapshot: true,
+      ...window,
+      items: [
+        {
+          sourceProductId,
+          targetProductId: targetProductA,
+          score: 4,
+          confidence: 0.9,
+          evidence: { sourceSystem: 'marketing-microservice' },
+        },
+      ],
+    }, { actor: adminActor });
+
+    expect(result.summary).toEqual({
+      total: 1,
+      upserted: 0,
+      updated: 1,
+      failed: 0,
+      pruned: 1,
+    });
+    expect(result.window).toEqual(window);
+    expect(result.prunedRelations).toEqual([{
+      relationId: 'rel-stale',
+      sourceProductId,
+      targetProductId: targetProductB,
+    }]);
+    expect(repository.save).toHaveBeenCalledWith(expect.objectContaining({
+      evidence: {
+        sourceSystem: 'marketing-microservice',
+        orderAffinityWindow: window,
+      },
+    }));
+    expect(repository.delete).toHaveBeenCalledTimes(1);
+    expect(repository.delete).toHaveBeenCalledWith('rel-stale');
+  });
+
+  it('rejects order-affinity window replacement without complete snapshot proof', async () => {
+    const repository = {
+      find: jest.fn(),
+      delete: jest.fn(),
+    };
+    const service = new ProductRelationsService(repository as any, { findOne: jest.fn() } as any);
+
+    await expect(service.replaceOrderAffinityWindow({
+      sourceOwner: 'allegro-service',
+      channel: 'allegro',
+      windowStart: '2026-07-01T00:00:00.000Z',
+      windowEnd: '2026-07-03T00:00:00.000Z',
+      runId: 'marketplace-affinity-allegro-20260703',
+      completeSnapshot: false,
+      items: [],
+    }, { actor: adminActor })).rejects.toThrow(BadRequestException);
+
+    expect(repository.find).not.toHaveBeenCalled();
+    expect(repository.delete).not.toHaveBeenCalled();
+  });
+
 });

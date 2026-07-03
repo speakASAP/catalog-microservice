@@ -68,7 +68,9 @@ Follow-up read-only evidence on 2026-07-03 confirmed the Orders replay endpoint,
 - `[MISSING: scripts/strict_doc_audit.py]`
 - `[MISSING: qualifying historical paid multi-product Orders rows for non-empty replay evidence]`
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`
-- `[MISSING: pruning/replacement semantics for stale affinity rows]`
+- `[MISSING: Marketing durable run ledger proving a complete source/window snapshot]`
+- `[MISSING: marketplace producer guarantee that replay window is complete and repeatable]`
+- `[MISSING: owner-approved retention/decay policy for stale affinity rows]`
 - `[MISSING: Catalog bundle ownership decision: read-only candidate, standalone bundle aggregate, or product-like SKU]`
 - `[MISSING: Orders bundle create-order contract and bundle identity representation beyond normal line items]`
 - `[MISSING: Warehouse bundle reservation contract for stock and fulfillment effects]`
@@ -110,3 +112,19 @@ Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task ->
 - Code: `docs/contracts/catalog-marketplace-affinity-backfill.md` and linked Goal 24 docs.
 - Validation: `git diff --check`.
 - State Update: W1 Allegro replay producer is ready now; Marketing parser/ledger and Catalog prune/replace work are dependency-gated.
+
+
+## 2026-07-03 Source/Window Replacement API Update
+
+Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update.
+
+- Vision: marketplace purchase history can improve related-product surfaces without moving customer, payment, address, stock, checkout, or publication ownership into Catalog.
+- Goal Impact: recurring Marketing order-affinity publishes have a bounded Catalog replacement surface instead of additive-only stale rows.
+- System: Catalog owns only `product_relations`; Marketing must still prove source/window completeness through its run ledger; marketplace producers must prove repeatable snapshots.
+- Feature: internal `order_affinity` `replace-window` endpoint that upserts a complete snapshot and prunes only exact same-window Marketing rows.
+- Task: implement fail-closed source/window scoped replacement in `src/product-relations/*`, update contracts, and validate focused tests/build/diff.
+- Execution Plan: single Catalog owner lane; no parallel source edits because the relation service/controller/contract are shared files.
+- Coding Prompt: require `completeSnapshot=true`; force `relationType=order_affinity` and `source=marketing_order_affinity`; stamp `evidence.orderAffinityWindow`; never prune manual/non-window/non-Marketing rows.
+- Code: `src/product-relations/product-relations.dto.ts`, `src/product-relations/product-relations.controller.ts`, `src/product-relations/product-relations.service.ts`, `src/product-relations/product-relations.service.spec.ts`, Goal 24 contracts/status docs.
+- Validation: `npm test -- --runInBand src/product-relations/product-relations.service.spec.ts`, `npm run build`, `git diff --check`.
+- State Update: Catalog source/window replacement API source is complete; scheduled use remains gated by Marketing ledger, marketplace producer completeness, owner retention policy, deployment, and runtime smoke.

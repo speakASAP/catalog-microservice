@@ -212,13 +212,58 @@ Body:
 
 Response returns per-item statuses: `upserted`, `updated`, or `failed`, plus aggregate counts. Invalid items do not abort the whole batch after root payload validation succeeds.
 
-First version semantics:
+Batch endpoint semantics:
 
 - Upsert only.
 - No deletion or pruning of missing rows.
 - No live backfill trigger.
 - No marketplace publication.
 - No bundle SKU, checkout, warehouse, payment, or free-shipping mutation.
+
+### `POST /api/internal/product-relations/order-affinity/replace-window`
+
+Protected by `CatalogAuthGuard` and restricted to platform/catalog admin roles or internal Catalog service actors.
+
+This endpoint is the Catalog-owned replacement surface for Marketing-derived complete source/window snapshots. Catalog still forces `relationType = order_affinity` and `source = marketing_order_affinity` server-side. It upserts the supplied candidates, stamps each row with `evidence.orderAffinityWindow`, and prunes only omitted rows whose existing evidence has the exact same `sourceOwner`, `channel`, `windowStart`, `windowEnd`, and `runId`.
+
+Body:
+
+```json
+{
+  "source": "marketing_order_affinity",
+  "idempotencyKey": "marketing_order_affinity:allegro-service:allegro:2026-07-01:2026-07-03:marketplace-affinity-allegro-20260703:1",
+  "generatedAt": "2026-07-03T10:00:00.000Z",
+  "sourceOwner": "allegro-service",
+  "channel": "allegro",
+  "windowStart": "2026-07-01T00:00:00.000Z",
+  "windowEnd": "2026-07-03T00:00:00.000Z",
+  "runId": "marketplace-affinity-allegro-20260703",
+  "completeSnapshot": true,
+  "items": [
+    {
+      "sourceProductId": "uuid",
+      "targetProductId": "uuid",
+      "score": 1,
+      "confidence": 0.5,
+      "evidence": {
+        "sourceSystem": "marketing-microservice",
+        "candidateId": "non-sensitive-candidate-id"
+      }
+    }
+  ]
+}
+```
+
+Response extends the batch aggregate with `window`, `completeSnapshot: true`, `summary.pruned`, and `prunedRelations[]`.
+
+Fail-closed rules:
+
+- `completeSnapshot` must be exactly `true`.
+- `sourceOwner` and `channel` must be lowercase source tokens.
+- `windowStart` and `windowEnd` must be ISO timestamps and `windowEnd` must be after `windowStart`.
+- `items` may be empty only on this replacement endpoint, allowing a complete empty snapshot to prune rows for the exact same window metadata.
+- Catalog never prunes manual, curated, non-Marketing, non-window, checkout, product, price, stock, payment, marketplace listing, or rows whose `evidence.orderAffinityWindow` does not exactly match this request.
+- This endpoint does not prove Marketing ledger completeness, marketplace replay completeness, retention policy approval, or publish-window approval.
 
 ## Blockers
 
@@ -228,7 +273,6 @@ First version semantics:
 - `[MISSING: Marketing parser support for marketplace-owned replay source envelopes]`
 - `[MISSING: durable Marketing backfill run ledger and idempotency key registry]`
 - `[MISSING: Allegro-owned protected replay endpoint so future runs do not require a temporary SQL export]`
-- `[MISSING: Catalog source/window scoped stale-affinity pruning or replacement API]`
 - `[MISSING: Catalog bundle ownership decision: read-only candidate, standalone bundle aggregate, or product-like SKU]`
 - `[MISSING: Orders bundle create-order contract and bundle identity representation beyond normal line items]`
 - `[MISSING: Warehouse bundle reservation contract for stock and fulfillment effects]`
