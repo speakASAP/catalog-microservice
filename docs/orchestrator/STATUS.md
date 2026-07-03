@@ -1,3 +1,4 @@
+2026-07-03: Goal 24 docs-rag JWT access blocker resolved. In the live docs-rag pod, JWT_TOKEN was present and accepted by POST /retrieval/agent-context for query 'catalog-microservice Goal 24 order affinity blockers', returning HTTP 200 with response keys query, context, sources, and estimatedTokens; token value was not printed or copied. The bounded query returned contextChars=0 and /retrieval/search returned results=0, so the remaining gap is indexed Catalog Goal 24 context, not JWT access. New blocker: [MISSING: docs-rag indexed Catalog Goal 24 order-affinity context]. No code, deployment, migration, runtime Catalog data, Auth user data, or secret value was changed.
 2026-07-03: Goal 24 Catalog source/window replacement API source completed. Added protected internal `POST /api/internal/product-relations/order-affinity/replace-window` that requires `completeSnapshot=true`, forces `relationType=order_affinity` and `source=marketing_order_affinity`, stamps `evidence.orderAffinityWindow`, upserts supplied candidates, and prunes only omitted rows whose existing Marketing window evidence exactly matches `sourceOwner`, `channel`, `windowStart`, `windowEnd`, and `runId`. Validation passed: focused product-relations Jest 1 suite / 9 tests and backend `npm run build`; `git diff --check` is the final commit gate. No deploy, migration, runtime mutation, Marketing/Orders/marketplace source edit, Warehouse/Payments/checkout change, secret read, or production publish was run. Scheduled replacement remains blocked on Marketing ledger, producer completeness, owner retention policy, deployment approval, and protected runtime smoke.
 2026-07-03: Goal 24 scheduled marketplace affinity backfill contract defined docs-only. IPS chain: Vision -> marketplace purchase history improves related-product surfaces without moving sensitive order/payment/customer ownership into Catalog; Goal Impact -> the one-time Allegro affinity publish now has a repeatable contract path; System -> marketplace services own replay producers, Marketing owns parser/ledger/scheduler/idempotent publish orchestration, Catalog owns upsert-only product relation persistence; Feature -> protected marketplace replay candidates and scheduled dry-run-first backfill; Task -> define Allegro-owned replay endpoint semantics, idempotency, pruning gates, and parallel workstreams; Execution Plan -> document only, preserve blockers, avoid runtime mutation; Coding Prompt -> do not invent backend fields or expose customer/address/payment/provider data; Code -> `docs/contracts/catalog-marketplace-affinity-backfill.md`, `docs/contracts/catalog-product-relations.md`, Goal 24 status/report docs; Validation -> `git diff --check`; State Update -> implementation-gated by Marketing parser support, durable run ledger, Allegro replay endpoint, and Catalog source/window prune or retention decision.
 ## 2026-07-03 - Goal 25 Product Quality Review Admin Closed
@@ -2023,3 +2024,39 @@ Branch cleanup:
 Boundary decision: no Catalog source change, Catalog deploy, Warehouse runtime mutation, production product mutation, marketplace publish/confirm/queue action, Kubernetes manifest change, migration, destructive command, or secret output was performed.
 
 Remaining blockers: none for Goal 25 W4A Warehouse quantity-default closure.
+
+## 2026-07-03 - Goal 24 Affinity Replace Window Runtime Closure
+
+Current focus: close the Catalog-owned deploy and protected runtime smoke blocker for `POST /api/internal/product-relations/order-affinity/replace-window`.
+
+Intent Preservation Chain:
+
+- Vision: Catalog remains product truth and exposes bounded relation metadata only.
+- Goal Impact: Marketing order-affinity publishers can replace a complete source/window snapshot without broad deletion semantics.
+- System: Catalog owns `product_relations`; Marketing owns ledger/scheduling/completeness; marketplace services own replay producers.
+- Feature: internal Marketing-owned order-affinity window replacement endpoint.
+- Task: deploy already-merged Catalog `main` at `70e2464` and run protected non-destructive runtime smoke.
+- Execution Plan: clean preflight, focused Jest/build/diff validation, deploy through `./scripts/deploy.sh`, then in-pod protected smoke using runtime credentials without printing secrets.
+- Coding Prompt: fail closed on missing complete snapshot proof; use only synthetic/tightly scoped canary metadata; clean up canary rows.
+- Code: deployed `70e2464 feat: add order affinity window replacement`.
+- Validation: focused product-relations Jest, backend build, `git diff --check`, deployment rollout, public health, and protected replace-window smoke passed.
+- State Update: blocker `[MISSING: deployment approval and protected runtime smoke for replace-window endpoint]` is resolved.
+
+Runtime evidence:
+
+- Preflight clean on `main` at `70e2464`, synced with `origin/main`; pre-deploy public health returned HTTP 200.
+- `./scripts/deploy.sh` completed successfully in 69.37s and deployed image `localhost:5000/catalog-microservice:70e2464` with digest `sha256:4cb09554511a97d9fc8a995a00657fc845f1c6678e70bcb60d388421de920fc2`.
+- Post-deploy Kubernetes state: ready `1`, updated `1`, available `1`. Public `https://catalog.alfares.cz/health` returned HTTP 200; Catalog event and BPCP consumer connections reported `status=up`.
+- Protected fail-closed smoke used in-pod `CATALOG_INTERNAL_SERVICE_TOKEN` without printing the value. `completeSnapshot=false` returned HTTP 400 with `completeSnapshot must be true for order-affinity window replacement`.
+- Protected isolated positive smoke selected a product pair with no existing Marketing `order_affinity` relation from protected API candidates without printing product ids. Positive replacement returned HTTP 201 with summary `total=1`, `upserted=1`, `updated=0`, `failed=0`, `pruned=0`; cleanup empty replacement returned HTTP 201 with `pruned=1`; follow-up related read found zero matching canary rows.
+
+Boundary decision:
+
+No secrets/tokens, product ids, customer/payment data, or raw private data were printed. No Marketing, Orders, marketplace, Warehouse, Payments, migration, secret, or deployment script files were edited. A first non-isolated canary attempt returned `updated=1` and was not used as positive insertion evidence; the documented isolated canary smoke left zero matching rows.
+
+Remaining blockers:
+
+- `[MISSING: Marketing durable run ledger proving a complete source/window snapshot]`
+- `[MISSING: marketplace producer guarantee that replay window is complete and repeatable]`
+- `[MISSING: owner-approved retention/decay policy for stale affinity rows]`
+- `[MISSING: docs-rag JWT_TOKEN]`
