@@ -50,8 +50,6 @@ Catalog reconciliation validation:
 ## Remaining Blockers
 
 - `[MISSING: owner-approved Bazos bundle publication contract proving one external Bazos listing is compliant]`
-- `[MISSING: Allegro-owned catalog.bundle.v1 external publication policy handoff]`
-- `[MISSING: Aukro-owned catalog.bundle.v1 external publication policy handoff]`
 
 ## Boundary
 

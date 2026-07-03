@@ -16,16 +16,21 @@ Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task ->
 
 Boundary decision: no Catalog source, migrations, Kubernetes manifests, deployment scripts, secrets, Marketing, Orders, Warehouse, Payments, FlipFlop, Aukro, Bazos, checkout, reservations, payments, product rows, or marketplace publication behavior was changed in this reconciliation. The canonical Catalog checkout still has unrelated frontend modifications and was not edited.
 
-Remaining blockers:
+Goal 24 status markers:
 
 - `[RESOLVED: owner-approved Rung 1 non-mutating real checkout smoke passed against active catalog.bundle.v1 bundle e38ce03c-d18b-40a4-9898-f82a3f77dc0b]`
 - `[RESOLVED: owner-approved Rung 2 live pending-order smoke proved pending Orders create, Warehouse reservation, and payment-status cleanup release for catalog.bundle.v1 bundle 919be990-1c76-4f9c-b100-829281c6a709]`
 - `[RESOLVED/NARROWED: Catalog fail-closed external marketplace bundle publication policy defined in docs/contracts/catalog-bundle-marketplace-publication-policy.md]`
-- `[MISSING: Allegro-owned catalog.bundle.v1 external publication policy handoff]`
+- `[RESOLVED/NARROWED: Allegro-owned catalog.bundle.v1 external publication policy handoff recorded as fail-closed in Allegro main 8b05807 / handoff commit 27b5f88]`
 - `[RESOLVED/NARROWED: Bazos-owned catalog.bundle.v1 external publication policy handoff resolved to fail-closed Bazos source policy at Bazos main 9703b0c / source acc0ac9]`
-- `[MISSING: Aukro-owned catalog.bundle.v1 external publication policy handoff]`
+- `[RESOLVED/NARROWED: Aukro-owned catalog.bundle.v1 external publication policy handoff resolved to fail-closed Aukro policy at Aukro main f44d7d7 / source bd86caa]`
 - `[MISSING: qualifying historical paid multi-product Orders rows for non-empty central Orders replay evidence]`
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill from live central Orders]`
+
+Resolved/narrowed in final channel policy pass:
+
+- `[RESOLVED/NARROWED: Allegro-owned catalog.bundle.v1 external publication policy handoff recorded as fail-closed in Allegro main 8b05807 / handoff commit 27b5f88]`. Allegro merge `8b05807` / handoff `27b5f88` records a fail-closed policy: no publish, queue, regenerate, confirm, mutate, sync, or one-offer conversion for `catalog.bundle.v1`; focused catalog-sell-action and policy-engine specs passed.
+- `[RESOLVED/NARROWED: Aukro-owned catalog.bundle.v1 external publication policy handoff resolved to fail-closed Aukro policy at Aukro main f44d7d7 / source bd86caa]`. Aukro `f44d7d7` / source `bd86caa` records `aukro.catalog_bundle_publication.v1` fail-closed behavior with `CATALOG_BUNDLE_PUBLICATION_FAILED`; focused specs, build, IPS gates, deployment-readiness gate, and diff check passed.
 
 Resolved/narrowed in this pass:
 
