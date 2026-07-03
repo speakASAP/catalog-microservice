@@ -71,12 +71,23 @@ git diff --check
 
 Result: passed before this report was staged. Final staged validation must rerun before commit.
 
+
+## 2026-07-03 Fiobanka Transaction-Polling And Orders Cleanup Idempotency Refresh
+
+Current remote heads after the latest dependency reconciliation:
+
+- Payments `9718efd fix: use fio json api for polling`: source/runtime evidence now uses the official Fio JSON API default, `FIO_BANKA_LOOKBACK_DAYS=31` bounded default lookback, distinct `FIO_BANKA_API_KEY_CZK` and `FIO_BANKA_API_KEY_EUR` inputs, and redacted owner-approved polling evidence for retained variable-symbol hash `d7512419521d2cab`. The CZK official endpoint returned HTTP `200`, `transactionCount=1`, `matchCount=1`, amount `1`, currency `CZK`, `tokenOutput=false`, and `rawPayloadOutput=false`; EUR returned no match. This resolves/narrows runtime token delivery, owner-approved read-only polling execution, and a real bank-originated polling match for the Fiobanka polling path only.
+- Orders `adddafb Merge goal24 orders cleanup idempotency key contract`: retains the cleanup idempotency source contract on `main`. Migration/deploy execution and any live cleanup mutation remain separately gated.
+- Catalog `main` records this as dependency-gated evidence only. It does not approve live checkout, provider call, webhook replay, refund/cancel/reversal, Orders mutation, Warehouse mutation, deploy, migration, DB mutation, marketplace/feed mutation, raw bank payload, token value, or secret output.
+
+Remaining runtime blockers: `[MISSING: official/native Fio Banka callback signature contract if provider-authentic bank-originated signed callbacks are required]`; `[MISSING: sanitized exact-order linkage between the manual refund confirmation and the Goal 24 completed Fiobanka smoke order]`; `[MISSING: FlipFlop runtime readback showing the exact smoke order acknowledged as status=refunded and paymentStatus=refunded after manual refund]`; `[MISSING: owner-approved post-paid Orders/Warehouse correction packet for the exact completed payment state]`; `[MISSING: named live-run executor/runtime validation owner for live paid/provider bundle smoke]`.
+
 ## Repository State Observed
 
 - Catalog: clean `main...origin/main` before this reconciliation at `cc08e4f docs: mark goal24 intermediate payments head superseded`; this report is refreshed by the final reconciliation commit.
 - Heureka: clean `main...origin/main` at `712c3b0 chore: expose orders lifecycle ui verifier`.
-- Payments: clean `main...origin/main` at `46bf1c3 docs: record goal24 fiobanka hmac length evidence`. This supersedes `1d503fa`, `472f07f`, `2563864`, `c5b2ba7`, and `7cfb431` in source/docs by retaining selected-provider callback evidence, provider rollback packet, Fiobanka rollback boundary, source-only refund/cancel rollback plan, source-level HMAC hardening, deployed-runtime HMAC closure evidence, and the provider-authenticity decision. Runtime `FIO_BANKA_WEBHOOK_SECRET` is verified present on deployed image `7cfb431`, but runtime `FIO_BANKA_API_KEY` is absent, so authenticated polling evidence remains missing; provider-specific refund/cancel/reversal execution approval, Orders/Warehouse mutation, deploy, migration, raw bank payload, and secret output remain blocked.
-- Orders: clean `main...origin/main` at `a7a6947 docs: record synthetic returned shipment fixture`. This supersedes `3a5f3f9` by consuming Warehouse `3043cad` cleanup-operation semantics while preserving runtime target-packet, Payments token, provider rollback execution, Warehouse stock window/max quantity, and owner approval blockers.
+- Payments: clean `main...origin/main` at `9718efd fix: use fio json api for polling`. This supersedes `1d503fa`, `472f07f`, `2563864`, `c5b2ba7`, and `7cfb431` in source/docs by retaining selected-provider callback evidence, provider rollback packet, Fiobanka rollback boundary, source-only refund/cancel rollback plan, source-level HMAC hardening, deployed-runtime HMAC closure evidence, and the provider-authenticity decision. Runtime HMAC presence, distinct currency-specific polling tokens, and redacted real CZK polling match evidence are verified without token/raw payload output; provider-specific refund/cancel/reversal execution approval, Orders/Warehouse mutation, deploy, migration, raw bank payload, and secret output remain blocked.
+- Orders: clean `main...origin/main` at `adddafb Merge goal24 orders cleanup idempotency key contract`. This supersedes `3a5f3f9` by consuming Warehouse `3043cad` cleanup-operation semantics while preserving runtime target-packet, Payments token, provider rollback execution, Warehouse stock window/max quantity, and owner approval blockers.
 - Warehouse: clean `main...origin/main` at `b3c793a Merge goal24 warehouse cleanup approval packet`. This retains `0b4c41b` source-policy cleanup operation evidence for reserved-only, fulfilled/stock-decremented, return, partial, and unknown component states and adds internal delivery smoke documentation without removing paid/provider rollback hard stops.
 
 
@@ -198,6 +209,8 @@ Current reconciliation: manual refund workflow is resolved/narrowed as an owner-
 
 Owner confirmation consumed: automated Fiobanka refund is unavailable, the refund had to be sent manually through the separate refund service, and the owner confirmed the manual refund was completed. No raw bank data, customer PII, raw order/payment ids, screenshots, provider payloads, token values, secrets, or raw database rows were captured or printed.
 
-Resolved/narrowed blockers: `[RESOLVED/NARROWED: owner-confirmed manual Fiobanka refund was executed through the external refund service; automated Payments Fiobanka refund remains fail-closed]`.
+Resolved/narrowed blockers: `[RESOLVED/NARROWED: owner-confirmed manual Fiobanka refund was executed through the external refund service; automated Payments Fiobanka refund remains fail-closed]`; `[RESOLVED/NARROWED: sanitized runtime readback found completed Fiobanka provider-payment evidence but no central Orders or FlipFlop exact-order linkage for the retained Goal 24 payment]`.
 
-Remaining runtime blockers: `[MISSING: sanitized exact-order linkage between the manual refund confirmation and the Goal 24 completed Fiobanka smoke order]`, `[MISSING: FlipFlop runtime readback showing the exact smoke order acknowledged as status=refunded and paymentStatus=refunded after manual refund]`, and `[MISSING: owner-approved post-paid Orders/Warehouse correction packet for the exact completed payment state]`.
+Sanitized readback summary: completed Fiobanka rows checked `2`; selected retained evidence payment hash `9fa68d05c012c879`, provider suffix `9053`, amount `1.00 CZK`, status `completed`, `refundedAtPresent=false`; selected payment metadata lacks FlipFlop and central Orders ids; Orders lookup `found=false`; FlipFlop local order lookup `foundCount=0`.
+
+Remaining runtime blockers: `[MISSING: sanitized exact-order linkage between the manual refund confirmation and a completed Goal 24 paid-smoke order]`, `[MISSING: FlipFlop runtime readback showing an exact linked smoke order acknowledged as status=refunded and paymentStatus=refunded after manual refund]`, and `[MISSING: owner-approved post-paid Orders/Warehouse correction packet for an exact linked completed payment state]`.
