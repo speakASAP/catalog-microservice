@@ -236,3 +236,49 @@ Evidence consumed:
 - Recovery executed without printing secrets: stuck new FlipFlop pods were deleted, Kubernetes rollout was undone for the six FlipFlop deployments, terminating rollout pods were force-cleaned, and final pod state returned to the previous six Ready FlipFlop pods.
 
 Smoke decision: no live checkout, provider redirect/callback, Orders mutation, Payments mutation, Warehouse mutation, refund/cancel/reversal, channel cleanup, DB mutation, migration, or secret output occurred. The live paid/provider smoke remains blocked by `[MISSING: k3s/containerd runtime recovery or sudo-authorized node recovery window for redeploying FlipFlop source rollout]` plus the existing Fiobanka runtime secret/provider-authentic callback and refund/cancel/reversal blockers.
+
+## 2026-07-03 Owner-Approved Stop-Before-Paid Runtime Smoke After Node Recovery
+
+Status: owner-approved bounded stop-before-paid smoke executed and cleaned up; completed-payment provider refund/reversal remains blocked.
+
+Upstream evidence consumed:
+
+- FlipFlop `64e7831 docs: add goal24 channel cleanup contract`, retaining `1b62909` and `7566d4e`, was redeployed after k3s/node recovery. `./scripts/deploy.sh` completed successfully and all six FlipFlop deployments rolled out Ready.
+- Payments `197292b docs: reconcile goal24 fiobanka runtime blocker status` supersedes earlier Payments heads and retains Fiobanka HMAC/runtime closure plus provider rollback packet status. Catalog treats it as dependency-gated provider evidence, not as completed refund/reversal proof.
+- Orders payment-status source accepts `orders.payment-status.v1` from `internal:payments-microservice:service` and maps `cancelled` to Orders paymentStatus `cancelled` with Warehouse release semantics.
+- Warehouse cleanup semantics remain component-line owned; the smoke verified release through Orders handoff, not direct stock edits.
+
+Runtime smoke executed from a temporary `/tmp` helper, not committed to any service repo. The smoke created one authenticated FlipFlop cart with the two approved component products, submitted checkout with `paymentMethod=fiobanka` and `bundleIntent.bundleId=919be990-1c76-4f9c-b100-829281c6a709`, stopped before payer transfer/completion, and then cleaned the runtime state.
+
+Sanitized evidence:
+
+- `catalog.bundle.v1` evidence was written to the local FlipFlop order metadata: target bundle match `true`, product id count `2`, `contractVersion=catalog.bundle.v1`, `serverTotalSource=checkout_authoritative`.
+- Payments row was created for `applicationId=flipflop-service`, `paymentMethod=fiobanka`, redirect URL present, and central Orders UUID matched the payment `orderId` by hash/readback.
+- Orders cleanup used the Payments-owned `orders.payment-status.v1` boundary with `status=cancelled`; response HTTP `200`, central order status remained `pending`, central paymentStatus became `cancelled`, and `warehouseHandoff.status=released`.
+- FlipFlop local cleanup used the internal order-service route inside the cluster; response HTTP `200`; local order readback became `status=cancelled`, `paymentStatus=failed`, `paymentMethod=fiobanka`.
+- Payment provider row readback remained `status=processing`, `paymentMethod=fiobanka`, redirect URL present. This is expected for stop-before-paid Fiobanka QR because no provider-side unpaid cancel/void endpoint is currently proven.
+
+Blockers resolved or narrowed:
+
+- `[RESOLVED: k3s/containerd runtime recovery blocker for redeploying FlipFlop source rollout]`: redeploy completed and six FlipFlop deployments are Ready.
+- `[RESOLVED/NARROWED: owner-approved paid/provider checkout smoke with stock cleanup for stop-before-paid Fiobanka QR]`: checkout creation, central Orders UUID propagation, bundleEvidence, Orders cleanup, and Warehouse release were proven with sanitized evidence.
+- `[RESOLVED/NARROWED: cross-service packet proving provider pre-completion cancellation cleanup through Orders/Warehouse release semantics]`: Orders/Warehouse cleanup is proven for the unpaid/pre-completion state only.
+
+Remaining blockers:
+
+- `[MISSING: Fiobanka provider-side unpaid cancel/void operation; payment row remains provider-processing because no provider cancel endpoint exists]`.
+- `[MISSING: completed-payment Fiobanka refund/reversal path with redacted provider evidence]`.
+- `[MISSING: owner-approved post-paid Orders/Warehouse correction packet for a completed provider payment]`.
+- `[MISSING: runtime FIO_BANKA_API_KEY read-token configuration and owner-approved polling run evidence]` if provider-authentic transaction polling is required.
+- `[MISSING: official/native Fio Banka callback signature contract]` if bank-originated native signed callbacks are required instead of the current HMAC/polling decision.
+
+Parallel execution update:
+
+| Workstream | Status | Owner role | Validation evidence | Merge order |
+| --- | --- | --- | --- | --- |
+| FlipFlop durable bundle checkout | completed for stop-before-paid | FlipFlop checkout owner | redeploy succeeded; bundleEvidence runtime readback passed | already deployed before Catalog reconciliation |
+| Orders/Warehouse unpaid cleanup | completed for stop-before-paid | Orders/Warehouse owners | `orders.payment-status.v1 cancelled` returned HTTP `200`; `warehouseHandoff.status=released` | consumed before Catalog docs commit |
+| Payments provider cancel/refund | dependency-gated | Payments provider owner | payment row remains `processing`; no cancel/void/refund execution proof | must precede any completed-payment smoke |
+| Catalog integration reconciliation | final integration | Catalog commerce integration owner | this packet plus validation commands | commit after Catalog verifier/build/diff checks |
+
+State Update: Catalog may now mark the original stop-before-paid smoke and Orders/Warehouse cleanup evidence as resolved/narrowed. Catalog must still keep completed-payment refund/reversal and provider-side cancel/void as `[MISSING: ...]`; no paid transfer, provider callback, provider refund, provider reversal, direct stock edit, direct Orders DB edit, marketplace/feed mutation, migration, or secret output was performed.

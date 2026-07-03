@@ -152,3 +152,32 @@ Owner approval was consumed for a bounded runtime attempt after FlipFlop source 
 Recovery was performed by deleting stuck new FlipFlop pods, undoing the Kubernetes rollout for the six FlipFlop deployments, and force-cleaning terminating rollout pods. Final live state returned to the previous six Ready FlipFlop pods. Because the new source rollout never became live, no paid/provider smoke was executed and no checkout, provider, Orders, Payments, Warehouse, channel, migration, DB, or secret-output side effect occurred.
 
 Result: runtime smoke is blocked by `[MISSING: k3s/containerd runtime recovery or sudo-authorized node recovery window for redeploying FlipFlop source rollout]` before any remaining provider/rollback gates can be tested live.
+
+## 2026-07-03 Stop-Before-Paid Runtime Smoke Result After FlipFlop Redeploy
+
+FlipFlop redeploy was retried after the node/k3s recovery. `./scripts/deploy.sh` completed successfully and rolled out `flipflop-service`, `flipflop-frontend`, `flipflop-product-service`, `flipflop-cart-service`, `flipflop-order-service`, and `flipflop-user-service`. Current pod readback showed all six Ready; `flipflop-product-service` had one transient early restart caused by a temporary database connection limit, then recovered.
+
+Bounded runtime smoke result:
+
+- Created an authenticated FlipFlop stop-before-paid checkout for the approved two-component target bundle with `paymentMethod=fiobanka`.
+- Verified `catalog.bundle.v1` runtime evidence: target bundle match `true`, product id count `2`, contract `catalog.bundle.v1`, server total source `checkout_authoritative`.
+- Verified Payments creation: `applicationId=flipflop-service`, `paymentMethod=fiobanka`, redirect URL present, central Orders UUID matched the payment `orderId` by sanitized hash/readback.
+- Performed central cleanup through Payments-owned `orders.payment-status.v1` with `status=cancelled`: HTTP `200`, central paymentStatus `cancelled`, Warehouse handoff `released`.
+- Performed local FlipFlop cleanup through the internal order-service route inside the cluster: HTTP `200`, local order `cancelled/failed`.
+- Readback showed the Payments provider row still `processing`, which is expected because no Fiobanka provider-side unpaid cancel/void operation exists in source/runtime evidence.
+
+Resolved/narrowed blockers:
+
+- `[RESOLVED: k3s/containerd runtime recovery or sudo-authorized node recovery window for redeploying FlipFlop source rollout]`.
+- `[RESOLVED/NARROWED: owner-approved paid/provider checkout smoke with stock cleanup for stop-before-paid Fiobanka QR]`.
+- `[RESOLVED/NARROWED: cross-service packet proving Orders/Warehouse cleanup for unpaid provider checkout via orders.payment-status.v1 cancelled -> warehouse release]`.
+
+Remaining blockers:
+
+- `[MISSING: Fiobanka provider-side unpaid cancel/void operation; payment row remains provider-processing because no provider cancel endpoint exists]`.
+- `[MISSING: completed-payment Fiobanka refund/reversal path with redacted provider evidence]`.
+- `[MISSING: owner-approved post-paid Orders/Warehouse correction packet for a completed provider payment]`.
+- `[MISSING: runtime FIO_BANKA_API_KEY read-token configuration and owner-approved polling run evidence]` if transaction-polling authenticity is required.
+- `[MISSING: official/native Fio Banka callback signature contract]` if native bank-originated signatures are required.
+
+Validation boundary: this runtime smoke did not perform a paid bank transfer, provider completed callback, provider refund/reversal, direct DB state correction, direct stock edit, migration, deployment after smoke, marketplace/feed mutation, raw provider payload output, or secret output.
