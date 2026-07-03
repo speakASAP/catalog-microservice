@@ -70,8 +70,9 @@ for (const marker of [
   '[MISSING: named admin/actor or approved token-handling path for guarded discount-code generation]',
   '[MISSING: named runtime validation owner for the exact side-effectful smoke]',
   '[MISSING: named FlipFlop channel cleanup executor]',
-  'FlipFlop `1409c18 docs: update Goal 24 discount fixture to reflect recalculated amount of 2117.58 CZK for tax-inclusive total`',
-  'Orders `a1f1428 Merge goal24 orders idempotency runtime evidence`',
+  '[MISSING: owner-approved server-side bundle-preserving fixture or different active <=300 CZK target]',
+  'FlipFlop `c5107cd docs: record goal24 discount fixture quote hard stop`',
+  'Orders `4baa6a9 Merge goal24 orders return cleanup gate`',
   'Payments `224aaf8 docs: align fiobanka polling rollback contract`',
 ]) {
   assert(report.includes(marker) || state.includes(marker) || status.includes(marker), `current exact linked paid-flow gate missing marker: ${marker}`);

@@ -117,7 +117,7 @@ Retained manual-refund evidence is closed by owner acceptance without exact orde
 
 The prior approval window expired at `2026-07-03T23:59:59+02:00`; remote continuation readback was `2026-07-04T00:00:06+02:00`. The old approval id must not be reused for a new side-effectful checkout/payment attempt.
 
-Catalog reconciles FlipFlop `1409c18 docs: update Goal 24 discount fixture to reflect recalculated amount of 2117.58 CZK for tax-inclusive total`, Payments `224aaf8 docs: align fiobanka polling rollback contract`, and Orders `a1f1428 Merge goal24 orders idempotency runtime evidence` as dependency evidence only. FlipFlop records an owner-approved server-validated discount/price fixture path for a future exact linked paid/provider smoke, but runtime preflight stopped before side effects because guarded discount-code generation returned `401 Unauthorized` without a named admin/actor or approved token-handling path.
+Catalog reconciles FlipFlop `c5107cd docs: record goal24 discount fixture quote hard stop`, Payments `224aaf8 docs: align fiobanka polling rollback contract`, and Orders `4baa6a9 Merge goal24 orders return cleanup gate` as dependency evidence only. FlipFlop records an owner-approved server-validated discount/price fixture path for a future exact linked paid/provider smoke, but runtime preflight stopped before side effects because guarded discount-code generation returned `401 Unauthorized` without a named admin/actor or approved token-handling path.
 
 Current hard stops before any exact linked paid/provider attempt:
 
