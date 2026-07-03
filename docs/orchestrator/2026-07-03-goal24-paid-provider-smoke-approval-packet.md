@@ -117,7 +117,7 @@ Retained manual-refund evidence is closed by owner acceptance without exact orde
 
 The prior approval window expired at `2026-07-03T23:59:59+02:00`; remote continuation readback was `2026-07-04T00:00:06+02:00`. The old approval id must not be reused for a new side-effectful checkout/payment attempt.
 
-Catalog reconciles FlipFlop `fbe585c test: align goal24 paid provider verifier`, Payments `ae51d7e merge goal24 stale polling marker cleanup`, and Orders `9f89e74 Sync Goal 24 terminal-state verifier marker` as dependency evidence only. FlipFlop records an owner-approved server-validated discount/price fixture path for a future exact linked paid/provider smoke, but runtime preflight stopped before side effects because guarded discount-code generation returned `401 Unauthorized` without a named admin/actor or approved token-handling path.
+Catalog reconciles FlipFlop `902f637 docs: stabilize goal24 auth actor verifier`, Payments `13f6182 test: cover fiobanka refund upload gate`, and Orders `e3f6e18 docs: preserve goal24 orders cleanup packet` as dependency evidence only. FlipFlop records an owner-approved server-validated discount/price fixture path for a future exact linked paid/provider smoke, but runtime preflight stopped before side effects because guarded discount-code generation returned `401 Unauthorized` without a named admin/actor or approved token-handling path.
 
 Current hard stops before any exact linked paid/provider attempt:
 
@@ -127,6 +127,21 @@ Current hard stops before any exact linked paid/provider attempt:
 - `[MISSING: named FlipFlop channel cleanup executor]`.
 
 Boundary: no discount code, checkout, order, payment, provider call, Warehouse reservation, Orders mutation, FlipFlop mutation, DB write, deploy, migration, secret/token output, raw customer/order/payment/provider evidence, or marketplace/feed mutation is authorized by this packet until the fields above are source-controlled and owner-approved.
+
+## 2026-07-04 Stale-Head Reconciliation
+
+Catalog consumed the orchestrator-provided clean heads: Catalog `9eea93b`, Orders `e3f6e18 docs: preserve goal24 orders cleanup packet`, Payments `13f6182 test: cover fiobanka refund upload gate`, Warehouse `9f8b438 docs: narrow goal24 warehouse cleanup states`, and FlipFlop `902f637 docs: stabilize goal24 auth actor verifier`. These are read-only readiness inputs only; they do not approve side-effectful checkout, provider, Orders, Warehouse, channel, deploy, migration, or DB mutation.
+
+Parallel execution state:
+
+| Workstream | Status | Owner role | Scope | Validation evidence | Merge order |
+| --- | --- | --- | --- | --- | --- |
+| Catalog stale-head reconciliation | final integration | Catalog integration owner | Catalog docs/status/verifier only | `npm run verify:goal24-refund-cancel-rollback-execution-approval`, `npm run build`, `git diff --check` | current commit after validation |
+| Renewed execution packet | blocked | owner/runtime coordinator `[MISSING]` | exact `approvalWindow`, admin/token path, runtime validation owner, hard-stop authority | `[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]` | before any runtime smoke |
+| Provider/Orders/Warehouse cleanup | dependency-gated | Payments, Orders, Warehouse, FlipFlop cleanup owners `[MISSING]` | provider callback/refund evidence, Orders correction actor/idempotency, Warehouse stock window/max quantity, channel cleanup | all side-effectful evidence remains `[MISSING]` | before final exact linked smoke |
+| Exact linked paid/provider smoke | blocked | runtime validation owner `[MISSING]` | one bounded future live run | `[MISSING: approved live smoke validation]` | last only |
+
+Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation.
 
 ## Non-Approval Boundaries
 

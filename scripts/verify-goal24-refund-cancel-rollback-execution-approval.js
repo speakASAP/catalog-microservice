@@ -72,9 +72,9 @@ for (const marker of [
   '[MISSING: named FlipFlop channel cleanup executor]',
   '[MISSING: deployed FlipFlop bundle-preserving fixture gate and renewed runtime quote evidence]',
   '[MISSING: sanitized runtime config readback or owner confirmation that PAYMENT_SUCCESS_URL and PAYMENT_CANCEL_URL are unset or exactly match the approved FlipFlop payment-result URLs]',
-  'FlipFlop `fbe585c test: align goal24 paid provider verifier`',
-  'Orders `9f89e74 Sync Goal 24 terminal-state verifier marker`',
-  'Payments `ae51d7e merge goal24 stale polling marker cleanup`',
+  'FlipFlop `902f637 docs: stabilize goal24 auth actor verifier`',
+  'Orders `e3f6e18 docs: preserve goal24 orders cleanup packet`',
+  'Payments `13f6182 test: cover fiobanka refund upload gate`',
   '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; max quantity and live hold/release window remain missing]',
 ]) {
   assert(report.includes(marker) || state.includes(marker) || status.includes(marker), `current exact linked paid-flow gate missing marker: ${marker}`);
