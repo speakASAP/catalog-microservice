@@ -113,11 +113,17 @@ Key decisions:
 
 New blockers:
 
-- `[MISSING: Marketing parser support for marketplace-owned replay source envelopes]`
-- `[MISSING: durable Marketing backfill run ledger and idempotency key registry]`
+- `[RESOLVED: Marketing parser support for marketplace-owned replay source envelopes at source/status level]`
+- `[RESOLVED: Marketing durable complete-snapshot ledger proof at source/status level]`
+- `[MISSING: deploy/apply updated Marketing ledger migration containing complete_snapshot]`
 - `[MISSING: Allegro-owned protected replay endpoint so future runs do not require a temporary SQL export]`
 - `[MISSING: scheduled dry-run matrix across Allegro, Aukro, Bazos, FlipFlop, and central Orders]`
 - `[RESOLVED: Catalog source/window scoped stale-affinity replacement API]`
+- `[RESOLVED: Bazos paid multi-product replay eligibility mapping resolved to fail-closed source blockers]`
+- `[MISSING: Bazos paid order history source]`
+- `[MISSING: Bazos persisted order item replay source]`
+- `[MISSING: Bazos order item ingestion contract]`
+- `[MISSING: Bazos runtime internal replay token env accepted by /internal/bazos/order-affinity/replay-candidates]`
 
 ## Local Validation
 
@@ -170,7 +176,12 @@ Conclusion: docs-rag JWT_TOKEN access is resolved for Goal 24. Remaining blocker
 - `[MISSING: docs-rag indexed Catalog Goal 24 order-affinity context]`
 - `[MISSING: qualifying historical paid multi-product Orders rows for non-empty central Orders replay evidence]`
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill from live central Orders]`
-- `[RESOLVED: conservative exact source/window replacement policy; remaining gates are Marketing ledger, producer completeness, and owner-reviewed publish window]`
+- `[RESOLVED: conservative exact source/window replacement policy; remaining gates are Marketing runtime ledger deployment, producer completeness, and owner-reviewed publish window]`
+- `[RESOLVED: Bazos paid multi-product replay eligibility mapping resolved to fail-closed source blockers]`
+- `[MISSING: Bazos paid order history source]`
+- `[MISSING: Bazos persisted order item replay source]`
+- `[MISSING: Bazos order item ingestion contract]`
+- `[MISSING: Bazos runtime internal replay token env accepted by /internal/bazos/order-affinity/replay-candidates]`
 - `[MISSING: Catalog standalone bundle aggregate API and persistence contract]`
 - `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
 - `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
@@ -184,9 +195,9 @@ Conclusion: docs-rag JWT_TOKEN access is resolved for Goal 24. Remaining blocker
 - `ready now`: Orders replay contract maintenance. Owner role: Orders worker. Scope: source-only verifier/fix lane for replay event shape and filtering.
 - `ready now`: Marketing dry-run/export/backfill hardening. Owner role: Marketing worker. Scope: source-only verifier/fix lane for dry-run aggregation and Catalog publisher guards.
 - `ready now`: Catalog relation API maintenance. Owner role: Catalog worker. Scope: protected related-products, bundle-candidates, and internal batch endpoint maintenance.
-- `active elsewhere`: Marketing ledger worker. Owner role: Marketing ledger worker. Dependencies: parser support, run ledger, idempotency registry, complete source/window accounting. Handoff required before this thread marks the ledger blocker resolved.
-- `active elsewhere`: marketplace producer worker. Owner role: marketplace producer worker. Dependencies: protected repeatable producer endpoint/export, completeness proof, producer validation. Handoff required before this thread marks producer completeness resolved.
-- `dependency-gated`: non-empty affinity publish. Owner role: integration validator. Dependencies: qualifying rows, publish window, Marketing ledger proof, marketplace producer completeness, and conservative replacement policy.
+- `source complete; runtime-gated`: Marketing ledger worker. Owner role: Marketing ledger worker. Dependencies: parser support, run ledger, idempotency registry, complete source/window accounting. Source/status evidence resolves the generic ledger proof; deploy/apply of the updated complete_snapshot migration remains required.
+- `partially resolved; blocked`: marketplace producer worker. Owner role: marketplace producer worker. Dependencies: protected repeatable producer endpoint/export, completeness proof, producer validation. Bazos eligibility mapping is resolved into fail-closed Bazos-owned blockers; producer completeness remains unresolved for schedulable replay.
+- `dependency-gated`: non-empty affinity publish. Owner role: integration validator. Dependencies: qualifying rows, publish window, Marketing runtime ledger deployment, marketplace producer completeness, and conservative replacement policy.
 - `dependency-gated`: Catalog durable bundle aggregate/API. Owner role: commerce/Catalog architect. Dependency: ownership decision.
 - `blocked`: real ecosystem bundle selling. Owner role: FlipFlop/Orders/Payments/Warehouse integration. Dependencies: order, stock, payment, discount, and smoke contracts.
 
@@ -200,7 +211,7 @@ Merge order: Marketing ledger worker handoff, marketplace producer worker handof
 
 ## Next Action
 
-Implement W1 Allegro protected replay producer or owner-run CLI export, then update Marketing parser support for marketplace-owned replay envelopes before enabling any scheduled publish.
+Keep Bazos recurring replay inactive until Bazos paid order history, persisted item replay, item ingestion, and runtime token acceptance blockers are resolved; deploy/apply Marketing complete_snapshot ledger migration before any replace-window publish.
 
 
 ## Bundle Commerce Contract Decision Refresh

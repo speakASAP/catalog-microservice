@@ -101,10 +101,10 @@ Response envelope:
 
 Event payload options:
 
-1. `ready now after Marketing parser support`: marketplace-owned envelope with `source="allegro-service"`, `type="marketplace.order_affinity_candidate.v1"`, and a payload containing only `channel`, synthetic non-sensitive replay id, `currency`, and `items[]` with Catalog `productId`, optional `sku`, `quantity`, optional `unitPrice`, and optional `totalPrice`.
+1. `ready now after Marketing parser support is source/status proven`: marketplace-owned envelope with `source="allegro-service"`, `type="marketplace.order_affinity_candidate.v1"`, and a payload containing only `channel`, synthetic non-sensitive replay id, `currency`, and `items[]` with Catalog `productId`, optional `sku`, `quantity`, optional `unitPrice`, and optional `totalPrice`.
 2. `temporary compatibility only`: an Orders-created compatible envelope may be emitted if Marketing explicitly documents that normalization step and preserves `payload.channel="allegro"`; this must not hide marketplace provenance in run metadata.
 
-The first durable implementation should prefer option 1 and add Marketing parser/normalizer support. Until then, scheduled publish must remain blocked by `[MISSING: Marketing parser support for marketplace-owned replay source envelopes]`.
+The first durable implementation should prefer option 1. Marketing status evidence now resolves parser/normalizer support at source/status level, but scheduled publish remains blocked until runtime source/window, ledger deployment, producer completeness, and owner-reviewed publish gates are proven.
 
 Forbidden response content:
 
@@ -120,11 +120,17 @@ Allegro first version:
 - Emit only aggregate-safe item snapshots; do not emit local marketplace order ids unless they are irreversibly synthetic/non-sensitive replay refs.
 - Preserve `channel=allegro` so Catalog evidence remains auditable by channel after Marketing aggregation.
 
-Other marketplace services must define their own paid/processable status mapping before joining the schedule:
+Other marketplace services must define their own paid/processable status mapping before joining the schedule. Bazos source evidence from merged commit `31c245c` resolves the generic Bazos eligibility-mapping blocker by proving Bazos is currently implemented-but-ineligible and must fail closed until exact Bazos-owned producer prerequisites exist:
 
 - `[MISSING: Aukro paid multi-product replay eligibility mapping]`
-- `[MISSING: Bazos paid multi-product replay eligibility mapping]`
+- `[RESOLVED: Bazos paid multi-product replay eligibility mapping resolved to fail-closed source blockers]`
+- `[MISSING: Bazos paid order history source]`
+- `[MISSING: Bazos persisted order item replay source]`
+- `[MISSING: Bazos order item ingestion contract]`
+- `[MISSING: Bazos runtime internal replay token env accepted by /internal/bazos/order-affinity/replay-candidates]`
 - `[MISSING: FlipFlop paid multi-product replay eligibility mapping]`
+
+Bazos must not infer eligibility from draft/listing history. Future Bazos eligibility requires an owner-approved paid order ingestion and persisted item replay contract that maps at least two distinct Catalog product ids per paid/processable order without emitting buyer, address, payment/provider, token, or raw marketplace payload data.
 
 ## Marketing Scheduler And Idempotency Contract
 
@@ -169,7 +175,7 @@ Catalog now exposes `POST /api/internal/product-relations/order-affinity/replace
 
 Therefore scheduled replacement/pruning remains blocked until these non-Catalog proofs exist:
 
-- `[MISSING: Marketing durable run ledger proving a complete source/window snapshot]`
+- `[MISSING: deploy/apply updated Marketing ledger migration containing complete_snapshot]`
 - `[MISSING: marketplace producer guarantee that replay window is complete and repeatable]`
 
 Allowed future replacement model:
@@ -201,7 +207,7 @@ This resolves the previous broad owner-approved retention/decay blocker for the 
 | W2 Marketing parser/normalizer | dependency-gated | Marketing worker | Accept marketplace-owned replay envelopes and preserve source/channel provenance | Marketing order-affinity parser/backfill tests/docs | Catalog source, marketplace DB queries | W1 response shape accepted | focused parser/backfill tests, build, diff check |
 | W3 Marketing scheduler/ledger | active elsewhere | Marketing ledger worker | Add run ledger, dry-run-first scheduler, idempotency key registry, and complete source/window accounting | Marketing scheduler/ledger/tests/docs | Catalog schema, marketplace source | W2 parser support | scheduler/ledger tests, dry-run evidence, ledger handoff |
 | W4 Catalog replace-window policy | source complete; integration-gated | Catalog worker | Maintain source/window scoped stale-affinity replacement API and conservative retention contract | Catalog product-relations contract/source/tests | Orders/Marketing/marketplace source, product/price/stock mutations | W3 ledger, producer completeness, owner-approved publish window before scheduled use | focused Catalog relation tests, build, diff check |
-| W5 Other marketplaces | blocked | Channel workers | Define paid multi-product replay eligibility and protected endpoints | Aukro/Bazos/FlipFlop docs/source/tests | Catalog/Marketing shared contracts until W2/W3 stable | marketplace eligibility mapping | focused channel tests/builds |
+| W5 Other marketplaces | partially resolved; blocked for runtime/source prerequisites | Channel workers | Define paid multi-product replay eligibility and protected endpoints | Aukro/Bazos/FlipFlop docs/source/tests | Catalog/Marketing shared contracts until W2/W3 stable | marketplace eligibility mapping and runtime dry-run evidence | focused channel tests/builds plus Marketing dry-runs |
 | W6 Integration validation | final integration | Catalog orchestrator | Run dry-run matrix and owner-approved publish windows | validation reports/status docs | unapproved runtime mutation | W1-W3 complete; W4 policy/source complete; runtime replacement still needs deploy/smoke approval | dry-run summaries, Catalog readback aggregates |
 
 Shared contracts:
@@ -219,11 +225,16 @@ Merge order: W1 marketplace producer worker handoff, W2 Marketing parser handoff
 
 ## Blockers
 
-- `[MISSING: Marketing parser support for marketplace-owned replay source envelopes]`
-- `[MISSING: durable Marketing backfill run ledger and idempotency key registry]`
+- `[RESOLVED: Marketing parser support for marketplace-owned replay source envelopes at source/status level]`
+- `[RESOLVED: Marketing durable complete-snapshot ledger proof at source/status level]`
+- `[MISSING: deploy/apply updated Marketing ledger migration containing complete_snapshot]`
 - `[MISSING: Allegro-owned protected replay endpoint so future runs do not require a temporary SQL export]`
 - `[MISSING: scheduled dry-run matrix across Allegro, Aukro, Bazos, FlipFlop, and central Orders]`
 - `[MISSING: Aukro paid multi-product replay eligibility mapping]`
-- `[MISSING: Bazos paid multi-product replay eligibility mapping]`
+- `[RESOLVED: Bazos paid multi-product replay eligibility mapping resolved to fail-closed source blockers]`
+- `[MISSING: Bazos paid order history source]`
+- `[MISSING: Bazos persisted order item replay source]`
+- `[MISSING: Bazos order item ingestion contract]`
+- `[MISSING: Bazos runtime internal replay token env accepted by /internal/bazos/order-affinity/replay-candidates]`
 - `[MISSING: FlipFlop paid multi-product replay eligibility mapping]`
 - `[UNKNOWN: whether marketplace services other than Allegro currently have paid multi-product orders mapped to Catalog product ids]`
