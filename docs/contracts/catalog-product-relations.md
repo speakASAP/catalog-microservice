@@ -82,7 +82,7 @@ Remaining implementation gates:
 - `[RESOLVED: Warehouse component-line-only reservation sign-off merged and validated]`
 - `[RESOLVED: Payments bounded bundle metadata allowlist merged and validated]`
 - `[RESOLVED: owner-approved Rung 1 non-mutating real checkout smoke passed against active catalog.bundle.v1 bundle e38ce03c-d18b-40a4-9898-f82a3f77dc0b]`
-- `[MISSING: owner-approved Rung 2 live pending-order smoke plan if production order/reservation evidence is required]`
+- `[RESOLVED: owner-approved Rung 2 live pending-order smoke proved pending Orders create, Warehouse reservation, and payment-status cleanup release for catalog.bundle.v1 bundle 919be990-1c76-4f9c-b100-829281c6a709]`
 
 ## API
 

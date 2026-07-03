@@ -1,3 +1,4 @@
+2026-07-03: Goal 24 Rung 2 live pending-order evidence is recorded. Owner-approved Catalog bundle `919be990-1c76-4f9c-b100-829281c6a709` plus Orders/Payments/Warehouse runtime smoke proved one pending two-line `catalog.bundle.v1` order can reserve both component product lines and then release the Warehouse hold through the Payments-owned cancelled-status cleanup path. Evidence is in `reports/validation/VAL-GOAL-24-rung2-live-pending-order.md`; no provider payment, fulfillment, marketplace publication, deployment, migration, secret value, raw order id, or customer payload was emitted. [RESOLVED: owner-approved Rung 2 live pending-order smoke proved pending Orders create, Warehouse reservation, and payment-status cleanup release for catalog.bundle.v1 bundle 919be990-1c76-4f9c-b100-829281c6a709]
 ## 2026-07-03 - Goal 24 Bundle Integration Reconciliation
 
 Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update.
@@ -18,7 +19,7 @@ Boundary decision: no Catalog source, migrations, Kubernetes manifests, deployme
 Remaining blockers:
 
 - `[RESOLVED: owner-approved Rung 1 non-mutating real checkout smoke passed against active catalog.bundle.v1 bundle e38ce03c-d18b-40a4-9898-f82a3f77dc0b]`
-- `[MISSING: owner-approved Rung 2 live pending-order smoke plan if production order/reservation evidence is required]`
+- `[RESOLVED: owner-approved Rung 2 live pending-order smoke proved pending Orders create, Warehouse reservation, and payment-status cleanup release for catalog.bundle.v1 bundle 919be990-1c76-4f9c-b100-829281c6a709]`
 - `[RESOLVED/NARROWED: Catalog fail-closed external marketplace bundle publication policy defined in docs/contracts/catalog-bundle-marketplace-publication-policy.md]`
 - `[MISSING: Allegro-owned catalog.bundle.v1 external publication policy handoff]`
 - `[MISSING: Bazos-owned catalog.bundle.v1 external publication policy handoff]`
@@ -2146,7 +2147,7 @@ Accepted decisions:
 - Warehouse v1 reservation: component product lines only, no synthetic bundle stock/SKU.
 - Payments policy: final amount/currency remains caller-owned; bundle/free-shipping metadata is evidence only.
 - Presentation policy: candidate savings/free-shipping copy must be hint-only and fail closed when current price, currency, threshold, policy ref, or visibility evidence is missing.
-- Smoke policy: Rung 1 is non-mutating Orders `POST /api/orders/validate-create` plus Payments `POST /payments/validate-create`; Rung 2 live pending-order/reservation evidence requires explicit owner approval.
+- Smoke policy: Rung 1 non-mutating Orders/Payments validation is complete; Rung 2 live pending-order/reservation evidence completed after explicit owner approval with Warehouse release cleanup. Paid/provider checkout remains blocked pending separate approval.
 
 Remaining blockers:
 
@@ -2157,4 +2158,4 @@ Remaining blockers:
 - `[RESOLVED: Warehouse component-line reservation sign-off merged in Warehouse commit ae8c8fe and retained on main 74870b0]`
 - `[RESOLVED: Payments bounded bundle metadata allowlist test covering free-shipping evidence merged in Payments commit aa79fa2]`
 - `[RESOLVED: owner-approved Rung 1 non-mutating real checkout smoke passed against active catalog.bundle.v1 bundle e38ce03c-d18b-40a4-9898-f82a3f77dc0b]`
-- `[MISSING: owner-approved Rung 2 live pending-order smoke plan if production order/reservation evidence is required]`
+- `[RESOLVED: owner-approved Rung 2 live pending-order smoke proved pending Orders create, Warehouse reservation, and payment-status cleanup release for catalog.bundle.v1 bundle 919be990-1c76-4f9c-b100-829281c6a709]`

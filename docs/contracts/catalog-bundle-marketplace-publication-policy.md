@@ -100,4 +100,4 @@ Still blocked:
 - `[MISSING: Bazos-owned catalog.bundle.v1 external publication policy handoff]`
 - `[MISSING: Aukro-owned catalog.bundle.v1 external publication policy handoff]`
 - `[MISSING: Heureka-owned catalog.bundle.v1 feed publication policy handoff]`
-- `[MISSING: owner-approved Rung 2 live pending-order smoke plan if production order/reservation evidence is required]`
+- `[RESOLVED: owner-approved Rung 2 live pending-order smoke proved pending Orders create, Warehouse reservation, and payment-status cleanup release for catalog.bundle.v1 bundle 919be990-1c76-4f9c-b100-829281c6a709]`

@@ -66,7 +66,7 @@ Result: `MISSING scripts/pre_coding_gate.py` and `MISSING scripts/strict_doc_aud
 - `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
 - `[MISSING: FlipFlop adoption contract for catalog.bundle.v1 read/display before ecosystem checkout]`
 - `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`
-- `[MISSING: owner-approved Rung 2 live pending-order smoke plan if production order/reservation evidence is required]`
+- `[RESOLVED: owner-approved Rung 2 live pending-order smoke proved pending Orders create, Warehouse reservation, and payment-status cleanup release for catalog.bundle.v1 bundle 919be990-1c76-4f9c-b100-829281c6a709]`
 - `[RESOLVED/NARROWED: Catalog fail-closed external marketplace bundle publication policy defined in docs/contracts/catalog-bundle-marketplace-publication-policy.md]`
 - `[MISSING: Allegro-owned catalog.bundle.v1 external publication policy handoff]`
 - `[MISSING: Bazos-owned catalog.bundle.v1 external publication policy handoff]`

@@ -134,6 +134,8 @@ Rung 2, still gated by explicit owner approval, live create without paid/provide
 
 Anything beyond Rung 2 remains `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]`.
 
+Rung 2 owner-approved evidence completed on 2026-07-03: one pending two-line Orders create over active Catalog bundle `919be990-1c76-4f9c-b100-829281c6a709` reserved both Warehouse component lines, then Payments-owned cancelled status released both reservations back to baseline. This proves pending-order/reservation mechanics only; it does not approve paid/provider checkout, fulfillment, refunds, external marketplace publication, or channel-visible bundle selling.
+
 
 ## 2026-07-03 Catalog Source Implementation Update
 
@@ -149,7 +151,7 @@ Catalog B1.1 source implementation is complete on branch `goal24-catalog-bundle-
 - `[RESOLVED: Warehouse component-line reservation sign-off merged in Warehouse commit ae8c8fe and retained on main 74870b0]`
 - `[RESOLVED: Payments bounded bundle metadata allowlist test covering free-shipping evidence merged in Payments commit aa79fa2]`
 - `[RESOLVED: owner-approved Rung 1 non-mutating real checkout smoke passed against active catalog.bundle.v1 bundle e38ce03c-d18b-40a4-9898-f82a3f77dc0b]`
-- `[MISSING: owner-approved Rung 2 live pending-order smoke plan if production order/reservation evidence is required]`
+- `[RESOLVED: owner-approved Rung 2 live pending-order smoke proved pending Orders create, Warehouse reservation, and payment-status cleanup release for catalog.bundle.v1 bundle 919be990-1c76-4f9c-b100-829281c6a709]`
 - `[RESOLVED/NARROWED: Catalog fail-closed external marketplace bundle publication policy defined in docs/contracts/catalog-bundle-marketplace-publication-policy.md]`
 - `[MISSING: Allegro-owned catalog.bundle.v1 external publication policy handoff]`
 - `[MISSING: Bazos-owned catalog.bundle.v1 external publication policy handoff]`
