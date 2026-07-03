@@ -74,7 +74,8 @@ for (const marker of [
   '[RESOLVED/NARROWED: runtime config readback shows PAYMENT_SUCCESS_URL and PAYMENT_CANCEL_URL resolve to approved FlipFlop payment-result URLs without secret output]',
   'FlipFlop `31845ef docs: close goal24 channel cleanup packet`',
   'Orders `e3f6e18 docs: preserve goal24 orders cleanup packet`',
-  'Payments `82c2ebb docs: sync goal24 downstream cleanup heads`',
+  'Payments `5bbca56 docs: align warehouse cleanup head reference`',
+  'Payments `5bbca56 docs: align warehouse cleanup head reference`',
   '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; max quantity and live hold/release window remain missing]',
 ]) {
   assert(report.includes(marker) || state.includes(marker) || status.includes(marker), `current exact linked paid-flow gate missing marker: ${marker}`);

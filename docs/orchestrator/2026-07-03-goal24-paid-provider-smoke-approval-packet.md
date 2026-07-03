@@ -117,7 +117,7 @@ Retained manual-refund evidence is closed by owner acceptance without exact orde
 
 The prior approval window expired at `2026-07-03T23:59:59+02:00`; remote continuation readback was `2026-07-04T00:00:06+02:00`. The old approval id must not be reused for a new side-effectful checkout/payment attempt.
 
-Catalog reconciles FlipFlop `31845ef docs: close goal24 channel cleanup packet`, Payments `82c2ebb docs: sync goal24 downstream cleanup heads`, and Orders `e3f6e18 docs: preserve goal24 orders cleanup packet` as dependency evidence only. FlipFlop records an owner-approved server-validated discount/price fixture path for a future exact linked paid/provider smoke, but runtime preflight stopped before side effects because guarded discount-code generation returned `401 Unauthorized` without a named admin/actor or approved token-handling path.
+Catalog reconciles FlipFlop `31845ef docs: close goal24 channel cleanup packet`, Payments `5bbca56 docs: align warehouse cleanup head reference`, and Orders `e3f6e18 docs: preserve goal24 orders cleanup packet` as dependency evidence only. FlipFlop records an owner-approved server-validated discount/price fixture path for a future exact linked paid/provider smoke, but runtime preflight stopped before side effects because guarded discount-code generation returned `401 Unauthorized` without a named admin/actor or approved token-handling path.
 
 Current hard stops before any exact linked paid/provider attempt:
 
@@ -130,7 +130,7 @@ Boundary: no discount code, checkout, order, payment, provider call, Warehouse r
 
 ## 2026-07-04 Stale-Head Reconciliation
 
-Catalog consumed the orchestrator-provided clean heads: Catalog `c52600d`, Orders `e3f6e18 docs: preserve goal24 orders cleanup packet`, Payments `82c2ebb docs: sync goal24 downstream cleanup heads`, Warehouse `46a66dc docs: define goal24 warehouse cleanup packet`, and FlipFlop `31845ef docs: close goal24 channel cleanup packet`. These are read-only readiness inputs only; they do not approve side-effectful checkout, provider, Orders, Warehouse, channel, deploy, migration, or DB mutation.
+Catalog consumed the orchestrator-provided clean heads: Catalog `c52600d`, Orders `e3f6e18 docs: preserve goal24 orders cleanup packet`, Payments `5bbca56 docs: align warehouse cleanup head reference`, Warehouse `46a66dc docs: define goal24 warehouse cleanup packet`, and FlipFlop `31845ef docs: close goal24 channel cleanup packet`. These are read-only readiness inputs only; they do not approve side-effectful checkout, provider, Orders, Warehouse, channel, deploy, migration, or DB mutation.
 
 Parallel execution state:
 
