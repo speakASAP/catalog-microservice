@@ -94,6 +94,36 @@ Current lanes:
 
 Shared files/contracts: `docs/contracts/catalog-product-relations.md`, `docs/contracts/catalog-bundle-commerce-contract.md`, Orders create-order contract, Warehouse reservation contract, Payments create-payment validation contract, FlipFlop GOAL-13 bundle intent docs, and Marketing orders-events integration contract. Integration owner: Catalog orchestrator until a commerce integration owner is assigned. Validation owner: integration validator. Merge order: source contract verification before any runtime publish or checkout implementation.
 
+## 2026-07-03 Parallel Worker Wave
+
+Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update.
+
+- Vision: recurring marketplace affinity can improve Catalog relation surfaces without moving marketplace order extraction, Marketing aggregation, or docs-rag indexing ownership into Catalog.
+- Goal Impact: remaining Goal 24 blockers are split into repo-owned, conflict-safe workstreams.
+- System: Allegro owns protected replay production; Marketing owns parser, scheduler, run ledger, and idempotency; docs-rag owns indexed retrieval context; Catalog remains integration owner for relation contracts/status.
+- Feature: parallel execution of producer, Marketing ledger/parser, and docs-rag indexing gates.
+- Task: launch separate Codex worker threads with disjoint file ownership and preserve Catalog integration merge order.
+- Execution Plan: each worker uses remote Alfares workflow, its own repo scope, focused validation, commit/push on its branch only, and final handoff; Catalog integration validates and merges after handoffs.
+- Coding Prompt: do not edit shared Catalog contracts from worker repos except through integration handoff; mark unknowns as `[MISSING: ...]` or `[UNKNOWN: ...]`.
+- Code: Catalog status docs only for this launch.
+- Validation: `git diff --check`.
+- State Update: W1, W2, and W3 are active in separate Codex threads.
+
+| Workstream | Status | Thread | Owner role | Scope | Allowed files/repos | Forbidden files/repos | Dependencies | Expected validation | Handoff |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| W1 Allegro replay producer | active | `019f268e-6e40-7063-80fd-6c81823638fb` | Allegro worker | Protected replay endpoint or owner-run export with complete/repeatable window evidence | `allegro` repo docs/source/tests | Catalog, Marketing, Orders, Warehouse, Payments, k8s, deploy scripts, secrets, live mutations | Catalog marketplace affinity contract | focused Allegro tests/build, `git diff --check` | branch, validation report, producer completeness status |
+| W2 Marketing parser/ledger | active | `019f268e-bf2c-7171-a545-bc810c99111d` | Marketing worker | Marketplace-owned envelope parser plus durable run ledger/idempotency if persistence is ready | `marketing` repo parser/backfill/ledger docs/source/tests | Catalog, Allegro, Orders, Warehouse, Payments, k8s, deploy scripts, secrets, unapproved publish | W1 response shape for full end-to-end publish; parser can proceed from contract | focused Marketing tests/build, dry-run evidence, `git diff --check` | branch, validation report, ledger/parser blocker status |
+| W3 docs-rag indexed context | active | `019f268e-fca4-7562-8538-c128284b714c` | docs-rag worker | Make Catalog Goal 24 order-affinity docs retrievable after auth succeeds | docs-rag repo indexing/config/docs; Catalog docs-only status only if evidence requires | Catalog source, Marketing/Allegro source, k8s, deploy scripts, secrets, destructive index purge | docs-rag JWT access already resolved | sanitized retrieval with non-zero Goal 24 context, `git diff --check` | branch/evidence, remaining indexing blockers |
+| W4 Catalog integration | active here | current thread | Catalog orchestrator | Validate handoffs, merge in order, update Goal 24 status/contracts | Catalog status/contracts/reports only after worker handoff | direct worker repo edits, runtime publish without owner window | W1-W3 handoffs | worker validation review, Catalog `git diff --check` | final Goal 24 closure or narrowed blockers |
+
+Shared contracts: `docs/contracts/catalog-marketplace-affinity-backfill.md`, `docs/contracts/catalog-product-relations.md`, Marketing order-affinity contract docs, and Allegro replay endpoint/export docs.
+
+Integration owner: Catalog orchestrator in this thread.
+
+Validation owner: Catalog integration validator after worker handoffs.
+
+Merge order: W1 producer, W2 parser/ledger, W3 docs-rag context, W4 Catalog integration status.
+
 ## 2026-07-03 Stale-Affinity Retention Policy Update
 
 Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update.
