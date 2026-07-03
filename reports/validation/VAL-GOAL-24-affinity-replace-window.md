@@ -62,7 +62,7 @@ Caveat:
 - `[RESOLVED: Marketing durable run ledger proving a complete source/window snapshot]` - deployed Marketing image `localhost:5000/marketing-microservice:0aa47ed`; live ledger smoke `goal24-complete-snapshot-ledger-smoke-20260703-001` recorded `completeSnapshot=true`, `status=dry_run_passed`, `inputRecords=0`, and `aggregatePairs=0` with no Catalog publish.
 - `[MISSING: marketplace producer guarantee that replay window is complete and repeatable]`
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`
-- `[MISSING: docs-rag indexed Catalog Goal 24 order-affinity context]`
+- `[RESOLVED: docs-rag indexed Catalog Goal 24 order-affinity context]`
 
 ## Resolved Blockers
 
@@ -86,4 +86,4 @@ Sanitized commands/results:
 - POST /retrieval/agent-context query catalog-microservice Goal 24 order affinity blockers: HTTP 200, response keys query, context, sources, estimatedTokens, bytes=110, contextChars=0, snippetCount=0.
 - Fallback POST /retrieval/search query catalog-microservice Goal 24 order affinity blockers product relations: HTTP 200, response keys query, results, total, results=0, snippetCount=0.
 
-Conclusion: docs-rag JWT_TOKEN access is resolved for Goal 24. Remaining blocker: `[MISSING: docs-rag indexed Catalog Goal 24 order-affinity context]` because retrieval authenticated successfully but returned no indexed chunks for the bounded topic.
+Conclusion: docs-rag JWT_TOKEN access and indexed Catalog Goal 24 order-affinity context are resolved. Follow-up catalog-only ingestion completed 163/163 chunks and sanitized retrieval returned non-zero Goal 24 sources.

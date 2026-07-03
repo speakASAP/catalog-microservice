@@ -288,11 +288,11 @@ Catalog accepts the conservative Goal 24 policy for `marketing_order_affinity` r
 - Do not perform time-based deletion, score decay, confidence decay, standalone prune-window cleanup, manual/non-window pruning, or archival without a new owner-approved contract.
 - Never prune manual, curated, non-Marketing, checkout, product, price, stock, payment, marketplace listing, or unrelated relation rows.
 
-This policy resolves the previous broad retention/decay blocker while preserving Catalog boundaries. Remaining scheduled replacement gates are Marketing durable ledger proof, marketplace producer completeness/repeatability, owner-reviewed publish windows, and indexed docs-rag context availability.
+This policy resolves the previous broad retention/decay blocker while preserving Catalog boundaries. Remaining scheduled replacement gates are Marketing durable ledger proof for the exact future source/window, marketplace producer completeness/repeatability, and owner-reviewed publish windows.
 
 ## Blockers
 
-- `[MISSING: docs-rag indexed Catalog Goal 24 order-affinity context]`
+- `[RESOLVED: docs-rag indexed Catalog Goal 24 order-affinity context]`
 - `[MISSING: qualifying historical paid multi-product Orders rows for non-empty replay evidence]`
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`
 - `[MISSING: Marketing parser support for marketplace-owned replay source envelopes]`
