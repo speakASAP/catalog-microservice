@@ -94,15 +94,16 @@ Current retained-evidence closeout blockers: none for exact order linkage, becau
 
 Current remote time readback was `2026-07-04T00:00:06+02:00`, after the prior approval window `2026-07-03T21:48:12+02:00` through `2026-07-03T23:59:59+02:00`. Catalog therefore must not run a side-effectful paid/provider checkout under the expired approval id.
 
-FlipFlop `1e5102b docs: supersede goal24 runtime owner blockers` supersedes `fbe585c` and preserves the owner-approved discount/price fixture path for a future exact linked paid/provider smoke: checkout-authoritative total `<= 300 CZK` after recalculating the fixed discount to `2117.58 CZK`, one use, short expiry, and Goal 24 correlation. FlipFlop source now adds a narrow Goal 24 bundle-preserving fixture gate requiring `goalId=GOAL24-paid-provider-fixture-20260704`, fixed `2117.58 CZK`, `maxUses=1`, unused code, the approved target bundle, exact component ids, and checkout-authoritative final total `<=300 CZK`; it has not been deployed or runtime-quoted in Catalog evidence.
+FlipFlop `1e5102b docs: supersede goal24 runtime owner blockers` supersedes `fbe585c` and preserves the owner-approved discount/price fixture path for a future exact linked paid/provider smoke: checkout-authoritative total `<= 300 CZK` after recalculating the fixed discount to `2117.58 CZK`, one use, short expiry, and Goal 24 correlation. FlipFlop source now adds a narrow Goal 24 bundle-preserving fixture gate requiring `goalId=GOAL24-paid-provider-fixture-20260704`, fixed `2117.58 CZK`, `maxUses=1`, unused code, the approved target bundle, exact component ids, and checkout-authoritative final total `<=300 CZK`; Catalog now consumes deployed quote-preflight evidence with `sideEffects=[]`, `total=300`, and post-quote `usedCount=0`/`remainingUses=1`.
 
 Current hard stops before any new paid/provider attempt:
 
 - `[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]`.
+- `[MISSING: named admin/actor or approved token-handling path for guarded discount-code generation]`.
 - `[MISSING: named runtime validation owner for the exact side-effectful smoke]`.
 - `[MISSING: named FlipFlop channel cleanup executor]`.
 
-Boundary: the guarded quote preflight created one redacted, unredeemed discount code and stopped before checkout. No checkout, order, payment, provider call, Warehouse reservation, Orders mutation, DB row dump/write, deploy, migration, secret/token output, raw code/customer/order/payment/provider evidence, or marketplace/feed mutation was created by this continuation.
+Boundary: Catalog consumed the guarded FlipFlop quote-preflight report as dependency evidence only. No Catalog checkout, order, payment, provider call, Warehouse reservation, Orders mutation, DB row dump/write, deploy, migration, secret/token output, raw code/customer/order/payment/provider evidence, or marketplace/feed mutation was created by this continuation.
 
 
 ## 2026-07-03 Exact Linked Paid-Flow Discount Fixture Preflight
@@ -290,7 +291,7 @@ Current heads consumed in this final reconciliation: Catalog `33f57d6`, FlipFlop
 
 Runtime prerequisites still Catalog-owned to track: Auth actor hash is source-readback narrowed; token source and provider rollback proof remain blocked; Orders cleanup actor/idempotency/side-effect acknowledgements; Warehouse max quantity/hold-window plus deterministic state cleanup packet. Resolved runtime prerequisite: sanitized runtime config readback shows `PAYMENT_SUCCESS_URL` and `PAYMENT_CANCEL_URL` match approved FlipFlop payment-result URLs.
 
-Parallel execution state: FlipFlop runtime fixture quote is blocked until renewed owner packet and named admin/token path; Payments/Orders/Warehouse/FlipFlop cleanup lanes are dependency-gated by selected-state owner packets; final exact linked paid/provider smoke is blocked until all `[MISSING: ...]` fields are source-controlled and owner-approved. Catalog final reconciliation owns only docs/verifier/status and must not dispatch additional Catalog writers against these files until this commit lands.
+Parallel execution state: FlipFlop runtime fixture quote preflight is complete before checkout; Payments/Orders/Warehouse/FlipFlop cleanup lanes are dependency-gated by selected-state owner packets; final exact linked paid/provider smoke is blocked until all remaining `[MISSING: ...]` fields are source-controlled and owner-approved. Catalog final reconciliation owns only docs/verifier/status and must not dispatch additional Catalog writers against these files until this commit lands.
 
 Boundary: no Catalog source behavior, checkout, discount code, order, payment, provider call, Warehouse reservation, Orders mutation, channel cleanup, deploy, migration, DB write, secret/token output, or raw customer/order/payment/provider evidence occurred.
 
