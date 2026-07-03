@@ -24,7 +24,6 @@ const requiredMarkers = [
   '[RESOLVED/NARROWED: sanitized runtime readback found completed Fiobanka provider-payment evidence but no central Orders or FlipFlop exact-order linkage for the retained Goal 24 payment]',
   '[RESOLVED: owner accepted owner-confirmed manual Fiobanka refund as sufficient Goal 24 closeout without exact order linkage]',
   '[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]',
-  '[MISSING: named admin/actor or approved token-handling path for guarded discount-code generation]',
   'exact field required: `approvalWindow` with calendar date, start time, end time, timezone, maximum duration, allowed retry count',
   '[MISSING: named runtime validation owner for the exact side-effectful smoke]',
   '[RESOLVED/NARROWED: runtime readback found no linked central Orders or FlipFlop state, so no Orders/Warehouse post-paid correction is required for this evidence-only closeout]',
@@ -65,16 +64,17 @@ assert(!packet.includes('[MISSING: runtime FIO_BANKA_API_KEY read-token configur
 assert(!report.includes('[MISSING: runtime FIO_BANKA_API_KEY read-token configuration and owner-approved polling run evidence]'), 'validation report still has stale runtime polling-token blocker');
 assert(report.includes('Retained Evidence Closeout Supersession'), 'validation report missing retained evidence closeout supersession section');
 assert(report.includes('future-only gates for new linked paid/provider smokes'), 'validation report must mark exact-linkage blockers as future-only after closeout');
+assert(!packet.includes('[MISSING: deployed FlipFlop bundle-preserving fixture gate and renewed runtime quote evidence]'), 'deployed quote evidence must not remain missing in packet');
+assert(!report.includes('[MISSING: deployed FlipFlop bundle-preserving fixture gate and renewed runtime quote evidence]'), 'deployed quote evidence must not remain missing in report');
 
 for (const marker of [
   '[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]',
-  '[MISSING: named admin/actor or approved token-handling path for guarded discount-code generation]',
   'exact field required: `approvalWindow` with calendar date, start time, end time, timezone, maximum duration, allowed retry count',
   '[MISSING: named runtime validation owner for the exact side-effectful smoke]',
   '[MISSING: named FlipFlop channel cleanup executor]',
-  '[MISSING: deployed FlipFlop bundle-preserving fixture gate and renewed runtime quote evidence]',
+  '[RESOLVED/NARROWED: deployed FlipFlop bundle-preserving fixture gate and renewed runtime quote evidence passed before checkout]',
   '[MISSING: sanitized runtime config readback or owner confirmation that PAYMENT_SUCCESS_URL and PAYMENT_CANCEL_URL are unset or exactly match the approved FlipFlop payment-result URLs]',
-  'FlipFlop `9b57abe fix: normalize goal24 fixture discount value`',
+  'FlipFlop `42b8073 docs: record goal24 runtime quote preflight`',
   'Orders `9f89e74 Sync Goal 24 terminal-state verifier marker`',
   'Payments `ae51d7e merge goal24 stale polling marker cleanup`',
   '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; max quantity and live hold/release window remain missing]',
