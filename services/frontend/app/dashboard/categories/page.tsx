@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { categoriesApi, Category } from '@/lib/api/categories';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import DashboardPageShell from '@/components/DashboardPageShell';
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -95,22 +96,19 @@ export default function AdminCategoriesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-extrabold mb-2">📁 Categories</h1>
-            <p className="text-xl text-blue-50">Manage product categories</p>
-          </div>
-          <Link
-            href="/dashboard/categories/new"
-            className="bg-white text-blue-600 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 text-center"
-          >
-            ➕ New Category
-          </Link>
-        </div>
-      </div>
-
+    <DashboardPageShell
+      icon="📁"
+      title="Categories"
+      subtitle="Manage product categories"
+      action={(
+        <Link
+          href="/dashboard/categories/new"
+          className="bg-white text-blue-600 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 text-center"
+        >
+          ➕ New Category
+        </Link>
+      )}
+    >
       <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
         {categories.length > 0 ? (
           renderCategoryTree(categories)
@@ -127,7 +125,6 @@ export default function AdminCategoriesPage() {
           </div>
         )}
       </div>
-    </div>
+    </DashboardPageShell>
   );
 }
-

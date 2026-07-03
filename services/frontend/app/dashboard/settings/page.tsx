@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { CatalogSourceSettings, productsApi } from '@/lib/api/products';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import DashboardPageShell from '@/components/DashboardPageShell';
 
 export default function CatalogSettingsPage() {
   const [settings, setSettings] = useState<CatalogSourceSettings | null>(null);
@@ -48,12 +49,11 @@ export default function CatalogSettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <div className="rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 p-8 text-white shadow-xl">
-        <h1 className="text-3xl font-extrabold">Catalog settings</h1>
-        <p className="mt-2 text-blue-50">Choose product sources for your seller catalog.</p>
-      </div>
-
+    <DashboardPageShell
+      icon="☑️"
+      title="Catalog settings"
+      subtitle="Choose product sources for your seller catalog."
+    >
       <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg">
         <h2 className="text-xl font-extrabold text-gray-900">Product sources</h2>
         <div className="mt-5 space-y-4">
@@ -87,6 +87,6 @@ export default function CatalogSettingsPage() {
         </div>
         {message && <p className="mt-4 text-sm font-semibold text-gray-700">{message}</p>}
       </section>
-    </div>
+    </DashboardPageShell>
   );
 }

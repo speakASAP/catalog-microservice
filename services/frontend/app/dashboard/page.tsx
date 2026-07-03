@@ -5,6 +5,7 @@ import { productsApi } from '@/lib/api/products';
 import { categoriesApi } from '@/lib/api/categories';
 import { attributesApi } from '@/lib/api/attributes';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import DashboardPageShell from '@/components/DashboardPageShell';
 import Link from 'next/link';
 
 export default function AdminDashboardPage() {
@@ -52,12 +53,11 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white">
-        <h1 className="text-4xl md:text-5xl font-extrabold mb-2">📦 Catalog Dashboard</h1>
-        <p className="text-xl text-blue-50">Central product catalog management</p>
-      </div>
-
+    <DashboardPageShell
+      icon="📦"
+      title="Catalog Dashboard"
+      subtitle="Central product catalog management"
+    >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Link href="/dashboard/products" className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow border border-gray-200">
           <div className="flex items-center justify-between">
@@ -89,6 +89,6 @@ export default function AdminDashboardPage() {
           </div>
         </Link>
       </div>
-    </div>
+    </DashboardPageShell>
   );
 }

@@ -6,6 +6,7 @@ import { apiClient } from './client';
 
 export interface User {
   id: string;
+  sub?: string | null;
   email: string;
   firstName?: string;
   lastName?: string;

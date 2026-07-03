@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { attributesApi, Attribute } from '@/lib/api/attributes';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import DashboardPageShell from '@/components/DashboardPageShell';
 
 export default function AdminAttributesPage() {
   const [attributes, setAttributes] = useState<Attribute[]>([]);
@@ -44,22 +45,19 @@ export default function AdminAttributesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-extrabold mb-2">🏷️ Attributes</h1>
-            <p className="text-xl text-blue-50">Manage product attributes</p>
-          </div>
-          <Link
-            href="/dashboard/attributes/new"
-            className="bg-white text-blue-600 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 text-center"
-          >
-            ➕ New Attribute
-          </Link>
-        </div>
-      </div>
-
+    <DashboardPageShell
+      icon="🏷️"
+      title="Attributes"
+      subtitle="Manage product attributes"
+      action={(
+        <Link
+          href="/dashboard/attributes/new"
+          className="bg-white text-blue-600 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 text-center"
+        >
+          ➕ New Attribute
+        </Link>
+      )}
+    >
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
         {attributes.length > 0 ? (
           <div className="overflow-x-auto">
@@ -128,7 +126,6 @@ export default function AdminAttributesPage() {
           </div>
         )}
       </div>
-    </div>
+    </DashboardPageShell>
   );
 }
-

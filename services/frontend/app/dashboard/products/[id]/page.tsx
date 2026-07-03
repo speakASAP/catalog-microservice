@@ -13,6 +13,7 @@ import ChannelSalesPanel from '@/components/ChannelSalesPanel';
 import MarketplaceFieldsPanel from '@/components/MarketplaceFieldsPanel';
 import ProductContentPreviewPanel from '@/components/ProductContentPreviewPanel';
 import { useAuth } from '@/contexts/AuthContext';
+import { canMutateCatalogProduct } from "@/lib/catalogAccess";
 
 
 const channelLabels: Record<string, string> = {
@@ -302,9 +303,7 @@ export default function EditProductPage() {
   const warehouseRouteStatus = getWarehouseRouteStatus(warehouseAvailability);
   const warehouseRows = warehouseAvailability?.warehouses ?? [];
   const warehouseRoutes = warehouseAvailability?.logistics?.options ?? [];
-  const canEditProduct = Boolean(
-    product.ownerUserId && (product.ownerUserId === user?.id || product.ownerUserId === user?.email),
-  ) || Boolean(user?.isAdmin || user?.roles?.some((role) => role.includes('catalog-microservice:admin') || role === 'global:superadmin'));
+  const canEditProduct = canMutateCatalogProduct(product, user);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">

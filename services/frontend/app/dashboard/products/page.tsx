@@ -12,6 +12,7 @@ import { productsApi, Product, ProductQuery, PaginatedResponse, ProductWarehouse
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardSidebarControls } from '@/contexts/DashboardSidebarContext';
+import { canMutateCatalogProduct } from "@/lib/catalogAccess";
 
 type ActiveFilter = 'all' | 'active' | 'inactive';
 type LifecycleFilter = 'all' | 'draft' | 'active' | 'archived' | 'needs_review';
@@ -191,12 +192,7 @@ export default function AdminProductsPage() {
   const selectedCount = selectedIds.size;
   const pageIds = products.map((product) => product.id);
   const currentPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
-  const canMutateProduct = useCallback((product: Product) => {
-    if (user?.isAdmin || user?.roles?.some((role) => role.includes('catalog-microservice:admin') || role === 'global:superadmin')) {
-      return true;
-    }
-    return Boolean(product.ownerUserId && (product.ownerUserId === user?.id || product.ownerUserId === user?.email));
-  }, [user?.email, user?.id, user?.isAdmin, user?.roles]);
+  const canMutateProduct = useCallback((product: Product) => canMutateCatalogProduct(product, user), [user]);
 
   const toggleProductSelection = (id: string) => {
     setSelectedIds((current) => {

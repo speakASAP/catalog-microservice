@@ -118,7 +118,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <aside
           className={`${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-44 bg-white/95 backdrop-blur-md border-r border-gray-200 shadow-xl transition-transform duration-300 ease-in-out`}
+          } lg:translate-x-0 fixed inset-y-0 left-0 z-50 w-44 bg-white/95 backdrop-blur-md border-r border-gray-200 shadow-xl transition-transform duration-300 ease-in-out`}
         >
           <div className="h-full flex flex-col">
             {/* Logo/Header */}
@@ -194,7 +194,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         )}
 
         {/* Main content */}
-        <main className="flex-1 lg:ml-0 min-h-screen">
+        <main className="flex-1 lg:ml-44 min-h-screen">
           <div className="p-4 lg:p-5">
             <DashboardSidebarProvider setSidebarControls={setSidebarControls}>
               {children}
