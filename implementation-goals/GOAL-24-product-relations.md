@@ -64,7 +64,7 @@ Follow-up read-only evidence on 2026-07-03 confirmed the Orders replay endpoint,
 ## Blockers
 
 - `[RESOLVED: docs-rag JWT_TOKEN available in live docs-rag pod and accepted for retrieval auth]`
-- `[MISSING: docs-rag indexed Catalog Goal 24 order-affinity context]`
+- `[RESOLVED: docs-rag indexed Catalog Goal 24 order-affinity context]`
 - `[MISSING: scripts/pre_coding_gate.py]`
 - `[MISSING: scripts/strict_doc_audit.py]`
 - `[MISSING: qualifying historical paid multi-product Orders rows for non-empty replay evidence]`
@@ -126,7 +126,7 @@ Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task ->
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | W1 Allegro replay producer | complete | `019f268e-6e40-7063-80fd-6c81823638fb` | Allegro worker | Protected replay endpoint with complete/repeatable window evidence | `allegro` repo docs/source/tests | Catalog, Marketing, Orders, Warehouse, Payments, k8s, deploy scripts, secrets, live mutations | Catalog marketplace affinity contract | focused Allegro tests/build, `git diff --check` passed in worker; integration doc check passed | Allegro `main` `37a5add`; Marketing parser/token/ledger remains next |
 | W2 Marketing parser/ledger | active | `019f268e-bf2c-7171-a545-bc810c99111d` | Marketing worker | Marketplace-owned envelope parser plus durable run ledger/idempotency if persistence is ready | `marketing` repo parser/backfill/ledger docs/source/tests | Catalog, Allegro, Orders, Warehouse, Payments, k8s, deploy scripts, secrets, unapproved publish | W1 response shape for full end-to-end publish; parser can proceed from contract | focused Marketing tests/build, dry-run evidence, `git diff --check` | branch, validation report, ledger/parser blocker status |
-| W3 docs-rag indexed context | active | `019f268e-fca4-7562-8538-c128284b714c` | docs-rag worker | Make Catalog Goal 24 order-affinity docs retrievable after auth succeeds | docs-rag repo indexing/config/docs; Catalog docs-only status only if evidence requires | Catalog source, Marketing/Allegro source, k8s, deploy scripts, secrets, destructive index purge | docs-rag JWT access already resolved | sanitized retrieval with non-zero Goal 24 context, `git diff --check` | branch/evidence, remaining indexing blockers |
+| W3 docs-rag indexed context | complete | `019f268e-fca4-7562-8538-c128284b714c` plus integration owner | Make Catalog Goal 24 order-affinity docs retrievable after auth succeeds | docs-rag repo indexing/config/docs; Catalog docs-only status only if evidence requires | Catalog source, Marketing/Allegro source, k8s manifests, deploy scripts, secrets, destructive index purge | docs-rag JWT access already resolved | catalog-only ingestion completed 163/163 chunks; sanitized retrieval returned non-zero Goal 24 context and sources | blocker resolved; future freshness source fix remains docs-rag-owned |
 | W4 Catalog integration | active here | current thread | Catalog orchestrator | Validate handoffs, merge in order, update Goal 24 status/contracts | Catalog status/contracts/reports only after worker handoff | direct worker repo edits, runtime publish without owner window | W1-W3 handoffs | worker validation review, Catalog `git diff --check` | final Goal 24 closure or narrowed blockers |
 
 Shared contracts: `docs/contracts/catalog-marketplace-affinity-backfill.md`, `docs/contracts/catalog-product-relations.md`, Marketing order-affinity contract docs, and Allegro replay endpoint/export docs.
@@ -135,7 +135,7 @@ Integration owner: Catalog orchestrator in this thread.
 
 Validation owner: Catalog integration validator after worker handoffs.
 
-Merge order: W1 producer complete, W2 parser/ledger next, W3 docs-rag context, W4 Catalog integration status.
+Merge order: W1 producer complete, W2 parser/ledger complete, W3 docs-rag context complete, W4 Catalog integration status ongoing for non-Allegro producer gates.
 
 ## 2026-07-03 Stale-Affinity Retention Policy Update
 

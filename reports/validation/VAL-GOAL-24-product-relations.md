@@ -48,7 +48,7 @@ Result: passed. No whitespace errors were reported for the tracked dirty diff.
 - `scripts/pre_coding_gate.py`: `[MISSING: scripts/pre_coding_gate.py]`
 - `scripts/strict_doc_audit.py`: `[MISSING: scripts/strict_doc_audit.py]`
 - docs-rag retrieval auth: `[RESOLVED: live docs-rag pod JWT_TOKEN accepted; retrieval returned HTTP 200]`
-- docs-rag retrieval content: `[MISSING: docs-rag indexed Catalog Goal 24 order-affinity context]`
+- docs-rag retrieval content: `[RESOLVED: docs-rag indexed Catalog Goal 24 order-affinity context]`
 - Source scope: allowed files only for this task, except concurrent unrelated dirty files already present or appearing during the session were not touched.
 - Sensitive data: no secrets, tokens, raw production data, live DB rows, or private logs read or printed.
 - Runtime/database: additive migration `scripts/migrations/20260702_product_relation_scores.sql` was applied to `catalog_db` after owner approval. Schema verification confirmed `product_relations`, 7 indexes, 9 constraints, and 0 rows. No deployment or runtime API smoke was run.
@@ -70,7 +70,7 @@ Sanitized commands/results:
 - POST /retrieval/agent-context query catalog-microservice Goal 24 order affinity blockers: HTTP 200, response keys query, context, sources, estimatedTokens, bytes=110, contextChars=0, snippetCount=0.
 - Fallback POST /retrieval/search query catalog-microservice Goal 24 order affinity blockers product relations: HTTP 200, response keys query, results, total, results=0, snippetCount=0.
 
-Conclusion: `[MISSING: docs-rag JWT_TOKEN]` is resolved for Goal 24 access. Remaining blocker: `[MISSING: docs-rag indexed Catalog Goal 24 order-affinity context]` because retrieval authenticated successfully but returned no indexed chunks for the bounded topic.
+Conclusion: docs-rag JWT access and `[RESOLVED: docs-rag indexed Catalog Goal 24 order-affinity context]` are resolved for Goal 24 access/content after follow-up catalog-only ingestion completed 163/163 chunks and sanitized retrieval returned non-zero Goal 24 sources.
 
 ## Blockers
 

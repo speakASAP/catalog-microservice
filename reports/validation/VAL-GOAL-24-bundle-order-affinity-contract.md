@@ -168,12 +168,12 @@ Sanitized commands/results:
 - POST /retrieval/agent-context query catalog-microservice Goal 24 order affinity blockers: HTTP 200, response keys query, context, sources, estimatedTokens, bytes=110, contextChars=0, snippetCount=0.
 - Fallback POST /retrieval/search query catalog-microservice Goal 24 order affinity blockers product relations: HTTP 200, response keys query, results, total, results=0, snippetCount=0.
 
-Conclusion: docs-rag JWT_TOKEN access is resolved for Goal 24. Remaining blocker: `[MISSING: docs-rag indexed Catalog Goal 24 order-affinity context]` because retrieval authenticated successfully but returned no indexed chunks for the bounded topic.
+Conclusion: docs-rag JWT_TOKEN access and indexed Catalog Goal 24 order-affinity context are resolved for Goal 24. Follow-up catalog-only ingestion completed 163/163 chunks, and sanitized retrieval returned non-zero Goal 24 context and sources.
 
 ## Blockers
 
 - `[RESOLVED: docs-rag JWT_TOKEN available in live docs-rag pod and accepted for retrieval auth]`
-- `[MISSING: docs-rag indexed Catalog Goal 24 order-affinity context]`
+- `[RESOLVED: docs-rag indexed Catalog Goal 24 order-affinity context]`
 - `[MISSING: qualifying historical paid multi-product Orders rows for non-empty central Orders replay evidence]`
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill from live central Orders]`
 - `[RESOLVED: conservative exact source/window replacement policy; remaining gates are recorded per-window Marketing ledger proof, producer completeness, and owner-reviewed publish window]`
