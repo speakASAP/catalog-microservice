@@ -72,8 +72,8 @@ for (const marker of [
   '[MISSING: named FlipFlop channel cleanup executor]',
   '[MISSING: deployed FlipFlop bundle-preserving fixture gate and renewed runtime quote evidence]',
   'FlipFlop `7ebcbd6 fix: use guarded goal24 fixture discount value`',
-  'Orders `4baa6a9 Merge goal24 orders return cleanup gate`',
-  'Payments `224aaf8 docs: align fiobanka polling rollback contract`',
+  'Orders `6c4a6a0 Document Goal 24 cleanup state matrix`',
+  'Payments `0180d98 docs: record goal24 fiobanka polling refund gate`',
 ]) {
   assert(report.includes(marker) || state.includes(marker) || status.includes(marker), `current exact linked paid-flow gate missing marker: ${marker}`);
 }

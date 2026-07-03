@@ -76,8 +76,8 @@ Result: passed before this report was staged. Final staged validation must rerun
 
 Current remote heads after the latest dependency reconciliation:
 
-- Payments `224aaf8 docs: align fiobanka polling rollback contract` on committed `main` retains the `9917793` rollback-authenticity reclassification, the `f5c078a` deployed polling match, the `27f3f73` polling-match status, and the `9718efd` official Fio JSON API fix. Authenticated Fio transaction polling is complete/narrowed for the selected Fiobanka QR path while native signed-callback evidence remains `[MISSING]` only if signed callbacks are required instead of accepted polling. `224aaf8` keeps Fiobanka rollback side-effect-safe only before paid completion; completed-transfer refund/reversal and Orders/Warehouse correction remain blocked.
-- Orders `4baa6a9 Merge goal24 orders return cleanup gate`: retains cleanup idempotency runtime evidence and return-cleanup gate documentation on `main`. Live cleanup mutation remains separately gated by the exact run packet and owner-approved side-effect acknowledgements.
+- Payments `0180d98 docs: record goal24 fiobanka polling refund gate` on committed `main` retains the `9917793` rollback-authenticity reclassification, the `f5c078a` deployed polling match, the `27f3f73` polling-match status, and the `9718efd` official Fio JSON API fix. Authenticated Fio transaction polling is complete/narrowed for the selected Fiobanka QR path while native signed-callback evidence remains `[MISSING]` only if signed callbacks are required instead of accepted polling. `224aaf8` keeps Fiobanka rollback side-effect-safe only before paid completion; completed-transfer refund/reversal and Orders/Warehouse correction remain blocked.
+- Orders `6c4a6a0 Document Goal 24 cleanup state matrix`: retains cleanup idempotency runtime evidence and adds cleanup state-matrix documentation on `main`. Live cleanup mutation remains separately gated by the exact run packet, selected state, and owner-approved side-effect acknowledgements.
 - Catalog `main` records this as dependency-gated evidence only. It does not approve live checkout, provider call, webhook replay, refund/cancel/reversal, Orders mutation, Warehouse mutation, deploy, migration, DB mutation, marketplace/feed mutation, raw bank payload, token value, or secret output.
 
 Current retained-evidence closeout blockers: none for exact order linkage, because the owner accepted the owner-confirmed manual Fiobanka refund as sufficient Goal 24 closeout without exact order linkage and runtime readback found no linked central Orders or FlipFlop state requiring Orders/Warehouse correction. Future-only runtime gates remain: `[MISSING: official/native Fio Banka callback signature contract if provider-authentic bank-originated signed callbacks are required]`, `[MISSING: sanitized exact-order linkage between the manual refund confirmation and a completed Goal 24 paid-smoke order]`, `[MISSING: FlipFlop runtime readback showing an exact linked smoke order acknowledged as status=refunded and paymentStatus=refunded after manual refund]`, `[MISSING: owner-approved post-paid Orders/Warehouse correction packet for an exact linked completed payment state]`, and `[MISSING: named live-run executor/runtime validation owner for live paid/provider bundle smoke]`.
@@ -104,8 +104,8 @@ Boundary: no discount code, checkout, order, payment, provider call, Warehouse r
 Current upstream heads after retained-evidence closeout:
 
 - FlipFlop `7ebcbd6 fix: use guarded goal24 fixture discount value`: owner-approved server-validated discount/price fixture path is documented for a future exact linked paid/provider smoke, with fixed `2117.58 CZK` discount required to keep the tax-inclusive checkout-authoritative total at `300 CZK`; source now contains the bundle-preserving fixture gate and uses the already guarded validation discount value, but deploy/runtime quote evidence remains missing and the prior approval window was expired.
-- Payments `224aaf8 docs: align fiobanka polling rollback contract`: deployed service-level polling match remains resolved/narrowed for the retained Fiobanka variable-symbol hash without token/raw payload output; selected Fiobanka QR rollback remains side-effect-safe only before paid completion, and completed-transfer refund/reversal remains missing.
-- Orders `4baa6a9 Merge goal24 orders return cleanup gate`: cleanup idempotency runtime evidence and return-cleanup gate are merged; any live cleanup remains gated by exact run packet and owner-approved side-effect acknowledgements.
+- Payments `0180d98 docs: record goal24 fiobanka polling refund gate`: authenticated polling remains accepted for Fiobanka authenticity and a future refund/reversal runtime packet now exists, but completed-transfer refund/reversal execution and exact smoke identities remain missing.
+- Orders `6c4a6a0 Document Goal 24 cleanup state matrix`: cleanup idempotency runtime evidence and cleanup state matrix are merged; any live cleanup remains gated by exact run packet and owner-approved side-effect acknowledgements.
 
 Retained evidence closeout remains complete: `[RESOLVED: owner accepted owner-confirmed manual Fiobanka refund as sufficient Goal 24 closeout without exact order linkage]`.
 
@@ -118,7 +118,7 @@ Decision: Catalog must not execute live checkout, discount-code generation, orde
 
 Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update.
 
-Current committed upstream heads consumed: Orders `4baa6a9`, Payments `224aaf8`, Warehouse `b3c793a`, FlipFlop `7ebcbd6`, Catalog pre-change `fddb7e0`. FlipFlop source-only bundle-preserving fixture gate is consumed; dirty runtime/deploy follow-up evidence is not consumed until it is pushed and validated.
+Current committed upstream heads consumed: Orders `6c4a6a0`, Payments `0180d98`, Warehouse `b3c793a`, FlipFlop `7ebcbd6`, Catalog pre-change `1870246`. FlipFlop source-only bundle-preserving fixture gate is consumed; dirty runtime/deploy follow-up evidence is not consumed until it is pushed and validated.
 
 Parallel execution state:
 
@@ -132,9 +132,9 @@ Merge notes: do not dispatch parallel Catalog writers against these same status/
 
 ## 2026-07-04 Pushed Upstream Head Refresh
 
-Catalog consumed the now-pushed downstream heads after the previous dirty-lane acceptance: FlipFlop `7ebcbd6 fix: use guarded goal24 fixture discount value`, Orders `4baa6a9 Merge goal24 orders return cleanup gate`, Payments `224aaf8 docs: align fiobanka polling rollback contract`, and Warehouse `b3c793a Merge goal24 warehouse cleanup approval packet`.
+Catalog consumed the now-pushed downstream heads after the previous dirty-lane acceptance: FlipFlop `7ebcbd6 fix: use guarded goal24 fixture discount value`, Orders `6c4a6a0 Document Goal 24 cleanup state matrix`, Payments `0180d98 docs: record goal24 fiobanka polling refund gate`, and Warehouse `b3c793a Merge goal24 warehouse cleanup approval packet`.
 
-Decision: runtime remains fail-closed. FlipFlop source now contains the narrow Goal 24 bundle-preserving fixture gate, but Catalog has no deployed/runtime quote evidence for it. The current exact linked paid/provider smoke path still needs `[MISSING: deployed FlipFlop bundle-preserving fixture gate and renewed runtime quote evidence]` plus renewed execution window, runtime validation owner, FlipFlop cleanup executor, provider rollback proof, Orders cleanup actor/idempotency, and Warehouse deterministic cleanup packet.
+Decision: runtime remains fail-closed. FlipFlop source now contains the narrow Goal 24 bundle-preserving fixture gate, but Catalog has no deployed/runtime quote evidence for it. The current exact linked paid/provider smoke path still needs `[MISSING: deployed FlipFlop bundle-preserving fixture gate and renewed runtime quote evidence]` plus renewed execution window, runtime validation owner, FlipFlop cleanup executor, exact payment/order/provider identity hashes, provider rollback proof, Orders cleanup actor/idempotency, and Warehouse deterministic cleanup packet.
 
 Boundary: this Catalog reconciliation records pushed source/verifier evidence only. No Catalog source behavior, checkout, discount code, order, payment, provider call, Warehouse reservation, Orders mutation, channel cleanup, deploy, migration, DB write, secret/token output, or raw customer/order/payment/provider evidence occurred.
 
