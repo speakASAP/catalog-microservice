@@ -83,9 +83,9 @@ Follow-up read-only evidence on 2026-07-03 confirmed the Orders replay endpoint,
 - `[RESOLVED: owner accepted catalog.bundle.v1 source implementation gate in Codex thread on 2026-07-03]`
 - `[RESOLVED: Catalog additive migration/API source implemented for catalog.bundle.v1 in branch goal24-catalog-bundle-api]`
 - `[RESOLVED: owner-approved Catalog bundle aggregate migration application/deploy/runtime smoke]`
-- `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
-- `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
-- `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
+- `[RESOLVED: Orders additive bundleEvidence metadata contract on create-order and idempotent replay merged in Orders commit 18892a5]`
+- `[RESOLVED: Warehouse component-line reservation sign-off merged in Warehouse commit ae8c8fe and retained on main 74870b0]`
+- `[RESOLVED: Payments bounded bundle metadata allowlist test covering free-shipping evidence merged in Payments commit aa79fa2]`
 - `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`
 - `[UNKNOWN: whether current live Orders history should contain paid multi-product rows or whether upstream order capture is still empty]`
 
@@ -103,9 +103,9 @@ Current lanes:
 - `complete`: W1 Allegro replay producer. Owner role: Allegro worker. Result: Allegro `main` has protected repeatable replay producer handoff at `37a5add` and hardened producer source already on `main`; remaining producer work is non-Allegro scheduled matrix coverage.
 - `ready now`: Catalog product relation API maintenance. Owner role: Catalog worker. Scope: maintain protected related-products, bundle-candidates, and internal batch endpoint. Validation: focused product-relations Jest and `git diff --check`.
 - `dependency-gated`: Non-empty historical affinity publish. Owner role: integration validator. Blockers: `[MISSING: qualifying historical paid multi-product Orders rows for non-empty replay evidence]`, `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`, and source-specific producer completeness/activation gates for non-Allegro sources.
-- `owner-ready`: Catalog standalone bundle aggregate contract design. Owner role: Catalog/commerce architect. Scope: `docs/contracts/catalog-bundle-aggregate-v1.md` defines the `catalog.bundle.v1` API/persistence plan from `docs/contracts/catalog-bundle-commerce-contract.md`; source implementation remains gated until owner acceptance.
+- `complete`: Catalog standalone bundle aggregate contract/API/runtime. Owner role: Catalog/commerce architect. Result: `catalog.bundle.v1` design, source implementation, additive migration, deployment, and protected runtime smoke are complete through Catalog source commit `074de13` and runtime-doc commit `f2d3f42`.
 - `dependency-gated`: Marketplace/operator bundle suggestions. Owner role: channel worker. Blocker: `[MISSING: channel-specific external marketplace bundle publication policies]`.
-- `dependency-gated`: Ecosystem real bundle selling beyond the existing FlipFlop-local bundle intent. Blockers: `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`, `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`, `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`, and `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`.
+- `dependency-gated`: Ecosystem real bundle selling beyond the existing FlipFlop-local bundle intent. Completed prerequisites: Orders bundleEvidence contract `18892a5`, Warehouse component-line reservation sign-off `ae8c8fe`/`74870b0`, Payments metadata allowlist `aa79fa2`, and FlipFlop display adoption `5911523`. Blocker: `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`.
 
 Shared files/contracts: `docs/contracts/catalog-product-relations.md`, `docs/contracts/catalog-bundle-commerce-contract.md`, Orders create-order contract, Warehouse reservation contract, Payments create-payment validation contract, FlipFlop GOAL-13 bundle intent docs, and Marketing orders-events integration contract. Integration owner: original Codex thread `019f2683-0cac-7ec0-b4cf-8fe83e07a74e` until a commerce integration owner is assigned. Validation owner: integration validator in the original thread. Merge order: Marketing parser/ledger handoff complete, Allegro producer handoff complete, Catalog integration reconciliation, then owner-reviewed runtime publish or checkout implementation only after all source-specific gates are proven.
 
