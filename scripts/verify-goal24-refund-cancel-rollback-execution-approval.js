@@ -74,7 +74,7 @@ for (const marker of [
   '[MISSING: named FlipFlop channel cleanup executor]',
   '[RESOLVED/NARROWED: deployed FlipFlop bundle-preserving fixture gate and renewed runtime quote evidence passed before checkout]',
   '[MISSING: sanitized runtime config readback or owner confirmation that PAYMENT_SUCCESS_URL and PAYMENT_CANCEL_URL are unset or exactly match the approved FlipFlop payment-result URLs]',
-  'FlipFlop `42b8073 docs: record goal24 runtime quote preflight`',
+  'FlipFlop `0089139 docs: align goal24 runtime quote evidence`',
   'Orders `9f89e74 Sync Goal 24 terminal-state verifier marker`',
   'Payments `ae51d7e merge goal24 stale polling marker cleanup`',
   '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; max quantity and live hold/release window remain missing]',
