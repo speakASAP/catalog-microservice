@@ -17,7 +17,7 @@ Execution Plan -> merge Bazos branch first, then Catalog docs-only reconciliatio
 Coding Prompt -> fail closed when Bazos cannot prove one external Bazos listing is compliant; do not invent a Bazos bundle adapter or owner approval.
 Code -> Catalog docs/status/report updates only.
 Validation -> Catalog `git diff --check`; Bazos worker validation evidence recorded below.
-State Update -> Bazos handoff resolved/narrowed to fail-closed Bazos-owned policy; remaining external channel handoffs stay blocked.
+State Update -> Bazos handoff resolved/narrowed to fail-closed Bazos-owned policy; Allegro and Aukro external channel handoffs stay blocked.
 
 ## Bazos Evidence
 
@@ -50,9 +50,6 @@ Catalog reconciliation validation:
 ## Remaining Blockers
 
 - `[MISSING: owner-approved Bazos bundle publication contract proving one external Bazos listing is compliant]`
-- `[MISSING: Allegro-owned catalog.bundle.v1 external publication policy handoff]`
-- `[MISSING: Aukro-owned catalog.bundle.v1 external publication policy handoff]`
-- `[MISSING: Heureka-owned catalog.bundle.v1 feed publication policy handoff]`
 
 ## Boundary
 

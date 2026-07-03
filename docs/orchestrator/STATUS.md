@@ -16,17 +16,25 @@ Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task ->
 
 Boundary decision: no Catalog source, migrations, Kubernetes manifests, deployment scripts, secrets, Marketing, Orders, Warehouse, Payments, FlipFlop, Aukro, Bazos, checkout, reservations, payments, product rows, or marketplace publication behavior was changed in this reconciliation. The canonical Catalog checkout still has unrelated frontend modifications and was not edited.
 
-Remaining blockers:
+Goal 24 status markers:
 
 - `[RESOLVED: owner-approved Rung 1 non-mutating real checkout smoke passed against active catalog.bundle.v1 bundle e38ce03c-d18b-40a4-9898-f82a3f77dc0b]`
 - `[RESOLVED: owner-approved Rung 2 live pending-order smoke proved pending Orders create, Warehouse reservation, and payment-status cleanup release for catalog.bundle.v1 bundle 919be990-1c76-4f9c-b100-829281c6a709]`
 - `[RESOLVED/NARROWED: Catalog fail-closed external marketplace bundle publication policy defined in docs/contracts/catalog-bundle-marketplace-publication-policy.md]`
-- `[MISSING: Allegro-owned catalog.bundle.v1 external publication policy handoff]`
-- `[MISSING: Bazos-owned catalog.bundle.v1 external publication policy handoff]`
-- `[MISSING: Aukro-owned catalog.bundle.v1 external publication policy handoff]`
-- `[MISSING: Heureka-owned catalog.bundle.v1 feed publication policy handoff]`
+- `[RESOLVED/NARROWED: Allegro-owned catalog.bundle.v1 external publication policy handoff recorded as fail-closed in Allegro main 8b05807 / handoff commit 27b5f88]`
+- `[RESOLVED/NARROWED: Bazos-owned catalog.bundle.v1 external publication policy handoff resolved to fail-closed Bazos source policy at Bazos main 9703b0c / source acc0ac9]`
+- `[RESOLVED/NARROWED: Aukro-owned catalog.bundle.v1 external publication policy handoff resolved to fail-closed Aukro policy at Aukro main f44d7d7 / source bd86caa]`
 - `[MISSING: qualifying historical paid multi-product Orders rows for non-empty central Orders replay evidence]`
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill from live central Orders]`
+
+Resolved/narrowed in final channel policy pass:
+
+- `[RESOLVED/NARROWED: Allegro-owned catalog.bundle.v1 external publication policy handoff recorded as fail-closed in Allegro main 8b05807 / handoff commit 27b5f88]`. Allegro merge `8b05807` / handoff `27b5f88` records a fail-closed policy: no publish, queue, regenerate, confirm, mutate, sync, or one-offer conversion for `catalog.bundle.v1`; focused catalog-sell-action and policy-engine specs passed.
+- `[RESOLVED/NARROWED: Aukro-owned catalog.bundle.v1 external publication policy handoff resolved to fail-closed Aukro policy at Aukro main f44d7d7 / source bd86caa]`. Aukro `f44d7d7` / source `bd86caa` records `aukro.catalog_bundle_publication.v1` fail-closed behavior with `CATALOG_BUNDLE_PUBLICATION_FAILED`; focused specs, build, IPS gates, deployment-readiness gate, and diff check passed.
+
+Resolved/narrowed in this pass:
+
+- `[RESOLVED/NARROWED: Heureka-owned catalog.bundle.v1 feed publication policy handoff resolved to fail-closed Heureka policy at Heureka main 1cf0f32]`. Heureka commit `1cf0f32` keeps `catalog.bundle.v1` bundles out of Heureka XML feed output and reports `willPublishFeed=false` / `willMutateExternalMarketplace=false`.
 
 2026-07-03: Goal 24 Bazos budget paid multi-product source evidence resolved the live Bazos replay evidence blocker. After owner request, Bazos created/updated one bounded synthetic/internal paid source projection row only: `status=completed`, `paymentStatus=paid`, total `2` CZK, two itemSnapshots over two Catalog product IDs, `forwarded=false`, and no central Orders id. Protected Bazos endpoint from the Marketing pod returned HTTP 200 with `count=1`, `eventCount=1`, `eventType=marketplace.order_affinity_candidate.v1`, `eventVersion=1`, `minItemCount=2`, `maxItemCount=2`, `skippedRecords=0`, `failClosed=false`, and `blockers=[]`. Marketing dry-run `goal24-bazos-budget-paid-source-20260703-001` returned `inputRecords=1`, `acceptedCreatedEvents=1`, `aggregatePairs=2`, `totalPairEvidence=2`, `candidateCount=2`, `ledgerStatus=recorded`, and `published=false`. `[RESOLVED: live Bazos paid multi-product order replay evidence via budget source dry-run goal24-bazos-budget-paid-source-20260703-001]`; recurring Bazos affinity activation remains blocked by `[MISSING: owner approval to activate recurring Bazos affinity publish after live dry-run evidence]`. No Catalog publish, replace-window call, product relation mutation, Orders create, Warehouse reservation, Payments action, deployment, migration, secret value, raw order id, customer/address/payment/provider payload, raw replay payload, or marketplace publication occurred.
 2026-07-03: Goal 24 Bazos live paid multi-product replay evidence check completed against deployed Bazos image `localhost:5000/bazos-service:27f325d` and Marketing image `localhost:5000/marketing-microservice:9cc549e`. Bazos rollout was healthy. Protected endpoint probe from the Marketing pod using the Marketing runtime header contract returned HTTP 200, `success=true`, `sourceOwner=bazos-service`, `contract=marketplace.order_affinity_candidate.v1`, `channel=bazos`, `count=0`, `eventCount=0`, `skippedRecords=0`, `failClosed=false`, and `blockers=[]`. Fresh Marketing dry-run `goal24-bazos-live-evidence-20260703-002` returned `inputRecords=0`, `acceptedCreatedEvents=0`, `aggregatePairs=0`, `totalPairEvidence=0`, `candidateCount=0`, `ledgerStatus=recorded`, and `published=false`. The source-contract blockers remain resolved/narrowed, and `[RESOLVED: live Bazos paid multi-product order replay evidence via budget source dry-run goal24-bazos-budget-paid-source-20260703-001]`; recurring Bazos affinity activation remains blocked pending owner approval after live dry-run evidence. No Catalog publish, replace-window call, product relation mutation, deployment, migration, secret value, raw order id, customer/address/payment/provider payload, or raw replay payload was emitted.
