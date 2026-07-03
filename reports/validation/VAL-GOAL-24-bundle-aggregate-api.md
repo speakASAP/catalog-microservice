@@ -75,9 +75,9 @@ No migration was applied, no deployment was run, no runtime DB mutation was made
 - `[RESOLVED: FlipFlop catalog.bundle.v1 read/display adoption merged and validated]`
 - `[RESOLVED: owner-approved Rung 1 non-mutating real checkout smoke passed against active catalog.bundle.v1 bundle e38ce03c-d18b-40a4-9898-f82a3f77dc0b]`
 - `[RESOLVED/NARROWED: Catalog fail-closed external marketplace bundle publication policy defined in docs/contracts/catalog-bundle-marketplace-publication-policy.md]`
-- `[MISSING: Allegro-owned catalog.bundle.v1 external publication policy handoff]`
+- `[RESOLVED/NARROWED: Allegro-owned catalog.bundle.v1 external publication policy handoff recorded as fail-closed in Allegro main 8b05807 / handoff commit 27b5f88]`
 - `[MISSING: Bazos-owned catalog.bundle.v1 external publication policy handoff]`
-- `[MISSING: Aukro-owned catalog.bundle.v1 external publication policy handoff]`
+- `[RESOLVED/NARROWED: Aukro-owned catalog.bundle.v1 external publication policy handoff resolved to fail-closed Aukro policy at Aukro main f44d7d7 / source bd86caa]`
 - `[RESOLVED/NARROWED: Heureka-owned catalog.bundle.v1 feed publication policy handoff resolved to fail-closed Heureka policy at Heureka main 1cf0f32]`
 
 ## Runtime Deployment Evidence
