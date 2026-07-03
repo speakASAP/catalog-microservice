@@ -127,7 +127,7 @@ Decision: the packet is no longer missing basic owner inputs, but the live paid/
 
 ## 2026-07-03 Fiobanka Runtime HMAC Closure And Polling Gate
 
-Payments `46bf1c3` and current runtime evidence narrow the stale runtime HMAC blocker. The ready pod `payments-microservice-6d5f9fbbfc-8sp7b` on image `localhost:5000/payments-microservice:7cfb431` returned `FIO_BANKA_WEBHOOK_SECRET_PRESENT=true`, sanitized length `64`, and `/health` HTTP `200` without secret output.
+Payments `27f3f73` and current runtime evidence narrow the stale runtime HMAC blocker. The ready pod `payments-microservice-6d5f9fbbfc-8sp7b` on image `localhost:5000/payments-microservice:7cfb431` returned `FIO_BANKA_WEBHOOK_SECRET_PRESENT=true`, sanitized length `64`, and `/health` HTTP `200` without secret output.
 
 Provider-authenticity is now resolved/narrowed through Payments `b19e3b5` authenticated transaction-polling evidence unless the owner still requires a future official/native signed Fiobanka callback contract.
 
