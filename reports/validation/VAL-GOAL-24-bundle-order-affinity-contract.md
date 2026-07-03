@@ -109,7 +109,7 @@ Key decisions:
 - Allegro is the first ready producer because its one-time qualified evidence already published 16 Catalog relations.
 - Marketing must add parser/normalizer support for marketplace-owned source envelopes; the current parser only accepts `source=orders-microservice`, and the direct `source=allegro-service` dry-run failed closed with `order_event_source_invalid=8`.
 - Marketing must add a durable backfill run ledger and scheduled dry-run-first orchestration before marketplace-wide automation.
-- Catalog remains upsert-only until a source/window scoped pruning or replacement API and owner retention policy exist.
+- Catalog now has a source/window scoped replacement API and conservative owner-approved retention policy: exact source/window replacement only, no time-based deletion or decay, and additive retention for legacy rows without matching window evidence.
 
 New blockers:
 
@@ -117,8 +117,7 @@ New blockers:
 - `[MISSING: durable Marketing backfill run ledger and idempotency key registry]`
 - `[MISSING: Allegro-owned protected replay endpoint so future runs do not require a temporary SQL export]`
 - `[MISSING: scheduled dry-run matrix across Allegro, Aukro, Bazos, FlipFlop, and central Orders]`
-- `[MISSING: Catalog source/window scoped stale-affinity pruning or replacement API]`
-- `[MISSING: owner-approved retention/decay policy for stale affinity rows]`
+- `[RESOLVED: Catalog source/window scoped stale-affinity replacement API]`
 
 ## Local Validation
 
@@ -146,7 +145,7 @@ Ready source contracts:
 Dependency-gated runtime actions:
 
 - Non-empty historical replay publish is gated by qualifying paid multi-product Orders rows.
-- Any future publish run requires owner-reviewed mutation scope and pruning/replacement semantics for stale affinity rows.
+- Any future publish run requires owner-reviewed mutation scope, Marketing ledger proof, producer completeness proof, and the conservative exact source/window replacement policy.
 
 Blocked ecosystem bundle selling:
 
@@ -159,7 +158,7 @@ Blocked ecosystem bundle selling:
 - `[MISSING: docs-rag JWT_TOKEN]`
 - `[MISSING: qualifying historical paid multi-product Orders rows for non-empty central Orders replay evidence]`
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill from live central Orders]`
-- `[MISSING: pruning/replacement semantics for stale affinity rows]`
+- `[RESOLVED: conservative exact source/window replacement policy; remaining gates are Marketing ledger, producer completeness, and owner-reviewed publish window]`
 - `[MISSING: Catalog bundle ownership decision: read-only candidate, standalone bundle aggregate, or product-like SKU]`
 - `[MISSING: Orders bundle create-order contract and bundle identity representation beyond normal line items]`
 - `[MISSING: Warehouse bundle reservation contract for stock and fulfillment effects]`

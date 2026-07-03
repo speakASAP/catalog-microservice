@@ -25,6 +25,16 @@ Date: 2026-07-03
 
 - `[MISSING: Marketing durable run ledger proving a complete source/window snapshot]`
 - `[MISSING: marketplace producer guarantee that replay window is complete and repeatable]`
-- `[MISSING: owner-approved retention/decay policy for stale affinity rows]`
+- `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`
 - `[MISSING: deployment approval and protected runtime smoke for replace-window endpoint]`
 - `[MISSING: docs-rag JWT_TOKEN]`
+
+## 2026-07-03 Retention Policy Closure
+
+Selected policy: conservative exact source/window replacement only. `marketing_order_affinity` rows may be pruned only by `POST /api/internal/product-relations/order-affinity/replace-window` when the existing row's `evidence.orderAffinityWindow` exactly matches the request `sourceOwner`, `channel`, `windowStart`, `windowEnd`, and `runId`, and the row is omitted from the complete snapshot.
+
+Retained rows: manual/curated/non-Marketing rows, non-window rows, rows from other windows or runs, checkout/product/price/stock/payment/marketplace-listing data, and legacy `marketing_order_affinity` rows without exact matching window evidence.
+
+Decay support: none. Catalog does not support time-based deletion, score decay, confidence decay, manual/non-window pruning, standalone prune-window cleanup, or archival in Goal 24. Any future decay or archival requires a new owner-approved contract.
+
+Resolved blocker: owner-approved retention/decay policy for stale affinity rows.

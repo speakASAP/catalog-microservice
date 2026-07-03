@@ -165,20 +165,33 @@ Catalog now exposes `POST /api/internal/product-relations/order-affinity/replace
 - It stamps each row with `evidence.orderAffinityWindow`.
 - It prunes only omitted `marketing_order_affinity` rows whose existing `evidence.orderAffinityWindow` exactly matches the request `sourceOwner`, `channel`, `windowStart`, `windowEnd`, and `runId`.
 - Legacy rows without matching window evidence and all non-Marketing/manual rows are retained.
-- Catalog still has no standalone stale-affinity retention or decay policy.
+- Catalog has an owner-approved conservative stale-affinity retention policy for current Goal 24 scheduling decisions: exact source/window replacement only, no time-based deletion, no manual/non-window pruning, no score decay, and additive retention for legacy rows without matching window evidence unless owners later approve archival.
 
-Therefore scheduled replacement/pruning remains blocked until all of these non-Catalog proofs exist:
+Therefore scheduled replacement/pruning remains blocked until these non-Catalog proofs exist:
 
 - `[MISSING: Marketing durable run ledger proving a complete source/window snapshot]`
 - `[MISSING: marketplace producer guarantee that replay window is complete and repeatable]`
-- `[MISSING: owner-approved retention/decay policy for stale affinity rows]`
 
 Allowed future replacement model:
 
 1. Producer declares a complete snapshot window.
 2. Marketing records the complete dry-run ledger and candidate set summary.
-3. Catalog receives either an explicit replace-window request or a prune-window request scoped to `source=marketing_order_affinity`, `channel`, and window metadata.
-4. Catalog never prunes manual, curated, non-Marketing, non-window, checkout, product, price, stock, payment, or marketplace listing data.
+3. Catalog receives an explicit replace-window request scoped to `source=marketing_order_affinity`, `channel`, and complete window metadata. Standalone prune-window behavior remains out of scope until separately designed and approved.
+4. Catalog never prunes manual, curated, non-Marketing, non-window, checkout, product, price, stock, payment, marketplace listing, or legacy rows without exact window evidence.
+
+
+## Stale-Affinity Retention And Decay Policy
+
+Owner-approved Catalog policy for Goal 24 recurring marketplace affinity replacement:
+
+- `marketing_order_affinity` rows may be replaced only through `POST /api/internal/product-relations/order-affinity/replace-window` for a complete source/window snapshot.
+- Replacement may prune only omitted rows whose existing `evidence.orderAffinityWindow` exactly matches the request `sourceOwner`, `channel`, `windowStart`, `windowEnd`, and `runId`.
+- No time-based deletion, age-based cleanup, score decay, confidence decay, manual pruning, standalone prune-window endpoint, or non-window broad cleanup is approved.
+- Legacy `marketing_order_affinity` rows without matching `evidence.orderAffinityWindow` are retained additively. They may be superseded by later exact-window rows in read ordering, but they must not be deleted or decayed by Catalog automation.
+- Manual, curated, non-Marketing, non-window, checkout, product, price, stock, payment, and marketplace listing data are never in scope for this policy.
+- Any future archival, decay scoring, run-ledger TTL, or legacy-row migration requires a separate owner-approved retention contract and validation plan.
+
+This resolves the previous broad owner-approved retention/decay blocker for the conservative Catalog-owned policy. Scheduled publish/replacement remains blocked on Marketing ledger proof, producer completeness proof, and owner-reviewed publish windows.
 
 ## Parallel Execution Plan
 
@@ -187,9 +200,9 @@ Allowed future replacement model:
 | W1 Allegro replay producer | ready now | Allegro worker | Add protected read-only replay endpoint or CLI export that emits bounded affinity snapshots | Allegro order service/controller/tests/docs | Catalog/Marketing source, payments, Warehouse, marketplace publication | This contract | focused Allegro order tests, service build, diff check |
 | W2 Marketing parser/normalizer | dependency-gated | Marketing worker | Accept marketplace-owned replay envelopes and preserve source/channel provenance | Marketing order-affinity parser/backfill tests/docs | Catalog source, marketplace DB queries | W1 response shape accepted | focused parser/backfill tests, build, diff check |
 | W3 Marketing scheduler/ledger | dependency-gated | Marketing worker | Add run ledger, dry-run-first scheduler, idempotency key registry | Marketing scheduler/ledger/tests/docs | Catalog schema, marketplace source | W2 parser support | scheduler/ledger tests, dry-run evidence, diff check |
-| W4 Catalog prune/replace | source complete; integration-gated | Catalog worker | Maintain source/window scoped stale-affinity replacement API | Catalog product-relations contract/source/tests | Orders/Marketing/marketplace source, product/price/stock mutations | W3 ledger, producer completeness, owner retention policy before scheduled use | focused Catalog relation tests, build, diff check |
+| W4 Catalog replace-window policy | source complete; integration-gated | Catalog worker | Maintain source/window scoped stale-affinity replacement API and conservative retention contract | Catalog product-relations contract/source/tests | Orders/Marketing/marketplace source, product/price/stock mutations | W3 ledger, producer completeness, owner-approved publish window before scheduled use | focused Catalog relation tests, build, diff check |
 | W5 Other marketplaces | blocked | Channel workers | Define paid multi-product replay eligibility and protected endpoints | Aukro/Bazos/FlipFlop docs/source/tests | Catalog/Marketing shared contracts until W2/W3 stable | marketplace eligibility mapping | focused channel tests/builds |
-| W6 Integration validation | final integration | Catalog orchestrator | Run dry-run matrix and owner-approved publish windows | validation reports/status docs | unapproved runtime mutation | W1-W3 complete; W4 only if pruning approved | dry-run summaries, Catalog readback aggregates |
+| W6 Integration validation | final integration | Catalog orchestrator | Run dry-run matrix and owner-approved publish windows | validation reports/status docs | unapproved runtime mutation | W1-W3 complete; W4 policy/source complete; runtime replacement still needs deploy/smoke approval | dry-run summaries, Catalog readback aggregates |
 
 Shared contracts:
 
@@ -210,7 +223,6 @@ Merge order: W1 Allegro producer docs/source, W2 Marketing parser, W3 scheduler/
 - `[MISSING: durable Marketing backfill run ledger and idempotency key registry]`
 - `[MISSING: Allegro-owned protected replay endpoint so future runs do not require a temporary SQL export]`
 - `[MISSING: scheduled dry-run matrix across Allegro, Aukro, Bazos, FlipFlop, and central Orders]`
-- `[MISSING: owner-approved retention/decay policy for stale affinity rows]`
 - `[MISSING: Aukro paid multi-product replay eligibility mapping]`
 - `[MISSING: Bazos paid multi-product replay eligibility mapping]`
 - `[MISSING: FlipFlop paid multi-product replay eligibility mapping]`

@@ -263,7 +263,19 @@ Fail-closed rules:
 - `windowStart` and `windowEnd` must be ISO timestamps and `windowEnd` must be after `windowStart`.
 - `items` may be empty only on this replacement endpoint, allowing a complete empty snapshot to prune rows for the exact same window metadata.
 - Catalog never prunes manual, curated, non-Marketing, non-window, checkout, product, price, stock, payment, marketplace listing, or rows whose `evidence.orderAffinityWindow` does not exactly match this request.
-- This endpoint does not prove Marketing ledger completeness, marketplace replay completeness, retention policy approval, or publish-window approval.
+- This endpoint does not prove Marketing ledger completeness, marketplace replay completeness, or publish-window approval. The approved retention policy permits only exact source/window replacement; it does not permit time-based deletion, score decay, manual/non-window pruning, or legacy-row archival.
+
+## Stale-Affinity Retention And Decay Policy
+
+Catalog accepts the conservative Goal 24 policy for `marketing_order_affinity` rows:
+
+- Replace only exact complete source/window snapshots through `POST /api/internal/product-relations/order-affinity/replace-window`.
+- Prune only omitted rows whose existing `evidence.orderAffinityWindow` exactly matches the incoming `sourceOwner`, `channel`, `windowStart`, `windowEnd`, and `runId`.
+- Retain legacy rows that do not carry matching window evidence; do not infer staleness from age, source name, channel, score, confidence, or absence from a different run.
+- Do not perform time-based deletion, score decay, confidence decay, standalone prune-window cleanup, manual/non-window pruning, or archival without a new owner-approved contract.
+- Never prune manual, curated, non-Marketing, checkout, product, price, stock, payment, marketplace listing, or unrelated relation rows.
+
+This policy resolves the previous broad retention/decay blocker while preserving Catalog boundaries. Remaining scheduled replacement gates are Marketing durable ledger proof, marketplace producer completeness/repeatability, owner-reviewed publish windows, deployment approval, and protected runtime smoke.
 
 ## Blockers
 
