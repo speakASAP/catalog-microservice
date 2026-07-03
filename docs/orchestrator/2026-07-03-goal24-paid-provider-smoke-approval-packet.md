@@ -282,3 +282,16 @@ Parallel execution update:
 | Catalog integration reconciliation | final integration | Catalog commerce integration owner | this packet plus validation commands | commit after Catalog verifier/build/diff checks |
 
 State Update: Catalog may now mark the original stop-before-paid smoke and Orders/Warehouse cleanup evidence as resolved/narrowed. Catalog must still keep completed-payment refund/reversal and provider-side cancel/void as `[MISSING: ...]`; no paid transfer, provider callback, provider refund, provider reversal, direct stock edit, direct Orders DB edit, marketplace/feed mutation, migration, or secret output was performed.
+
+## 2026-07-03 Full Paid/Refund Variant Selection
+
+Owner selected variant 2: full paid/refund evidence is required beyond the stop-before-paid smoke. Catalog consumed Payments `451ebdb fix: fail closed fiobanka refunds`, deployed as `localhost:5000/payments-microservice:451ebdb`, as a safety hardening packet: Fiobanka refunds now fail closed instead of returning a local pseudo-refund that could be persisted as `refunded`.
+
+Decision: full paid/refund remains dependency-gated, not resolved. Payments has no automated Fiobanka bank-transfer refund/reversal implementation, and runtime readback still has no configured `FIO_BANKA_API_KEY` polling token. Catalog must not mark a completed Fiobanka payment as rolled back until the provider/bank owner supplies redacted evidence of a real manual bank refund/reversal and Orders/Warehouse owners approve the post-paid correction packet.
+
+Remaining full paid/refund blockers:
+
+- `[MISSING: owner-approved manual Fiobanka completed-transfer refund/reversal workflow with redacted provider/bank evidence]`.
+- `[MISSING: owner-approved post-paid Orders/Warehouse correction packet for a completed provider payment]`.
+- `[MISSING: runtime FIO_BANKA_API_KEY read-token configuration and owner-approved polling run evidence]` if polling authenticity is required.
+- `[MISSING: official/native Fio Banka callback signature contract]` if native bank-originated signatures are required.

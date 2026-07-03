@@ -181,3 +181,11 @@ Remaining blockers:
 - `[MISSING: official/native Fio Banka callback signature contract]` if native bank-originated signatures are required.
 
 Validation boundary: this runtime smoke did not perform a paid bank transfer, provider completed callback, provider refund/reversal, direct DB state correction, direct stock edit, migration, deployment after smoke, marketplace/feed mutation, raw provider payload output, or secret output.
+
+## 2026-07-03 Full Paid/Refund Variant Selection
+
+Owner selected the full paid/refund path after the stop-before-paid smoke. Payments `451ebdb fix: fail closed fiobanka refunds` was pushed and deployed to image `localhost:5000/payments-microservice:451ebdb`; runtime readback showed deployment `1/1`, pod-local health HTTP `200`, and deployed dist contains the fail-closed Fiobanka refund text.
+
+Catalog reconciliation result: full paid/refund is still blocked, but a false-positive refund path was removed. Fiobanka `refundPayment()` now throws until an owner-approved manual bank transfer/reversal workflow exists. No paid transfer, provider refund/reversal, bank API mutation, Orders mutation, Warehouse mutation, channel cleanup, DB edit, secret output, or raw provider/customer/payment evidence was performed.
+
+Remaining blockers: `[MISSING: owner-approved manual Fiobanka completed-transfer refund/reversal workflow with redacted provider/bank evidence]`, `[MISSING: owner-approved post-paid Orders/Warehouse correction packet for a completed provider payment]`, `[MISSING: runtime FIO_BANKA_API_KEY read-token configuration and owner-approved polling run evidence]` if polling authenticity is required, and `[MISSING: official/native Fio Banka callback signature contract]` if native bank-originated signatures are required.
