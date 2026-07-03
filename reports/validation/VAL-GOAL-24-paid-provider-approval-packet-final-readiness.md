@@ -73,11 +73,11 @@ Result: passed before this report was staged. Final staged validation must rerun
 
 ## Repository State Observed
 
-- Catalog: checked-out branch `codex/goal24-paid-provider-owner-approval-packet` with docs-only approval-packet changes on top of `086843f Merge goal24 paid provider approval packet` before this validation rollup.
+- Catalog: clean `main...origin/main` at `923aaaa docs: record goal24 paid provider readiness validation`; the temporary approval-packet branch was fast-forward merged and deleted.
 - Heureka: clean `main...origin/main` at `25a5df3 docs: refresh goal25 heureka consumer validation`.
-- Payments: checked-out branch `codex/goal24-payments-provider-webhook-refund-gate` points at `aa32909`, same commit as `main` and `origin/main`.
-- Orders: checked-out branch `codex/goal24-orders-paid-provider-uuid-token-verifier` points at `e0e1095`, same commit as `main` and `origin/main`.
-- Warehouse: checked-out branch `codex/goal24-bundle-stock-rollback-readiness` points at `204665e`, same commit as `main` and `origin/main`.
+- Payments: clean `main...origin/main` at `c72296c Document Goal 24 provider rollback contract` after fast-forward merge and worker branch deletion.
+- Orders: clean `main...origin/main` at `47da581 docs: record goal24 paid provider uuid blockers` after fast-forward merge and worker branch deletion.
+- Warehouse: clean `main...origin/main` at `ee65ee4 docs: verify bundle component rollback evidence` after fast-forward merge and worker branch deletion.
 
 ## Remaining Runtime Blockers
 
