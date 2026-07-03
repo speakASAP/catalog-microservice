@@ -18,6 +18,7 @@ export default function MediaManagement({ productId }: MediaManagementProps) {
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [reordering, setReordering] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [uploadMessage, setUploadMessage] = useState('');
   const [newMediaUrl, setNewMediaUrl] = useState('');
@@ -175,6 +176,47 @@ export default function MediaManagement({ productId }: MediaManagementProps) {
     }
   };
 
+  const persistMediaOrder = async (orderedMedia: Media[]) => {
+    await Promise.all(
+      orderedMedia.map((item, position) => (
+        item.position === position
+          ? Promise.resolve()
+          : mediaApi.updateMedia(item.id, { position })
+      )),
+    );
+  };
+
+  const moveMedia = async (id: string, offset: number) => {
+    const currentIndex = media.findIndex((item) => item.id === id);
+    const targetIndex = currentIndex + offset;
+
+    if (
+      currentIndex === -1 ||
+      targetIndex < 0 ||
+      targetIndex >= media.length ||
+      reordering
+    ) {
+      return;
+    }
+
+    const nextMedia = [...media];
+    const [movedItem] = nextMedia.splice(currentIndex, 1);
+    nextMedia.splice(targetIndex, 0, movedItem);
+    const reorderedMedia = nextMedia.map((item, position) => ({ ...item, position }));
+
+    setMedia(reorderedMedia);
+    setReordering(true);
+    try {
+      await persistMediaOrder(reorderedMedia);
+    } catch (error) {
+      console.error('Failed to reorder media:', error);
+      alert('Failed to reorder media');
+      loadMedia();
+    } finally {
+      setReordering(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -307,7 +349,7 @@ export default function MediaManagement({ productId }: MediaManagementProps) {
         {/* Media List */}
         {media.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {media.map((item) => (
+            {media.map((item, index) => (
               <div
                 key={item.id}
                 className={`relative border-2 rounded-lg overflow-hidden ${
@@ -334,6 +376,48 @@ export default function MediaManagement({ productId }: MediaManagementProps) {
                 )}
                 <div className="p-2 bg-white">
                   <p className="text-xs text-gray-600 truncate">{item.altText || item.title || 'No description'}</p>
+                  <div className="mt-2 grid grid-cols-4 gap-1">
+                    <button
+                      type="button"
+                      onClick={() => moveMedia(item.id, -1)}
+                      disabled={reordering || index === 0}
+                      aria-label="Move media left"
+                      title="Move left"
+                      className="rounded bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700 transition-all hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      ←
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveMedia(item.id, 1)}
+                      disabled={reordering || index === media.length - 1}
+                      aria-label="Move media right"
+                      title="Move right"
+                      className="rounded bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700 transition-all hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      →
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveMedia(item.id, -4)}
+                      disabled={reordering || index < 4}
+                      aria-label="Move media up"
+                      title="Move up"
+                      className="rounded bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700 transition-all hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveMedia(item.id, 4)}
+                      disabled={reordering || index + 4 >= media.length}
+                      aria-label="Move media down"
+                      title="Move down"
+                      className="rounded bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700 transition-all hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      ↓
+                    </button>
+                  </div>
                   <div className="flex gap-2 mt-2">
                     {!item.isPrimary && (
                       <button
