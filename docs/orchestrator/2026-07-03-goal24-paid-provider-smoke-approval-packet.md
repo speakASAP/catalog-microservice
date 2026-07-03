@@ -2,7 +2,7 @@
 
 ```yaml
 id: GOAL24-PAID-PROVIDER-SMOKE-APPROVAL-PACKET
-status: draft-owner-input-required
+status: owner-approved-preflight-filled-runtime-hard-stopped
 owner: catalog-commerce-integration-owner
 created: 2026-07-03
 scope: required owner inputs before any catalog.bundle.v1 paid/provider checkout smoke with stock and rollback effects
@@ -29,23 +29,44 @@ The following fields must be filled before any live or sandbox paid/provider smo
 
 | Field | Required value | Current state |
 | --- | --- | --- |
-| `approvalId` | non-secret owner approval id for this exact smoke window | `[MISSING: approvalId]` |
-| `approvalWindow` | exact date, start/end time, timezone, maximum duration, and allowed retry count | `[MISSING: approvalWindow]` |
-| `checkoutOwner` | service/person that initiates the checkout | `[MISSING: checkoutOwner]` |
-| `targetBundleId` | active `catalog.bundle.v1` bundle id approved for this smoke only | `[MISSING: targetBundleId]` |
-| `componentProductIds` | exact component Catalog product ids and quantities | `[MISSING: componentProductIds]` |
-| `warehousePlan` | warehouse id(s), max hold quantity, release/fulfill/reversal path | `[MISSING: warehousePlan]` |
-| `paymentProvider` | provider, method, sandbox/live mode, success URL, cancel URL, callback/webhook route, maximum amount, and currency | `[MISSING: paymentProvider]` |
-| `providerSuccessEvidence` | webhook/callback/provider fixture proving paid success without manual state bypass | `[MISSING: providerSuccessEvidence]` |
-| `providerCancelEvidence` | provider-side cancellation path before completed payment, if applicable | `[MISSING: providerCancelEvidence]` |
-| `refundPlan` | completed-payment refund path, max amount, provider rollback operation, and evidence policy | `[MISSING: refundPlan]` |
-| `ordersRollbackPlan` | payment-status/order-status transitions and idempotency keys | `[MISSING: ordersRollbackPlan]` |
-| `warehouseRollbackPlan` | release/cancel/return mapping for active and fulfilled component reservations | `[MISSING: warehouseRollbackPlan]` |
-| `centralOrdersUuidProof` | proof active checkout passes central Orders UUID to Payments | `[MISSING: centralOrdersUuidProof]` |
-| `paymentsOrdersTokenProof` | runtime proof Payments can call Orders with expected service role | `[MISSING: paymentsOrdersTokenProof]` |
-| `evidenceRedactionPolicy` | prohibited fields and allowed aggregate/hash evidence | `[MISSING: evidenceRedactionPolicy]` |
-| `hardStopAuthority` | named owner/operator authorized to stop the run before the next side effect | `[MISSING: hardStopAuthority]` |
-| `stopConditions` | exact failures that stop before next side effect | `[MISSING: stopConditions]` |
+| `approvalId` | non-secret owner approval id for this exact smoke window | `GOAL24-PAID-PROVIDER-SMOKE-20260703-CODEX-OWNER-APPROVED-001` |
+| `approvalWindow` | exact date, start/end time, timezone, maximum duration, and allowed retry count | `2026-07-03T21:48:12+02:00` through `2026-07-03T23:59:59+02:00`, Europe/Prague, one bounded attempt after all hard stops clear; preflight/read-only checks allowed in current session |
+| `checkoutOwner` | service/person that initiates the checkout | FlipFlop checkout/order-service owns initiation; Catalog remains integration packet owner; runtime submission remains hard-stopped until FlipFlop accepts durable Catalog bundle evidence in checkout |
+| `targetBundleId` | active `catalog.bundle.v1` bundle id approved for this smoke only | `919be990-1c76-4f9c-b100-829281c6a709`, active, `catalog.bundle.v1`, `catalog_internal`, validation `valid`, blockers `[]` |
+| `componentProductIds` | exact component Catalog product ids and quantities | `ce4a51aa-2d12-4ab7-a965-7a36609d01fc` qty `1`; `dbc51dde-fc66-4511-b178-f929183f4647` qty `1` |
+| `warehousePlan` | warehouse id(s), max hold quantity, release/fulfill/reversal path | Warehouse `c0de0000-0000-4000-8000-000000000013`; max hold qty `1` per component; readback `available=118/108`, `reserved=0/0`; release before fulfillment, fulfill on paid, cancel/return only through approved post-fulfillment workflow |
+| `paymentProvider` | provider, method, sandbox/live mode, success URL, cancel URL, callback/webhook route, maximum amount, and currency | Fiobanka bank-transfer QR, `paymentMethod=fiobanka`, `applicationId=flipflop-service`, CZK, maximum `300 CZK`, callback `/webhooks/fiobanka`; success/cancel URLs must be FlipFlop approved runtime URLs before provider creation `[MISSING: exact success/cancel URLs for the live run]` |
+| `providerSuccessEvidence` | webhook/callback/provider fixture proving paid success without manual state bypass | Payments `f9d40a4` records owner-approved synthetic Fiobanka completed callback through `/webhooks/fiobanka` with matched payment completion; real bank-originated signature remains `[MISSING: real Fiobanka bank-originated callback/signature evidence]` |
+| `providerCancelEvidence` | provider-side cancellation path before completed payment, if applicable | `[MISSING: Fiobanka provider-side unpaid cancel/void operation or explicit no-provider-cancel policy for pending bank transfer]` |
+| `refundPlan` | completed-payment refund path, max amount, provider rollback operation, and evidence policy | `[MISSING: owner-approved Fiobanka refund/reversal execution path and redacted provider evidence]`; Payments refund endpoint is provider-side for completed payments |
+| `ordersRollbackPlan` | payment-status/order-status transitions and idempotency keys | Orders `62f5d62`: `completed -> paid/confirm/fulfill`, `failed|cancelled -> release` before fulfillment; post-paid cancellation requires approved cancellation actor/reason/sideEffectsHandled and provider rollback proof; idempotency key prefix `goal24-paid-provider-smoke-20260703-001` |
+| `warehouseRollbackPlan` | release/cancel/return mapping for active and fulfilled component reservations | Warehouse `3043cad`: component-line `release` for reserved-only, `fulfill` on paid, `cancel`/`return` only for owner-approved post-fulfillment correction; aggregate bundle stock identity forbidden |
+| `centralOrdersUuidProof` | proof active checkout passes central Orders UUID to Payments | FlipFlop source verifier passed for central Orders before payment and Payments using central UUID; durable Catalog `bundleId` checkout path remains `[MISSING: owner-approved FlipFlop rollout mapping durable Catalog bundleId into Orders bundleEvidence]` |
+| `paymentsOrdersTokenProof` | runtime proof Payments can call Orders with expected service role | Payments pod probe used token without printing it; `PATCH /api/orders/00000000-0000-4000-8000-000000000000/payment-status` returned HTTP `404`, `authAccepted=true`, `responseClass=not_found_after_auth` |
+| `evidenceRedactionPolicy` | prohibited fields and allowed aggregate/hash evidence | Approved: hashes, statuses, counts, endpoint/status, commit ids, bundle/component ids, aggregate Warehouse counts. Forbidden: token values, raw provider payloads, customer/card/bank data, raw DB rows, raw order/payment ids, secrets |
+| `hardStopAuthority` | named owner/operator authorized to stop the run before the next side effect | Owner/operator approval captured in current Codex thread; Catalog integration owner and runtime validation owner must stop at first hard-stop condition. Runtime validation owner remains `[MISSING: named live-run executor]` |
+| `stopConditions` | exact failures that stop before next side effect | Stop on expired packet, bundle/component mismatch, amount/currency mismatch, missing central UUID, missing Payments Orders token acceptance, placeholder-only provider proof unless explicitly accepted, missing refund/cancel path, Warehouse aggregate mismatch, raw evidence requirement, dirty owner repo, or FlipFlop durable checkout gate failure |
+
+## 2026-07-03 Owner Approval And Self-Discovered Runtime Facts
+
+Owner approval for self-discovery and bounded verification was captured in the current Codex thread on 2026-07-03. Catalog records the non-secret approval id `GOAL24-PAID-PROVIDER-SMOKE-20260703-CODEX-OWNER-APPROVED-001` for this approval packet only. This approval authorizes filling the packet and running read-only/preflight checks; it does not override the hard stops below when required runtime contracts are still missing.
+
+Discovered target and evidence:
+
+- Target bundle: `919be990-1c76-4f9c-b100-829281c6a709`, active `catalog.bundle.v1`, `catalog_internal`, validation `valid`, blockers `[]`.
+- Components: `ce4a51aa-2d12-4ab7-a965-7a36609d01fc` qty `1`; `dbc51dde-fc66-4511-b178-f929183f4647` qty `1`.
+- Warehouse read-only aggregate via `CLIPLOT_WAREHOUSE_SERVICE_TOKEN` inside the Warehouse pod, token not printed: both components returned HTTP `200` from `/api/warehouses/logistics/:productId`; warehouse `c0de0000-0000-4000-8000-000000000013`; available/reserved `118/0` and `108/0`; `canReserveFromWarehouse=true` for both.
+- Payment method: Fiobanka bank-transfer QR, `applicationId=flipflop-service`, maximum `300 CZK`, callback route `/webhooks/fiobanka`.
+- Payments success evidence: Payments `f9d40a4` records synthetic Fiobanka QR creation and owner-approved synthetic completed callback through `/webhooks/fiobanka` without manual payment-state bypass.
+- Payments to Orders token proof: in-pod Payments probe did not print the token; fake UUID status update returned HTTP `404` after auth, so the service role was accepted and no order was mutated.
+- FlipFlop verifier evidence: `npm run verify:orders-hub-integration` passed; `npm run verify:paid-provider-bundle-checkout-gate` returned `runtimeProgression=blocked`, `catalogBundleIdCheckoutAuthority=false`, and durable bundleId migration `evidence_only_runtime_blocked`.
+
+Hard-stop facts that remain unavailable even after owner approval:
+
+- `[MISSING: owner-approved FlipFlop source rollout mapping durable Catalog bundleId into runtime checkout bundleEvidence without changing totals, stock identity, or provider state]`.
+- `[MISSING: real Fiobanka bank-originated callback/signature evidence beyond the current non-empty-signature placeholder verifier, unless the owner explicitly approves the synthetic Fiobanka fixture as sufficient for this one run]`.
+- `[MISSING: Fiobanka provider-side refund/reversal or unpaid cancel/void execution path with redacted evidence]`.
+- `[MISSING: named live-run executor/runtime validation owner for the exact side-effectful smoke]`.
 
 ## Non-Approval Boundaries
 
@@ -104,7 +125,7 @@ Any future smoke must stop before the next side effect when one of these checks 
 
 1. Approval packet is incomplete or expired.
 2. Target bundle is not active or component ids/quantities differ from the approved packet.
-3. Checkout cannot prove central Orders UUID propagation to Payments.
+3. Checkout cannot prove central Orders UUID runtime propagation for the approved target to Payments.
 4. Payments cannot prove selected provider success/cancel/refund semantics without manual state bypass.
 5. Warehouse cannot map every component reservation to approved release/fulfill/cancel/return behavior.
 6. Evidence redaction cannot be guaranteed.
@@ -119,7 +140,7 @@ Any future smoke must stop before the next side effect when one of these checks 
 
 | Workstream | Thread | Status | Objective |
 | --- | --- | --- | --- |
-| Orders UUID/token verifier | `019f292b-431d-7f80-8956-73a732f750e3` | started | Prove or keep blocked central Orders UUID propagation and Orders/Payments status mapping. |
+| Orders UUID/token verifier | `019f292b-431d-7f80-8956-73a732f750e3` | started | Prove or keep blocked central Orders UUID runtime propagation for the approved target and Orders/Payments status mapping. |
 | Payments provider rollback contract | `019f292b-6f1a-74f0-9cc1-4dd6246840b1` | started | Prove or keep blocked provider-specific success/cancel/refund rollback contract. |
 | Heureka channel fail-closed envelope | `019f292b-a487-7850-946a-9f0533e8e0e2` | started | Prove fail-closed non-mutating channel policy envelope for `catalog.bundle.v1`. |
 
@@ -149,13 +170,13 @@ Catalog consumed the latest upstream evidence as dependency-gated integration in
 
 | Owner packet | Evidence consumed | Catalog reconciliation decision |
 | --- | --- | --- |
-| Orders | `62f5d62` merged cancel/cleanup rollback gate | Source choreography is narrowed, but provider refund/cancel proof and owner-approved cancellation cleanup inputs remain required. |
+| Orders | `62f5d62` merged cancel/cleanup rollback gate | Source choreography is narrowed, but provider refund/cancel execution proof, runtime target packet evidence, and owner-approved cancellation cleanup inputs remain required. |
 | Warehouse | `3043cad` on `origin/main` source-verifies component-line hold/release/fulfill/cancel/return plus cleanup operation matrix | Component-line lifecycle and cleanup operation-selection semantics are narrowed to source evidence; approved stock window/max quantity and live canary remain missing. |
 | FlipFlop | `23a901d` keeps durable `catalog.bundle.v1` `bundleId` as evidence-only and runtime checkout submission blocked | Checkout owner packet remains dependency-gated until approved rollout maps display-only bundle evidence into Orders without changing totals, stock identity, or provider state. |
 | Payments | `f9d40a4` records pending Fiobanka QR evidence, owner-approved synthetic completed-callback evidence through `/webhooks/fiobanka`, and a source-only refund/cancel rollback plan | Route-level completion and rollback planning are narrowed as dependency-gated evidence; real bank-originated signature evidence or approved selected-provider fixture plus provider-specific refund/cancel/reversal execution approval remain missing. |
 
-Exact next required owner packet before any live paid/provider smoke: a single owner-approved run packet naming `approvalId`, `approvalWindow`, `checkoutOwner`, active `targetBundleId`, component product ids/quantities, Warehouse stock window/max quantity, selected provider/method/environment/max amount, provider completion evidence, provider refund/cancel/reversal operation, Orders cancellation actor/reason/side-effect acknowledgements, Warehouse cleanup operation for reserved/fulfilled/partial states, active checkout central Orders UUID proof, Payments Orders service-token proof, evidence redaction policy, hard-stop authority, dedicated smoke owner, and runtime validation owner.
+Exact next required owner packet before any live paid/provider smoke: a single owner-approved run packet naming `approvalId`, `approvalWindow`, `checkoutOwner`, active `targetBundleId`, component product ids/quantities, Warehouse stock window/max quantity, selected provider/method/environment/max amount, provider completion evidence, provider refund/cancel/reversal operation, Orders cancellation actor/reason/side-effect acknowledgements, Warehouse cleanup operation for reserved/fulfilled/partial states, runtime checkout packet central Orders UUID proof, Payments Orders service-token proof, evidence redaction policy, hard-stop authority, dedicated smoke owner, and runtime validation owner.
 
 ## Current Decision
 
-Runtime paid/provider bundle progression remains blocked on `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]` until this packet is complete, owner-approved, and validated by the owning services. Additional unresolved packet fields: `[MISSING: target active catalog.bundle.v1 bundle id approved for paid/provider smoke]`, `[MISSING: approved payment method/provider mode and maximum amount for paid/provider smoke]`, `[MISSING: runtime verification of Payments Orders service token/role]`, `[MISSING: hard stop authority for paid/provider smoke]`, `[MISSING: dedicated paid/provider smoke owner]`, and `[MISSING: runtime validation owner for live paid/provider bundle smoke]`.
+Runtime paid/provider bundle progression remains blocked after packet fill because the active FlipFlop durable Catalog bundle checkout path is still source-gated and Fiobanka provider rollback/real bank-originated callback evidence is still unavailable. Resolved/narrowed by this packet: target bundle, component product ids, Warehouse aggregate/max quantity, selected provider/method/max amount, Payments Orders service-token acceptance, evidence policy, approval id/window, and hard-stop conditions. Remaining blockers: `[MISSING: owner-approved FlipFlop source rollout mapping durable Catalog bundleId into runtime checkout bundleEvidence without changing totals, stock identity, or provider state]`, `[MISSING: real Fiobanka bank-originated callback/signature evidence or explicit one-run approval to accept the synthetic Fiobanka fixture]`, `[MISSING: Fiobanka provider-side refund/reversal or unpaid cancel/void execution path with redacted evidence]`, and `[MISSING: named live-run executor/runtime validation owner for the exact side-effectful smoke]`.
