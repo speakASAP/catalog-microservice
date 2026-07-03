@@ -71,7 +71,6 @@ for (const marker of [
   '[MISSING: named runtime validation owner for the exact side-effectful smoke]',
   '[MISSING: named FlipFlop channel cleanup executor]',
   '[MISSING: deployed FlipFlop bundle-preserving fixture gate and renewed runtime quote evidence]',
-  '[MISSING: deployed FlipFlop bundle-preserving fixture gate and renewed runtime quote evidence]',
   'FlipFlop `7ebcbd6 fix: use guarded goal24 fixture discount value`',
   'Orders `4baa6a9 Merge goal24 orders return cleanup gate`',
   'Payments `224aaf8 docs: align fiobanka polling rollback contract`',
