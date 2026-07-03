@@ -304,10 +304,19 @@ Consumed FlipFlop source evidence: `/admin/orders/:id` can set order status `ref
 
 Updated blockers:
 
-- `[RESOLVED/NARROWED: owner-approved manual Fiobanka refund workflow is accepted as the provider rollback mechanism for completed transfers; runtime redacted refund-service evidence remains required]`.
+- `[RESOLVED/NARROWED: owner-approved manual Fiobanka refund workflow is accepted as the provider rollback mechanism for completed transfers]`.
+- `[RESOLVED/NARROWED: owner-confirmed manual Fiobanka refund was executed through the external refund service; automated Payments Fiobanka refund remains fail-closed]`.
 - `[RESOLVED/NARROWED: FlipFlop admin order UI supports local refunded acknowledgement with notes after external refund evidence]`.
-- `[MISSING: redacted external refund-service evidence for the exact completed Goal 24 Fiobanka transfer]`.
+- `[MISSING: sanitized exact-order linkage between the manual refund confirmation and the Goal 24 completed Fiobanka smoke order]`.
 - `[MISSING: FlipFlop runtime readback showing the exact smoke order acknowledged as status=refunded and paymentStatus=refunded after manual refund]`.
 - `[MISSING: owner-approved post-paid Orders/Warehouse correction packet for the exact completed payment state]`.
 
-Boundary: this clarification does not run a paid transfer, external refund, provider reversal, Orders mutation, Warehouse mutation, FlipFlop runtime mutation, DB edit, deploy, migration, secret output, or raw customer/payment evidence capture.
+## 2026-07-03 Owner-Confirmed Manual Refund Execution
+
+Owner confirmation in the current Codex thread: automated Fiobanka refund is not available; the refund had to be sent manually through the separate owner-operated refund service, and the owner confirmed the manual refund was completed. Catalog records this as verified manual refund execution for the selected full paid/refund mechanism.
+
+Evidence policy: no raw bank data, customer PII, raw order/payment ids, screenshots, provider payloads, token values, secrets, or raw database rows were captured or printed. Because the thread confirmation did not include a sanitized order/payment hash or refund-service reference, final strict-audit closeout still requires `[MISSING: sanitized exact-order linkage between the manual refund confirmation and the Goal 24 completed Fiobanka smoke order]` if the exact smoke order must be tied to this confirmation.
+
+Current reconciliation: the manual refund execution blocker is resolved/narrowed by owner confirmation; automated Payments Fiobanka refund stays fail-closed; exact post-refund FlipFlop acknowledgement and Orders/Warehouse correction remain separate owner-owned evidence packets.
+
+Boundary: this confirmation did not run a new paid transfer, automated refund, provider reversal, Orders mutation, Warehouse mutation, FlipFlop runtime mutation, DB edit, deploy, migration, secret output, or raw customer/payment evidence capture.
