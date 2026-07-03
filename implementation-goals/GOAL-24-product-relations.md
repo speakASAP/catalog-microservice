@@ -80,7 +80,7 @@ Follow-up read-only evidence on 2026-07-03 confirmed the Orders replay endpoint,
 - `[RESOLVED: Catalog standalone bundle aggregate API and persistence contract design owner-ready in docs/contracts/catalog-bundle-aggregate-v1.md]`
 - `[RESOLVED: owner accepted catalog.bundle.v1 source implementation gate in Codex thread on 2026-07-03]`
 - `[RESOLVED: Catalog additive migration/API source implemented for catalog.bundle.v1 in branch goal24-catalog-bundle-api]`
-- `[MISSING: owner-approved Catalog bundle aggregate migration application/deploy/runtime smoke]`
+- `[RESOLVED: owner-approved Catalog bundle aggregate migration application/deploy/runtime smoke]`
 - `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
 - `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
 - `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
@@ -169,6 +169,22 @@ Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task ->
 - Code: `src/bundles/*`, `src/app.module.ts`, `scripts/migrations/20260703_catalog_bundle_aggregate.sql`, validation/status docs.
 - Validation: docs-rag retrieval HTTP 200 with indexed context; pre-coding scripts missing; focused bundles Jest passed 1 suite/7 tests; `npm run build` passed; `git diff --check` passed.
 - State Update: source implementation is complete; migration application/deploy/runtime smoke and downstream commerce contracts remain gated.
+
+
+## 2026-07-03 B1.1 Catalog Bundle Aggregate Runtime Closure
+
+Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update.
+
+- Vision: Catalog can expose durable bundle identity while preserving product truth and downstream checkout/stock/payment boundaries.
+- Goal Impact: the Catalog-owned `catalog.bundle.v1` migration/API/deploy/runtime-smoke blocker is resolved.
+- System: Catalog owns only bundle aggregate metadata over existing product IDs; downstream selling gates remain explicit.
+- Feature: deployed protected bundle aggregate API and additive persistence.
+- Task: apply additive migration, deploy `44ce06d`, and run bounded protected runtime smoke.
+- Execution Plan: `implementation-goals/GOAL-24-bundle-aggregate-api-execution-plan.md`.
+- Coding Prompt: do not create SKU, order, reservation, payment, provider call, marketplace publication, or stock movement.
+- Code: `src/bundles/*`, `scripts/migrations/20260703_catalog_bundle_aggregate.sql` deployed at image `localhost:5000/catalog-microservice:44ce06d`.
+- Validation: migration verification, deploy rollout, in-pod health, external health HTTP 200, protected create/activate/archive/read canary smoke, and post-smoke row counts.
+- State Update: Catalog runtime lane complete; Orders/Warehouse/Payments/FlipFlop contract lanes remain.
 
 ## Rollback Notes
 

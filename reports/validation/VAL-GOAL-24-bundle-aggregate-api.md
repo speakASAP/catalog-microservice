@@ -5,8 +5,8 @@ id: VAL-GOAL-24-bundle-aggregate-api
 date: 2026-07-03
 repository: /home/ssf/Documents/Github/codex-worktrees/catalog-goal24-bundle-api
 branch: goal24-catalog-bundle-api
-deployment: not_run
-runtime_db_mutation: not_run
+deployment: deployed_44ce06d
+runtime_db_mutation: additive_migration_applied_and_archived_canary_created
 ```
 
 ## Intent Preservation Chain
@@ -68,10 +68,46 @@ No migration was applied, no deployment was run, no runtime DB mutation was made
 
 ## Remaining Blockers
 
-- `[MISSING: owner-approved Catalog bundle aggregate migration application/deploy/runtime smoke]`
+- `[RESOLVED: owner-approved Catalog bundle aggregate migration application/deploy/runtime smoke]`
 - `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
 - `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
 - `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
 - `[MISSING: FlipFlop adoption contract for catalog.bundle.v1 read/display before ecosystem checkout]`
 - `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`
 - `[MISSING: channel-specific external marketplace bundle publication policies]`
+
+## Runtime Deployment Evidence
+
+```bash
+kubectl -n statex-apps exec -i deployment/db-server-postgres -- psql -U dbadmin -d catalog_db -v ON_ERROR_STOP=1 < scripts/migrations/20260703_catalog_bundle_aggregate.sql
+```
+
+Result: PASS. `catalog_bundles` and `catalog_bundle_items` were created additively. Immediate post-migration verification returned `bundle_rows=0`, `item_rows=0`.
+
+```bash
+./scripts/deploy.sh
+```
+
+Result: PASS. Image `localhost:5000/catalog-microservice:44ce06d` was built, pushed, rolled out, and in-pod health returned `status=healthy`.
+
+```bash
+curl -sk https://catalog.alfares.cz/health
+kubectl -n statex-apps get deploy catalog-microservice
+```
+
+Result: external health HTTP 200; deployment image `localhost:5000/catalog-microservice:44ce06d`, ready=1 updated=1 available=1.
+
+```bash
+# protected in-pod runtime smoke with CATALOG_INTERNAL_SERVICE_TOKEN, token value not printed
+```
+
+Result: PASS. One synthetic internal canary bundle `257a0518-56eb-4dba-9428-4be5a25813df` was created as draft, activated, archived, and read back as archived with `contractVersion=catalog.bundle.v1`, `source=manual`, `itemCount=2`, and `validation.blockers=[bundle_archived]`.
+
+```bash
+select count(*) as bundle_rows, count(*) filter (where status='archived') as archived_rows from catalog_bundles;
+select count(*) as item_rows from catalog_bundle_items;
+```
+
+Result: `bundle_rows=1`, `archived_rows=1`, `item_rows=2` for the archived synthetic runtime canary.
+
+Boundary: no Orders rows, Warehouse reservations/stock movements, Payments/provider calls, FlipFlop checkout mutation, marketplace publication, product SKU creation, or secret output occurred.
