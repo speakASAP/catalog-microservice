@@ -71,7 +71,6 @@ Follow-up read-only evidence on 2026-07-03 confirmed the Orders replay endpoint,
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`
 - `[MISSING: Marketing durable run ledger proving a complete source/window snapshot]`
 - `[MISSING: marketplace producer guarantee that replay window is complete and repeatable]`
-- `[MISSING: owner-approved retention/decay policy for stale affinity rows]`
 - `[MISSING: Catalog bundle ownership decision: read-only candidate, standalone bundle aggregate, or product-like SKU]`
 - `[MISSING: Orders bundle create-order contract and bundle identity representation beyond normal line items]`
 - `[MISSING: Warehouse bundle reservation contract for stock and fulfillment effects]`
@@ -88,12 +87,29 @@ Current lanes:
 - `ready now`: Orders replay contract maintenance. Owner role: Orders worker. Scope: keep `orders.order.created.v1` item snapshots and replay verifier compatible with Marketing/Catalog affinity replay. Expected output: source-only verification or bounded fixes in Orders. Validation: `npm run verify:order-affinity-replay`.
 - `ready now`: Marketing dry-run/export/backfill hardening. Owner role: Marketing worker. Scope: keep the backfill CLI, aggregation, and Catalog publisher safe and dry-run-first. Expected output: source-only verification or bounded fixes in Marketing. Validation: focused order-affinity backfill tests and non-mutating dry-run.
 - `ready now`: Catalog product relation API maintenance. Owner role: Catalog worker. Scope: maintain protected related-products, bundle-candidates, and internal batch endpoint. Validation: focused product-relations Jest and `git diff --check`.
-- `dependency-gated`: Non-empty historical affinity publish. Owner role: integration validator. Blockers: `[MISSING: qualifying historical paid multi-product Orders rows for non-empty replay evidence]`, `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`, and `[MISSING: pruning/replacement semantics for stale affinity rows]`.
+- `dependency-gated`: Non-empty historical affinity publish. Owner role: integration validator. Blockers: `[MISSING: qualifying historical paid multi-product Orders rows for non-empty replay evidence]`, `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`, and `[RESOLVED: conservative exact source/window replacement policy; remaining gates are Marketing ledger, producer completeness, and owner-reviewed publish window]`.
 - `dependency-gated`: Catalog durable bundle aggregate/API. Owner role: Catalog/commerce architect. Blocker: `[MISSING: Catalog bundle ownership decision: read-only candidate, standalone bundle aggregate, or product-like SKU]`.
 - `dependency-gated`: Marketplace/operator bundle suggestions. Owner role: channel worker. Blocker: `[MISSING: channel-specific external marketplace bundle publication policies]`.
 - `blocked`: Ecosystem real bundle selling beyond the existing FlipFlop-local bundle intent. Blockers: `[MISSING: Orders bundle create-order contract and bundle identity representation beyond normal line items]`, `[MISSING: Warehouse bundle reservation contract for stock and fulfillment effects]`, `[MISSING: Payments metadata policy for bundle/free-shipping evidence without making Payments pricing truth]`, and `[MISSING: approved real checkout smoke scope]`.
 
 Shared files/contracts: `docs/contracts/catalog-product-relations.md`, Orders `ORDER_EVENT_CONTRACTS.md`, Marketing orders-events integration contract, and any future bundle checkout contract. Integration owner: Catalog orchestrator until a commerce integration owner is assigned. Validation owner: integration validator. Merge order: source contract verification before any runtime publish or checkout implementation.
+
+## 2026-07-03 Stale-Affinity Retention Policy Update
+
+Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update.
+
+- Vision: marketplace purchase history can improve product-relation surfaces while Catalog remains bounded to relation metadata.
+- Goal Impact: recurring affinity replacement can proceed under a conservative owner-approved policy once external completeness gates are met.
+- System: Catalog owns only `product_relations`; Marketing owns ledger/scheduling completeness; marketplace producers own repeatable source windows.
+- Feature: stale `marketing_order_affinity` retention and replacement policy.
+- Task: resolve the broad retention/decay blocker without adding deletion, decay, migration, deployment, or runtime mutation.
+- Execution Plan: docs/contract-only update; preserve parallel lanes and remaining external blockers.
+- Coding Prompt: choose exact source/window replacement only, retain legacy/non-window rows, and avoid invented archival or decay behavior.
+- Code: Goal 24 contracts/status/validation docs only.
+- Validation: `git diff --check`; no source tests required for docs-only policy update.
+- State Update: broad owner-retention blocker resolved; scheduled replacement remains gated by Marketing ledger, producer completeness, owner-reviewed publish windows, deployment approval, and protected runtime smoke.
+
+Selected policy: only the `replace-window` endpoint may prune `marketing_order_affinity` rows, and only when existing `evidence.orderAffinityWindow` exactly matches the incoming `sourceOwner`, `channel`, `windowStart`, `windowEnd`, and `runId`. Catalog does not support time-based deletion, score/confidence decay, manual/non-window pruning, standalone prune-window cleanup, or legacy-row archival. Legacy rows without exact matching window evidence are retained additively unless owners later approve a separate archival contract.
 
 ## Rollback Notes
 
@@ -128,4 +144,4 @@ Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task ->
 - Coding Prompt: require `completeSnapshot=true`; force `relationType=order_affinity` and `source=marketing_order_affinity`; stamp `evidence.orderAffinityWindow`; never prune manual/non-window/non-Marketing rows.
 - Code: `src/product-relations/product-relations.dto.ts`, `src/product-relations/product-relations.controller.ts`, `src/product-relations/product-relations.service.ts`, `src/product-relations/product-relations.service.spec.ts`, Goal 24 contracts/status docs.
 - Validation: `npm test -- --runInBand src/product-relations/product-relations.service.spec.ts`, `npm run build`, `git diff --check`.
-- State Update: Catalog source/window replacement API source is complete; scheduled use remains gated by Marketing ledger, marketplace producer completeness, owner retention policy, deployment, and runtime smoke.
+- State Update: Catalog source/window replacement API source is complete; scheduled use remains gated by Marketing ledger, marketplace producer completeness, owner-reviewed publish window, deployment, and runtime smoke.

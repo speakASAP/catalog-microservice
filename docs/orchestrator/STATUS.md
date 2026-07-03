@@ -1,5 +1,7 @@
+2026-07-03: Goal 24 stale-affinity retention/decay policy selected. Catalog adopts the conservative owner-approved policy for `marketing_order_affinity`: exact source/window replacement only through `replace-window`, pruning only omitted rows whose existing `evidence.orderAffinityWindow` exactly matches `sourceOwner`, `channel`, `windowStart`, `windowEnd`, and `runId`; no time-based deletion, score/confidence decay, manual/non-window pruning, standalone prune-window cleanup, or legacy-row archival. Legacy rows without exact matching window evidence are retained additively unless owners later approve archival. The broad retention/decay blocker is resolved; scheduled replacement remains gated by Marketing durable ledger proof, marketplace producer completeness/repeatability, owner-reviewed publish windows, and indexed docs-rag context availability.
 2026-07-03: Goal 24 docs-rag JWT access blocker resolved. In the live docs-rag pod, JWT_TOKEN was present and accepted by POST /retrieval/agent-context for query 'catalog-microservice Goal 24 order affinity blockers', returning HTTP 200 with response keys query, context, sources, and estimatedTokens; token value was not printed or copied. The bounded query returned contextChars=0 and /retrieval/search returned results=0, so the remaining gap is indexed Catalog Goal 24 context, not JWT access. New blocker: [MISSING: docs-rag indexed Catalog Goal 24 order-affinity context]. No code, deployment, migration, runtime Catalog data, Auth user data, or secret value was changed.
-2026-07-03: Goal 24 Catalog source/window replacement API source completed. Added protected internal `POST /api/internal/product-relations/order-affinity/replace-window` that requires `completeSnapshot=true`, forces `relationType=order_affinity` and `source=marketing_order_affinity`, stamps `evidence.orderAffinityWindow`, upserts supplied candidates, and prunes only omitted rows whose existing Marketing window evidence exactly matches `sourceOwner`, `channel`, `windowStart`, `windowEnd`, and `runId`. Validation passed: focused product-relations Jest 1 suite / 9 tests and backend `npm run build`; `git diff --check` is the final commit gate. No deploy, migration, runtime mutation, Marketing/Orders/marketplace source edit, Warehouse/Payments/checkout change, secret read, or production publish was run. Scheduled replacement remains blocked on Marketing ledger, producer completeness, owner retention policy, deployment approval, and protected runtime smoke.
+2026-07-03: Goal 24 Catalog source/window replacement API source completed. Added protected internal `POST /api/internal/product-relations/order-affinity/replace-window` that requires `completeSnapshot=true`, forces `relationType=order_affinity` and `source=marketing_order_affinity`, stamps `evidence.orderAffinityWindow`, upserts supplied candidates, and prunes only omitted rows whose existing Marketing window evidence exactly matches `sourceOwner`, `channel`, `windowStart`, `windowEnd`, and `runId`. Validation passed: focused product-relations Jest 1 suite / 9 tests and backend `npm run build`; `git diff --check` is the final commit gate. No deploy, migration, runtime mutation, Marketing/Orders/marketplace source edit, Warehouse/Payments/checkout change, secret read, or production publish was run. Scheduled replacement remains blocked on Marketing ledger, producer completeness, owner-reviewed publish window, and indexed docs-rag context.
+
 2026-07-03: Goal 24 scheduled marketplace affinity backfill contract defined docs-only. IPS chain: Vision -> marketplace purchase history improves related-product surfaces without moving sensitive order/payment/customer ownership into Catalog; Goal Impact -> the one-time Allegro affinity publish now has a repeatable contract path; System -> marketplace services own replay producers, Marketing owns parser/ledger/scheduler/idempotent publish orchestration, Catalog owns upsert-only product relation persistence; Feature -> protected marketplace replay candidates and scheduled dry-run-first backfill; Task -> define Allegro-owned replay endpoint semantics, idempotency, pruning gates, and parallel workstreams; Execution Plan -> document only, preserve blockers, avoid runtime mutation; Coding Prompt -> do not invent backend fields or expose customer/address/payment/provider data; Code -> `docs/contracts/catalog-marketplace-affinity-backfill.md`, `docs/contracts/catalog-product-relations.md`, Goal 24 status/report docs; Validation -> `git diff --check`; State Update -> implementation-gated by Marketing parser support, durable run ledger, Allegro replay endpoint, and Catalog source/window prune or retention decision.
 ## 2026-07-03 - Goal 25 Product Quality Review Admin Closed
 
@@ -1784,7 +1786,7 @@ Remaining blockers:
 
 - `[MISSING: qualifying historical paid multi-product Orders rows for non-empty replay evidence]`.
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`.
-- `[MISSING: pruning/replacement semantics for stale affinity rows]`.
+- `[RESOLVED: conservative exact source/window replacement policy; remaining gates are Marketing ledger, producer completeness, and owner-reviewed publish window]`.
 - `[MISSING: Catalog bundle ownership decision: read-only candidate, standalone bundle aggregate, or product-like SKU]`.
 - `[MISSING: Orders bundle create-order contract and bundle identity representation beyond normal line items]`.
 - `[MISSING: Warehouse bundle reservation contract for stock and fulfillment effects]`.
@@ -1827,7 +1829,7 @@ Remaining blockers:
 
 - `[MISSING: qualifying historical paid multi-product Orders rows for non-empty central Orders replay evidence]`.
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill from live central Orders]`.
-- `[MISSING: pruning/replacement semantics for stale affinity rows]`.
+- `[RESOLVED: conservative exact source/window replacement policy; remaining gates are Marketing ledger, producer completeness, and owner-reviewed publish window]`.
 - `[MISSING: Catalog bundle ownership decision: read-only candidate, standalone bundle aggregate, or product-like SKU]`.
 - `[MISSING: Orders bundle create-order contract and bundle identity representation beyond normal line items]`.
 - `[MISSING: Warehouse bundle reservation contract for stock and fulfillment effects]`.
@@ -1871,7 +1873,7 @@ Remaining blockers:
 - `[MISSING: Allegro-owned protected replay endpoint so future runs do not require a temporary SQL export]`.
 - `[MISSING: scheduled/idempotent marketplace-wide backfill orchestration across Allegro, Aukro, Bazos, FlipFlop, and central Orders]`.
 - `[MISSING: qualifying historical paid multi-product Orders rows for non-empty central Orders replay evidence]`.
-- `[MISSING: pruning/replacement semantics for stale affinity rows across repeated marketplace-wide runs]`.
+- `[RESOLVED: conservative exact source/window replacement policy for repeated marketplace-wide runs; remaining gates are Marketing ledger, producer completeness, and owner-reviewed publish window]`.
 - `[MISSING: approved ecosystem bundle-selling contract across Catalog/Orders/Warehouse/Payments/FlipFlop]`.
 
 
@@ -2040,7 +2042,7 @@ Intent Preservation Chain:
 - Coding Prompt: fail closed on missing complete snapshot proof; use only synthetic/tightly scoped canary metadata; clean up canary rows.
 - Code: deployed `70e2464 feat: add order affinity window replacement`.
 - Validation: focused product-relations Jest, backend build, `git diff --check`, deployment rollout, public health, and protected replace-window smoke passed.
-- State Update: blocker `[MISSING: deployment approval and protected runtime smoke for replace-window endpoint]` is resolved.
+- State Update: deployment approval and protected runtime smoke for the replace-window endpoint are resolved.
 
 Runtime evidence:
 
@@ -2058,5 +2060,10 @@ Remaining blockers:
 
 - `[MISSING: Marketing durable run ledger proving a complete source/window snapshot]`
 - `[MISSING: marketplace producer guarantee that replay window is complete and repeatable]`
-- `[MISSING: owner-approved retention/decay policy for stale affinity rows]`
-- `[MISSING: docs-rag JWT_TOKEN]`
+- `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`
+- `[MISSING: docs-rag indexed Catalog Goal 24 order-affinity context]`
+
+Resolved blockers:
+
+- `[RESOLVED: owner-approved retention/decay policy for stale affinity rows]`
+- `[RESOLVED: docs-rag JWT_TOKEN available in live docs-rag pod and accepted for retrieval auth]`

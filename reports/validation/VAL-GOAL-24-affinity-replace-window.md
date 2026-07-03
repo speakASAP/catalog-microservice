@@ -61,14 +61,22 @@ Caveat:
 
 - `[MISSING: Marketing durable run ledger proving a complete source/window snapshot]`
 - `[MISSING: marketplace producer guarantee that replay window is complete and repeatable]`
-- `[MISSING: owner-approved retention/decay policy for stale affinity rows]`
-- `[RESOLVED: docs-rag JWT_TOKEN available in live docs-rag pod and accepted for retrieval auth]`
+- `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`
 - `[MISSING: docs-rag indexed Catalog Goal 24 order-affinity context]`
 
 ## Resolved Blockers
 
+- `[RESOLVED: owner-approved retention/decay policy for stale affinity rows]`
 - `[RESOLVED: deployment approval and protected runtime smoke for replace-window endpoint]`
+- `[RESOLVED: docs-rag JWT_TOKEN available in live docs-rag pod and accepted for retrieval auth]`
 
+## 2026-07-03 Retention Policy Closure
+
+Selected policy: conservative exact source/window replacement only. `marketing_order_affinity` rows may be pruned only by `POST /api/internal/product-relations/order-affinity/replace-window` when the existing row's `evidence.orderAffinityWindow` exactly matches the request `sourceOwner`, `channel`, `windowStart`, `windowEnd`, and `runId`, and the row is omitted from the complete snapshot.
+
+Retained rows: manual/curated/non-Marketing rows, non-window rows, rows from other windows or runs, checkout/product/price/stock/payment/marketplace-listing data, and legacy `marketing_order_affinity` rows without exact matching window evidence.
+
+Decay support: none. Catalog does not support time-based deletion, score decay, confidence decay, manual/non-window pruning, standalone prune-window cleanup, or archival in Goal 24. Any future decay or archival requires a new owner-approved contract.
 
 ## 2026-07-03 Docs-RAG JWT Access Evidence
 
@@ -78,4 +86,4 @@ Sanitized commands/results:
 - POST /retrieval/agent-context query catalog-microservice Goal 24 order affinity blockers: HTTP 200, response keys query, context, sources, estimatedTokens, bytes=110, contextChars=0, snippetCount=0.
 - Fallback POST /retrieval/search query catalog-microservice Goal 24 order affinity blockers product relations: HTTP 200, response keys query, results, total, results=0, snippetCount=0.
 
-Conclusion: `[MISSING: docs-rag JWT_TOKEN]` is resolved for Goal 24 access. Remaining blocker: `[MISSING: docs-rag indexed Catalog Goal 24 order-affinity context]` because retrieval authenticated successfully but returned no indexed chunks for the bounded topic.
+Conclusion: docs-rag JWT_TOKEN access is resolved for Goal 24. Remaining blocker: `[MISSING: docs-rag indexed Catalog Goal 24 order-affinity context]` because retrieval authenticated successfully but returned no indexed chunks for the bounded topic.
