@@ -75,9 +75,19 @@ Result: passed before this report was staged. Final staged validation must rerun
 
 - Catalog: clean `main...origin/main` at `923aaaa docs: record goal24 paid provider readiness validation`; the temporary approval-packet branch was fast-forward merged and deleted.
 - Heureka: clean `main...origin/main` at `25a5df3 docs: refresh goal25 heureka consumer validation`.
-- Payments: clean `main...origin/main` at `f11200b docs: repair goal24 provider rollback gate notes` after fast-forward merge, docs repair, and worker branch deletion.
-- Orders: clean `main...origin/main` at `47da581 docs: record goal24 paid provider uuid blockers` after fast-forward merge and worker branch deletion.
+- Payments: clean `main...origin/main` at `2614bb5 docs: record goal24 fiobank qr smoke`. This supersedes `f11200b` by adding sanitized Fiobanka QR creation evidence for one synthetic pending payment, without payment completion, provider/bank callback, refund/cancel, Orders/Warehouse mutation, deploy, migration, or secret output.
+- Orders: clean `main...origin/main` at `62f5d62 Merge goal24 orders rollback gate`. This supersedes `47da581` by merging the Orders cancel/cleanup rollback policy gate, while preserving central Orders UUID, Payments token, provider rollback, Warehouse cleanup, and owner approval blockers.
 - Warehouse: clean `main...origin/main` at `ee65ee4 docs: verify bundle component rollback evidence` after fast-forward merge and worker branch deletion.
+
+
+## 2026-07-03 Continuation Head Refresh
+
+Current remote heads were refreshed after the original readiness report:
+
+- Payments `2614bb5 docs: record goal24 fiobank qr smoke`: validates a synthetic Fiobanka bank-transfer payment shape and QR page creation path in the deployed Payments pod. It creates only a pending low-value payment record and does not prove paid completion, provider/bank callback, refund/cancel rollback, Orders update, Warehouse cleanup, or live bundle checkout safety.
+- Orders `62f5d62 Merge goal24 orders rollback gate`: records that Orders can express rollback choreography only after Payments proves provider refund/cancel/reversal and the owner-approved runtime packet defines Orders cancellation actor/reason/side-effect acknowledgements plus Warehouse cleanup semantics.
+
+Decision: these newer heads improve source/runtime-readiness documentation but do not remove the live paid/provider blockers below.
 
 ## Remaining Runtime Blockers
 
