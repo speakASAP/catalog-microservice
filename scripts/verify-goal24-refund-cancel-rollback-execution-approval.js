@@ -8,6 +8,9 @@ const report = read('reports/validation/VAL-GOAL-24-paid-provider-approval-packe
 const state = read('docs/IMPLEMENTATION_STATE.md');
 const status = read('docs/orchestrator/STATUS.md');
 const linkageReport = read('reports/validation/VAL-GOAL-24-manual-refund-linkage-readback.md');
+const flipflopChannelSupersessionReport = read('reports/validation/VAL-GOAL-24-flipflop-channel-supersession-consumption-2026-07-04.md');
+
+const flipflopChannelSupersessionMarker = '[RESOLVED/NARROWED: Codex Goal 24 integration thread supersedes earlier FlipFlop channel executor/runtime owner blockers; channel cleanup runtime remains blocked until bank/refund authority, exact provider proof, Orders side-effect acknowledgements, Warehouse target facts, Auth token source, and final redacted evidence path exist]';
 
 const requiredMarkers = [
   '## Refund/Cancel Rollback Execution Approval Decision',
@@ -36,6 +39,8 @@ const requiredMarkers = [
   'A refund alone is not Warehouse return evidence.',
   'Stop before provider refund/cancel/reversal if the provider operation, provider owner, evidence redaction path, and amount ceiling are not explicitly recorded.',
   'Owner approval boundary: the current owner approval covers self-discovery, packet fill, and read-only/preflight verification only.',
+  'Catalog consumed FlipFlop `5202c15 merge goal24 channel cleanup owner supersession`',
+  flipflopChannelSupersessionMarker,
 ];
 
 for (const marker of requiredMarkers) {
@@ -82,15 +87,53 @@ for (const marker of [
   '[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, Fiobanka payment-order Vault write tokens, and redacted evidence path exist]',
   '[RESOLVED/NARROWED: deployed FlipFlop bundle-preserving fixture gate and renewed runtime quote evidence passed before checkout]',
   '[RESOLVED/NARROWED: runtime config readback shows PAYMENT_SUCCESS_URL and PAYMENT_CANCEL_URL resolve to approved FlipFlop payment-result URLs without secret output]',
-  'FlipFlop `1e5102b docs: supersede goal24 runtime owner blockers`',
-  'FlipFlop `1e5102b docs: supersede goal24 runtime owner blockers`',
-  'FlipFlop `1e5102b docs: supersede goal24 runtime owner blockers`',
+  'FlipFlop `5202c15 merge goal24 channel cleanup owner supersession`',
+  'FlipFlop `1a79c6a docs: supersede goal24 channel cleanup owner blockers`',
+  flipflopChannelSupersessionMarker,
   'Orders `e3f6e18 docs: preserve goal24 orders cleanup packet`',
   'Payments `e631ebd docs: sync goal24 flipflop supersession head`',
   '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; max quantity and live hold/release window remain missing]',
 ]) {
   assert(report.includes(marker) || state.includes(marker) || status.includes(marker), `current exact linked paid-flow gate missing marker: ${marker}`);
 }
+
+for (const [label, source] of [
+  ['flipflop channel supersession report', flipflopChannelSupersessionReport],
+  ['approval packet', packet],
+  ['validation report', report],
+  ['implementation state', state],
+  ['orchestrator status', status],
+]) {
+  assert(source.includes(flipflopChannelSupersessionMarker), `${label} missing FlipFlop channel supersession marker`);
+  assert(source.includes('FlipFlop `5202c15 merge goal24 channel cleanup owner supersession`') || source.includes('5202c15 merge goal24 channel cleanup owner supersession'), `${label} missing FlipFlop 5202c15 consumption`);
+}
+for (const marker of [
+  '[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]',
+  '[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]',
+  '[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]',
+  '[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]',
+  '[MISSING: concrete side-effectful rollback run id and cleanup idempotency keys]',
+  '[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]',
+  '[MISSING: owner-approved Warehouse stock hold/release window, max quantity, target rows]',
+  '[MISSING: Vault properties FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK and FIO_BANKA_PAYMENT_ORDER_TOKEN_EUR for owner-approved payment-order upload]',
+  '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
+]) {
+  assert(flipflopChannelSupersessionReport.includes(marker), `FlipFlop channel supersession consumption missing blocker ${marker}`);
+}
+for (const boundary of [
+  'mutation: false',
+  'live_checkout_executed: false',
+  'provider_call: false',
+  'orders_mutation: false',
+  'warehouse_mutation: false',
+  'channel_cleanup_mutation: false',
+  'deployment: false',
+  'secret_output: false',
+  'raw_customer_or_payment_evidence: false',
+]) {
+  assert(flipflopChannelSupersessionReport.includes(boundary), `FlipFlop channel supersession consumption missing boundary ${boundary}`);
+}
+
 console.log('Goal 24 refund/cancel rollback execution approval gate verified');
 
 for (const marker of ['[RESOLVED/NARROWED: sanitized runtime readback found completed Fiobanka provider-payment evidence but no central Orders or FlipFlop exact-order linkage for the retained Goal 24 payment]', '[RESOLVED: owner accepted owner-confirmed manual Fiobanka refund as sufficient Goal 24 closeout without exact order linkage]', '[RESOLVED/NARROWED: runtime readback found no linked central Orders or FlipFlop state, so no Orders/Warehouse post-paid correction is required for this evidence-only closeout]', 'completed Fiobanka rows checked: `2`', 'Orders lookup', 'FlipFlop readback']) {
