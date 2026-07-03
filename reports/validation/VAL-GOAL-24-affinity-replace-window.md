@@ -59,7 +59,7 @@ Caveat:
 
 ## Remaining Blockers
 
-- `[MISSING: Marketing durable run ledger proving a complete source/window snapshot]`
+- `[RESOLVED: Marketing durable run ledger proving a complete source/window snapshot]` - deployed Marketing image `localhost:5000/marketing-microservice:0aa47ed`; live ledger smoke `goal24-complete-snapshot-ledger-smoke-20260703-001` recorded `completeSnapshot=true`, `status=dry_run_passed`, `inputRecords=0`, and `aggregatePairs=0` with no Catalog publish.
 - `[MISSING: marketplace producer guarantee that replay window is complete and repeatable]`
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`
 - `[MISSING: docs-rag indexed Catalog Goal 24 order-affinity context]`
