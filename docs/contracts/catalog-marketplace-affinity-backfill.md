@@ -195,7 +195,7 @@ Owner-approved Catalog policy for Goal 24 recurring marketplace affinity replace
 - Manual, curated, non-Marketing, non-window, checkout, product, price, stock, payment, and marketplace listing data are never in scope for this policy.
 - Any future archival, decay scoring, run-ledger TTL, or legacy-row migration requires a separate owner-approved retention contract and validation plan.
 
-This resolves the previous broad owner-approved retention/decay blocker for the conservative Catalog-owned policy. Marketing ledger/source-window proof is now implemented, deployed, and runtime-smoked at Marketing image `localhost:5000/marketing-microservice:0aa47ed`; scheduled publish/replacement remains blocked on source-specific producer completeness proof and owner-reviewed publish windows.
+This resolves the previous broad owner-approved retention/decay blocker for the conservative Catalog-owned policy. Marketing ledger/source-window proof is now implemented, deployed, and runtime-smoked at Marketing image `localhost:5000/marketing-microservice:0aa47ed`; dry-run ledger `goal24-complete-snapshot-smoke-20260703123503` persisted `complete_snapshot=true`, and guard run `goal24-replace-window-blocked-20260703123529` failed closed with `replace_window_requires_owner_retention_policy`. Scheduled publish/replacement remains blocked on source-specific producer completeness proof and owner-reviewed source/window approval.
 
 ## Parallel Execution Plan
 

@@ -25,7 +25,7 @@ Catalog docs/status reconciliation only. Source repositories for Bazos and Marke
 - Bazos evidence proves `BazosOrder` lacks persisted paid/processable state, paid timestamp/payment status, item-line relation or item snapshot replay source, and a Bazos-owned order item ingestion contract.
 - Bazos protected replay endpoint is source-compatible and fail-closed with `count=0`, `events=[]`, and aggregate-safe blocker metadata.
 - Bazos runtime follow-up is superseded by Bazos `main` at `1ccb93d`, which records accepted runtime token wiring and a Marketing pod dry-run returning HTTP 200 with zero records/candidates and no Catalog publish.
-- Marketing `docs/orchestrator/STATUS.md` and current Catalog `main` record marketplace parser support, durable complete-snapshot ledger proof, and deployed `complete_snapshot` runtime smoke as resolved; producer completeness and owner-reviewed non-empty source/window approval remain separate gates.
+- Marketing `docs/orchestrator/STATUS.md` and current Catalog `main` record marketplace parser support, durable complete-snapshot ledger proof, deployed `complete_snapshot` runtime smoke `goal24-complete-snapshot-smoke-20260703123503`, and guard smoke `goal24-replace-window-blocked-20260703123529` as resolved evidence; producer completeness and owner-reviewed non-empty source/window approval remain separate gates.
 
 ## Resolved Blockers
 

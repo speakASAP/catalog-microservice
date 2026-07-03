@@ -151,7 +151,7 @@ Ready source contracts:
 Dependency-gated runtime actions:
 
 - Non-empty historical replay publish is gated by qualifying paid multi-product Orders rows.
-- Any future publish run requires owner-reviewed mutation scope, recorded Marketing ledger proof for the exact source/window, producer completeness proof, and the conservative exact source/window replacement policy.
+- Any future publish or replace-window run requires owner-reviewed mutation scope, recorded Marketing ledger proof for the exact source/window, producer completeness proof, and the conservative exact source/window replacement policy. Marketing runtime smoke `goal24-complete-snapshot-smoke-20260703123503` proves the deployed ledger can persist `complete_snapshot=true`; guard smoke `goal24-replace-window-blocked-20260703123529` proves replace-window publish remains blocked without owner retention/source-window approval.
 
 Blocked ecosystem bundle selling:
 
