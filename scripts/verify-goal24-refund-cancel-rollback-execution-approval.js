@@ -70,8 +70,9 @@ for (const marker of [
   '[MISSING: named admin/actor or approved token-handling path for guarded discount-code generation]',
   '[MISSING: named runtime validation owner for the exact side-effectful smoke]',
   '[MISSING: named FlipFlop channel cleanup executor]',
-  '[MISSING: owner-approved server-side bundle-preserving fixture or different active <=300 CZK target]',
-  'FlipFlop `c5107cd docs: record goal24 discount fixture quote hard stop`',
+  '[MISSING: deployed FlipFlop bundle-preserving fixture gate and renewed runtime quote evidence]',
+  '[MISSING: deployed FlipFlop bundle-preserving fixture gate and renewed runtime quote evidence]',
+  'FlipFlop `7ebcbd6 fix: use guarded goal24 fixture discount value`',
   'Orders `4baa6a9 Merge goal24 orders return cleanup gate`',
   'Payments `224aaf8 docs: align fiobanka polling rollback contract`',
 ]) {
