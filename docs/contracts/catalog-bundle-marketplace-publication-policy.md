@@ -2,7 +2,7 @@
 
 ```yaml
 id: CATALOG-BUNDLE-MARKETPLACE-PUBLICATION-POLICY
-status: fail-closed-policy-defined-channel-handoffs-active
+status: fail-closed-policy-defined-bazos-handoff-resolved
 owner: catalog-commerce-integration-owner
 created: 2026-07-03
 scope: channel-specific external marketplace publication policy for catalog.bundle.v1
@@ -26,7 +26,7 @@ Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding P
 - Coding Prompt: fail closed when a channel policy is absent; permit display/operator suggestion use only; do not invent marketplace support for kits, bundles, combined stock, or bundle pricing.
 - Code: this policy doc plus linked Goal 24 status/contract docs.
 - Validation: `git diff --check`; channel workers must provide repo-local validation before any channel-specific blocker can close.
-- State Update: central Catalog ambiguity is resolved; channel-owned policy handoffs remain active.
+- State Update: central Catalog ambiguity is resolved; Bazos handoff is resolved to a Bazos-owned fail-closed source policy; other channel-owned policy handoffs remain active.
 
 ## Default Policy
 
@@ -68,7 +68,7 @@ A channel can move from blocked to owner-ready only when its repository document
 | Channel | Current policy | Allowed now | Blocked until channel handoff | Worker thread |
 | --- | --- | --- | --- | --- |
 | Allegro | fail-closed | operator suggestion / draft assistance only | Allegro-owned policy proving whether a `catalog.bundle.v1` can become one Allegro offer without violating offer identity, stock, price, compliance, and pacing rules | `019f2900-9f87-7e53-9d28-0b0429fcff71` |
-| Bazos | fail-closed | operator suggestion / draft text assistance only | Bazos-owned policy proving whether a bundle can become one Bazos listing without violating compliance, duplicate, pacing, category, and manual publication rules | `019f2900-c258-7431-aa0a-cab73be30be3` |
+| Bazos | fail-closed by Bazos source policy | operator suggestion / draft text assistance only; Bazos runtime blocks Catalog bundle publication before draft/listing mutation | `[RESOLVED/NARROWED: Bazos-owned policy says catalog.bundle.v1 cannot publish as one Bazos listing under current rules; future enablement requires owner-approved Bazos bundle publication contract]` | `019f2900-c258-7431-aa0a-cab73be30be3` |
 | Aukro | fail-closed | operator suggestion / draft assistance only | Aukro-owned policy proving whether a bundle can become one auction/offer without violating category, shipment, price, stock, and platform rules | `019f2900-f84a-7533-abc3-5c5a3bea60f7` |
 | Heureka | fail-closed | component-level feed readiness only | Heureka-owned policy proving whether a bundle can be represented as one `SHOPITEM`; otherwise components remain separate feed items | `019f2901-4930-7f62-a5d3-f03f6da321f6` |
 | FlipFlop | not external marketplace | storefront display and approved non-mutating checkout validation | live Rung 2 order/reservation evidence if production side effects are required | current thread |
@@ -77,7 +77,7 @@ A channel can move from blocked to owner-ready only when its repository document
 
 1. Catalog fail-closed policy document.
 2. Allegro policy worker handoff.
-3. Bazos policy worker handoff.
+3. Bazos policy worker handoff - resolved to fail-closed Bazos policy at Bazos `main` merge `9703b0c` / source commit `acc0ac9`.
 4. Aukro policy worker handoff.
 5. Heureka policy worker handoff.
 6. Catalog final reconciliation only after all channel handoffs are merged or explicitly blocked.
@@ -93,11 +93,18 @@ Validation owner: final integration validator after worker handoffs.
 Resolved/narrowed:
 
 - `[RESOLVED/NARROWED: Catalog fail-closed external marketplace bundle publication policy defined in docs/contracts/catalog-bundle-marketplace-publication-policy.md]`
+- `[RESOLVED/NARROWED: Bazos-owned catalog.bundle.v1 external publication policy handoff resolved to fail-closed Bazos source policy at Bazos main 9703b0c / source acc0ac9]`
+- `[RESOLVED: owner-approved Rung 2 live pending-order smoke proved pending Orders create, Warehouse reservation, and payment-status cleanup release for catalog.bundle.v1 bundle 919be990-1c76-4f9c-b100-829281c6a709]`
+
+Bazos policy evidence:
+
+- Bazos source commit `acc0ac9 docs: block Bazos catalog bundle publication` and Bazos merge commit `9703b0c Merge goal24 Bazos bundle publication policy` document and enforce that Bazos cannot publish a `catalog.bundle.v1` aggregate as one external listing under current rules.
+- Bazos runtime source policy blocks Catalog bundle readiness markers (`catalog.bundle.v1`, `bundle`, `catalog_bundle`, or `bundleId`) before draft/listing mutation with blocker `bazos_catalog_bundle_external_listing_blocked`, policy id `bazos.catalog_bundle_publication.v1`, and publish-policy gate `catalog_bundle_publication_blocked`.
+- Bazos validation evidence from the worker handoff: focused shared Jest passed 2 suites / 55 tests, `node scripts/verify-bazos-bundle-publication-policy.js` passed, TypeScript no-emit check passed, shared build passed, and `git diff --check` passed.
+- Future Bazos enablement remains blocked by `[MISSING: owner-approved Bazos bundle publication contract proving one external Bazos listing is compliant]`.
 
 Still blocked:
 
 - `[MISSING: Allegro-owned catalog.bundle.v1 external publication policy handoff]`
-- `[MISSING: Bazos-owned catalog.bundle.v1 external publication policy handoff]`
 - `[MISSING: Aukro-owned catalog.bundle.v1 external publication policy handoff]`
 - `[MISSING: Heureka-owned catalog.bundle.v1 feed publication policy handoff]`
-- `[RESOLVED: owner-approved Rung 2 live pending-order smoke proved pending Orders create, Warehouse reservation, and payment-status cleanup release for catalog.bundle.v1 bundle 919be990-1c76-4f9c-b100-829281c6a709]`
