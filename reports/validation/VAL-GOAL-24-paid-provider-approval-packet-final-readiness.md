@@ -300,3 +300,11 @@ Boundary: no Catalog source behavior, checkout, discount code, order, payment, p
 Catalog consumed FlipFlop `31845ef docs: close goal24 channel cleanup packet`. Quote evidence: HTTP `200`, `schemaVersion=flipflop.checkout-quote.v1`, `sideEffects=[]`, `paymentMethod=fiobanka`, `deliveryMethod=store`, `subtotal=1998`, `tax=419.58`, `orderTotalBeforeDiscount=2417.58`, `discount=2117.58`, `total=300`, redacted `codeHash=8533c8372a079955`, and post-quote `usedCount=0`/`remainingUses=1`.
 
 Decision: `[RESOLVED/NARROWED: deployed FlipFlop bundle-preserving fixture gate and renewed runtime quote evidence passed before checkout]`. This is not live paid/provider approval and does not authorize checkout/order/payment/provider/Warehouse/Orders/channel/marketplace side effects.
+
+## FlipFlop Autonomous Approval Decision Sync - 2026-07-04
+
+Catalog consumed FlipFlop `85ecb11 docs: record goal24 autonomous approval decision` after the final Payments deploy-head sync. The autonomy approval resolves only coordination authority for Codex continuation; it does not create bank/refund authority, exact provider proof, Orders side-effect acknowledgements, Warehouse target rows/window/max quantity, Fiobanka payment-order Vault write tokens, or final redacted runtime evidence.
+
+[RESOLVED/NARROWED: owner delegated autonomous Goal 24 continuation to Codex, but integration validation keeps new Fiobanka paid/provider side effects hard-stopped until bank/refund authority, exact Orders/Warehouse packet, and redacted provider proof exist]
+
+No Catalog checkout, payment, provider call, refund/reversal, Orders/Warehouse/channel mutation, deploy, migration, DB write, secret/token output, or raw customer/order/payment/provider evidence occurred.
