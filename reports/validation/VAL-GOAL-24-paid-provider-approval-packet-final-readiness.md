@@ -75,7 +75,7 @@ Result: passed before this report was staged. Final staged validation must rerun
 
 - Catalog: clean `main...origin/main` at `923aaaa docs: record goal24 paid provider readiness validation`; the temporary approval-packet branch was fast-forward merged and deleted.
 - Heureka: clean `main...origin/main` at `25a5df3 docs: refresh goal25 heureka consumer validation`.
-- Payments: clean `main...origin/main` at `c72296c Document Goal 24 provider rollback contract` after fast-forward merge and worker branch deletion.
+- Payments: clean `main...origin/main` at `f11200b docs: repair goal24 provider rollback gate notes` after fast-forward merge, docs repair, and worker branch deletion.
 - Orders: clean `main...origin/main` at `47da581 docs: record goal24 paid provider uuid blockers` after fast-forward merge and worker branch deletion.
 - Warehouse: clean `main...origin/main` at `ee65ee4 docs: verify bundle component rollback evidence` after fast-forward merge and worker branch deletion.
 
