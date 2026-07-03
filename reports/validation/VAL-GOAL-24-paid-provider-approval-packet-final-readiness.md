@@ -138,3 +138,11 @@ Decision: `[MISSING: owner-approved refund/cancel rollback execution approval fo
 The retained 1 CZK Fiobanka evidence payment is completion evidence only. It is not authorization for a future refund, cancel, reversal, webhook replay, Orders cleanup, Warehouse cleanup, channel cleanup, or another paid/provider smoke. For selected Fiobanka QR, the only currently source-supported side-effect-safe rollback remains stop-before-paid.
 
 No live checkout, provider call, webhook replay, refund/cancel/reversal, Orders mutation, Warehouse mutation, channel cleanup, deploy, migration, DB mutation, or secret output occurred.
+
+## 2026-07-03 Owner-Approved Deploy/Smoke Attempt
+
+Owner approval was consumed for a bounded runtime attempt after FlipFlop source rollout `1b62909` was pushed. FlipFlop source validation passed (`verify:catalog-bundleid-checkout-migration`, `verify:paid-provider-bundle-checkout-gate`, `verify:catalog-bundle-adoption`, order-service build, frontend build). `./scripts/deploy.sh` built and pushed FlipFlop images and applied manifests, but rollout failed before the new pods became Ready: new pods remained in `ContainerCreating`/image pull state until Kubernetes progress deadline. Registry manifests for the pushed images returned HTTP `200`; node conditions reported no disk, memory, or PID pressure; k3s logs showed runtime/API instability unrelated to application startup.
+
+Recovery was performed by deleting stuck new FlipFlop pods, undoing the Kubernetes rollout for the six FlipFlop deployments, and force-cleaning terminating rollout pods. Final live state returned to the previous six Ready FlipFlop pods. Because the new source rollout never became live, no paid/provider smoke was executed and no checkout, provider, Orders, Payments, Warehouse, channel, migration, DB, or secret-output side effect occurred.
+
+Result: runtime smoke is blocked by `[MISSING: k3s/containerd runtime recovery or sudo-authorized node recovery window for redeploying FlipFlop source rollout]` before any remaining provider/rollback gates can be tested live.

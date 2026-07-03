@@ -216,3 +216,17 @@ Exact next required owner packet before any live paid/provider smoke: a single o
 ## Current Decision
 
 Runtime paid/provider bundle progression remains blocked after packet fill because FlipFlop source rollout is merged, but Fiobanka runtime signature/deploy verification and provider rollback evidence are still unavailable. Resolved/narrowed by this packet: target bundle, component product ids, Warehouse aggregate/max quantity, selected provider/method/max amount, Payments Orders service-token acceptance, source-level Fiobanka HMAC hardening, evidence policy, approval id/window, and hard-stop conditions. Remaining blockers: `[RESOLVED/NARROWED: FlipFlop main 1b62909 maps durable catalog.bundle.v1 bundleId into central Orders bundleEvidence without changing totals, stock identity, or provider state]`, `[MISSING: runtime FIO_BANKA_WEBHOOK_SECRET configuration and deployment verification]`, `[MISSING: official/native Fio Banka callback signature contract if provider-authentic bank-originated signatures are required]`, `[MISSING: owner-approved refund/cancel rollback execution approval for future paid/provider smoke beyond the retained 1 CZK Fiobanka evidence payment]`, `[MISSING: Fiobanka provider-side refund/reversal or unpaid cancel/void execution path with redacted evidence]`, and `[MISSING: named live-run executor/runtime validation owner for the exact side-effectful smoke]`.
+
+## 2026-07-03 Owner-Approved Runtime Attempt Result
+
+Owner approval from the current Codex thread authorized a bounded side-effectful paid/provider smoke attempt and adjacent service changes, but execution stopped before checkout/order/payment/stock mutation.
+
+Evidence consumed:
+
+- FlipFlop `origin/main` `1b62909` contains the source rollout mapping durable `catalog.bundle.v1` `bundleId` into central Orders `bundleEvidence` as bounded audit evidence.
+- FlipFlop source validation passed: `npm run verify:catalog-bundleid-checkout-migration`, `npm run verify:paid-provider-bundle-checkout-gate`, `npm run verify:catalog-bundle-adoption`, `npm --prefix services/order-service run build`, and `npm --prefix services/frontend run build`.
+- FlipFlop deploy attempted from `/home/ssf/Documents/Github/flipflop` via `./scripts/deploy.sh`; images built and pushed, manifests applied, and rollout restart began.
+- Runtime deploy failed before new pods became Ready: new FlipFlop pods stayed in `ContainerCreating`/image pull state until progress deadline; registry manifests returned HTTP `200`; node had no disk/memory/PID pressure; k3s/containerd logs showed node/runtime instability (`RST_STREAM`/reserved container errors) on neighboring workloads.
+- Recovery executed without printing secrets: stuck new FlipFlop pods were deleted, Kubernetes rollout was undone for the six FlipFlop deployments, terminating rollout pods were force-cleaned, and final pod state returned to the previous six Ready FlipFlop pods.
+
+Smoke decision: no live checkout, provider redirect/callback, Orders mutation, Payments mutation, Warehouse mutation, refund/cancel/reversal, channel cleanup, DB mutation, migration, or secret output occurred. The live paid/provider smoke remains blocked by `[MISSING: k3s/containerd runtime recovery or sudo-authorized node recovery window for redeploying FlipFlop source rollout]` plus the existing Fiobanka runtime secret/provider-authentic callback and refund/cancel/reversal blockers.
