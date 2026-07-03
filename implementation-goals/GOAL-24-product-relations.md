@@ -77,7 +77,9 @@ Follow-up read-only evidence on 2026-07-03 confirmed the Orders replay endpoint,
 - `[MISSING: Bazos order item ingestion contract]`
 - `[MISSING: non-empty real Aukro multi-Catalog-product replay evidence]`
 - `[MISSING: owner-approved Aukro recurring schedule activation policy]`
-- `[MISSING: Catalog standalone bundle aggregate API and persistence contract]`
+- `[RESOLVED: Catalog standalone bundle aggregate API and persistence contract design owner-ready in docs/contracts/catalog-bundle-aggregate-v1.md]`
+- `[MISSING: owner acceptance of catalog.bundle.v1 design before source implementation]`
+- `[MISSING: Catalog additive migration/API implementation for catalog.bundle.v1]`
 - `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
 - `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
 - `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
@@ -98,7 +100,7 @@ Current lanes:
 - `complete`: W1 Allegro replay producer. Owner role: Allegro worker. Result: Allegro `main` has protected repeatable replay producer handoff at `37a5add` and hardened producer source already on `main`; remaining producer work is non-Allegro scheduled matrix coverage.
 - `ready now`: Catalog product relation API maintenance. Owner role: Catalog worker. Scope: maintain protected related-products, bundle-candidates, and internal batch endpoint. Validation: focused product-relations Jest and `git diff --check`.
 - `dependency-gated`: Non-empty historical affinity publish. Owner role: integration validator. Blockers: `[MISSING: qualifying historical paid multi-product Orders rows for non-empty replay evidence]`, `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`, and source-specific producer completeness/activation gates for non-Allegro sources.
-- `ready now`: Catalog standalone bundle aggregate contract design. Owner role: Catalog/commerce architect. Scope: define `catalog.bundle.v1` API/persistence plan from `docs/contracts/catalog-bundle-commerce-contract.md`; source implementation remains gated until the plan is accepted.
+- `owner-ready`: Catalog standalone bundle aggregate contract design. Owner role: Catalog/commerce architect. Scope: `docs/contracts/catalog-bundle-aggregate-v1.md` defines the `catalog.bundle.v1` API/persistence plan from `docs/contracts/catalog-bundle-commerce-contract.md`; source implementation remains gated until owner acceptance.
 - `dependency-gated`: Marketplace/operator bundle suggestions. Owner role: channel worker. Blocker: `[MISSING: channel-specific external marketplace bundle publication policies]`.
 - `dependency-gated`: Ecosystem real bundle selling beyond the existing FlipFlop-local bundle intent. Blockers: `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`, `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`, `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`, and `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`.
 

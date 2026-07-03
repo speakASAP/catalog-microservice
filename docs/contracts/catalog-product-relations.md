@@ -62,7 +62,7 @@ Bundle checkout remains outside this contract:
 
 ## Bundle Selling Decision Gate
 
-The first ecosystem bundle-selling model is accepted as a standalone Catalog bundle aggregate, documented in `docs/contracts/catalog-bundle-commerce-contract.md`. The current `bundle-candidates` endpoint remains read-only display metadata until that aggregate API/persistence contract exists.
+The first ecosystem bundle-selling model is accepted as a standalone Catalog bundle aggregate, documented in `docs/contracts/catalog-bundle-commerce-contract.md`. The B1 owner-ready API/persistence design is now documented in `docs/contracts/catalog-bundle-aggregate-v1.md`. The current `bundle-candidates` endpoint remains read-only display metadata until that aggregate API/persistence contract is owner-accepted and implemented.
 
 Resolved architecture decisions:
 
@@ -75,7 +75,9 @@ Resolved architecture decisions:
 
 Remaining implementation gates:
 
-- `[MISSING: Catalog standalone bundle aggregate API and persistence contract]`
+- `[RESOLVED: Catalog standalone bundle aggregate API and persistence contract design owner-ready in docs/contracts/catalog-bundle-aggregate-v1.md]`
+- `[MISSING: owner acceptance of catalog.bundle.v1 design before source implementation]`
+- `[MISSING: Catalog additive migration/API implementation for catalog.bundle.v1]`
 - `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
 - `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
 - `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
