@@ -51,3 +51,24 @@ Validation -> Bazos focused validation and Catalog `git diff --check`.
 ## Boundary
 
 No Catalog source code, Catalog production data, product relations, marketplace publish, Kubernetes manifest, deployment script, secret value, customer/address/payment/provider payload, or raw marketplace order id was changed.
+
+## 2026-07-03 Source/Window Scheduled Publish Follow-up
+
+Catalog reconciliation consumed aggregate-only evidence from Bazos and Marketing after the owner asked the worker to do the remaining alignment directly.
+
+Evidence:
+
+- Bazos source/window alignment: one Bazos-owned synthetic/internal paid multi-product source row was moved into `2026-07-02T00:00:00Z..2026-07-03T00:00:00Z`.
+- Protected Bazos replay returned `count=1`, `eventCount=1`, `minItemCount=2`, `maxItemCount=2`, `failClosed=false`, and no blockers.
+- Natural Marketing Job `marketing-order-affinity-bazos-daily-29718487` completed through the CronJob.
+- Marketing aggregate output returned `inputRecords=1`, `acceptedCreatedEvents=1`, `aggregatePairs=2`, `totalPairEvidence=2`, `publish.status=published`, `candidateCount=2`, `batchCount=1`, and `ledgerRecord.status=recorded`.
+- Marketing ledger readback returned `status=published`, `idempotency_key_count=1`, `complete_snapshot=false`.
+
+Catalog Decision:
+
+- `[RESOLVED: recurring Bazos batch-publish activation/source-window evidence]`.
+- `[MISSING: owner-reviewed future replace-window activation for Bazos]`.
+
+Boundary:
+
+No Catalog source/deploy/migration, replace-window call, raw relation payload documentation, secret output, Orders/Warehouse/Payments mutation, or marketplace publication was performed by this reconciliation.
