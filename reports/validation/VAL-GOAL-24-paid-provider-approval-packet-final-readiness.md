@@ -87,7 +87,7 @@ Current retained-evidence closeout blockers: none for exact order linkage, becau
 
 Current remote time readback was `2026-07-04T00:00:06+02:00`, after the prior approval window `2026-07-03T21:48:12+02:00` through `2026-07-03T23:59:59+02:00`. Catalog therefore must not run a side-effectful paid/provider checkout under the expired approval id.
 
-FlipFlop `7ebcbd6 fix: use guarded goal24 fixture discount value` records the owner-approved discount/price fixture path for a future exact linked paid/provider smoke: checkout-authoritative total `<= 300 CZK` after recalculating the fixed discount to `2117.58 CZK`, one use, short expiry, and Goal 24 correlation. FlipFlop source now adds a narrow Goal 24 bundle-preserving fixture gate requiring `goalId=GOAL24-paid-provider-fixture-20260704`, fixed `2117.58 CZK`, `maxUses=1`, unused code, the approved target bundle, exact component ids, and checkout-authoritative final total `<=300 CZK`; it has not been deployed or runtime-quoted in Catalog evidence.
+FlipFlop `10201db docs: record goal24 channel cleanup ownership` records the owner-approved discount/price fixture path for a future exact linked paid/provider smoke: checkout-authoritative total `<= 300 CZK` after recalculating the fixed discount to `2117.58 CZK`, one use, short expiry, and Goal 24 correlation. FlipFlop source now adds a narrow Goal 24 bundle-preserving fixture gate requiring `goalId=GOAL24-paid-provider-fixture-20260704`, fixed `2117.58 CZK`, `maxUses=1`, unused code, the approved target bundle, exact component ids, and checkout-authoritative final total `<=300 CZK`; it has not been deployed or runtime-quoted in Catalog evidence.
 
 Current hard stops before any new paid/provider attempt:
 
@@ -103,13 +103,13 @@ Boundary: no discount code, checkout, order, payment, provider call, Warehouse r
 
 Current upstream heads after retained-evidence closeout:
 
-- FlipFlop `7ebcbd6 fix: use guarded goal24 fixture discount value`: owner-approved server-validated discount/price fixture path is documented for a future exact linked paid/provider smoke, with fixed `2117.58 CZK` discount required to keep the tax-inclusive checkout-authoritative total at `300 CZK`; source now contains the bundle-preserving fixture gate and uses the already guarded validation discount value, but deploy/runtime quote evidence remains missing and the prior approval window was expired.
+- FlipFlop `10201db docs: record goal24 channel cleanup ownership`: owner-approved server-validated discount/price fixture path is documented for a future exact linked paid/provider smoke, with fixed `2117.58 CZK` discount required to keep the tax-inclusive checkout-authoritative total at `300 CZK`; source now contains the bundle-preserving fixture gate and uses the already guarded validation discount value, but deploy/runtime quote evidence remains missing and the prior approval window was expired.
 - Payments `0180d98 docs: record goal24 fiobanka polling refund gate`: authenticated polling remains accepted for Fiobanka authenticity and a future refund/reversal runtime packet now exists, but completed-transfer refund/reversal execution and exact smoke identities remain missing.
 - Orders `6c4a6a0 Document Goal 24 cleanup state matrix`: cleanup idempotency runtime evidence and cleanup state matrix are merged; any live cleanup remains gated by exact run packet and owner-approved side-effect acknowledgements.
 
 Retained evidence closeout remains complete: `[RESOLVED: owner accepted owner-confirmed manual Fiobanka refund as sufficient Goal 24 closeout without exact order linkage]`.
 
-Future exact linked paid/provider smoke hard stops remain: `[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]`; `[MISSING: named admin/actor or approved token-handling path for guarded discount-code generation]`; `[MISSING: named runtime validation owner for the exact side-effectful smoke]`; `[MISSING: named FlipFlop channel cleanup executor]`; `[MISSING: deployed FlipFlop bundle-preserving fixture gate and renewed runtime quote evidence]`.
+Future exact linked paid/provider smoke hard stops remain: `[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]`; `[MISSING: named admin/actor or approved token-handling path for guarded discount-code generation]`; `[MISSING: named runtime validation owner for the exact side-effectful smoke]`; `[MISSING: named FlipFlop channel cleanup executor]`; `[MISSING: deployed FlipFlop bundle-preserving fixture gate and renewed runtime quote evidence]`; `[MISSING: sanitized runtime config readback or owner confirmation that PAYMENT_SUCCESS_URL and PAYMENT_CANCEL_URL are unset or exactly match the approved FlipFlop payment-result URLs]`.
 
 Decision: Catalog must not execute live checkout, discount-code generation, order creation, provider payment, Warehouse reservation, Orders cleanup, channel cleanup, deploy, migration, DB write, or secret/token output until those exact fields are source-controlled and owner-approved.
 
@@ -118,7 +118,7 @@ Decision: Catalog must not execute live checkout, discount-code generation, orde
 
 Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update.
 
-Current committed upstream heads consumed: Orders `6c4a6a0`, Payments `0180d98`, Warehouse `b3c793a`, FlipFlop `7ebcbd6`, Catalog pre-change `1870246`. FlipFlop source-only bundle-preserving fixture gate is consumed; dirty runtime/deploy follow-up evidence is not consumed until it is pushed and validated.
+Current committed upstream heads consumed: Orders `6c4a6a0`, Payments `0180d98`, Warehouse `b3c793a`, FlipFlop `10201db`, Catalog pre-change `4e187b3`. FlipFlop source-only bundle-preserving fixture gate is consumed; dirty runtime/deploy follow-up evidence is not consumed until it is pushed and validated.
 
 Parallel execution state:
 
@@ -132,17 +132,17 @@ Merge notes: do not dispatch parallel Catalog writers against these same status/
 
 ## 2026-07-04 Pushed Upstream Head Refresh
 
-Catalog consumed the now-pushed downstream heads after the previous dirty-lane acceptance: FlipFlop `7ebcbd6 fix: use guarded goal24 fixture discount value`, Orders `6c4a6a0 Document Goal 24 cleanup state matrix`, Payments `0180d98 docs: record goal24 fiobanka polling refund gate`, and Warehouse `b3c793a Merge goal24 warehouse cleanup approval packet`.
+Catalog consumed the now-pushed downstream heads after the previous dirty-lane acceptance: FlipFlop `10201db docs: record goal24 channel cleanup ownership`, Orders `6c4a6a0 Document Goal 24 cleanup state matrix`, Payments `0180d98 docs: record goal24 fiobanka polling refund gate`, and Warehouse `b3c793a Merge goal24 warehouse cleanup approval packet`.
 
-Decision: runtime remains fail-closed. FlipFlop source now contains the narrow Goal 24 bundle-preserving fixture gate, but Catalog has no deployed/runtime quote evidence for it. The current exact linked paid/provider smoke path still needs `[MISSING: deployed FlipFlop bundle-preserving fixture gate and renewed runtime quote evidence]` plus renewed execution window, runtime validation owner, FlipFlop cleanup executor, exact payment/order/provider identity hashes, provider rollback proof, Orders cleanup actor/idempotency, and Warehouse deterministic cleanup packet.
+Decision: runtime remains fail-closed. FlipFlop source now contains the narrow Goal 24 bundle-preserving fixture gate, but Catalog has no deployed/runtime quote evidence for it. The current exact linked paid/provider smoke path still needs `[MISSING: deployed FlipFlop bundle-preserving fixture gate and renewed runtime quote evidence]` plus renewed execution window, runtime validation owner, FlipFlop cleanup executor, exact payment/order/provider identity hashes, provider rollback proof, Orders cleanup actor/idempotency, Warehouse deterministic cleanup packet, and `[MISSING: sanitized runtime config readback or owner confirmation that PAYMENT_SUCCESS_URL and PAYMENT_CANCEL_URL are unset or exactly match the approved FlipFlop payment-result URLs]`.
 
 Boundary: this Catalog reconciliation records pushed source/verifier evidence only. No Catalog source behavior, checkout, discount code, order, payment, provider call, Warehouse reservation, Orders mutation, channel cleanup, deploy, migration, DB write, secret/token output, or raw customer/order/payment/provider evidence occurred.
 
 ## Repository State Observed
 
-- Catalog: `main...origin/main` at `1c2b9c4 docs: dedupe goal24 paid flow hard stop` before this reconciliation; the observed dirty files are this Goal 24 reconciliation draft.
+- Catalog: `main...origin/main` at `4e187b3 docs: reconcile goal24 refund gate heads` before this reconciliation; the observed dirty files are this Goal 24 reconciliation draft.
 - Heureka: clean `main...origin/main` at `712c3b0 chore: expose orders lifecycle ui verifier`.
-- FlipFlop: clean `main...origin/main` at `7ebcbd6 fix: use guarded goal24 fixture discount value`; Catalog consumes the pushed source-only fixture gate and guarded-discount safety fix; deploy/runtime quote evidence remains missing.
+- FlipFlop: clean `main...origin/main` at `10201db docs: record goal24 channel cleanup ownership`; Catalog consumes the pushed source-only fixture gate, guarded-discount safety fix, and channel cleanup URL ownership narrowing; deploy/runtime quote evidence and sanitized payment URL runtime config readback remain missing.
 - Payments: clean `main...origin/main` at `0180d98 docs: record goal24 fiobanka polling refund gate`. This head supersedes `224aaf8` and adds a source-controlled future Fiobanka refund/reversal runtime packet while preserving accepted authenticated polling evidence. Runtime refund/reversal execution, exact smoke identities, Orders/Warehouse/channel approvals, deploy, migration, raw bank payload, and secret output remain blocked.
 - Orders: clean `main...origin/main` at `6c4a6a0 Document Goal 24 cleanup state matrix`. This supersedes `4baa6a9` while preserving runtime target-packet, Payments token, provider rollback execution, Warehouse stock window/max quantity, cleanup state selection, and owner approval blockers.
 - Warehouse: clean `main...origin/main` at `b3c793a Merge goal24 warehouse cleanup approval packet`. This retains `0b4c41b` source-policy cleanup operation evidence for reserved-only, fulfilled/stock-decremented, return, partial, and unknown component states and adds internal delivery smoke documentation without removing paid/provider rollback hard stops.
