@@ -184,17 +184,19 @@ Conclusion: docs-rag JWT_TOKEN access is resolved for Goal 24. Remaining blocker
 - `ready now`: Orders replay contract maintenance. Owner role: Orders worker. Scope: source-only verifier/fix lane for replay event shape and filtering.
 - `ready now`: Marketing dry-run/export/backfill hardening. Owner role: Marketing worker. Scope: source-only verifier/fix lane for dry-run aggregation and Catalog publisher guards.
 - `ready now`: Catalog relation API maintenance. Owner role: Catalog worker. Scope: protected related-products, bundle-candidates, and internal batch endpoint maintenance.
-- `dependency-gated`: non-empty affinity publish. Owner role: integration validator. Dependencies: qualifying rows, publish window, pruning semantics.
+- `active elsewhere`: Marketing ledger worker. Owner role: Marketing ledger worker. Dependencies: parser support, run ledger, idempotency registry, complete source/window accounting. Handoff required before this thread marks the ledger blocker resolved.
+- `active elsewhere`: marketplace producer worker. Owner role: marketplace producer worker. Dependencies: protected repeatable producer endpoint/export, completeness proof, producer validation. Handoff required before this thread marks producer completeness resolved.
+- `dependency-gated`: non-empty affinity publish. Owner role: integration validator. Dependencies: qualifying rows, publish window, Marketing ledger proof, marketplace producer completeness, and conservative replacement policy.
 - `dependency-gated`: Catalog durable bundle aggregate/API. Owner role: commerce/Catalog architect. Dependency: ownership decision.
 - `blocked`: real ecosystem bundle selling. Owner role: FlipFlop/Orders/Payments/Warehouse integration. Dependencies: order, stock, payment, discount, and smoke contracts.
 
 Shared contracts: Catalog product relations contract, Orders order-event contract, Marketing orders-events integration contract, and any future bundle checkout contract.
 
-Integration owner: Catalog orchestrator until a commerce integration owner is assigned.
+Integration owner: original Codex thread `019f2683-0cac-7ec0-b4cf-8fe83e07a74e` for Catalog docs/status reconciliation until a commerce integration owner is assigned.
 
-Validation owner: integration validator.
+Validation owner: integration validator in the original thread.
 
-Merge order: source contract verification, then non-empty replay evidence, then owner-reviewed publish, then bundle-selling implementation only after cross-service contracts are approved.
+Merge order: Marketing ledger worker handoff, marketplace producer worker handoff, Catalog integration reconciliation, then owner-reviewed publish or bundle-selling implementation only after cross-service contracts are approved.
 
 ## Next Action
 

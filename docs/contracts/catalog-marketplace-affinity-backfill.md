@@ -197,9 +197,9 @@ This resolves the previous broad owner-approved retention/decay blocker for the 
 
 | Workstream | Status | Owner role | Objective | Allowed files | Forbidden files | Dependencies | Validation |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| W1 Allegro replay producer | ready now | Allegro worker | Add protected read-only replay endpoint or CLI export that emits bounded affinity snapshots | Allegro order service/controller/tests/docs | Catalog/Marketing source, payments, Warehouse, marketplace publication | This contract | focused Allegro order tests, service build, diff check |
+| W1 Allegro replay producer | active elsewhere | marketplace producer worker | Add protected read-only replay endpoint or CLI export that emits bounded, complete, repeatable affinity snapshots | Allegro order service/controller/tests/docs | Catalog/Marketing source, payments, Warehouse, marketplace publication | This contract | focused Allegro order tests, service build, diff check, producer completeness handoff |
 | W2 Marketing parser/normalizer | dependency-gated | Marketing worker | Accept marketplace-owned replay envelopes and preserve source/channel provenance | Marketing order-affinity parser/backfill tests/docs | Catalog source, marketplace DB queries | W1 response shape accepted | focused parser/backfill tests, build, diff check |
-| W3 Marketing scheduler/ledger | dependency-gated | Marketing worker | Add run ledger, dry-run-first scheduler, idempotency key registry | Marketing scheduler/ledger/tests/docs | Catalog schema, marketplace source | W2 parser support | scheduler/ledger tests, dry-run evidence, diff check |
+| W3 Marketing scheduler/ledger | active elsewhere | Marketing ledger worker | Add run ledger, dry-run-first scheduler, idempotency key registry, and complete source/window accounting | Marketing scheduler/ledger/tests/docs | Catalog schema, marketplace source | W2 parser support | scheduler/ledger tests, dry-run evidence, ledger handoff |
 | W4 Catalog replace-window policy | source complete; integration-gated | Catalog worker | Maintain source/window scoped stale-affinity replacement API and conservative retention contract | Catalog product-relations contract/source/tests | Orders/Marketing/marketplace source, product/price/stock mutations | W3 ledger, producer completeness, owner-approved publish window before scheduled use | focused Catalog relation tests, build, diff check |
 | W5 Other marketplaces | blocked | Channel workers | Define paid multi-product replay eligibility and protected endpoints | Aukro/Bazos/FlipFlop docs/source/tests | Catalog/Marketing shared contracts until W2/W3 stable | marketplace eligibility mapping | focused channel tests/builds |
 | W6 Integration validation | final integration | Catalog orchestrator | Run dry-run matrix and owner-approved publish windows | validation reports/status docs | unapproved runtime mutation | W1-W3 complete; W4 policy/source complete; runtime replacement still needs deploy/smoke approval | dry-run summaries, Catalog readback aggregates |
@@ -211,11 +211,11 @@ Shared contracts:
 - Marketing orders-events integration contract
 - Marketplace-specific replay endpoint docs
 
-Integration owner: Catalog orchestrator until a commerce/data integration owner is assigned.
+Integration owner: original Codex thread `019f2683-0cac-7ec0-b4cf-8fe83e07a74e` for Catalog docs/status reconciliation until a commerce/data integration owner is assigned.
 
-Validation owner: integration validator.
+Validation owner: integration validator in the original thread.
 
-Merge order: W1 Allegro producer docs/source, W2 Marketing parser, W3 scheduler/ledger, optional W4 Catalog prune/replace, W5 additional marketplaces, W6 integration validation.
+Merge order: W1 marketplace producer worker handoff, W2 Marketing parser handoff if separate, W3 Marketing ledger worker handoff, W4 Catalog integration reconciliation, W5 additional marketplaces, W6 integration validation.
 
 ## Blockers
 
