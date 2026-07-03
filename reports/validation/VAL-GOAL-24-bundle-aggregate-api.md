@@ -78,7 +78,7 @@ No migration was applied, no deployment was run, no runtime DB mutation was made
 - `[MISSING: Allegro-owned catalog.bundle.v1 external publication policy handoff]`
 - `[MISSING: Bazos-owned catalog.bundle.v1 external publication policy handoff]`
 - `[MISSING: Aukro-owned catalog.bundle.v1 external publication policy handoff]`
-- `[MISSING: Heureka-owned catalog.bundle.v1 feed publication policy handoff]`
+- `[RESOLVED/NARROWED: Heureka-owned catalog.bundle.v1 feed publication policy handoff resolved to fail-closed Heureka policy at Heureka main 1cf0f32]`
 
 ## Runtime Deployment Evidence
 
