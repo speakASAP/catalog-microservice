@@ -115,7 +115,7 @@ New blockers:
 
 - `[MISSING: Marketing parser support for marketplace-owned replay source envelopes]`
 - `[MISSING: durable Marketing backfill run ledger and idempotency key registry]`
-- `[MISSING: Allegro-owned protected replay endpoint so future runs do not require a temporary SQL export]`
+- `[RESOLVED: Allegro-owned protected replay endpoint so future runs do not require a temporary SQL export]`
 - `[MISSING: scheduled dry-run matrix across Allegro, Aukro, Bazos, FlipFlop, and central Orders]`
 - `[RESOLVED: Catalog source/window scoped stale-affinity replacement API]`
 

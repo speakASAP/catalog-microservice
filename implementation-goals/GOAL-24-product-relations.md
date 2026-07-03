@@ -70,7 +70,8 @@ Follow-up read-only evidence on 2026-07-03 confirmed the Orders replay endpoint,
 - `[MISSING: qualifying historical paid multi-product Orders rows for non-empty replay evidence]`
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`
 - `[MISSING: Marketing durable run ledger proving a complete source/window snapshot]`
-- `[MISSING: marketplace producer guarantee that replay window is complete and repeatable]`
+- `[RESOLVED: Allegro protected repeatable replay producer completeness]`
+- `[MISSING: non-Allegro marketplace producer completeness for scheduled matrix]`
 - `[MISSING: Catalog standalone bundle aggregate API and persistence contract]`
 - `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
 - `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
@@ -89,7 +90,7 @@ Current lanes:
 - `ready now`: Orders replay contract maintenance. Owner role: Orders worker. Scope: keep `orders.order.created.v1` item snapshots and replay verifier compatible with Marketing/Catalog affinity replay. Expected output: source-only verification or bounded fixes in Orders. Validation: `npm run verify:order-affinity-replay`.
 - `ready now`: Marketing dry-run/export/backfill hardening. Owner role: Marketing worker. Scope: keep the backfill CLI, aggregation, and Catalog publisher safe and dry-run-first. Expected output: source-only verification or bounded fixes in Marketing. Validation: focused order-affinity backfill tests and non-mutating dry-run.
 - `active elsewhere`: Marketing ledger worker. Owner role: Marketing ledger worker. Scope: prove durable run ledger, idempotency key registry, dry-run summaries, and complete source/window snapshot accounting. Expected output: worker handoff with commit, tests, and ledger evidence. Blocker until handoff: `[MISSING: Marketing durable run ledger proving a complete source/window snapshot]`.
-- `active elsewhere`: marketplace producer worker. Owner role: marketplace producer worker. Scope: prove protected repeatable replay producer completeness for marketplace windows without temporary `/tmp` exports. Expected output: worker handoff with producer contract, tests, and completeness evidence. Blocker until handoff: `[MISSING: marketplace producer guarantee that replay window is complete and repeatable]`.
+- `complete`: W1 Allegro replay producer. Owner role: Allegro worker. Result: Allegro `main` has protected repeatable replay producer handoff at `37a5add` and hardened producer source already on `main`; remaining producer work is non-Allegro scheduled matrix coverage.
 - `ready now`: Catalog product relation API maintenance. Owner role: Catalog worker. Scope: maintain protected related-products, bundle-candidates, and internal batch endpoint. Validation: focused product-relations Jest and `git diff --check`.
 - `dependency-gated`: Non-empty historical affinity publish. Owner role: integration validator. Blockers: `[MISSING: qualifying historical paid multi-product Orders rows for non-empty replay evidence]`, `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`, and `[RESOLVED: conservative exact source/window replacement policy; remaining gates are Marketing ledger, producer completeness, and owner-reviewed publish window]`.
 - `ready now`: Catalog standalone bundle aggregate contract design. Owner role: Catalog/commerce architect. Scope: define `catalog.bundle.v1` API/persistence plan from `docs/contracts/catalog-bundle-commerce-contract.md`; source implementation remains gated until the plan is accepted.
@@ -115,7 +116,7 @@ Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task ->
 
 | Workstream | Status | Thread | Owner role | Scope | Allowed files/repos | Forbidden files/repos | Dependencies | Expected validation | Handoff |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| W1 Allegro replay producer | active | `019f268e-6e40-7063-80fd-6c81823638fb` | Allegro worker | Protected replay endpoint or owner-run export with complete/repeatable window evidence | `allegro` repo docs/source/tests | Catalog, Marketing, Orders, Warehouse, Payments, k8s, deploy scripts, secrets, live mutations | Catalog marketplace affinity contract | focused Allegro tests/build, `git diff --check` | branch, validation report, producer completeness status |
+| W1 Allegro replay producer | complete | `019f268e-6e40-7063-80fd-6c81823638fb` | Allegro worker | Protected replay endpoint with complete/repeatable window evidence | `allegro` repo docs/source/tests | Catalog, Marketing, Orders, Warehouse, Payments, k8s, deploy scripts, secrets, live mutations | Catalog marketplace affinity contract | focused Allegro tests/build, `git diff --check` passed in worker; integration doc check passed | Allegro `main` `37a5add`; Marketing parser/token/ledger remains next |
 | W2 Marketing parser/ledger | active | `019f268e-bf2c-7171-a545-bc810c99111d` | Marketing worker | Marketplace-owned envelope parser plus durable run ledger/idempotency if persistence is ready | `marketing` repo parser/backfill/ledger docs/source/tests | Catalog, Allegro, Orders, Warehouse, Payments, k8s, deploy scripts, secrets, unapproved publish | W1 response shape for full end-to-end publish; parser can proceed from contract | focused Marketing tests/build, dry-run evidence, `git diff --check` | branch, validation report, ledger/parser blocker status |
 | W3 docs-rag indexed context | active | `019f268e-fca4-7562-8538-c128284b714c` | docs-rag worker | Make Catalog Goal 24 order-affinity docs retrievable after auth succeeds | docs-rag repo indexing/config/docs; Catalog docs-only status only if evidence requires | Catalog source, Marketing/Allegro source, k8s, deploy scripts, secrets, destructive index purge | docs-rag JWT access already resolved | sanitized retrieval with non-zero Goal 24 context, `git diff --check` | branch/evidence, remaining indexing blockers |
 | W4 Catalog integration | active here | current thread | Catalog orchestrator | Validate handoffs, merge in order, update Goal 24 status/contracts | Catalog status/contracts/reports only after worker handoff | direct worker repo edits, runtime publish without owner window | W1-W3 handoffs | worker validation review, Catalog `git diff --check` | final Goal 24 closure or narrowed blockers |
@@ -126,7 +127,7 @@ Integration owner: Catalog orchestrator in this thread.
 
 Validation owner: Catalog integration validator after worker handoffs.
 
-Merge order: W1 producer, W2 parser/ledger, W3 docs-rag context, W4 Catalog integration status.
+Merge order: W1 producer complete, W2 parser/ledger next, W3 docs-rag context, W4 Catalog integration status.
 
 ## 2026-07-03 Stale-Affinity Retention Policy Update
 
