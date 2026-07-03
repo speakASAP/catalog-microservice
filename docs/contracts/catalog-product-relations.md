@@ -76,11 +76,11 @@ Resolved architecture decisions:
 Remaining implementation gates:
 
 - `[RESOLVED: Catalog standalone bundle aggregate API and persistence contract design owner-ready in docs/contracts/catalog-bundle-aggregate-v1.md]`
-- `[MISSING: owner acceptance of catalog.bundle.v1 design before source implementation]`
-- `[MISSING: Catalog additive migration/API implementation for catalog.bundle.v1]`
-- `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
-- `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
-- `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
+- `[RESOLVED: owner accepted catalog.bundle.v1 source implementation gate on 2026-07-03]`
+- `[RESOLVED: Catalog additive migration/API implementation, deploy, and protected runtime smoke completed]`
+- `[RESOLVED: Orders additive bundleEvidence metadata contract merged and validated]`
+- `[RESOLVED: Warehouse component-line-only reservation sign-off merged and validated]`
+- `[RESOLVED: Payments bounded bundle metadata allowlist merged and validated]`
 - `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`
 - `[MISSING: owner-approved Rung 2 live pending-order smoke plan if production order/reservation evidence is required]`
 
@@ -298,9 +298,9 @@ This policy resolves the previous broad retention/decay blocker while preserving
 - `[MISSING: Marketing parser support for marketplace-owned replay source envelopes]`
 - `[MISSING: durable Marketing backfill run ledger and idempotency key registry]`
 - `[MISSING: Allegro-owned protected replay endpoint so future runs do not require a temporary SQL export]`
-- `[MISSING: Catalog standalone bundle aggregate API and persistence contract]`
-- `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
-- `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
-- `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
+- `[RESOLVED: Catalog standalone bundle aggregate API, persistence contract, deploy, and protected runtime smoke completed]`
+- `[RESOLVED: Orders additive bundleEvidence metadata contract merged and validated]`
+- `[RESOLVED: Warehouse component-line-only reservation sign-off merged and validated]`
+- `[RESOLVED: Payments bounded bundle metadata allowlist merged and validated]`
 - `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`
 - `[UNKNOWN: whether current live Orders history should contain paid multi-product rows or whether upstream order capture is still empty]`

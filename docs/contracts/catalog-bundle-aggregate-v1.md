@@ -17,7 +17,7 @@ upstream:
 Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update
 
 - Vision: Catalog can expose durable bundle identity for storefront/channel consumers without taking checkout, stock, payment, or marketplace ownership.
-- Goal Impact: Goal 24 narrows `[MISSING: Catalog standalone bundle aggregate API and persistence contract]` into an owner-ready `catalog.bundle.v1` design that downstream Orders/Warehouse/Payments/FlipFlop contracts can consume.
+- Goal Impact: Goal 24 narrows `[RESOLVED: Catalog standalone bundle aggregate API and persistence contract]` into an owner-ready `catalog.bundle.v1` design that downstream Orders/Warehouse/Payments/FlipFlop contracts can consume.
 - System: Catalog owns bundle identity, component product references, lifecycle metadata, visibility, and policy references; Products/Pricing remain product truth; Orders owns order identity/items/idempotent create; Warehouse owns reservations/stock; Payments owns payment execution; FlipFlop owns checkout UX.
 - Feature: standalone bundle aggregate API and persistence design.
 - Task: define DTO shape, lifecycle/status transitions, idempotency/visibility rules, fail-closed validation, rejected SKU/read-only alternatives, and downstream handoff requirements.
@@ -234,26 +234,26 @@ Warehouse-owned or Payments-owned bundle identity remains rejected. Warehouse re
 
 Orders:
 
-- `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
+- `[RESOLVED: Orders additive bundleEvidence metadata contract on create-order and idempotent replay merged in Orders commit 18892a5]`
 - Preserve normal product item lines with `productId`, quantity, unit price snapshot, currency, and totals.
 - Accept optional `bundleEvidence[]` only after it validates `bundleId`, `contractVersion='catalog.bundle.v1'`, product ID set, policy refs, and idempotency replay behavior.
 - Never infer eligibility or totals from browser-submitted bundle evidence alone.
 
 Warehouse:
 
-- `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
+- `[RESOLVED: Warehouse component-line reservation sign-off merged in Warehouse commit ae8c8fe and retained on main 74870b0]`
 - Reserve and release each component product line independently through existing reservation lifecycle.
 - Do not reserve `bundleId`, synthetic SKU, or aggregate stock in v1.
 
 Payments:
 
-- `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
+- `[RESOLVED: Payments bounded bundle metadata allowlist test covering free-shipping evidence merged in Payments commit aa79fa2]`
 - Allow only audit metadata such as `bundleIds`, `bundleContractVersion`, `discountPolicyRefs`, `freeShippingPolicyRef`, and `serverTotalSource`.
 - Keep amount/currency caller-owned from checkout/Orders; do not compute discounts or free shipping.
 
 FlipFlop:
 
-- `[MISSING: FlipFlop adoption contract for catalog.bundle.v1 read/display before ecosystem checkout]`
+- `[RESOLVED: FlipFlop catalog.bundle.v1 read/display adoption merged in FlipFlop commit 5911523]`
 - May read active bundles for display after Catalog aggregate implementation.
 - Must submit normal product lines and future `bundleEvidence` only after Orders/Warehouse/Payments contracts are accepted.
 - Must keep existing local bundle intent separate from durable Catalog `bundleId` until migration is explicit.
@@ -301,10 +301,10 @@ Still blocked before runtime selling:
 - `[RESOLVED: owner accepted catalog.bundle.v1 source implementation gate in Codex thread on 2026-07-03]`
 - `[RESOLVED: Catalog additive migration/API source implemented for catalog.bundle.v1 in branch goal24-catalog-bundle-api]`
 - `[RESOLVED: owner-approved Catalog bundle aggregate migration application/deploy/runtime smoke]`
-- `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
-- `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
-- `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
-- `[MISSING: FlipFlop adoption contract for catalog.bundle.v1 read/display before ecosystem checkout]`
+- `[RESOLVED: Orders additive bundleEvidence metadata contract on create-order and idempotent replay merged in Orders commit 18892a5]`
+- `[RESOLVED: Warehouse component-line reservation sign-off merged in Warehouse commit ae8c8fe and retained on main 74870b0]`
+- `[RESOLVED: Payments bounded bundle metadata allowlist test covering free-shipping evidence merged in Payments commit aa79fa2]`
+- `[RESOLVED: FlipFlop catalog.bundle.v1 read/display adoption merged in FlipFlop commit 5911523]`
 - `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`
 - `[MISSING: owner-approved Rung 2 live pending-order smoke plan if production order/reservation evidence is required]`
 - `[MISSING: channel-specific external marketplace bundle publication policies]`

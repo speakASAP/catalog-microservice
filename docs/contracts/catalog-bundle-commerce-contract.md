@@ -145,9 +145,9 @@ Catalog B1.1 source implementation is complete on branch `goal24-catalog-bundle-
 - `[RESOLVED: owner accepted catalog.bundle.v1 source implementation gate in Codex thread on 2026-07-03]`
 - `[RESOLVED: Catalog additive migration/API source implemented for catalog.bundle.v1 in branch goal24-catalog-bundle-api]`
 - `[RESOLVED: owner-approved Catalog bundle aggregate migration application/deploy/runtime smoke]`
-- `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
-- `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
-- `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
+- `[RESOLVED: Orders additive bundleEvidence metadata contract on create-order and idempotent replay merged in Orders commit 18892a5]`
+- `[RESOLVED: Warehouse component-line reservation sign-off merged in Warehouse commit ae8c8fe and retained on main 74870b0]`
+- `[RESOLVED: Payments bounded bundle metadata allowlist test covering free-shipping evidence merged in Payments commit aa79fa2]`
 - `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`
 - `[MISSING: owner-approved Rung 2 live pending-order smoke plan if production order/reservation evidence is required]`
 - `[MISSING: channel-specific external marketplace bundle publication policies]`

@@ -1,3 +1,28 @@
+## 2026-07-03 - Goal 24 Bundle Integration Reconciliation
+
+Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update.
+
+- Vision: Catalog can expose durable bundle aggregates while downstream commerce services keep checkout, reservation, and payment authority.
+- Goal Impact: stale cross-service `[MISSING: ...]` blockers are reconciled after worker handoffs were merged and cleaned.
+- System: Catalog owns bundle aggregate identity and relation metadata; Orders owns order creation metadata, Warehouse owns component reservations, Payments owns payment metadata validation, and FlipFlop owns storefront display adoption.
+- Feature: `catalog.bundle.v1` runtime and downstream adoption evidence.
+- Task: update Catalog Goal 24 status/contract docs only after verifying merged branch state and preserving unrelated dirty frontend work.
+- Execution Plan: isolated worktree `/home/ssf/Documents/Github/codex-worktrees/catalog-goal24-bundle-reconcile` from `origin/main`, docs-only reconciliation, no deploy.
+- Coding Prompt: replace only blockers resolved by committed cross-service evidence; keep owner-gated smoke and channel publication policy blockers explicit.
+- Code: documentation/state updates only.
+- Validation: `git diff --check` plus blocker grep after edit.
+- State Update: Orders commit `18892a5`, Warehouse commit `ae8c8fe` retained on main `74870b0`, Payments commit `aa79fa2`, FlipFlop commit `5911523`, and Catalog bundle runtime closure are recorded as resolved prerequisites.
+
+Boundary decision: no Catalog source, migrations, Kubernetes manifests, deployment scripts, secrets, Marketing, Orders, Warehouse, Payments, FlipFlop, Aukro, Bazos, checkout, reservations, payments, product rows, or marketplace publication behavior was changed in this reconciliation. The canonical Catalog checkout still has unrelated frontend modifications and was not edited.
+
+Remaining blockers:
+
+- `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`
+- `[MISSING: owner-approved Rung 2 live pending-order smoke plan if production order/reservation evidence is required]`
+- `[MISSING: channel-specific external marketplace bundle publication policies]`
+- `[MISSING: qualifying historical paid multi-product Orders rows for non-empty central Orders replay evidence]`
+- `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill from live central Orders]`
+
 2026-07-03: Goal 24 Bazos budget paid multi-product source evidence resolved the live Bazos replay evidence blocker. After owner request, Bazos created/updated one bounded synthetic/internal paid source projection row only: `status=completed`, `paymentStatus=paid`, total `2` CZK, two itemSnapshots over two Catalog product IDs, `forwarded=false`, and no central Orders id. Protected Bazos endpoint from the Marketing pod returned HTTP 200 with `count=1`, `eventCount=1`, `eventType=marketplace.order_affinity_candidate.v1`, `eventVersion=1`, `minItemCount=2`, `maxItemCount=2`, `skippedRecords=0`, `failClosed=false`, and `blockers=[]`. Marketing dry-run `goal24-bazos-budget-paid-source-20260703-001` returned `inputRecords=1`, `acceptedCreatedEvents=1`, `aggregatePairs=2`, `totalPairEvidence=2`, `candidateCount=2`, `ledgerStatus=recorded`, and `published=false`. `[RESOLVED: live Bazos paid multi-product order replay evidence via budget source dry-run goal24-bazos-budget-paid-source-20260703-001]`; recurring Bazos affinity activation remains blocked by `[MISSING: owner approval to activate recurring Bazos affinity publish after live dry-run evidence]`. No Catalog publish, replace-window call, product relation mutation, Orders create, Warehouse reservation, Payments action, deployment, migration, secret value, raw order id, customer/address/payment/provider payload, raw replay payload, or marketplace publication occurred.
 2026-07-03: Goal 24 Bazos live paid multi-product replay evidence check completed against deployed Bazos image `localhost:5000/bazos-service:27f325d` and Marketing image `localhost:5000/marketing-microservice:9cc549e`. Bazos rollout was healthy. Protected endpoint probe from the Marketing pod using the Marketing runtime header contract returned HTTP 200, `success=true`, `sourceOwner=bazos-service`, `contract=marketplace.order_affinity_candidate.v1`, `channel=bazos`, `count=0`, `eventCount=0`, `skippedRecords=0`, `failClosed=false`, and `blockers=[]`. Fresh Marketing dry-run `goal24-bazos-live-evidence-20260703-002` returned `inputRecords=0`, `acceptedCreatedEvents=0`, `aggregatePairs=0`, `totalPairEvidence=0`, `candidateCount=0`, `ledgerStatus=recorded`, and `published=false`. The source-contract blockers remain resolved/narrowed, and `[RESOLVED: live Bazos paid multi-product order replay evidence via budget source dry-run goal24-bazos-budget-paid-source-20260703-001]`; recurring Bazos affinity activation remains blocked pending owner approval after live dry-run evidence. No Catalog publish, replace-window call, product relation mutation, deployment, migration, secret value, raw order id, customer/address/payment/provider payload, or raw replay payload was emitted.
 2026-07-03: Goal 24 Bazos paid source reconciliation integrated. Bazos `main` advanced through `d4040c8` (merged and pushed `codex/bazos-paid-lifecycle-fixture`, then deleted the local and remote worker branch) and follow-up `27f325d` (Marketing-compatible replay event shape). Bazos now has source-contract coverage for paid replay: local `BazosOrder.paymentStatus`, `paidAt`, bounded `itemSnapshots`, protected paid/processable multi-product replay filtering, forwarding of Bazos `paymentStatus` to central Orders, and replay envelopes using Marketing-compatible `type`, `eventVersion`, and `payload.items[].productId` fields. The broad Catalog Bazos producer-source blockers are resolved/narrowed to source-contract level. Remaining Bazos affinity gates are `[RESOLVED: live Bazos paid multi-product order replay evidence via budget source dry-run goal24-bazos-budget-paid-source-20260703-001]` and `[MISSING: owner approval to activate recurring Bazos affinity publish after live dry-run evidence]`. Validation: Bazos `git diff --check` passed, focused orders spec passed 17/17, `npm --prefix services/aukro-service run build` passed on latest `main`; Catalog reconciliation is docs-only. No Catalog source, production data, product relations, marketplace publish, Kubernetes manifest, deployment script, secret value, customer/address/payment/provider payload, or raw marketplace order id was changed.
@@ -1793,8 +1818,8 @@ Parallel execution:
 - `ready now`: Marketing dry-run/export/backfill hardening. Validation: focused `order-affinity-backfill` tests plus dry-run.
 - `ready now`: Catalog relation API maintenance. Validation: focused product-relations Jest plus `git diff --check`.
 - `dependency-gated`: non-empty historical affinity publish. Blockers: qualifying rows, owner-reviewed mutation window, and pruning/replacement semantics.
-- `owner-ready`: Catalog standalone bundle aggregate contract design. Scope: `docs/contracts/catalog-bundle-aggregate-v1.md` defines `catalog.bundle.v1` API/persistence from `docs/contracts/catalog-bundle-commerce-contract.md`; source implementation remains gated until owner acceptance.
-- `dependency-gated`: real ecosystem bundle selling. Blockers: Orders additive bundleEvidence metadata, Warehouse component-line reservation sign-off, Payments metadata allowlist, presentation-policy adoption, and owner-approved Rung 1 smoke credentials.
+- `complete`: Catalog standalone bundle aggregate contract/API/runtime. Scope: `docs/contracts/catalog-bundle-aggregate-v1.md` defines `catalog.bundle.v1`; source implementation, additive migration, deployment, and protected runtime smoke are complete.
+- `dependency-gated`: real ecosystem bundle selling. Completed prerequisites: Orders additive bundleEvidence metadata, Warehouse component-line reservation sign-off, Payments metadata allowlist, and FlipFlop presentation adoption. Blocker: owner-approved Rung 1 smoke credentials and target products.
 
 Remaining blockers:
 
@@ -1802,11 +1827,11 @@ Remaining blockers:
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`.
 - `[RESOLVED: conservative exact source/window replacement policy; remaining gates are recorded per-window Marketing ledger proof, producer completeness, and owner-reviewed publish window]`.
 - `[RESOLVED: Catalog standalone bundle aggregate API and persistence contract design owner-ready in docs/contracts/catalog-bundle-aggregate-v1.md]`.
-- `[MISSING: owner acceptance of catalog.bundle.v1 design before source implementation]`.
-- `[MISSING: Catalog additive migration/API implementation for catalog.bundle.v1]`.
-- `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`.
-- `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`.
-- `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`.
+- `[RESOLVED: owner accepted catalog.bundle.v1 source implementation gate in Codex thread on 2026-07-03]`.
+- `[RESOLVED: Catalog additive migration/API source implemented for catalog.bundle.v1 in commit 074de13]`.
+- `[RESOLVED: Orders additive bundleEvidence metadata contract on create-order and idempotent replay merged in Orders commit 18892a5]`.
+- `[RESOLVED: Warehouse component-line reservation sign-off merged in Warehouse commit ae8c8fe and retained on main 74870b0]`.
+- `[RESOLVED: Payments bounded bundle metadata allowlist test covering free-shipping evidence merged in Payments commit aa79fa2]`.
 - `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`.
 - `[UNKNOWN: whether current live Orders history should contain paid multi-product rows or whether upstream order capture is still empty]`.
 
@@ -1847,11 +1872,11 @@ Remaining blockers:
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill from live central Orders]`.
 - `[RESOLVED: conservative exact source/window replacement policy; remaining gates are recorded per-window Marketing ledger proof, producer completeness, and owner-reviewed publish window]`.
 - `[RESOLVED: Catalog standalone bundle aggregate API and persistence contract design owner-ready in docs/contracts/catalog-bundle-aggregate-v1.md]`.
-- `[MISSING: owner acceptance of catalog.bundle.v1 design before source implementation]`.
-- `[MISSING: Catalog additive migration/API implementation for catalog.bundle.v1]`.
-- `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`.
-- `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`.
-- `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`.
+- `[RESOLVED: owner accepted catalog.bundle.v1 source implementation gate in Codex thread on 2026-07-03]`.
+- `[RESOLVED: Catalog additive migration/API source implemented for catalog.bundle.v1 in commit 074de13]`.
+- `[RESOLVED: Orders additive bundleEvidence metadata contract on create-order and idempotent replay merged in Orders commit 18892a5]`.
+- `[RESOLVED: Warehouse component-line reservation sign-off merged in Warehouse commit ae8c8fe and retained on main 74870b0]`.
+- `[RESOLVED: Payments bounded bundle metadata allowlist test covering free-shipping evidence merged in Payments commit aa79fa2]`.
 - `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`.
 
 
@@ -2122,10 +2147,10 @@ Accepted decisions:
 Remaining blockers:
 
 - `[RESOLVED: Catalog standalone bundle aggregate API and persistence contract design owner-ready in docs/contracts/catalog-bundle-aggregate-v1.md]`
-- `[MISSING: owner acceptance of catalog.bundle.v1 design before source implementation]`
-- `[MISSING: Catalog additive migration/API implementation for catalog.bundle.v1]`
-- `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
-- `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
-- `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
+- `[RESOLVED: owner accepted catalog.bundle.v1 source implementation gate in Codex thread on 2026-07-03]`
+- `[RESOLVED: Catalog additive migration/API source implemented for catalog.bundle.v1 in commit 074de13]`
+- `[RESOLVED: Orders additive bundleEvidence metadata contract on create-order and idempotent replay merged in Orders commit 18892a5]`
+- `[RESOLVED: Warehouse component-line reservation sign-off merged in Warehouse commit ae8c8fe and retained on main 74870b0]`
+- `[RESOLVED: Payments bounded bundle metadata allowlist test covering free-shipping evidence merged in Payments commit aa79fa2]`
 - `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`
 - `[MISSING: owner-approved Rung 2 live pending-order smoke plan if production order/reservation evidence is required]`

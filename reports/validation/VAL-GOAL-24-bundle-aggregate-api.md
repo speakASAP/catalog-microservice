@@ -68,11 +68,11 @@ No migration was applied, no deployment was run, no runtime DB mutation was made
 
 ## Remaining Blockers
 
-- `[RESOLVED: owner-approved Catalog bundle aggregate migration application/deploy/runtime smoke]`
-- `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
-- `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
-- `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
-- `[MISSING: FlipFlop adoption contract for catalog.bundle.v1 read/display before ecosystem checkout]`
+- `[RESOLVED: Catalog bundle aggregate migration application/deploy/runtime smoke completed]`
+- `[RESOLVED: Orders additive bundleEvidence metadata contract merged and validated]`
+- `[RESOLVED: Warehouse component-line-only reservation sign-off merged and validated]`
+- `[RESOLVED: Payments bounded bundle metadata allowlist merged and validated]`
+- `[RESOLVED: FlipFlop catalog.bundle.v1 read/display adoption merged and validated]`
 - `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`
 - `[MISSING: channel-specific external marketplace bundle publication policies]`
 
