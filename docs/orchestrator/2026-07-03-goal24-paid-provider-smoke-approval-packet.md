@@ -111,27 +111,13 @@ Hard-stop conditions before rollback execution:
 Owner approval boundary: the current owner approval covers self-discovery, packet fill, and read-only/preflight verification only. It does not approve future money movement, stock movement, order mutation, webhook replay, provider refund/cancel/reversal, or channel cleanup execution.
 
 
-## 2026-07-04 Exact Linked Paid-Smoke Hard Stop
-
-The prior approval window expired at `2026-07-03T23:59:59+02:00`; remote continuation readback was `2026-07-04T00:00:06+02:00`. The old approval id must not be reused for a new side-effectful checkout/payment attempt.
-
-FlipFlop records an owner-approved server-validated discount/price fixture path for a future exact linked paid/provider smoke, but runtime preflight stopped before side effects because guarded discount-code generation returned `401 Unauthorized` without a named admin/actor or approved token-handling path.
-
-Current hard stops before any future exact linked paid/provider smoke:
-
-- `[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]`.
-- `[MISSING: named admin/actor or approved token-handling path for guarded discount-code generation]`.
-- `[MISSING: named runtime validation owner for the exact side-effectful smoke]`.
-- `[MISSING: named FlipFlop channel cleanup executor]`.
-
-Boundary: no discount code, checkout, order, payment, provider call, Warehouse reservation, Orders mutation, DB write, deploy, migration, secret/token output, raw customer/order/payment/provider evidence, or marketplace/feed mutation is authorized by the expired packet.
-
-
 ## 2026-07-04 Exact Linked Paid-Flow Discount Fixture Gate
 
 Retained manual-refund evidence is closed by owner acceptance without exact order linkage. A future exact linked paid/provider smoke is a separate side-effectful lane.
 
-Catalog reconciles FlipFlop `236488d docs: record goal24 discount fixture preflight blocker`, Payments `f5c078a docs: record deployed fiobanka polling match`, and Orders `a1f1428 Merge goal24 orders idempotency runtime evidence` as dependency evidence only.
+The prior approval window expired at `2026-07-03T23:59:59+02:00`; remote continuation readback was `2026-07-04T00:00:06+02:00`. The old approval id must not be reused for a new side-effectful checkout/payment attempt.
+
+Catalog reconciles FlipFlop `236488d docs: record goal24 discount fixture preflight blocker`, Payments `f5c078a docs: record deployed fiobanka polling match`, and Orders `a1f1428 Merge goal24 orders idempotency runtime evidence` as dependency evidence only. FlipFlop records an owner-approved server-validated discount/price fixture path for a future exact linked paid/provider smoke, but runtime preflight stopped before side effects because guarded discount-code generation returned `401 Unauthorized` without a named admin/actor or approved token-handling path.
 
 Current hard stops before any exact linked paid/provider attempt:
 
