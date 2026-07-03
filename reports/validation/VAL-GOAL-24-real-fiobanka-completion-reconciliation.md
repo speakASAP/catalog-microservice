@@ -41,7 +41,7 @@ Read-only evidence from the deployed Payments pod for owner-confirmed Fio Banka 
 
 ## Still Blocked
 
-- `[MISSING: native/strong Fiobanka callback signature verification beyond current non-empty-signature placeholder verifier]`.
+- `[RESOLVED/NARROWED: Payments 4313424 hardens Fiobanka webhook source so arbitrary non-empty x-fio-signature values are rejected]; [MISSING: runtime FIO_BANKA_WEBHOOK_SECRET configuration and deployment verification]; [MISSING: official/native Fio Banka callback signature contract if provider-authentic bank-originated signatures are required]`.
 - `[MISSING: owner-approved manual Fiobanka completed-transfer refund/reversal workflow and Orders/Warehouse correction contract]`.
 - `[MISSING: owner-approved paid/provider checkout smoke with stock and provider-specific refund/cancel rollback execution approval]`.
 - `[MISSING: named live-run executor and runtime validation owner]`.
