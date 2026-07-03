@@ -36,9 +36,11 @@ Catalog docs/status reconciliation only. Source repositories for Bazos and Marke
 
 ## Remaining Blockers
 
-- `[MISSING: Bazos paid order history source]`
-- `[MISSING: Bazos persisted order item replay source]`
-- `[MISSING: Bazos order item ingestion contract]`
+- `[RESOLVED/NARROWED: Bazos paid order history source implemented as local paid projection fields]`
+- `[RESOLVED/NARROWED: Bazos persisted order item replay source implemented as bounded itemSnapshots]`
+- `[RESOLVED/NARROWED: Bazos order item ingestion contract implemented for source item lines or linked Bazos ads with Catalog product IDs]`
+- `[MISSING: live Bazos paid multi-product order replay evidence]`
+- `[MISSING: owner approval to activate recurring Bazos affinity publish after live dry-run evidence]`
 - `[MISSING: marketplace producer guarantee that replay window is complete and repeatable]`
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`
 - `[MISSING: docs-rag indexed Catalog Goal 24 order-affinity context]`

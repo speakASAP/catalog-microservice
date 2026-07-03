@@ -42,9 +42,11 @@ Catalog docs/status reconciliation for the Goal 24 docs-rag indexed-context bloc
 ## Remaining Blockers
 
 - `[MISSING: owner-approved source/window for any future replace-window publish]`
-- `[MISSING: Bazos paid order history source]`
-- `[MISSING: Bazos persisted order item replay source]`
-- `[MISSING: Bazos order item ingestion contract]`
+- `[RESOLVED/NARROWED: Bazos paid order history source implemented as local paid projection fields]`
+- `[RESOLVED/NARROWED: Bazos persisted order item replay source implemented as bounded itemSnapshots]`
+- `[RESOLVED/NARROWED: Bazos order item ingestion contract implemented for source item lines or linked Bazos ads with Catalog product IDs]`
+- `[MISSING: live Bazos paid multi-product order replay evidence]`
+- `[MISSING: owner approval to activate recurring Bazos affinity publish after live dry-run evidence]`
 - `[MISSING: non-empty real Aukro multi-Catalog-product replay evidence]`
 - `[MISSING: owner-approved Aukro recurring schedule activation policy]`
 - `[RESOLVED: deployed FlipFlop replay endpoint/runtime smoke]`

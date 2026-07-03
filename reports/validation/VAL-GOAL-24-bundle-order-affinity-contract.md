@@ -118,9 +118,11 @@ New blockers:
 - `[RESOLVED: Allegro-owned protected replay endpoint so future runs do not require a temporary SQL export]`
 - `[RESOLVED: scheduled dry-run matrix for central Orders, FlipFlop, Allegro, and Aukro zero-row dry-run]`
 - `[RESOLVED: Bazos protected replay endpoint compatible with Marketing marketplace replay contract]`
-- `[MISSING: Bazos paid order history source]`
-- `[MISSING: Bazos persisted order item replay source]`
-- `[MISSING: Bazos order item ingestion contract]`
+- `[RESOLVED/NARROWED: Bazos paid order history source implemented as local paid projection fields]`
+- `[RESOLVED/NARROWED: Bazos persisted order item replay source implemented as bounded itemSnapshots]`
+- `[RESOLVED/NARROWED: Bazos order item ingestion contract implemented for source item lines or linked Bazos ads with Catalog product IDs]`
+- `[MISSING: live Bazos paid multi-product order replay evidence]`
+- `[MISSING: owner approval to activate recurring Bazos affinity publish after live dry-run evidence]`
 - `[MISSING: non-empty real Aukro multi-Catalog-product replay evidence]`
 - `[MISSING: owner-approved Aukro recurring schedule activation policy]`
 - `[RESOLVED: Catalog source/window scoped stale-affinity replacement API]`

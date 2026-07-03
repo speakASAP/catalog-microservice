@@ -124,9 +124,11 @@ Other marketplace services must define their own paid/processable status mapping
 
 - `[MISSING: Aukro paid multi-product replay eligibility mapping]`
 - `[RESOLVED: Bazos protected replay endpoint compatible with Marketing marketplace replay contract]`
-- `[MISSING: Bazos paid order history source]`
-- `[MISSING: Bazos persisted order item replay source]`
-- `[MISSING: Bazos order item ingestion contract]`
+- `[RESOLVED/NARROWED: Bazos paid order history source implemented as local paid projection fields]`
+- `[RESOLVED/NARROWED: Bazos persisted order item replay source implemented as bounded itemSnapshots]`
+- `[RESOLVED/NARROWED: Bazos order item ingestion contract implemented for source item lines or linked Bazos ads with Catalog product IDs]`
+- `[MISSING: live Bazos paid multi-product order replay evidence]`
+- `[MISSING: owner approval to activate recurring Bazos affinity publish after live dry-run evidence]`
 - `[MISSING: FlipFlop paid multi-product replay eligibility mapping]`
 
 ## Marketing Scheduler And Idempotency Contract
@@ -231,8 +233,10 @@ Merge order: W1 Allegro producer complete, W2 Marketing parser complete, W3 Mark
 - `[MISSING: non-empty real Aukro multi-Catalog-product replay evidence]`
 - `[MISSING: owner-approved Aukro recurring schedule activation policy]`
 - `[MISSING: Aukro paid multi-product replay eligibility mapping]`
-- `[MISSING: Bazos paid order history source]`
-- `[MISSING: Bazos persisted order item replay source]`
-- `[MISSING: Bazos order item ingestion contract]`
+- `[RESOLVED/NARROWED: Bazos paid order history source implemented as local paid projection fields]`
+- `[RESOLVED/NARROWED: Bazos persisted order item replay source implemented as bounded itemSnapshots]`
+- `[RESOLVED/NARROWED: Bazos order item ingestion contract implemented for source item lines or linked Bazos ads with Catalog product IDs]`
+- `[MISSING: live Bazos paid multi-product order replay evidence]`
+- `[MISSING: owner approval to activate recurring Bazos affinity publish after live dry-run evidence]`
 - `[MISSING: FlipFlop paid multi-product replay eligibility mapping]`
 - `[UNKNOWN: whether marketplace services other than Allegro currently have paid multi-product orders mapped to Catalog product ids]`
