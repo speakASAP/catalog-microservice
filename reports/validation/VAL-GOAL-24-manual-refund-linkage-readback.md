@@ -15,7 +15,7 @@ Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding P
 - Coding Prompt: do not print token values, connection strings, raw order/payment ids, raw customer data, raw provider payloads, raw DB rows, screenshots, or bank payloads.
 - Code: Catalog docs/status/verifier/report only.
 - Validation: `npm run verify:goal24-refund-cancel-rollback-execution-approval`, `npm run build`, and `git diff --check`.
-- State Update: manual refund execution remains owner-confirmed; exact paid-smoke order linkage remains missing after runtime readback.
+- State Update: manual refund execution is owner-confirmed, and the owner explicitly accepts closeout without exact order linkage for this retained evidence path.
 
 ## Sanitized Runtime Evidence
 
@@ -44,21 +44,25 @@ FlipFlop readback:
 
 [RESOLVED/NARROWED: sanitized runtime readback found completed Fiobanka provider-payment evidence but no central Orders or FlipFlop exact-order linkage for the retained Goal 24 payment]
 
-This readback means the current owner-confirmed manual refund can be recorded as external/manual refund execution evidence for the retained Fiobanka payment path, but it cannot honestly close an exact paid-smoke order rollback because no central Orders row or FlipFlop local order row is linked to the retained completed Fiobanka payment evidence.
+This readback means no exact paid-smoke order rollback can be proven from linked central Orders or FlipFlop state. The owner explicitly accepts the owner-confirmed manual refund as sufficient closeout without exact order linkage for this retained evidence path. [RESOLVED: owner accepted owner-confirmed manual Fiobanka refund as sufficient Goal 24 closeout without exact order linkage] [RESOLVED/NARROWED: runtime readback found no linked central Orders or FlipFlop state, so no Orders/Warehouse post-paid correction is required for this evidence-only closeout]
 
-Remaining blockers:
+Closed by owner decision:
 
-- `[MISSING: sanitized exact-order linkage between the manual refund confirmation and a completed Goal 24 paid-smoke order]`.
-- `[MISSING: FlipFlop runtime readback showing an exact linked smoke order acknowledged as status=refunded and paymentStatus=refunded after manual refund]`.
-- `[MISSING: owner-approved post-paid Orders/Warehouse correction packet for an exact linked completed payment state]`.
+- `[RESOLVED: owner accepted owner-confirmed manual Fiobanka refund as sufficient Goal 24 closeout without exact order linkage]`.
+- `[RESOLVED/NARROWED: runtime readback found no linked central Orders or FlipFlop state, so no Orders/Warehouse post-paid correction is required for this evidence-only closeout]`.
+
+Future-smoke guardrails:
+
+- Future paid/provider smokes still require exact payment/order/channel linkage before execution.
+- This closeout does not authorize future provider refunds, Orders mutations, Warehouse corrections, or channel acknowledgement without a linked run packet.
 
 ## Parallel Execution
 
 | Workstream | Status | Owner role | Scope | Dependencies | Blockers | Validation owner | Merge order |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Payments evidence readback | complete-read-only | Catalog integration validator consuming Payments evidence | completed Fiobanka rows, transaction summary, webhook summary | current deployed Payments DB | none for readback | Catalog integration validator | first |
-| Orders exact linkage | blocked | Orders lifecycle owner | central order lifecycle and Warehouse handoff for exact paid smoke | exact linked central Orders UUID | `[MISSING: sanitized exact-order linkage between the manual refund confirmation and a completed Goal 24 paid-smoke order]` | Orders/Warehouse validation owner | before post-paid correction |
-| FlipFlop acknowledgement | blocked | FlipFlop channel owner | local order `refunded/refunded` acknowledgement for exact order | exact linked FlipFlop order | `[MISSING: FlipFlop runtime readback showing an exact linked smoke order acknowledged as status=refunded and paymentStatus=refunded after manual refund]` | FlipFlop checkout owner | after external refund evidence and before final closeout |
+| Orders exact linkage | waived-for-retained-evidence | Orders lifecycle owner | central order lifecycle and Warehouse handoff for exact paid smoke | exact linked central Orders UUID | `[MISSING: sanitized exact-order linkage between the manual refund confirmation and a completed Goal 24 paid-smoke order]` | Orders/Warehouse validation owner | before post-paid correction |
+| FlipFlop acknowledgement | waived-for-retained-evidence | FlipFlop channel owner | local order `refunded/refunded` acknowledgement for exact order | exact linked FlipFlop order | `[MISSING: FlipFlop runtime readback showing an exact linked smoke order acknowledged as status=refunded and paymentStatus=refunded after manual refund]` | FlipFlop checkout owner | after external refund evidence and before final closeout |
 | Final integration closeout | final integration | Catalog commerce integration owner | reconcile provider refund plus Orders/Warehouse/channel cleanup | linked payment/order/channel evidence | blockers above | Catalog validation owner | last |
 
 Shared contracts: Payments Fiobanka provider evidence, Orders `orders.payment-status.v1`/post-paid correction policy, Warehouse component-line cleanup policy, FlipFlop channel acknowledgement, Catalog Goal 24 approval packet.
