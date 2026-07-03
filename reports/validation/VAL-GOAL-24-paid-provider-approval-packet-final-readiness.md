@@ -76,7 +76,7 @@ Result: passed before this report was staged. Final staged validation must rerun
 
 Current remote heads after the latest dependency reconciliation:
 
-- Payments `e531b82 chore: keep fiobanka upload token mapping blocked` on committed `main` retains accepted authenticated polling evidence and adds a future Fiobanka refund/reversal runtime packet. It remains source/docs/verifier only: completed-transfer refund/reversal, exact payment/order/provider identity hashes, named runtime validation owner, Payments/provider rollback owner, Orders correction approval, Warehouse cleanup approval, channel cleanup approval, side-effectful rollback idempotency keys, and live provider/bank evidence remain missing.
+- Payments `5bbca56 docs: align warehouse cleanup head reference` on committed `main` retains accepted authenticated polling evidence and adds a future Fiobanka refund/reversal runtime packet. It remains source/docs/verifier only: completed-transfer refund/reversal, exact payment/order/provider identity hashes, named runtime validation owner, Payments/provider rollback owner, Orders correction approval, Warehouse cleanup approval, channel cleanup approval, side-effectful rollback idempotency keys, and live provider/bank evidence remain missing.
 - Orders `e3f6e18 docs: preserve goal24 orders cleanup packet`: retains cleanup idempotency runtime evidence and adds cleanup state-matrix documentation on `main`. Live cleanup mutation remains separately gated by the exact run packet, selected state, and owner-approved side-effect acknowledgements.
 - Catalog `main` records this as dependency-gated evidence only. It does not approve live checkout, provider call, webhook replay, refund/cancel/reversal, Orders mutation, Warehouse mutation, deploy, migration, DB mutation, marketplace/feed mutation, raw bank payload, token value, or secret output.
 
@@ -103,7 +103,7 @@ Boundary: the guarded quote preflight created one redacted, unredeemed discount 
 Current upstream heads after retained-evidence closeout:
 
 - FlipFlop `31845ef docs: close goal24 channel cleanup packet`: owner-approved server-validated discount/price fixture path remains documented for a future exact linked paid/provider smoke, with fixed `2117.58 CZK` discount required to keep the tax-inclusive checkout-authoritative total at `300 CZK`; source still contains the bundle-preserving fixture gate, uses the already guarded validation discount value, and has verifier alignment for the payment-result URL builder, but deployed/runtime quote preflight evidence is now resolved/narrowed and the prior approval window was expired.
-- Payments `e531b82 chore: keep fiobanka upload token mapping blocked`: authenticated polling evidence remains accepted after stale-marker cleanup and the future refund/reversal packet remains source-controlled, but completed-transfer refund/reversal execution and exact smoke identities remain missing.
+- Payments `5bbca56 docs: align warehouse cleanup head reference`: authenticated polling evidence remains accepted after stale-marker cleanup and the future refund/reversal packet remains source-controlled, but completed-transfer refund/reversal execution and exact smoke identities remain missing.
 - Orders `e3f6e18 docs: preserve goal24 orders cleanup packet`: terminal-state verifier marker sync preserves cleanup idempotency evidence and the cleanup state matrix; any live cleanup remains gated by exact run packet and owner-approved side-effect acknowledgements.
 
 Retained evidence closeout remains complete: `[RESOLVED: owner accepted owner-confirmed manual Fiobanka refund as sufficient Goal 24 closeout without exact order linkage]`.
@@ -117,7 +117,7 @@ Decision: Catalog must not execute live checkout, discount-code generation, orde
 
 Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update.
 
-Current committed upstream heads consumed: Orders `e3f6e18`, Payments `e531b82`, Warehouse `46a66dc`, FlipFlop `31845ef`, Catalog pre-change `9eea93b`, plus read-only channel context Allegro `60fb3f3`, Aukro `e264a34`, and Bazos `053a4d3`. FlipFlop source-only bundle-preserving fixture gate and payment-result verifier alignment are consumed; Warehouse reserved/fulfilled/return/partial/timeout operation narrowing is consumed; runtime quote preflight evidence from FlipFlop 42b8073 is consumed; side-effectful checkout evidence remains blocked.
+Current committed upstream heads consumed: Orders `e3f6e18`, Payments `5bbca56`, Warehouse `46a66dc`, FlipFlop `31845ef`, Catalog pre-change `9eea93b`, plus read-only channel context Allegro `60fb3f3`, Aukro `e264a34`, and Bazos `053a4d3`. FlipFlop source-only bundle-preserving fixture gate and payment-result verifier alignment are consumed; Warehouse reserved/fulfilled/return/partial/timeout operation narrowing is consumed; runtime quote preflight evidence from FlipFlop 42b8073 is consumed; side-effectful checkout evidence remains blocked.
 
 Parallel execution state:
 
@@ -131,7 +131,7 @@ Merge notes: do not dispatch parallel Catalog writers against these same status/
 
 ## 2026-07-04 Pushed Upstream Head Refresh
 
-Catalog consumed the now-pushed downstream heads after the previous dirty-lane acceptance: FlipFlop `31845ef docs: close goal24 channel cleanup packet`, Orders `e3f6e18 docs: preserve goal24 orders cleanup packet`, Payments `e531b82 chore: keep fiobanka upload token mapping blocked`, and Warehouse `46a66dc docs: define goal24 warehouse cleanup packet`; read-only cross-check heads were Allegro `60fb3f3`, Aukro `e264a34`, and Bazos `053a4d3`.
+Catalog consumed the now-pushed downstream heads after the previous dirty-lane acceptance: FlipFlop `31845ef docs: close goal24 channel cleanup packet`, Orders `e3f6e18 docs: preserve goal24 orders cleanup packet`, Payments `5bbca56 docs: align warehouse cleanup head reference`, and Warehouse `46a66dc docs: define goal24 warehouse cleanup packet`; read-only cross-check heads were Allegro `60fb3f3`, Aukro `e264a34`, and Bazos `053a4d3`.
 
 Decision: runtime remains fail-closed. FlipFlop source now contains the narrow Goal 24 bundle-preserving fixture gate, and Catalog consumes deployed/runtime quote preflight evidence for it: quote HTTP 200, total=300 CZK, sideEffects=[], provider_call=false, live_checkout_executed=false, order_created=false, payment_created=false, warehouse_reservation_created=false, and orders_mutation_created=false. The current exact linked paid/provider smoke path now has `[RESOLVED/NARROWED: deployed FlipFlop bundle-preserving fixture gate and runtime quote preflight evidence passed before checkout at 300 CZK with sideEffects=[]]`, but still needs renewed execution window, runtime validation owner, FlipFlop cleanup executor, exact payment/order/provider identity hashes, provider rollback proof, Orders cleanup actor/idempotency, Warehouse max quantity/hold-window plus deterministic cleanup packet, and `[RESOLVED/NARROWED: runtime config readback shows PAYMENT_SUCCESS_URL and PAYMENT_CANCEL_URL resolve to approved FlipFlop payment-result URLs without secret output]`.
 
@@ -277,7 +277,7 @@ The retained 1 CZK Fiobanka evidence path is closed by owner acceptance without 
 
 ## 2026-07-04 Catalog Final Reconciliation Lane 6
 
-Current heads consumed in this final reconciliation: Catalog `d49c150`, FlipFlop `31845ef`, Payments `e531b82`, Orders `e3f6e18`, Warehouse `46a66dc`, Allegro `60fb3f3`, Aukro `e264a34`, and Bazos `053a4d3`. FlipFlop `31845ef` narrows only source/verifier correctness for Goal 24 fixture discount normalization; Catalog now has deployed/runtime quote evidence and keeps `[RESOLVED/NARROWED: deployed FlipFlop bundle-preserving fixture gate and runtime quote preflight evidence passed before checkout at 300 CZK with sideEffects=[]]`.
+Current heads consumed in this final reconciliation: Catalog `d49c150`, FlipFlop `31845ef`, Payments `5bbca56`, Orders `e3f6e18`, Warehouse `46a66dc`, Allegro `60fb3f3`, Aukro `e264a34`, and Bazos `053a4d3`. FlipFlop `31845ef` narrows only source/verifier correctness for Goal 24 fixture discount normalization; Catalog now has deployed/runtime quote evidence and keeps `[RESOLVED/NARROWED: deployed FlipFlop bundle-preserving fixture gate and runtime quote preflight evidence passed before checkout at 300 CZK with sideEffects=[]]`.
 
 `[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]` remains unresolved. exact field required before any side-effectful smoke: source-controlled `approvalWindow` with calendar date, start time, end time, timezone, maximum duration, allowed retry count, and non-secret approval id/owner reference. Broad approval for this reconciliation is not enough to infer those timestamp/owner facts.
 
