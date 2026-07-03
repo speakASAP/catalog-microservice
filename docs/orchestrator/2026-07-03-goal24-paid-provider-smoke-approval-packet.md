@@ -143,6 +143,19 @@ Validation owner: `[MISSING: runtime validation owner for live paid/provider bun
 
 Merge order: Catalog packet -> FlipFlop durable bundleId/checkout gate -> Orders central UUID/status bridge runtime proof -> Warehouse stock rollback plan -> Payments provider rollback plan -> final owner-approved smoke packet execution.
 
+## 2026-07-03 Upstream Packet Reconciliation
+
+Catalog consumed the latest upstream evidence as dependency-gated integration input:
+
+| Owner packet | Evidence consumed | Catalog reconciliation decision |
+| --- | --- | --- |
+| Orders | `62f5d62` merged cancel/cleanup rollback gate | Source choreography is narrowed, but provider refund/cancel proof and owner-approved cancellation cleanup inputs remain required. |
+| Warehouse | `ee65ee4` on `origin/main` source-verifies component-line hold/release/fulfill/cancel/return | Component-line lifecycle semantics are narrowed to source evidence; approved stock window/max quantity and live canary remain missing. |
+| FlipFlop | `23a901d` keeps durable `catalog.bundle.v1` `bundleId` as evidence-only and runtime checkout submission blocked | Checkout owner packet remains dependency-gated until approved rollout maps display-only bundle evidence into Orders without changing totals, stock identity, or provider state. |
+| Payments | `124256f` records pending Fiobanka QR evidence plus owner-approved synthetic Fiobanka completed-callback evidence through `/webhooks/fiobanka` | Route-level completion is narrowed as dependency-gated evidence; real bank-originated signature evidence or approved selected-provider fixture, and refund/cancel rollback remain missing. |
+
+Exact next required owner packet before any live paid/provider smoke: a single owner-approved run packet naming `approvalId`, `approvalWindow`, `checkoutOwner`, active `targetBundleId`, component product ids/quantities, Warehouse stock window/max quantity, selected provider/method/environment/max amount, provider completion evidence, provider refund/cancel/reversal operation, Orders cancellation actor/reason/side-effect acknowledgements, Warehouse cleanup operation for reserved/fulfilled/partial states, active checkout central Orders UUID proof, Payments Orders service-token proof, evidence redaction policy, hard-stop authority, dedicated smoke owner, and runtime validation owner.
+
 ## Current Decision
 
 Runtime paid/provider bundle progression remains blocked on `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]` until this packet is complete, owner-approved, and validated by the owning services. Additional unresolved packet fields: `[MISSING: target active catalog.bundle.v1 bundle id approved for paid/provider smoke]`, `[MISSING: approved payment method/provider mode and maximum amount for paid/provider smoke]`, `[MISSING: runtime verification of Payments Orders service token/role]`, `[MISSING: hard stop authority for paid/provider smoke]`, `[MISSING: dedicated paid/provider smoke owner]`, and `[MISSING: runtime validation owner for live paid/provider bundle smoke]`.
