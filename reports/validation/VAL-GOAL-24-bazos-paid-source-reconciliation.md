@@ -21,17 +21,19 @@ Validation -> Bazos focused validation and Catalog `git diff --check`.
 ## Bazos Evidence
 
 - Bazos `main` merged/pushed `d4040c8 Merge goal24 Bazos paid lifecycle fixture`.
+- Bazos `main` then advanced to `27f325d fix: emit marketing-compatible bazos replay events`, which aligns replay envelopes with Marketing parser expectations: `type`, `eventVersion`, and `payload.items[].productId`.
 - Worker branch `codex/bazos-paid-lifecycle-fixture` was deleted locally and from `origin`.
 - Source contract now includes local paid projection fields `paymentStatus`, `paidAt`, and bounded `itemSnapshots`.
 - Replay remains aggregate-safe: paid/processable local Bazos orders only, at least two distinct Catalog product IDs, hashed replay refs, and no customer/address/payment-provider/token/raw marketplace payload output.
-- The final branch fix forwards Bazos `paymentStatus` to central Orders when synthetic/internal Bazos order creation forwards a central order.
+- The paid lifecycle fixture forwards Bazos `paymentStatus` to central Orders when synthetic/internal Bazos order creation forwards a central order.
+- The follow-up event-shape fix emits `payload.items[].productId` instead of Catalog-only item keys so Marketing can parse Bazos replay events consistently with other marketplace producers.
 
 ## Validation Evidence
 
-- Bazos `git diff --check` passed.
-- Bazos focused Jest passed: `services/aukro-service/src/aukro/orders/orders.service.spec.ts` -> 1 suite, 17 tests.
-- Bazos service build passed: `npm --prefix services/aukro-service run build`.
-- Bazos push/cleanup passed: `main` synced to `origin/main` at `d4040c8`; `origin/codex/bazos-paid-lifecycle-fixture` deleted.
+- Bazos `git diff --check` passed on latest `main` at `27f325d`.
+- Bazos focused Jest passed on latest `main`: `services/aukro-service/src/aukro/orders/orders.service.spec.ts` -> 1 suite, 17 tests.
+- Bazos service build passed on latest `main`: `npm --prefix services/aukro-service run build`.
+- Bazos push/cleanup passed: paid lifecycle fixture merged through `d4040c8`, latest `origin/main` is `27f325d`, and `origin/codex/bazos-paid-lifecycle-fixture` was deleted.
 - Catalog docs-only `git diff --check` passed.
 
 ## Resolved Or Narrowed Blockers
