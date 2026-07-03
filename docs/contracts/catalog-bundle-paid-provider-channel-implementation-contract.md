@@ -11,6 +11,7 @@ upstream:
   - docs/contracts/catalog-bundle-aggregate-v1.md
   - docs/contracts/catalog-bundle-commerce-contract.md
   - docs/contracts/catalog-bundle-marketplace-publication-policy.md
+  - docs/orchestrator/2026-07-03-goal24-paid-provider-smoke-approval-packet.md
 ```
 
 ## Intent Preservation Chain
@@ -48,6 +49,8 @@ Not approved by this contract:
 - Raw customer, address, provider, payment, credential, token, or marketplace payload output in validation reports.
 
 ## Paid/Provider Contract
+
+The exact owner approval packet for any future live paid/provider smoke is `docs/orchestrator/2026-07-03-goal24-paid-provider-smoke-approval-packet.md`. That packet is owner-ready but runtime-blocked; it must be completed with a non-secret approval id, test window, target active bundle id, provider method, sanitized evidence policy, stock rollback, refund/cancel rollback, and hard stop authority before any live smoke begins.
 
 The next paid/provider implementation must keep the existing service boundaries:
 
