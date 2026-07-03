@@ -71,11 +71,11 @@ Follow-up read-only evidence on 2026-07-03 confirmed the Orders replay endpoint,
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`
 - `[MISSING: Marketing durable run ledger proving a complete source/window snapshot]`
 - `[MISSING: marketplace producer guarantee that replay window is complete and repeatable]`
-- `[MISSING: Catalog bundle ownership decision: read-only candidate, standalone bundle aggregate, or product-like SKU]`
-- `[MISSING: Orders bundle create-order contract and bundle identity representation beyond normal line items]`
-- `[MISSING: Warehouse bundle reservation contract for stock and fulfillment effects]`
-- `[MISSING: Payments metadata policy for bundle/free-shipping evidence without making Payments pricing truth]`
-- `[MISSING: approved real checkout smoke scope]`
+- `[MISSING: Catalog standalone bundle aggregate API and persistence contract]`
+- `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
+- `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
+- `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
+- `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`
 - `[UNKNOWN: whether current live Orders history should contain paid multi-product rows or whether upstream order capture is still empty]`
 
 ## Parallel Execution
@@ -88,11 +88,11 @@ Current lanes:
 - `ready now`: Marketing dry-run/export/backfill hardening. Owner role: Marketing worker. Scope: keep the backfill CLI, aggregation, and Catalog publisher safe and dry-run-first. Expected output: source-only verification or bounded fixes in Marketing. Validation: focused order-affinity backfill tests and non-mutating dry-run.
 - `ready now`: Catalog product relation API maintenance. Owner role: Catalog worker. Scope: maintain protected related-products, bundle-candidates, and internal batch endpoint. Validation: focused product-relations Jest and `git diff --check`.
 - `dependency-gated`: Non-empty historical affinity publish. Owner role: integration validator. Blockers: `[MISSING: qualifying historical paid multi-product Orders rows for non-empty replay evidence]`, `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`, and `[RESOLVED: conservative exact source/window replacement policy; remaining gates are Marketing ledger, producer completeness, and owner-reviewed publish window]`.
-- `dependency-gated`: Catalog durable bundle aggregate/API. Owner role: Catalog/commerce architect. Blocker: `[MISSING: Catalog bundle ownership decision: read-only candidate, standalone bundle aggregate, or product-like SKU]`.
+- `ready now`: Catalog standalone bundle aggregate contract design. Owner role: Catalog/commerce architect. Scope: define `catalog.bundle.v1` API/persistence plan from `docs/contracts/catalog-bundle-commerce-contract.md`; source implementation remains gated until the plan is accepted.
 - `dependency-gated`: Marketplace/operator bundle suggestions. Owner role: channel worker. Blocker: `[MISSING: channel-specific external marketplace bundle publication policies]`.
-- `blocked`: Ecosystem real bundle selling beyond the existing FlipFlop-local bundle intent. Blockers: `[MISSING: Orders bundle create-order contract and bundle identity representation beyond normal line items]`, `[MISSING: Warehouse bundle reservation contract for stock and fulfillment effects]`, `[MISSING: Payments metadata policy for bundle/free-shipping evidence without making Payments pricing truth]`, and `[MISSING: approved real checkout smoke scope]`.
+- `dependency-gated`: Ecosystem real bundle selling beyond the existing FlipFlop-local bundle intent. Blockers: `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`, `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`, `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`, and `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`.
 
-Shared files/contracts: `docs/contracts/catalog-product-relations.md`, Orders `ORDER_EVENT_CONTRACTS.md`, Marketing orders-events integration contract, and any future bundle checkout contract. Integration owner: Catalog orchestrator until a commerce integration owner is assigned. Validation owner: integration validator. Merge order: source contract verification before any runtime publish or checkout implementation.
+Shared files/contracts: `docs/contracts/catalog-product-relations.md`, `docs/contracts/catalog-bundle-commerce-contract.md`, Orders create-order contract, Warehouse reservation contract, Payments create-payment validation contract, FlipFlop GOAL-13 bundle intent docs, and Marketing orders-events integration contract. Integration owner: Catalog orchestrator until a commerce integration owner is assigned. Validation owner: integration validator. Merge order: source contract verification before any runtime publish or checkout implementation.
 
 ## 2026-07-03 Stale-Affinity Retention Policy Update
 

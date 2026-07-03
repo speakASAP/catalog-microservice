@@ -150,8 +150,8 @@ Dependency-gated runtime actions:
 Blocked ecosystem bundle selling:
 
 - The current Catalog endpoint returns display metadata only, not a sellable bundle.
-- FlipFlop-local bundle intent does not answer whether Catalog should own a durable bundle aggregate or product-like SKU.
-- Orders, Warehouse, and Payments need explicit contracts before real ecosystem bundle selling can move beyond local FlipFlop intent.
+- FlipFlop-local bundle intent does not implement the accepted standalone Catalog bundle aggregate or downstream ecosystem contracts.
+- Orders, Warehouse, and Payments need narrower additive implementation contracts before real ecosystem bundle selling can move beyond local FlipFlop intent: Orders bundle evidence metadata, Warehouse component-line reservation sign-off, and Payments evidence-only metadata allowlist.
 
 
 ## 2026-07-03 Docs-RAG JWT Access Evidence
@@ -171,12 +171,12 @@ Conclusion: docs-rag JWT_TOKEN access is resolved for Goal 24. Remaining blocker
 - `[MISSING: qualifying historical paid multi-product Orders rows for non-empty central Orders replay evidence]`
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill from live central Orders]`
 - `[RESOLVED: conservative exact source/window replacement policy; remaining gates are Marketing ledger, producer completeness, and owner-reviewed publish window]`
-- `[MISSING: Catalog bundle ownership decision: read-only candidate, standalone bundle aggregate, or product-like SKU]`
-- `[MISSING: Orders bundle create-order contract and bundle identity representation beyond normal line items]`
-- `[MISSING: Warehouse bundle reservation contract for stock and fulfillment effects]`
-- `[MISSING: Payments metadata policy for bundle/free-shipping evidence without making Payments pricing truth]`
-- `[MISSING: explicit discount/price presentation policy for bundle candidates]`
-- `[MISSING: approved real checkout smoke scope]`
+- `[MISSING: Catalog standalone bundle aggregate API and persistence contract]`
+- `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
+- `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
+- `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
+- `[MISSING: discount/free-shipping presentation policy adoption in storefront/channel UIs]`
+- `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`
 - `[UNKNOWN: whether current live Orders history should contain paid multi-product rows or whether upstream order capture is still empty]`
 
 ## Parallel Execution
@@ -199,3 +199,39 @@ Merge order: source contract verification, then non-empty replay evidence, then 
 ## Next Action
 
 Implement W1 Allegro protected replay producer or owner-run CLI export, then update Marketing parser support for marketplace-owned replay envelopes before enabling any scheduled publish.
+
+
+## Bundle Commerce Contract Decision Refresh
+
+Date: 2026-07-03
+
+Contract added:
+
+- `docs/contracts/catalog-bundle-commerce-contract.md`
+
+Accepted decisions:
+
+- Recommended bundle model: standalone Catalog bundle aggregate for first ecosystem implementation.
+- Rejected alternatives: read-only candidate as long-term selling model, product-like SKU in v1, FlipFlop-local intent as ecosystem contract, Payments-owned bundle pricing, and Warehouse-owned bundle identity.
+- Orders contract direction: keep canonical normal item lines and add bounded `bundleEvidence` metadata later.
+- Warehouse contract direction: reserve component product lines only in v1.
+- Payments metadata policy: allow bounded bundle/free-shipping evidence only; final `amount` and `currency` remain caller-owned and Payments must not compute bundle pricing.
+- Smoke scope: start with non-mutating Orders `validate-create` and Payments `validate-create`; live pending-order/reservation smoke remains owner-gated.
+- Presentation policy: Catalog/storefront monetary bundle claims are hints only until checkout confirms totals; missing price/policy evidence must suppress monetary claims or render neutral copy.
+
+Replaced broad blockers with narrower gates:
+
+- `[MISSING: Catalog standalone bundle aggregate API and persistence contract]`
+- `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
+- `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
+- `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
+- `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`
+- `[MISSING: owner-approved Rung 2 live pending-order smoke plan if production order/reservation evidence is required]`
+
+Validation:
+
+- `git diff --check`: passed for the documentation-only change.
+
+Boundary:
+
+No source code, migration, deployment, product row, order row, payment row, stock/reservation row, marketplace listing, checkout flow, provider call, Kubernetes manifest, secret, or runtime data was changed.

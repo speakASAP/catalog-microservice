@@ -62,14 +62,25 @@ Bundle checkout remains outside this contract:
 
 ## Bundle Selling Decision Gate
 
-Before any service implements real ecosystem bundle selling, owners must resolve these contracts:
+The first ecosystem bundle-selling model is accepted as a standalone Catalog bundle aggregate, documented in `docs/contracts/catalog-bundle-commerce-contract.md`. The current `bundle-candidates` endpoint remains read-only display metadata until that aggregate API/persistence contract exists.
 
-- `[MISSING: Catalog bundle ownership decision: read-only candidate, standalone bundle aggregate, or product-like SKU]`
-- `[MISSING: Orders bundle create-order contract and bundle identity representation beyond normal line items]`
-- `[MISSING: Warehouse bundle reservation contract for stock and fulfillment effects]`
-- `[MISSING: Payments metadata policy for bundle/free-shipping evidence without making Payments pricing truth]`
-- `[MISSING: approved real checkout smoke scope]`
-- `[MISSING: explicit discount/price presentation policy for bundle candidates]`
+Resolved architecture decisions:
+
+- Catalog bundle ownership model: standalone aggregate for first implementation; not read-only-only long term and not a product-like SKU in v1.
+- Orders representation: normal product line items remain canonical; future bundle identity is additive bounded order metadata.
+- Warehouse reservation model: first implementation reserves component product lines only; no synthetic bundle stock/SKU.
+- Payments policy: Payments receives final caller-owned total and bounded bundle/free-shipping evidence metadata only; it never computes bundle pricing.
+- Presentation policy: Catalog and storefronts may show candidate savings/free-shipping hints only with current price evidence and policy refs, never final payable-total claims.
+- Real checkout smoke scope: Rung 1 is non-mutating validation through Orders `validate-create` and Payments `validate-create`; Rung 2 requires explicit owner approval before any live pending order or Warehouse reservation side effect.
+
+Remaining implementation gates:
+
+- `[MISSING: Catalog standalone bundle aggregate API and persistence contract]`
+- `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
+- `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
+- `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
+- `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`
+- `[MISSING: owner-approved Rung 2 live pending-order smoke plan if production order/reservation evidence is required]`
 
 ## API
 
@@ -285,9 +296,9 @@ This policy resolves the previous broad retention/decay blocker while preserving
 - `[MISSING: Marketing parser support for marketplace-owned replay source envelopes]`
 - `[MISSING: durable Marketing backfill run ledger and idempotency key registry]`
 - `[MISSING: Allegro-owned protected replay endpoint so future runs do not require a temporary SQL export]`
-- `[MISSING: Catalog bundle ownership decision: read-only candidate, standalone bundle aggregate, or product-like SKU]`
-- `[MISSING: Orders bundle create-order contract and bundle identity representation beyond normal line items]`
-- `[MISSING: Warehouse bundle reservation contract for stock and fulfillment effects]`
-- `[MISSING: Payments metadata policy for bundle/free-shipping evidence without making Payments pricing truth]`
-- `[MISSING: approved real checkout smoke scope]`
+- `[MISSING: Catalog standalone bundle aggregate API and persistence contract]`
+- `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
+- `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
+- `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
+- `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`
 - `[UNKNOWN: whether current live Orders history should contain paid multi-product rows or whether upstream order capture is still empty]`

@@ -1651,12 +1651,12 @@ Intent Preservation Chain:
 Parallel execution evidence:
 
 - Marketplace/read-path subagent confirmed FlipFlop already has related product and buy-together UI/read paths and should consume Catalog as candidate source without Catalog owning checkout discounts.
-- Catalog explorer subagent confirmed no migration is needed and identified `[MISSING: approved bundle checkout contract owned by FlipFlop/Orders/Payments]`, `[MISSING: explicit discount/price presentation policy for bundle candidates]`, and `[MISSING: sufficient order_affinity backfill volume]`.
+- Catalog explorer subagent confirmed no migration is needed and identified `[MISSING: approved bundle checkout contract owned by FlipFlop/Orders/Payments]`, `[MISSING: discount/free-shipping presentation policy adoption in storefront/channel UIs]`, and `[MISSING: sufficient order_affinity backfill volume]`.
 
 Remaining blockers:
 
 - `[MISSING: approved bundle checkout contract owned by FlipFlop/Orders/Payments]`.
-- `[MISSING: explicit discount/price presentation policy for bundle candidates]`.
+- `[MISSING: discount/free-shipping presentation policy adoption in storefront/channel UIs]`.
 - `[MISSING: sufficient order_affinity backfill volume]`.
 Runtime deployment evidence:
 
@@ -1670,7 +1670,7 @@ Runtime deployment evidence:
 Remaining blockers:
 
 - `[MISSING: approved bundle checkout contract owned by FlipFlop/Orders/Payments]`.
-- `[MISSING: explicit discount/price presentation policy for bundle candidates]`.
+- `[MISSING: discount/free-shipping presentation policy adoption in storefront/channel UIs]`.
 - `[MISSING: sufficient order_affinity backfill volume]`.
 - `[MISSING: current product price rows for canary/order-affinity products before presenting sellable bundle prices]`.
 
@@ -1701,7 +1701,7 @@ Runtime evidence:
 Remaining blockers:
 
 - `[MISSING: approved bundle checkout contract owned by FlipFlop/Orders/Payments]`.
-- `[MISSING: explicit discount/price presentation policy for bundle candidates]`.
+- `[MISSING: discount/free-shipping presentation policy adoption in storefront/channel UIs]`.
 - `[MISSING: sufficient order_affinity backfill volume]`.
 
 
@@ -1779,19 +1779,19 @@ Parallel execution:
 - `ready now`: Marketing dry-run/export/backfill hardening. Validation: focused `order-affinity-backfill` tests plus dry-run.
 - `ready now`: Catalog relation API maintenance. Validation: focused product-relations Jest plus `git diff --check`.
 - `dependency-gated`: non-empty historical affinity publish. Blockers: qualifying rows, owner-reviewed mutation window, and pruning/replacement semantics.
-- `dependency-gated`: Catalog durable bundle aggregate/API. Blocker: Catalog ownership decision for read-only candidate versus standalone aggregate versus product-like SKU.
-- `blocked`: real ecosystem bundle selling. Blockers: Orders bundle create-order contract, Warehouse reservation contract, Payments metadata policy, explicit discount/price presentation policy, and approved real-checkout smoke scope.
+- `ready now`: Catalog standalone bundle aggregate contract design. Scope: define `catalog.bundle.v1` API/persistence plan from `docs/contracts/catalog-bundle-commerce-contract.md`; source implementation remains gated until accepted.
+- `dependency-gated`: real ecosystem bundle selling. Blockers: Orders additive bundleEvidence metadata, Warehouse component-line reservation sign-off, Payments metadata allowlist, presentation-policy adoption, and owner-approved Rung 1 smoke credentials.
 
 Remaining blockers:
 
 - `[MISSING: qualifying historical paid multi-product Orders rows for non-empty replay evidence]`.
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`.
 - `[RESOLVED: conservative exact source/window replacement policy; remaining gates are Marketing ledger, producer completeness, and owner-reviewed publish window]`.
-- `[MISSING: Catalog bundle ownership decision: read-only candidate, standalone bundle aggregate, or product-like SKU]`.
-- `[MISSING: Orders bundle create-order contract and bundle identity representation beyond normal line items]`.
-- `[MISSING: Warehouse bundle reservation contract for stock and fulfillment effects]`.
-- `[MISSING: Payments metadata policy for bundle/free-shipping evidence without making Payments pricing truth]`.
-- `[MISSING: approved real checkout smoke scope]`.
+- `[MISSING: Catalog standalone bundle aggregate API and persistence contract]`.
+- `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`.
+- `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`.
+- `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`.
+- `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`.
 - `[UNKNOWN: whether current live Orders history should contain paid multi-product rows or whether upstream order capture is still empty]`.
 
 
@@ -1830,11 +1830,11 @@ Remaining blockers:
 - `[MISSING: qualifying historical paid multi-product Orders rows for non-empty central Orders replay evidence]`.
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill from live central Orders]`.
 - `[RESOLVED: conservative exact source/window replacement policy; remaining gates are Marketing ledger, producer completeness, and owner-reviewed publish window]`.
-- `[MISSING: Catalog bundle ownership decision: read-only candidate, standalone bundle aggregate, or product-like SKU]`.
-- `[MISSING: Orders bundle create-order contract and bundle identity representation beyond normal line items]`.
-- `[MISSING: Warehouse bundle reservation contract for stock and fulfillment effects]`.
-- `[MISSING: Payments metadata policy for bundle/free-shipping evidence without making Payments pricing truth]`.
-- `[MISSING: approved real checkout smoke scope]`.
+- `[MISSING: Catalog standalone bundle aggregate API and persistence contract]`.
+- `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`.
+- `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`.
+- `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`.
+- `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`.
 
 
 ## 2026-07-03 - Goal 24 Allegro Affinity Live Catalog Publish
@@ -2067,3 +2067,38 @@ Resolved blockers:
 
 - `[RESOLVED: owner-approved retention/decay policy for stale affinity rows]`
 - `[RESOLVED: docs-rag JWT_TOKEN available in live docs-rag pod and accepted for retrieval auth]`
+
+## 2026-07-03 - Goal 24 Bundle Commerce Contract Decision
+
+Current focus: replace broad Goal 24 bundle-selling blockers with an accepted architecture decision and narrower implementation gates.
+
+Intent Preservation Chain:
+
+- Vision: purchase-derived product relationships should become safe bundle commerce only when product identity, checkout totals, stock reservation, and payment evidence stay with their owning services.
+- Goal Impact: broad bundle ownership/payment/stock/smoke blockers are narrowed to a standalone Catalog aggregate model plus concrete downstream implementation gates.
+- System: Catalog owns relation rows, read-only bundle candidates, and future standalone bundle aggregate metadata; FlipFlop owns storefront checkout intent; Orders owns canonical order lines/totals/lifecycle; Warehouse owns stock/reservations; Payments owns payment creation/status/reconciliation.
+- Feature: bundle commerce contract decision.
+- Task: document recommended model, rejected alternatives, fail-closed checkout smoke scope, and discount/free-shipping presentation policy.
+- Execution Plan: docs-only remote worktree update; no source, migration, deploy, order/payment/stock mutation, marketplace publication, or real checkout mutation.
+- Coding Prompt: keep `bundle-candidates` display-only, reject Payments pricing authority, and preserve component-line stock reservation semantics until owners approve implementation.
+- Code: `docs/contracts/catalog-bundle-commerce-contract.md`, `docs/contracts/catalog-product-relations.md`, `implementation-goals/GOAL-24-product-relations.md`, `docs/IMPLEMENTATION_STATE.md`, and `reports/validation/VAL-GOAL-24-bundle-order-affinity-contract.md`.
+- Validation: `git diff --check` passed in isolated worktree `catalog-goal24-bundle-commerce-contract`; merge validation reran on `main`.
+
+Accepted decisions:
+
+- Catalog bundle ownership model: standalone aggregate for first ecosystem implementation.
+- Rejected: read-only candidate as long-term real selling model, product-like SKU in v1, FlipFlop-local intent as ecosystem contract, Payments-owned pricing, and Warehouse-owned bundle identity.
+- Orders v1 representation: normal item lines plus future bounded `bundleEvidence` metadata.
+- Warehouse v1 reservation: component product lines only, no synthetic bundle stock/SKU.
+- Payments policy: final amount/currency remains caller-owned; bundle/free-shipping metadata is evidence only.
+- Presentation policy: candidate savings/free-shipping copy must be hint-only and fail closed when current price, currency, threshold, policy ref, or visibility evidence is missing.
+- Smoke policy: Rung 1 is non-mutating Orders `POST /api/orders/validate-create` plus Payments `POST /payments/validate-create`; Rung 2 live pending-order/reservation evidence requires explicit owner approval.
+
+Remaining blockers:
+
+- `[MISSING: Catalog standalone bundle aggregate API and persistence contract]`
+- `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
+- `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
+- `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
+- `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`
+- `[MISSING: owner-approved Rung 2 live pending-order smoke plan if production order/reservation evidence is required]`
