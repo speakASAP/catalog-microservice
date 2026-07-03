@@ -76,11 +76,11 @@ Result: passed before this report was staged. Final staged validation must rerun
 
 Current remote heads after the latest dependency reconciliation:
 
-- Payments `9718efd fix: use fio json api for polling`: source/runtime evidence now uses the official Fio JSON API default, `FIO_BANKA_LOOKBACK_DAYS=31` bounded default lookback, distinct `FIO_BANKA_API_KEY_CZK` and `FIO_BANKA_API_KEY_EUR` inputs, and redacted owner-approved polling evidence for retained variable-symbol hash `d7512419521d2cab`. The CZK official endpoint returned HTTP `200`, `transactionCount=1`, `matchCount=1`, amount `1`, currency `CZK`, `tokenOutput=false`, and `rawPayloadOutput=false`; EUR returned no match. This resolves/narrows runtime token delivery, owner-approved read-only polling execution, and a real bank-originated polling match for the Fiobanka polling path only.
+- Payments `f5c078a docs: record deployed fiobanka polling match` on current `main` retains the `27f3f73` polling-match status and the `9718efd` official Fio JSON API fix: source/runtime evidence uses the official Fio JSON API default, `FIO_BANKA_LOOKBACK_DAYS=31` bounded default lookback, distinct `FIO_BANKA_API_KEY_CZK` and `FIO_BANKA_API_KEY_EUR` inputs, and redacted owner-approved polling evidence for retained variable-symbol hash `d7512419521d2cab`. The CZK official endpoint returned HTTP `200`, `transactionCount=1`, `matchCount=1`, amount `1`, currency `CZK`, `tokenOutput=false`, and `rawPayloadOutput=false`; EUR returned no match. This resolves/narrows runtime token delivery, owner-approved read-only polling execution, and a real bank-originated polling match for the Fiobanka polling path only.
 - Orders `adddafb Merge goal24 orders cleanup idempotency key contract`: retains the cleanup idempotency source contract on `main`. Migration/deploy execution and any live cleanup mutation remain separately gated.
 - Catalog `main` records this as dependency-gated evidence only. It does not approve live checkout, provider call, webhook replay, refund/cancel/reversal, Orders mutation, Warehouse mutation, deploy, migration, DB mutation, marketplace/feed mutation, raw bank payload, token value, or secret output.
 
-Remaining runtime blockers: `[MISSING: official/native Fio Banka callback signature contract if provider-authentic bank-originated signed callbacks are required]`; `[MISSING: sanitized exact-order linkage between the manual refund confirmation and the Goal 24 completed Fiobanka smoke order]`; `[MISSING: FlipFlop runtime readback showing the exact smoke order acknowledged as status=refunded and paymentStatus=refunded after manual refund]`; `[MISSING: owner-approved post-paid Orders/Warehouse correction packet for the exact completed payment state]`; `[MISSING: named live-run executor/runtime validation owner for live paid/provider bundle smoke]`.
+Current retained-evidence closeout blockers: none for exact order linkage, because the owner accepted the owner-confirmed manual Fiobanka refund as sufficient Goal 24 closeout without exact order linkage and runtime readback found no linked central Orders or FlipFlop state requiring Orders/Warehouse correction. Future-only runtime gates remain: `[MISSING: official/native Fio Banka callback signature contract if provider-authentic bank-originated signed callbacks are required]`, `[MISSING: sanitized exact-order linkage between the manual refund confirmation and a completed Goal 24 paid-smoke order]`, `[MISSING: FlipFlop runtime readback showing an exact linked smoke order acknowledged as status=refunded and paymentStatus=refunded after manual refund]`, `[MISSING: owner-approved post-paid Orders/Warehouse correction packet for an exact linked completed payment state]`, and `[MISSING: named live-run executor/runtime validation owner for live paid/provider bundle smoke]`.
 
 ## Repository State Observed
 
@@ -183,13 +183,13 @@ Resolved/narrowed blockers:
 - `[RESOLVED/NARROWED: owner-approved paid/provider checkout smoke with stock cleanup for stop-before-paid Fiobanka QR]`.
 - `[RESOLVED/NARROWED: cross-service packet proving Orders/Warehouse cleanup for unpaid provider checkout via orders.payment-status.v1 cancelled -> warehouse release]`.
 
-Remaining blockers:
+Future-only blockers after retained-evidence closeout:
 
-- `[MISSING: Fiobanka provider-side unpaid cancel/void operation; payment row remains provider-processing because no provider cancel endpoint exists]`.
-- `[MISSING: completed-payment Fiobanka refund/reversal path with redacted provider evidence]`.
-- `[MISSING: owner-approved post-paid Orders/Warehouse correction packet for a completed provider payment]`.
+- `[MISSING: Fiobanka provider-side unpaid cancel/void operation; payment row remains provider-processing because no provider cancel endpoint exists]` for future stop-before-paid provider cleanup semantics.
+- `[MISSING: completed-payment Fiobanka refund/reversal path with redacted provider evidence]` for future linked completed-payment smokes.
+- `[MISSING: owner-approved post-paid Orders/Warehouse correction packet for a completed provider payment]` for future exact linked order/stock correction.
 - `[RESOLVED/NARROWED: Payments b19e3b5 records owner-approved read-only Fiobanka polling run and redacted real CZK transaction match for retained Goal 24 variable-symbol hash d7512419521d2cab without token/raw payload output]` as transaction-polling authenticity evidence.
-- `[MISSING: official/native Fio Banka callback signature contract]` if native bank-originated signatures are required.
+- `[MISSING: official/native Fio Banka callback signature contract]` only if native bank-originated signatures are required instead of accepted transaction polling.
 
 Validation boundary: this runtime smoke did not perform a paid bank transfer, provider completed callback, provider refund/reversal, direct DB state correction, direct stock edit, migration, deployment after smoke, marketplace/feed mutation, raw provider payload output, or secret output.
 
@@ -199,7 +199,7 @@ Owner selected the full paid/refund path after the stop-before-paid smoke. Payme
 
 Catalog reconciliation result: full paid/refund is still blocked, but a false-positive refund path was removed. Fiobanka `refundPayment()` now throws until an owner-approved manual bank transfer/reversal workflow exists. No paid transfer, provider refund/reversal, bank API mutation, Orders mutation, Warehouse mutation, channel cleanup, DB edit, secret output, or raw provider/customer/payment evidence was performed.
 
-Remaining blockers: `[MISSING: owner-approved manual Fiobanka completed-transfer refund/reversal workflow with redacted provider/bank evidence]`, `[MISSING: owner-approved post-paid Orders/Warehouse correction packet for a completed provider payment]`, `[RESOLVED/NARROWED: Payments b19e3b5 records owner-approved read-only Fiobanka polling run and redacted real CZK transaction match for retained Goal 24 variable-symbol hash d7512419521d2cab without token/raw payload output]` as transaction-polling authenticity evidence, and `[MISSING: official/native Fio Banka callback signature contract]` if native bank-originated signatures are required.
+Retained-evidence closeout decision supersedes the linked post-paid correction blocker for this specific evidence payment: `[RESOLVED: owner accepted owner-confirmed manual Fiobanka refund as sufficient Goal 24 closeout without exact order linkage]` and `[RESOLVED/NARROWED: runtime readback found no linked central Orders or FlipFlop state, so no Orders/Warehouse post-paid correction is required for this evidence-only closeout]`. Future-only blockers remain `[MISSING: owner-approved manual Fiobanka completed-transfer refund/reversal workflow with redacted provider/bank evidence]`, `[MISSING: owner-approved post-paid Orders/Warehouse correction packet for a completed provider payment]`, and `[MISSING: official/native Fio Banka callback signature contract]` if native bank-originated signatures are required.
 
 ## 2026-07-03 Manual Fiobanka Refund Workflow Clarification
 
@@ -214,3 +214,7 @@ Resolved/narrowed blockers: `[RESOLVED/NARROWED: owner-confirmed manual Fiobanka
 Sanitized readback summary: completed Fiobanka rows checked `2`; selected retained evidence payment hash `9fa68d05c012c879`, provider suffix `9053`, amount `1.00 CZK`, status `completed`, `refundedAtPresent=false`; selected payment metadata lacks FlipFlop and central Orders ids; Orders lookup `found=false`; FlipFlop local order lookup `foundCount=0`.
 
 Owner closeout decision: `[RESOLVED: owner accepted owner-confirmed manual Fiobanka refund as sufficient Goal 24 closeout without exact order linkage]`. `[RESOLVED/NARROWED: runtime readback found no linked central Orders or FlipFlop state, so no Orders/Warehouse post-paid correction is required for this evidence-only closeout]`. The exact-linkage blockers are waived for this retained evidence closeout only; future paid/provider smokes still require exact linkage before execution.
+
+## 2026-07-03 Retained Evidence Closeout Supersession
+
+The retained 1 CZK Fiobanka evidence path is closed by owner acceptance without exact order linkage: `[RESOLVED: owner accepted owner-confirmed manual Fiobanka refund as sufficient Goal 24 closeout without exact order linkage]`. Runtime readback found no linked central Orders or FlipFlop state, so no Orders/Warehouse post-paid correction is required for this evidence-only closeout. Any exact-linkage, FlipFlop refunded readback, and post-paid Orders/Warehouse correction markers that remain in this report are future-only gates for new linked paid/provider smokes, not blockers for this retained evidence closeout.
