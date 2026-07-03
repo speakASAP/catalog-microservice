@@ -78,8 +78,9 @@ Follow-up read-only evidence on 2026-07-03 confirmed the Orders replay endpoint,
 - `[MISSING: non-empty real Aukro multi-Catalog-product replay evidence]`
 - `[MISSING: owner-approved Aukro recurring schedule activation policy]`
 - `[RESOLVED: Catalog standalone bundle aggregate API and persistence contract design owner-ready in docs/contracts/catalog-bundle-aggregate-v1.md]`
-- `[MISSING: owner acceptance of catalog.bundle.v1 design before source implementation]`
-- `[MISSING: Catalog additive migration/API implementation for catalog.bundle.v1]`
+- `[RESOLVED: owner accepted catalog.bundle.v1 source implementation gate in Codex thread on 2026-07-03]`
+- `[RESOLVED: Catalog additive migration/API source implemented for catalog.bundle.v1 in branch goal24-catalog-bundle-api]`
+- `[MISSING: owner-approved Catalog bundle aggregate migration application/deploy/runtime smoke]`
 - `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
 - `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
 - `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
@@ -152,6 +153,22 @@ Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task ->
 - State Update: broad owner-retention blocker resolved and Marketing ledger proof is deployed/smoked; scheduled replacement still requires source-specific producer completeness and owner-reviewed publish windows.
 
 Selected policy: only the `replace-window` endpoint may prune `marketing_order_affinity` rows, and only when existing `evidence.orderAffinityWindow` exactly matches the incoming `sourceOwner`, `channel`, `windowStart`, `windowEnd`, and `runId`. Catalog does not support time-based deletion, score/confidence decay, manual/non-window pruning, standalone prune-window cleanup, or legacy-row archival. Legacy rows without exact matching window evidence are retained additively unless owners later approve a separate archival contract.
+
+
+## 2026-07-03 B1.1 Catalog Bundle Aggregate API Source
+
+Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update.
+
+- Vision: Catalog can expose durable bundle identity without owning checkout, stock, payment, or marketplace publication.
+- Goal Impact: Catalog-owned additive source resolves the `catalog.bundle.v1` implementation blocker and leaves runtime/downstream gates explicit.
+- System: Catalog owns bundle aggregate metadata over existing products only; Orders/Warehouse/Payments/FlipFlop retain their boundaries.
+- Feature: protected create/read/list/update/activate/archive API plus additive persistence.
+- Task: implement `src/bundles/*`, migration, focused tests, and docs/state evidence.
+- Execution Plan: `implementation-goals/GOAL-24-bundle-aggregate-api-execution-plan.md`.
+- Coding Prompt: no SKU, no final totals, no orders, no reservations, no payments, no marketplace publication, fail closed on missing downstream contracts.
+- Code: `src/bundles/*`, `src/app.module.ts`, `scripts/migrations/20260703_catalog_bundle_aggregate.sql`, validation/status docs.
+- Validation: docs-rag retrieval HTTP 200 with indexed context; pre-coding scripts missing; focused bundles Jest passed 1 suite/7 tests; `npm run build` passed; `git diff --check` passed.
+- State Update: source implementation is complete; migration application/deploy/runtime smoke and downstream commerce contracts remain gated.
 
 ## Rollback Notes
 

@@ -2,7 +2,7 @@
 
 ```yaml
 id: CATALOG-BUNDLE-COMMERCE-CONTRACT
-status: accepted-contract-b1-design-ready
+status: accepted-contract-b1-source-implemented
 owner: catalog-commerce-integration-owner
 created: 2026-07-03
 scope: ecosystem bundle identity, presentation, checkout-smoke, and service ownership boundaries
@@ -134,11 +134,17 @@ Rung 2, still gated by explicit owner approval, live create without paid/provide
 
 Anything beyond Rung 2 remains `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]`.
 
+
+## 2026-07-03 Catalog Source Implementation Update
+
+Catalog B1.1 source implementation is complete on branch `goal24-catalog-bundle-api`: additive bundle aggregate tables, protected API/service, idempotency conflict handling, fail-closed activation, and focused tests. Runtime migration/deploy/smoke remain owner-gated.
+
 ## Remaining Blockers
 
 - `[RESOLVED: Catalog standalone bundle aggregate API and persistence contract design owner-ready in docs/contracts/catalog-bundle-aggregate-v1.md]`
-- `[MISSING: owner acceptance of catalog.bundle.v1 design before source implementation]`
-- `[MISSING: Catalog additive migration/API implementation for catalog.bundle.v1]`
+- `[RESOLVED: owner accepted catalog.bundle.v1 source implementation gate in Codex thread on 2026-07-03]`
+- `[RESOLVED: Catalog additive migration/API source implemented for catalog.bundle.v1 in branch goal24-catalog-bundle-api]`
+- `[MISSING: owner-approved Catalog bundle aggregate migration application/deploy/runtime smoke]`
 - `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
 - `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
 - `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`

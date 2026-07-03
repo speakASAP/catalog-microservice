@@ -2,7 +2,7 @@
 
 ```yaml
 id: CATALOG-BUNDLE-AGGREGATE-V1
-status: owner-ready-design
+status: source-implemented-pending-runtime
 owner: catalog-commerce-integration-owner
 created: 2026-07-03
 scope: standalone Catalog bundle aggregate API and persistence proposal
@@ -283,6 +283,13 @@ Validation owner: final integration validator.
 
 Merge order: Catalog aggregate identity first, Orders metadata second, Warehouse component reservation sign-off third, Payments metadata allowlist fourth, FlipFlop display/smoke fifth, cross-repo integration last.
 
+
+## 2026-07-03 Source Implementation Update
+
+Owner acceptance for B1.1 source implementation was received in the Codex thread. Catalog now has additive source for `catalog.bundle.v1`: protected create/read/list/update/activate/archive endpoints, TypeORM entities, focused service tests, and migration file `scripts/migrations/20260703_catalog_bundle_aggregate.sql`.
+
+The implementation remains source-only until the owner approves migration application, deployment, and runtime smoke. It does not create product SKUs, carts, orders, payments, reservations, stock records, marketplace listings, or payable totals.
+
 ## Remaining Blockers
 
 Resolved by this design:
@@ -291,8 +298,9 @@ Resolved by this design:
 
 Still blocked before runtime selling:
 
-- `[MISSING: owner acceptance of catalog.bundle.v1 design before source implementation]`
-- `[MISSING: Catalog additive migration/API implementation for catalog.bundle.v1]`
+- `[RESOLVED: owner accepted catalog.bundle.v1 source implementation gate in Codex thread on 2026-07-03]`
+- `[RESOLVED: Catalog additive migration/API source implemented for catalog.bundle.v1 in branch goal24-catalog-bundle-api]`
+- `[MISSING: owner-approved Catalog bundle aggregate migration application/deploy/runtime smoke]`
 - `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
 - `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
 - `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
