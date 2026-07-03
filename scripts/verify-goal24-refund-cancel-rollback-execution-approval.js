@@ -12,6 +12,8 @@ const requiredMarkers = [
   '## Refund/Cancel Rollback Execution Approval Decision',
   'This packet does not authorize any refund, cancel, void, reversal, live checkout, provider redirect, webhook replay, Orders mutation, Warehouse mutation, or channel cleanup beyond the retained owner-confirmed 1 CZK Fiobanka evidence payment.',
   '[MISSING: owner-approved refund/cancel rollback execution approval for future paid/provider smoke beyond the retained 1 CZK Fiobanka evidence payment]',
+  '[MISSING: runtime FIO_BANKA_API_KEY read-token configuration and owner-approved polling run evidence]',
+  '[RESOLVED/NARROWED: deployed ready Payments pod has FIO_BANKA_WEBHOOK_SECRET present and healthy without secret output]',
   '[MISSING: named Payments/provider rollback execution owner]',
   '[MISSING: owner-approved Orders cancellation/refund correction actor, reason, sideEffectsHandled acknowledgement, and route]',
   '[MISSING: side-effectful rollback run id and cleanup idempotency keys]',
@@ -40,4 +42,6 @@ assert(packet.includes('`return` for approved physical return'), 'Warehouse retu
 assert(packet.includes('Exact FlipFlop/customer-visible cleanup'), 'FlipFlop channel cleanup ownership missing');
 assert(packet.includes('one Payments idempotency key anchored to the central Orders UUID'), 'Payments idempotency requirement missing');
 
+assert(!packet.includes('[MISSING: runtime FIO_BANKA_WEBHOOK_SECRET configuration and deployment verification]'), 'approval packet still has stale runtime HMAC blocker');
+assert(!report.includes('[MISSING: runtime FIO_BANKA_WEBHOOK_SECRET configuration and deployment verification]'), 'validation report still has stale runtime HMAC blocker');
 console.log('Goal 24 refund/cancel rollback execution approval gate verified');
