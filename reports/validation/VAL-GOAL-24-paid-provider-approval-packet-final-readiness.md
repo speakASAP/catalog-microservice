@@ -284,7 +284,7 @@ The retained 1 CZK Fiobanka evidence path is closed by owner acceptance without 
 
 ## 2026-07-04 Catalog Final Reconciliation Lane 6
 
-Current heads consumed in this final reconciliation: Catalog `d49c150`, FlipFlop `31845ef`, Payments `038c8e3`, Orders `e3f6e18`, Warehouse `46a66dc`, Allegro `60fb3f3`, Aukro `e264a34`, and Bazos `053a4d3`. FlipFlop `31845ef` narrows only source/verifier correctness for Goal 24 fixture discount normalization; Catalog now has deployed/runtime quote evidence and keeps `[RESOLVED/NARROWED: deployed FlipFlop bundle-preserving fixture gate and runtime quote preflight evidence passed before checkout at 300 CZK with sideEffects=[]]`.
+Current heads consumed in this final reconciliation: Catalog `33f57d6`, FlipFlop `31845ef`, Payments `038c8e3`, Orders `e3f6e18`, Warehouse `46a66dc`, Allegro `60fb3f3`, Aukro `e264a34`, and Bazos `053a4d3`. FlipFlop `31845ef` narrows only source/verifier correctness for Goal 24 fixture discount normalization; Catalog now has deployed/runtime quote evidence and keeps `[RESOLVED/NARROWED: deployed FlipFlop bundle-preserving fixture gate and runtime quote preflight evidence passed before checkout at 300 CZK with sideEffects=[]]`.
 
 `[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]` remains unresolved. exact field required before any side-effectful smoke: source-controlled `approvalWindow` with calendar date, start time, end time, timezone, maximum duration, allowed retry count, and non-secret approval id/owner reference. Broad approval for this reconciliation is not enough to infer those timestamp/owner facts.
 
