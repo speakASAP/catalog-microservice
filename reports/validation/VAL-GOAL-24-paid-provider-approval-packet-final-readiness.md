@@ -128,3 +128,13 @@ Decision: the packet is no longer missing basic owner inputs, but the live paid/
 ## State Update
 
 The final source/dry-run verifier stage is current and fail-closed. No live paid/provider checkout or external channel publication is approved by this validation.
+
+## 2026-07-03 Refund/Cancel Rollback Execution Approval Refresh
+
+Catalog added a machine-checked rollback execution approval decision to `docs/orchestrator/2026-07-03-goal24-paid-provider-smoke-approval-packet.md`.
+
+Decision: `[MISSING: owner-approved refund/cancel rollback execution approval for future paid/provider smoke beyond the retained 1 CZK Fiobanka evidence payment]` remains fail-closed. The packet now states exactly when rollback can execute: a future source-controlled run packet must name the provider rollback operation, Payments/provider owner, Orders cleanup route/actor/reason/sideEffectsHandled acknowledgement, Warehouse cleanup operation for each component state, FlipFlop channel cleanup, idempotency keys, redaction policy, and hard-stop authority with no `[MISSING: ...]` entry on the selected path.
+
+The retained 1 CZK Fiobanka evidence payment is completion evidence only. It is not authorization for a future refund, cancel, reversal, webhook replay, Orders cleanup, Warehouse cleanup, channel cleanup, or another paid/provider smoke. For selected Fiobanka QR, the only currently source-supported side-effect-safe rollback remains stop-before-paid.
+
+No live checkout, provider call, webhook replay, refund/cancel/reversal, Orders mutation, Warehouse mutation, channel cleanup, deploy, migration, DB mutation, or secret output occurred.
