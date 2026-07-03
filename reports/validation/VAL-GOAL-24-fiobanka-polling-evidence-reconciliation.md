@@ -5,7 +5,7 @@ Metadata:
   date: 2026-07-03
   repository: /home/ssf/Documents/Github/catalog-microservice
   source_repository: /home/ssf/Documents/Github/payments-microservice
-  source_head: b19e3b5
+  source_head: 27f3f73
   json_api_fix: 9718efd
   status: polling-authenticity-evidence-consumed
 
@@ -26,7 +26,7 @@ Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding P
 
 ## Consumed Payments Evidence
 
-Payments `main` at `b19e3b5` records:
+Payments `main` at `27f3f73` records, retaining the `b19e3b5` polling evidence:
 
 - JSON API polling fix `9718efd`.
 - Runtime `FIO_BANKA_API_KEY_CZK_PRESENT=true`, `FIO_BANKA_API_KEY_EUR_PRESENT=true`, distinct keys, and no token value output.
@@ -36,7 +36,7 @@ Payments `main` at `b19e3b5` records:
 
 ## Resolved/Narrowed
 
-- `[RESOLVED/NARROWED: Payments b19e3b5 records owner-approved read-only Fiobanka polling run and redacted real CZK transaction match for retained Goal 24 variable-symbol hash d7512419521d2cab without token/raw payload output]`.
+- `[RESOLVED/NARROWED: Payments 27f3f73 retains owner-approved read-only Fiobanka polling run and redacted real CZK transaction match for retained Goal 24 variable-symbol hash d7512419521d2cab without token/raw payload output]`.
 - `[RESOLVED/NARROWED: transaction-polling authenticity path is available for selected Fiobanka QR unless owner still requires official/native signed callbacks]`.
 
 ## Still Blocked
