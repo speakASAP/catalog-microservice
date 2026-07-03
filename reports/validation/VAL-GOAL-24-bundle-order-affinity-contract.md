@@ -107,16 +107,19 @@ Key decisions:
 
 - Marketplace services must own protected replay endpoints or equivalent owner-run exports for their local order history.
 - Allegro is the first ready producer because its one-time qualified evidence already published 16 Catalog relations.
-- Marketing must add parser/normalizer support for marketplace-owned source envelopes; the current parser only accepts `source=orders-microservice`, and the direct `source=allegro-service` dry-run failed closed with `order_event_source_invalid=8`.
-- Marketing must add a durable backfill run ledger and scheduled dry-run-first orchestration before marketplace-wide automation.
+- Marketing now has parser/normalizer support for marketplace-owned source envelopes on `main` and runtime evidence for Allegro replay.
+- Marketing now has a durable aggregate-only backfill run ledger, idempotency registry, complete-snapshot proof, and scheduled dry-run-first orchestration before marketplace-wide automation.
 - Catalog now has a source/window scoped replacement API and conservative owner-approved retention policy: exact source/window replacement only, no time-based deletion or decay, and additive retention for legacy rows without matching window evidence.
 
 New blockers:
 
-- `[MISSING: Marketing parser support for marketplace-owned replay source envelopes]`
-- `[MISSING: durable Marketing backfill run ledger and idempotency key registry]`
+- `[RESOLVED: Marketing parser support for marketplace-owned replay source envelopes]`
+- `[RESOLVED: durable Marketing backfill run ledger, complete-snapshot proof, and idempotency key registry]`
 - `[RESOLVED: Allegro-owned protected replay endpoint so future runs do not require a temporary SQL export]`
-- `[MISSING: scheduled dry-run matrix across Allegro, Aukro, Bazos, FlipFlop, and central Orders]`
+- `[RESOLVED: scheduled dry-run matrix for central Orders, FlipFlop, Allegro, and Aukro zero-row dry-run]`
+- `[MISSING: Bazos protected replay endpoint compatible with Marketing marketplace replay contract]`
+- `[MISSING: non-empty real Aukro multi-Catalog-product replay evidence]`
+- `[MISSING: owner-approved Aukro recurring schedule activation policy]`
 - `[RESOLVED: Catalog source/window scoped stale-affinity replacement API]`
 
 ## Local Validation
@@ -145,7 +148,7 @@ Ready source contracts:
 Dependency-gated runtime actions:
 
 - Non-empty historical replay publish is gated by qualifying paid multi-product Orders rows.
-- Any future publish run requires owner-reviewed mutation scope, Marketing ledger proof, producer completeness proof, and the conservative exact source/window replacement policy.
+- Any future publish run requires owner-reviewed mutation scope, recorded Marketing ledger proof for the exact source/window, producer completeness proof, and the conservative exact source/window replacement policy.
 
 Blocked ecosystem bundle selling:
 
@@ -170,7 +173,7 @@ Conclusion: docs-rag JWT_TOKEN access is resolved for Goal 24. Remaining blocker
 - `[MISSING: docs-rag indexed Catalog Goal 24 order-affinity context]`
 - `[MISSING: qualifying historical paid multi-product Orders rows for non-empty central Orders replay evidence]`
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill from live central Orders]`
-- `[RESOLVED: conservative exact source/window replacement policy; remaining gates are Marketing ledger, producer completeness, and owner-reviewed publish window]`
+- `[RESOLVED: conservative exact source/window replacement policy; remaining gates are recorded per-window Marketing ledger proof, producer completeness, and owner-reviewed publish window]`
 - `[MISSING: Catalog standalone bundle aggregate API and persistence contract]`
 - `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
 - `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
@@ -184,9 +187,9 @@ Conclusion: docs-rag JWT_TOKEN access is resolved for Goal 24. Remaining blocker
 - `ready now`: Orders replay contract maintenance. Owner role: Orders worker. Scope: source-only verifier/fix lane for replay event shape and filtering.
 - `ready now`: Marketing dry-run/export/backfill hardening. Owner role: Marketing worker. Scope: source-only verifier/fix lane for dry-run aggregation and Catalog publisher guards.
 - `ready now`: Catalog relation API maintenance. Owner role: Catalog worker. Scope: protected related-products, bundle-candidates, and internal batch endpoint maintenance.
-- `active elsewhere`: Marketing ledger worker. Owner role: Marketing ledger worker. Dependencies: parser support, run ledger, idempotency registry, complete source/window accounting. Handoff required before this thread marks the ledger blocker resolved.
+- `complete`: Marketing parser/ledger worker. Owner role: Marketing worker. Evidence: Marketing `main` at `0aa47ed` includes parser/token/ledger/source-window proof and runtime validation reports.
 - `active elsewhere`: marketplace producer worker. Owner role: marketplace producer worker. Dependencies: protected repeatable producer endpoint/export, completeness proof, producer validation. Handoff required before this thread marks producer completeness resolved.
-- `dependency-gated`: non-empty affinity publish. Owner role: integration validator. Dependencies: qualifying rows, publish window, Marketing ledger proof, marketplace producer completeness, and conservative replacement policy.
+- `dependency-gated`: non-empty affinity publish. Owner role: integration validator. Dependencies: qualifying rows, publish window, recorded Marketing ledger proof for the exact source/window, marketplace producer completeness, and conservative replacement policy.
 - `dependency-gated`: Catalog durable bundle aggregate/API. Owner role: commerce/Catalog architect. Dependency: ownership decision.
 - `blocked`: real ecosystem bundle selling. Owner role: FlipFlop/Orders/Payments/Warehouse integration. Dependencies: order, stock, payment, discount, and smoke contracts.
 
@@ -200,7 +203,7 @@ Merge order: Marketing ledger worker handoff, marketplace producer worker handof
 
 ## Next Action
 
-Implement W1 Allegro protected replay producer or owner-run CLI export, then update Marketing parser support for marketplace-owned replay envelopes before enabling any scheduled publish.
+Continue non-Allegro producer closure: Bazos needs a compatible protected replay endpoint, Aukro needs non-empty real multi-product evidence plus owner schedule activation approval, and any future replace-window/publish needs owner-reviewed source/window approval.
 
 
 ## Bundle Commerce Contract Decision Refresh

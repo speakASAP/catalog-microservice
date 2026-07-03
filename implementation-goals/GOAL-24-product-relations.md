@@ -69,9 +69,11 @@ Follow-up read-only evidence on 2026-07-03 confirmed the Orders replay endpoint,
 - `[MISSING: scripts/strict_doc_audit.py]`
 - `[MISSING: qualifying historical paid multi-product Orders rows for non-empty replay evidence]`
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`
-- `[MISSING: Marketing durable run ledger proving a complete source/window snapshot]`
+- `[RESOLVED: Marketing durable run ledger proving a complete source/window snapshot]`
 - `[RESOLVED: Allegro protected repeatable replay producer completeness]`
-- `[MISSING: non-Allegro marketplace producer completeness for scheduled matrix]`
+- `[MISSING: Bazos protected replay endpoint compatible with Marketing marketplace replay contract]`
+- `[MISSING: non-empty real Aukro multi-Catalog-product replay evidence]`
+- `[MISSING: owner-approved Aukro recurring schedule activation policy]`
 - `[MISSING: Catalog standalone bundle aggregate API and persistence contract]`
 - `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
 - `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
@@ -89,15 +91,15 @@ Current lanes:
 
 - `ready now`: Orders replay contract maintenance. Owner role: Orders worker. Scope: keep `orders.order.created.v1` item snapshots and replay verifier compatible with Marketing/Catalog affinity replay. Expected output: source-only verification or bounded fixes in Orders. Validation: `npm run verify:order-affinity-replay`.
 - `ready now`: Marketing dry-run/export/backfill hardening. Owner role: Marketing worker. Scope: keep the backfill CLI, aggregation, and Catalog publisher safe and dry-run-first. Expected output: source-only verification or bounded fixes in Marketing. Validation: focused order-affinity backfill tests and non-mutating dry-run.
-- `active elsewhere`: Marketing ledger worker. Owner role: Marketing ledger worker. Scope: prove durable run ledger, idempotency key registry, dry-run summaries, and complete source/window snapshot accounting. Expected output: worker handoff with commit, tests, and ledger evidence. Blocker until handoff: `[MISSING: Marketing durable run ledger proving a complete source/window snapshot]`.
+- `complete`: Marketing parser/ledger worker. Owner role: Marketing worker. Result: Marketing `main` at `0aa47ed` includes marketplace envelope parsing, source-specific token mapping, aggregate-only run ledger, complete-snapshot proof, idempotency registry, scheduled publish ledger guard, and runtime evidence for Allegro plus Aukro zero-row dry-run.
 - `complete`: W1 Allegro replay producer. Owner role: Allegro worker. Result: Allegro `main` has protected repeatable replay producer handoff at `37a5add` and hardened producer source already on `main`; remaining producer work is non-Allegro scheduled matrix coverage.
 - `ready now`: Catalog product relation API maintenance. Owner role: Catalog worker. Scope: maintain protected related-products, bundle-candidates, and internal batch endpoint. Validation: focused product-relations Jest and `git diff --check`.
-- `dependency-gated`: Non-empty historical affinity publish. Owner role: integration validator. Blockers: `[MISSING: qualifying historical paid multi-product Orders rows for non-empty replay evidence]`, `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`, and `[RESOLVED: conservative exact source/window replacement policy; remaining gates are Marketing ledger, producer completeness, and owner-reviewed publish window]`.
+- `dependency-gated`: Non-empty historical affinity publish. Owner role: integration validator. Blockers: `[MISSING: qualifying historical paid multi-product Orders rows for non-empty replay evidence]`, `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`, and source-specific producer completeness/activation gates for non-Allegro sources.
 - `ready now`: Catalog standalone bundle aggregate contract design. Owner role: Catalog/commerce architect. Scope: define `catalog.bundle.v1` API/persistence plan from `docs/contracts/catalog-bundle-commerce-contract.md`; source implementation remains gated until the plan is accepted.
 - `dependency-gated`: Marketplace/operator bundle suggestions. Owner role: channel worker. Blocker: `[MISSING: channel-specific external marketplace bundle publication policies]`.
 - `dependency-gated`: Ecosystem real bundle selling beyond the existing FlipFlop-local bundle intent. Blockers: `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`, `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`, `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`, and `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`.
 
-Shared files/contracts: `docs/contracts/catalog-product-relations.md`, `docs/contracts/catalog-bundle-commerce-contract.md`, Orders create-order contract, Warehouse reservation contract, Payments create-payment validation contract, FlipFlop GOAL-13 bundle intent docs, and Marketing orders-events integration contract. Integration owner: original Codex thread `019f2683-0cac-7ec0-b4cf-8fe83e07a74e` until a commerce integration owner is assigned. Validation owner: integration validator in the original thread. Merge order: Marketing ledger worker handoff, marketplace producer worker handoff, Catalog integration reconciliation, then owner-reviewed runtime publish or checkout implementation only after all gates are proven.
+Shared files/contracts: `docs/contracts/catalog-product-relations.md`, `docs/contracts/catalog-bundle-commerce-contract.md`, Orders create-order contract, Warehouse reservation contract, Payments create-payment validation contract, FlipFlop GOAL-13 bundle intent docs, and Marketing orders-events integration contract. Integration owner: original Codex thread `019f2683-0cac-7ec0-b4cf-8fe83e07a74e` until a commerce integration owner is assigned. Validation owner: integration validator in the original thread. Merge order: Marketing parser/ledger handoff complete, Allegro producer handoff complete, Catalog integration reconciliation, then owner-reviewed runtime publish or checkout implementation only after all source-specific gates are proven.
 
 ## 2026-07-03 Parallel Worker Wave
 
@@ -142,7 +144,7 @@ Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task ->
 - Coding Prompt: choose exact source/window replacement only, retain legacy/non-window rows, and avoid invented archival or decay behavior.
 - Code: Goal 24 contracts/status/validation docs only.
 - Validation: `git diff --check`; no source tests required for docs-only policy update.
-- State Update: broad owner-retention blocker resolved; scheduled replacement remains gated by Marketing ledger, producer completeness, owner-reviewed publish windows, deployment approval, and protected runtime smoke.
+- State Update: broad owner-retention blocker resolved; scheduled replacement requires recorded Marketing ledger proof per exact source/window, producer completeness, owner-reviewed publish windows, deployment approval, and protected runtime smoke.
 
 Selected policy: only the `replace-window` endpoint may prune `marketing_order_affinity` rows, and only when existing `evidence.orderAffinityWindow` exactly matches the incoming `sourceOwner`, `channel`, `windowStart`, `windowEnd`, and `runId`. Catalog does not support time-based deletion, score/confidence decay, manual/non-window pruning, standalone prune-window cleanup, or legacy-row archival. Legacy rows without exact matching window evidence are retained additively unless owners later approve a separate archival contract.
 
