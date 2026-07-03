@@ -130,5 +130,7 @@ Aukro policy evidence:
 
 Still blocked before external bundle publication:
 
-- `[MISSING: owner-approved channel implementation contract before any Catalog bundle becomes one external marketplace offer/listing/feed item]`
+- `[RESOLVED/NARROWED: owner-approved channel implementation contract defined in docs/contracts/catalog-bundle-paid-provider-channel-implementation-contract.md]`
+- `[MISSING: selected first channel for external bundle implementation canary]`
+- `[MISSING: owner-approved live test listing/feed/import plan and cleanup plan]`
 - `[MISSING: downstream Orders/Warehouse/Payments/shipping contracts for paid/provider bundle selling beyond current pending-order evidence]`

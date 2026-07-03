@@ -132,7 +132,7 @@ Rung 2, still gated by explicit owner approval, live create without paid/provide
 - Warehouse reservation may be exercised only if the owner approves stock hold/release side effects and the test plan includes immediate release/cancel evidence.
 - Do not mark paid, simulate provider webhooks, fulfill stock, decrement stock, issue refunds, publish marketplace offers, or mutate real customer data.
 
-Anything beyond Rung 2 remains `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]`.
+Anything beyond Rung 2 is now contract-approved but runtime-gated by `docs/contracts/catalog-bundle-paid-provider-channel-implementation-contract.md`. The prior broad blocker is narrowed to `[RESOLVED/NARROWED: owner-approved paid/provider checkout implementation contract defined in docs/contracts/catalog-bundle-paid-provider-channel-implementation-contract.md]`; live paid/provider execution still remains blocked by missing target, payment mode, stock window, provider-status, refund/cancel, and rollback facts.
 
 Rung 2 owner-approved evidence completed on 2026-07-03: one pending two-line Orders create over active Catalog bundle `919be990-1c76-4f9c-b100-829281c6a709` reserved both Warehouse component lines, then Payments-owned cancelled status released both reservations back to baseline. This proves pending-order/reservation mechanics only; it does not approve paid/provider checkout, fulfillment, refunds, external marketplace publication, or channel-visible bundle selling.
 
