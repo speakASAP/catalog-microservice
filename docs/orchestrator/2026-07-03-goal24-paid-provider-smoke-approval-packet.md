@@ -117,16 +117,34 @@ Retained manual-refund evidence is closed by owner acceptance without exact orde
 
 The prior approval window expired at `2026-07-03T23:59:59+02:00`; remote continuation readback was `2026-07-04T00:00:06+02:00`. The old approval id must not be reused for a new side-effectful checkout/payment attempt.
 
-Catalog reconciles FlipFlop `fbe585c test: align goal24 paid provider verifier`, Payments `ae51d7e merge goal24 stale polling marker cleanup`, and Orders `9f89e74 Sync Goal 24 terminal-state verifier marker` as dependency evidence only. FlipFlop records an owner-approved server-validated discount/price fixture path for a future exact linked paid/provider smoke, but runtime preflight stopped before side effects because guarded discount-code generation returned `401 Unauthorized` without a named admin/actor or approved token-handling path.
+Catalog reconciles FlipFlop `9b57abe fix: normalize goal24 fixture discount value`, Payments `ae51d7e merge goal24 stale polling marker cleanup`, Orders `9f89e74 Sync Goal 24 terminal-state verifier marker`, Warehouse `9f8b438 docs: narrow goal24 warehouse cleanup states`, plus read-only channel heads Allegro `60fb3f3` and Aukro `e264a34` as dependency evidence only. FlipFlop `9b57abe` supersedes `fbe585c` by normalizing the Goal 24 fixture discount value in source/verifier state, but Catalog still has no deployed/runtime quote evidence. The future exact linked paid/provider smoke remains hard-stopped because guarded discount-code generation requires a named admin/actor or approved token-handling path and the expired approval window has not been replaced.
 
 Current hard stops before any exact linked paid/provider attempt:
 
-- `[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]`.
+- `[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]`; exact field required: `approvalWindow` with calendar date, start time, end time, timezone, maximum duration, allowed retry count, and non-secret approval id/owner reference for this new side-effectful smoke.
 - `[MISSING: named admin/actor or approved token-handling path for guarded discount-code generation]`.
 - `[MISSING: named runtime validation owner for the exact side-effectful smoke]`.
 - `[MISSING: named FlipFlop channel cleanup executor]`.
 
 Boundary: no discount code, checkout, order, payment, provider call, Warehouse reservation, Orders mutation, FlipFlop mutation, DB write, deploy, migration, secret/token output, raw customer/order/payment/provider evidence, or marketplace/feed mutation is authorized by this packet until the fields above are source-controlled and owner-approved.
+
+## 2026-07-04 Catalog Final Reconciliation Of Current Heads
+
+Catalog final integration consumed current read-only heads: Catalog `9eea93b`, FlipFlop `9b57abe`, Payments `ae51d7e`, Orders `9f89e74`, Warehouse `9f8b438`, Allegro `60fb3f3`, Aukro `e264a34`, and Bazos `053a4d3`. FlipFlop `9b57abe` only narrows source/verifier correctness for the Goal 24 fixture discount normalization; it does not prove deployment, runtime quote, discount-code creation, checkout, provider, Orders, Warehouse, or cleanup execution.
+
+`[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]` remains unresolved because no source-controlled packet names the new `approvalWindow` exact date/start/end/timezone/max duration/allowed retry count and approval id/owner reference. The current broad owner approval is treated as permission for this docs/verifier reconciliation only, not as a fabricated smoke timestamp.
+
+Parallel execution state:
+
+| Workstream | Status | Owner role | Scope | Validation evidence | Merge order |
+| --- | --- | --- | --- | --- | --- |
+| Catalog final reconciliation | final integration complete after validation | Catalog integration owner | Catalog docs/verifier/status only | `npm run verify:goal24-refund-cancel-rollback-execution-approval`, `npm run build`, `git diff --check` | current commit |
+| FlipFlop runtime fixture quote | blocked | FlipFlop checkout/admin owner `[MISSING: named admin/actor or token-handling path]` | deploy/runtime quote and one-use discount-code path | `[MISSING: deployed FlipFlop bundle-preserving fixture gate and renewed runtime quote evidence]` | after renewed owner packet |
+| Provider rollback and cleanup owners | dependency-gated | Payments, Orders, Warehouse, FlipFlop cleanup owners | provider rollback, Orders cleanup, Warehouse state cleanup, channel cleanup | provider rollback proof, Orders actor/idempotency, Warehouse max quantity/hold-window, FlipFlop cleanup executor all remain `[MISSING]` | before any side-effectful smoke |
+| Final exact linked paid/provider smoke | blocked | runtime validation owner `[MISSING]` | one bounded side-effectful run | `[MISSING: approved live smoke validation]` | last only |
+
+Runtime remains fail-closed. No Catalog source behavior, checkout, discount code, order, payment, provider call, Warehouse reservation, Orders mutation, channel cleanup, deploy, migration, DB write, secret/token output, or raw customer/order/payment/provider evidence occurred in this reconciliation.
+
 
 ## Non-Approval Boundaries
 
