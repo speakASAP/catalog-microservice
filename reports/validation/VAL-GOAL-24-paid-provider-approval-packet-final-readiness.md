@@ -73,18 +73,18 @@ Result: passed before this report was staged. Final staged validation must rerun
 
 ## Repository State Observed
 
-- Catalog: clean `main...origin/main` at `923aaaa docs: record goal24 paid provider readiness validation`; the temporary approval-packet branch was fast-forward merged and deleted.
+- Catalog: clean `main...origin/main` before this reconciliation at `cc08e4f docs: mark goal24 intermediate payments head superseded`; this report is refreshed by the final reconciliation commit.
 - Heureka: clean `main...origin/main` at `25a5df3 docs: refresh goal25 heureka consumer validation`.
-- Payments: clean `main...origin/main` at `124256f docs: record goal24 fiobank paid callback smoke`. This supersedes `2614bb5` by adding owner-approved synthetic Fiobanka completed-callback evidence through `/webhooks/fiobanka`, while still blocking real bank-originated signature evidence, refund/cancel, Orders/Warehouse mutation, deploy, migration, and secret output.
+- Payments: clean `main...origin/main` at `f9d40a4 docs: add goal24 refund cancel rollback plan`. This supersedes `124256f` by adding a source-only refund/cancel rollback plan and verifier while still blocking provider-specific refund/cancel/reversal execution approval, real bank-originated signature evidence or approved provider fixture, Orders/Warehouse mutation, deploy, migration, and secret output.
 - Orders: clean `main...origin/main` at `62f5d62 Merge goal24 orders rollback gate`. This supersedes `47da581` by merging the Orders cancel/cleanup rollback policy gate, while preserving central Orders UUID, Payments token, provider rollback, Warehouse cleanup, and owner approval blockers.
-- Warehouse: clean `main...origin/main` at `ee65ee4 docs: verify bundle component rollback evidence` after fast-forward merge and worker branch deletion.
+- Warehouse: clean `main...origin/main` at `3043cad docs: define paid bundle cleanup semantics` after fast-forward merge and worker branch deletion. This supersedes `ee65ee4` by adding the source-policy cleanup operation matrix for reserved-only, fulfilled/stock-decremented, return, partial, and unknown component states.
 
 
 ## 2026-07-03 Continuation Head Refresh
 
 Current remote heads were refreshed after the original readiness report:
 
-- Payments `124256f docs: record goal24 fiobank paid callback smoke`: validates a synthetic Fiobanka bank-transfer payment shape, QR page creation path, and owner-approved synthetic completed callback through the deployed `/webhooks/fiobanka` route. It proves matched-payment completion without manual payment-state bypass, but does not prove real bank-originated callback/signature authenticity, refund/cancel rollback, Orders update, Warehouse cleanup, or live bundle checkout safety.
+- Payments `f9d40a4 docs: add goal24 refund cancel rollback plan`: validates a synthetic Fiobanka bank-transfer payment shape, QR page creation path, owner-approved synthetic completed callback through `/webhooks/fiobanka`, and source-only refund/cancel rollback packet requirements. It proves matched-payment completion without manual payment-state bypass and documents rollback gates, but does not prove real bank-originated callback/signature authenticity, provider-specific refund/cancel/reversal execution, Orders update, Warehouse cleanup execution, or live bundle checkout safety.
 - Orders `62f5d62 Merge goal24 orders rollback gate`: records that Orders can express rollback choreography only after Payments proves provider refund/cancel/reversal and the owner-approved runtime packet defines Orders cancellation actor/reason/side-effect acknowledgements plus Warehouse cleanup semantics.
 
 Decision: these newer heads improve source/runtime-readiness documentation but do not remove the live paid/provider blockers below.
@@ -94,15 +94,15 @@ Decision: these newer heads improve source/runtime-readiness documentation but d
 Current upstream evidence consumed by Catalog:
 
 - Orders `62f5d62 Merge goal24 orders rollback gate`: merged source/docs evidence that Orders can express completed, failed, and cancelled payment-status effects and owner-approved cancellation cleanup, but it still requires Payments-owned provider refund/cancel/reversal proof before any paid rollback.
-- Warehouse `ee65ee4 docs: verify bundle component rollback evidence`: `origin/main` source evidence verifies component-line hold, release, fulfill/decrement, cancel, expire, and return behavior. This resolves/narrows Warehouse lifecycle semantics as source evidence only; approved stock window, max quantity, and live canary remain missing.
+- Warehouse `3043cad docs: define paid bundle cleanup semantics`: `origin/main` source evidence verifies component-line hold, release, fulfill/decrement, cancel, expire, return behavior, and the cleanup operation matrix. This resolves/narrows Warehouse lifecycle and operation-selection semantics as source evidence only; approved stock window, max quantity, and live canary remain missing.
 - FlipFlop `23a901d Merge remote-tracking branch origin/main`: durable Catalog `bundleId` remains display/evidence-only. Runtime checkout submission of `bundleEvidence` and live paid/provider smoke remain blocked.
-- Payments `124256f docs: record goal24 fiobank paid callback smoke`: pushed main records pending Fiobanka QR creation plus owner-approved synthetic completed callback through `/webhooks/fiobanka`; Catalog treats this as dependency-gated evidence because it still records `[MISSING: real Fiobanka bank-originated callback/signature evidence beyond the current non-empty-signature placeholder verifier]` plus refund/cancel rollback blockers.
+- Payments `f9d40a4 docs: add goal24 refund cancel rollback plan`: pushed main records pending Fiobanka QR creation, owner-approved synthetic completed callback through `/webhooks/fiobanka`, and a source-only refund/cancel rollback plan; Catalog treats this as dependency-gated evidence because it still records `[MISSING: real Fiobanka bank-originated callback/signature evidence beyond the current non-empty-signature placeholder verifier]` plus provider-specific rollback execution blockers.
 
-Decision: upstream packets narrow source and route-level readiness but do not complete the owner-approved paid/provider checkout packet. Catalog must not reconcile this as live-smoke approval until pushed Payments owner evidence, provider-specific refund/cancel rollback, Orders/Warehouse cleanup semantics for the selected state, active checkout central Orders UUID propagation, and all approval-packet fields are present.
+Decision: upstream packets narrow source, route-level, rollback-plan, and Warehouse operation-selection readiness but do not complete the owner-approved paid/provider checkout packet. Catalog must not reconcile this as live-smoke approval until pushed Payments owner evidence, provider-specific refund/cancel/reversal execution approval, Orders/Warehouse cleanup execution inputs for the selected state, active checkout central Orders UUID propagation, and all approval-packet fields are present.
 
 ## Remaining Runtime Blockers
 
-- `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]`
+- `[MISSING: owner-approved paid/provider checkout smoke with stock and provider-specific refund/cancel rollback execution approval]`
 - `[MISSING: owner-approved paid/provider test window]`
 - `[MISSING: non-secret owner approval id for paid/provider smoke]`
 - `[MISSING: target active catalog.bundle.v1 bundle id approved for paid/provider smoke]`
@@ -113,7 +113,7 @@ Decision: upstream packets narrow source and route-level readiness but do not co
 - `[MISSING: sanitized evidence policy approved for paid/provider smoke]`
 - `[MISSING: approved Warehouse stock hold/release window and max quantity]`
 - `[MISSING: real Fiobanka bank-originated callback/signature evidence beyond the current non-empty-signature placeholder verifier]`
-- `[MISSING: owner-approved refund/cancel rollback plan proving provider refund or cancellation plus Orders/Warehouse cleanup]`
+- `[MISSING: owner-approved refund/cancel rollback execution approval proving provider refund, void, cancel, or reversal plus Orders/Warehouse cleanup for the selected method]`
 - `[MISSING: hard stop authority for paid/provider smoke]`
 - `[MISSING: dedicated paid/provider smoke owner]`
 - `[MISSING: runtime validation owner for live paid/provider bundle smoke]`
