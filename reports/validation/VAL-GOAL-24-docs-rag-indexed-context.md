@@ -47,8 +47,9 @@ Catalog docs/status reconciliation for the Goal 24 docs-rag indexed-context bloc
 - `[MISSING: Bazos order item ingestion contract]`
 - `[MISSING: non-empty real Aukro multi-Catalog-product replay evidence]`
 - `[MISSING: owner-approved Aukro recurring schedule activation policy]`
-- `[MISSING: deployed FlipFlop replay endpoint/runtime smoke]`
-- `[MISSING: owner-approved FlipFlop marketplace replay activation policy]`
+- `[RESOLVED: deployed FlipFlop replay endpoint/runtime smoke]`
+- `[RESOLVED: owner-approved conservative FlipFlop marketplace replay activation policy - no recurring marketplace CronJob, publish, or replace-window activation without future explicit source/window approval]`
+- `[MISSING: owner-approved FlipFlop recurring marketplace publish/replace-window schedule activation]`
 
 ## Parallel Execution
 
