@@ -189,3 +189,11 @@ Owner selected the full paid/refund path after the stop-before-paid smoke. Payme
 Catalog reconciliation result: full paid/refund is still blocked, but a false-positive refund path was removed. Fiobanka `refundPayment()` now throws until an owner-approved manual bank transfer/reversal workflow exists. No paid transfer, provider refund/reversal, bank API mutation, Orders mutation, Warehouse mutation, channel cleanup, DB edit, secret output, or raw provider/customer/payment evidence was performed.
 
 Remaining blockers: `[MISSING: owner-approved manual Fiobanka completed-transfer refund/reversal workflow with redacted provider/bank evidence]`, `[MISSING: owner-approved post-paid Orders/Warehouse correction packet for a completed provider payment]`, `[MISSING: runtime FIO_BANKA_API_KEY read-token configuration and owner-approved polling run evidence]` if polling authenticity is required, and `[MISSING: official/native Fio Banka callback signature contract]` if native bank-originated signatures are required.
+
+## 2026-07-03 Manual Fiobanka Refund Workflow Clarification
+
+Owner clarified that completed Fiobanka refunds are handled manually through a separate refund service and then marked in backend/customer-visible order surfaces. Catalog accepts this as the intended full paid/refund rollback mechanism, but runtime closeout still requires redacted evidence for the exact completed Goal 24 payment and exact post-refund backend acknowledgement.
+
+Current reconciliation: manual refund workflow is resolved/narrowed as an owner-approved process; runtime proof remains missing. FlipFlop source supports `status=refunded`, `paymentStatus=refunded`, and notes in the admin order detail UI. Payments remains fail-closed for automated Fiobanka refunds, so it cannot create a false local refund without manual evidence.
+
+Remaining runtime blockers: `[MISSING: redacted external refund-service evidence for the exact completed Goal 24 Fiobanka transfer]`, `[MISSING: FlipFlop runtime readback showing the exact smoke order acknowledged as status=refunded and paymentStatus=refunded after manual refund]`, and `[MISSING: owner-approved post-paid Orders/Warehouse correction packet for the exact completed payment state]`.

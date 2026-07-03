@@ -295,3 +295,19 @@ Remaining full paid/refund blockers:
 - `[MISSING: owner-approved post-paid Orders/Warehouse correction packet for a completed provider payment]`.
 - `[MISSING: runtime FIO_BANKA_API_KEY read-token configuration and owner-approved polling run evidence]` if polling authenticity is required.
 - `[MISSING: official/native Fio Banka callback signature contract]` if native bank-originated signatures are required.
+
+## 2026-07-03 Manual Fiobanka Refund Workflow Clarification
+
+Owner clarified that Fiobanka refunds are normally executed manually in a separate owner-operated refund service and then acknowledged in backend/customer-visible order surfaces. Catalog therefore treats the provider rollback operation for the full paid/refund variant as manual bank/service refund plus redacted evidence, not an automated Payments API refund.
+
+Consumed FlipFlop source evidence: `/admin/orders/:id` can set order status `refunded`, payment status `refunded`, and notes. This resolves/narrows the channel-local acknowledgement workflow only.
+
+Updated blockers:
+
+- `[RESOLVED/NARROWED: owner-approved manual Fiobanka refund workflow is accepted as the provider rollback mechanism for completed transfers; runtime redacted refund-service evidence remains required]`.
+- `[RESOLVED/NARROWED: FlipFlop admin order UI supports local refunded acknowledgement with notes after external refund evidence]`.
+- `[MISSING: redacted external refund-service evidence for the exact completed Goal 24 Fiobanka transfer]`.
+- `[MISSING: FlipFlop runtime readback showing the exact smoke order acknowledged as status=refunded and paymentStatus=refunded after manual refund]`.
+- `[MISSING: owner-approved post-paid Orders/Warehouse correction packet for the exact completed payment state]`.
+
+Boundary: this clarification does not run a paid transfer, external refund, provider reversal, Orders mutation, Warehouse mutation, FlipFlop runtime mutation, DB edit, deploy, migration, secret output, or raw customer/payment evidence capture.
