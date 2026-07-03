@@ -73,8 +73,7 @@ No migration was applied, no deployment was run, no runtime DB mutation was made
 - `[RESOLVED: Warehouse component-line-only reservation sign-off merged and validated]`
 - `[RESOLVED: Payments bounded bundle metadata allowlist merged and validated]`
 - `[RESOLVED: FlipFlop catalog.bundle.v1 read/display adoption merged and validated]`
-- `[RESOLVED/NARROWED: Rung 1 Orders and Payments non-mutating validators passed with real Catalog product IDs and runtime credentials; full real-bundle smoke still requires an active catalog.bundle.v1 target bundle]`
-- `[MISSING: owner-approved active catalog.bundle.v1 target bundle for full Rung 1 real checkout smoke]`
+- `[RESOLVED: owner-approved Rung 1 non-mutating real checkout smoke passed against active catalog.bundle.v1 bundle e38ce03c-d18b-40a4-9898-f82a3f77dc0b]`
 - `[MISSING: channel-specific external marketplace bundle publication policies]`
 
 ## Runtime Deployment Evidence

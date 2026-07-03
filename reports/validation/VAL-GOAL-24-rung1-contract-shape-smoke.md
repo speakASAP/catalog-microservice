@@ -90,10 +90,9 @@ No deployment, DB migration, DB write, Catalog bundle creation, Catalog product 
 
 Resolved/narrowed:
 
-- `[RESOLVED/NARROWED: Rung 1 Orders and Payments non-mutating validators passed with real Catalog product IDs and runtime credentials; full real-bundle smoke still requires an active catalog.bundle.v1 target bundle]`
+- `[RESOLVED: owner-approved Rung 1 non-mutating real checkout smoke passed against active catalog.bundle.v1 bundle e38ce03c-d18b-40a4-9898-f82a3f77dc0b]`
 
 Still blocked:
 
-- `[MISSING: owner-approved active catalog.bundle.v1 target bundle for full Rung 1 real checkout smoke]`
 - `[MISSING: owner-approved Rung 2 live pending-order smoke plan if production order/reservation evidence is required]`
 - `[MISSING: channel-specific external marketplace bundle publication policies]`
