@@ -71,7 +71,9 @@ Follow-up read-only evidence on 2026-07-03 confirmed the Orders replay endpoint,
 - `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`
 - `[MISSING: Marketing durable run ledger proving a complete source/window snapshot]`
 - `[MISSING: marketplace producer guarantee that replay window is complete and repeatable]`
-- `[MISSING: Catalog standalone bundle aggregate API and persistence contract]`
+- `[RESOLVED: Catalog standalone bundle aggregate API and persistence contract design owner-ready in docs/contracts/catalog-bundle-aggregate-v1.md]`
+- `[MISSING: owner acceptance of catalog.bundle.v1 design before source implementation]`
+- `[MISSING: Catalog additive migration/API implementation for catalog.bundle.v1]`
 - `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
 - `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
 - `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
@@ -88,7 +90,7 @@ Current lanes:
 - `ready now`: Marketing dry-run/export/backfill hardening. Owner role: Marketing worker. Scope: keep the backfill CLI, aggregation, and Catalog publisher safe and dry-run-first. Expected output: source-only verification or bounded fixes in Marketing. Validation: focused order-affinity backfill tests and non-mutating dry-run.
 - `ready now`: Catalog product relation API maintenance. Owner role: Catalog worker. Scope: maintain protected related-products, bundle-candidates, and internal batch endpoint. Validation: focused product-relations Jest and `git diff --check`.
 - `dependency-gated`: Non-empty historical affinity publish. Owner role: integration validator. Blockers: `[MISSING: qualifying historical paid multi-product Orders rows for non-empty replay evidence]`, `[MISSING: owner-reviewed publish window before running a future non-empty --publish backfill]`, and `[RESOLVED: conservative exact source/window replacement policy; remaining gates are Marketing ledger, producer completeness, and owner-reviewed publish window]`.
-- `ready now`: Catalog standalone bundle aggregate contract design. Owner role: Catalog/commerce architect. Scope: define `catalog.bundle.v1` API/persistence plan from `docs/contracts/catalog-bundle-commerce-contract.md`; source implementation remains gated until the plan is accepted.
+- `owner-ready`: Catalog standalone bundle aggregate contract design. Owner role: Catalog/commerce architect. Scope: `docs/contracts/catalog-bundle-aggregate-v1.md` defines the `catalog.bundle.v1` API/persistence plan from `docs/contracts/catalog-bundle-commerce-contract.md`; source implementation remains gated until owner acceptance.
 - `dependency-gated`: Marketplace/operator bundle suggestions. Owner role: channel worker. Blocker: `[MISSING: channel-specific external marketplace bundle publication policies]`.
 - `dependency-gated`: Ecosystem real bundle selling beyond the existing FlipFlop-local bundle intent. Blockers: `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`, `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`, `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`, and `[MISSING: owner-approved Rung 1 non-mutating real checkout smoke credentials and target products]`.
 
@@ -140,6 +142,23 @@ Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task ->
 - State Update: broad owner-retention blocker resolved; scheduled replacement remains gated by Marketing ledger, producer completeness, owner-reviewed publish windows, deployment approval, and protected runtime smoke.
 
 Selected policy: only the `replace-window` endpoint may prune `marketing_order_affinity` rows, and only when existing `evidence.orderAffinityWindow` exactly matches the incoming `sourceOwner`, `channel`, `windowStart`, `windowEnd`, and `runId`. Catalog does not support time-based deletion, score/confidence decay, manual/non-window pruning, standalone prune-window cleanup, or legacy-row archival. Legacy rows without exact matching window evidence are retained additively unless owners later approve a separate archival contract.
+
+
+
+## 2026-07-03 B1 Catalog Bundle Aggregate Design
+
+Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update.
+
+- Vision: Catalog can provide durable bundle identity without owning checkout, stock, payments, or marketplace publication.
+- Goal Impact: the broad Catalog aggregate blocker is narrowed to an owner-ready `catalog.bundle.v1` design plus explicit source/downstream gates.
+- System: Catalog owns bundle aggregate metadata over existing product IDs; Orders keeps normal item lines and future additive evidence; Warehouse reserves component lines only after sign-off; Payments stores bounded evidence only; FlipFlop owns checkout UX.
+- Feature: standalone bundle aggregate API/persistence proposal.
+- Task: define DTO shape, lifecycle/status, idempotency, visibility, fail-closed validation, rejected alternatives, and downstream handoff requirements.
+- Execution Plan: docs-only B1 worker in isolated remote worktree; no migration, source implementation, deployment, runtime mutation, checkout/payment/warehouse/order changes, marketplace publication, or product-like SKU.
+- Coding Prompt: keep `bundle-candidates` read-only; never use candidate IDs as sellable identity; use `bundleId` only after aggregate implementation; preserve `[MISSING: ...]` downstream gates.
+- Code: `docs/contracts/catalog-bundle-aggregate-v1.md`, linked Goal 24 contract/status/validation docs.
+- Validation: `git diff --check`; pre-coding scripts remain unavailable when absent.
+- State Update: `[RESOLVED: Catalog standalone bundle aggregate API and persistence contract design owner-ready in docs/contracts/catalog-bundle-aggregate-v1.md]`; runtime source remains `[MISSING: owner acceptance of catalog.bundle.v1 design before source implementation]` and `[MISSING: Catalog additive migration/API implementation for catalog.bundle.v1]`.
 
 ## Rollback Notes
 

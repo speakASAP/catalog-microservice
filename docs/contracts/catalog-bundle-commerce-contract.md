@@ -2,7 +2,7 @@
 
 ```yaml
 id: CATALOG-BUNDLE-COMMERCE-CONTRACT
-status: accepted-contract-implementation-gated
+status: accepted-contract-b1-design-ready
 owner: catalog-commerce-integration-owner
 created: 2026-07-03
 scope: ecosystem bundle identity, presentation, checkout-smoke, and service ownership boundaries
@@ -20,13 +20,15 @@ Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding P
 - Task: define the recommended model, rejected alternatives, per-service contract boundaries, smoke scope, presentation policy, parallel workstreams, and remaining blockers.
 - Execution Plan: documentation-only contract decision in Catalog; no source, migration, deployment, order/payment/stock mutation, marketplace publication, or real checkout mutation.
 - Coding Prompt: do not make Payments pricing truth, do not make Catalog a checkout/stock owner, do not create bundle SKUs until explicitly approved, and record missing runtime approvals with `[MISSING: ...]`.
-- Code: this contract and Goal 24 documentation/state updates only.
+- Code: this contract, `docs/contracts/catalog-bundle-aggregate-v1.md`, and Goal 24 documentation/state updates only.
 - Validation: `git diff --check`; focused source tests/builds are not required because only Markdown docs changed.
 - State Update: the Catalog bundle ownership decision is accepted as a standalone aggregate model, while implementation and live side effects remain gated.
 
 ## Accepted Decision
 
 Recommended model: Catalog-owned standalone bundle aggregate.
+
+B1 design artifact: `docs/contracts/catalog-bundle-aggregate-v1.md` defines the owner-ready `catalog.bundle.v1` API/persistence proposal. It keeps the accepted standalone aggregate model, rejects SKU/read-only alternatives for v1 selling, and gates source implementation on owner acceptance plus downstream Orders/Warehouse/Payments/FlipFlop contracts.
 
 The first ecosystem bundle-selling model should be a Catalog aggregate that references existing sellable Catalog product IDs and exposes deterministic metadata for storefront/channel consumers. It is not a Catalog product row, not a SKU, not a stock item, and not a payment price record in its first version.
 
@@ -134,7 +136,9 @@ Anything beyond Rung 2 remains `[MISSING: owner-approved paid/provider checkout 
 
 ## Remaining Blockers
 
-- `[MISSING: Catalog standalone bundle aggregate API and persistence contract]`
+- `[RESOLVED: Catalog standalone bundle aggregate API and persistence contract design owner-ready in docs/contracts/catalog-bundle-aggregate-v1.md]`
+- `[MISSING: owner acceptance of catalog.bundle.v1 design before source implementation]`
+- `[MISSING: Catalog additive migration/API implementation for catalog.bundle.v1]`
 - `[MISSING: Orders additive bundleEvidence metadata contract on create-order and idempotent replay]`
 - `[MISSING: Warehouse approval that first ecosystem bundle selling reserves component lines only]`
 - `[MISSING: Payments bounded bundle metadata allowlist test covering free-shipping evidence without pricing authority]`
@@ -146,7 +150,7 @@ Anything beyond Rung 2 remains `[MISSING: owner-approved paid/provider checkout 
 
 | Workstream | Status | Owner role | Objective | Allowed files | Forbidden files | Dependencies | Validation evidence | Handoff notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| B1 Catalog aggregate design | ready now | Catalog commerce architect | Define `catalog.bundle.v1` aggregate DTO/API/persistence plan | Catalog docs, future bundle module plan | migrations/source until plan accepted | this contract | `git diff --check` for docs | Integration owner resolves naming and lifecycle. |
+| B1 Catalog aggregate design | owner-ready | Catalog commerce architect | Define `catalog.bundle.v1` aggregate DTO/API/persistence plan | `docs/contracts/catalog-bundle-aggregate-v1.md` and linked Goal 24 docs | migrations/source until plan accepted | this contract | `git diff --check` for docs | Design resolves API/persistence contract shape; source implementation remains gated. |
 | B2 Orders metadata contract | ready now | Orders contract worker | Add docs/tests for additive `bundleEvidence` metadata while preserving item lines | Orders contract docs/verifiers | DB migrations, live create mutation | B1 identity draft | create-order verifier/build when changed | Must not replace normal item rows. |
 | B3 Warehouse component reservation sign-off | ready now | Warehouse reservation owner | Document component-line reservation as v1 bundle stock behavior | Warehouse docs/tests if needed | stock mutation, migration, deploy | B1/B2 draft | reservation verifier/build when changed | Keep synthetic SKU blocked. |
 | B4 Payments metadata allowlist | ready now | Payments boundary owner | Document/test allowed bundle metadata as evidence only | Payments docs/DTO verifier if needed | provider internals, amount calculation | B2 metadata draft | payment validation spec/build when changed | Must preserve `amount` as caller-owned final total. |
