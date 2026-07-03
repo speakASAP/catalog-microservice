@@ -38,8 +38,8 @@ Resolved/narrowed:
 
 Still blocked:
 
-- `[MISSING: owner-approved polling run evidence]`.
-- `[MISSING: redacted runtime evidence packet for a real bank-originated transaction-polling match, including only non-sensitive correlation hashes and amount/currency/status facts]`.
+- `[RESOLVED/NARROWED: Payments b19e3b5 records owner-approved read-only Fiobanka polling run and redacted real CZK transaction match for retained Goal 24 variable-symbol hash d7512419521d2cab without token/raw payload output]`.
+- `[RESOLVED/NARROWED: Payments b19e3b5 records owner-approved read-only Fiobanka polling run and redacted real CZK transaction match for retained Goal 24 variable-symbol hash d7512419521d2cab without token/raw payload output]`.
 - `[MISSING: official/native Fio Banka callback signature contract if provider-authentic bank-originated signatures are required]`.
 - `[MISSING: owner-approved manual Fiobanka completed-transfer refund/reversal workflow with redacted provider/bank evidence]`.
 - `[MISSING: owner-approved post-paid Orders/Warehouse correction packet for a completed provider payment]`.
