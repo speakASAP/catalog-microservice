@@ -424,3 +424,9 @@ Catalog consumed Payments `4133a21 docs: record goal24 owner approval intake 003
 Decision: approval-window/provider/amount/evidence-path intake is resolved/narrowed for the selected Goal 24 Fiobanka QR path, but runtime execution remains hard-stopped until the packet records the named human Payments/provider rollback owner with bank/refund authority, named bank/refund executor, exact future payment/order/provider hashes, concrete idempotency keys, exact Orders side-effect acknowledgements, Warehouse live readback/final mutation approval, and final redacted evidence. `FIO_BANKA_REFUND_UPLOAD_ENABLED` remains disabled until an exact owner-approved refund upload window.
 
 No live checkout, payment creation, provider call, webhook replay, refund/reversal, Orders mutation, Warehouse mutation, channel cleanup, deploy, migration, DB write, secret/token output, raw provider payload, or raw customer/order/payment evidence occurred.
+
+## 2026-07-04 Active Payments Token Provisioning Runtime Readback
+
+[RESOLVED/NARROWED: active Payments runtime image localhost:5000/payments-microservice:fd58097 exposes FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK/EUR as present length-valid env vars without value output while FIO_BANKA_REFUND_UPLOAD_ENABLED=false]
+
+Validation impact: token delivery is resolved/narrowed, but live side effects remain blocked by the upload flag/window, bank/refund authority, exact hashes, idempotency keys, Orders/Warehouse/channel packets, and final evidence path.
