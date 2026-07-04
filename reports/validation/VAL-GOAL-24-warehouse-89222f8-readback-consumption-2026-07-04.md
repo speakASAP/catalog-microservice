@@ -46,9 +46,9 @@ Remaining current blockers:
 - `[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]`
 - `[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]`
 - `[MISSING: concrete side-effectful rollback run id and cleanup idempotency keys]`
-- `[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]`
-- `[MISSING: Warehouse hold/release duration]`
-- `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
+- `[MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]`
+- `[MISSING: exact selected Warehouse reservation lookup state for cleanup]`
+- `[RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]`
 - `[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]`
 
 Historical Wave B/C/E and older report entries may still quote `[MISSING: live current target row readback at execution time]` as frozen snapshot lineage. They are not current operative blockers after Warehouse `89222f8`.

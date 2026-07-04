@@ -33,13 +33,13 @@ Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding P
 - Coding Prompt: do not infer live Warehouse stock effects from source-documented Catalog candidate facts.
 - Code: `reports/validation/VAL-GOAL-24-paid-provider-approval-packet-final-readiness.md`, `docs/orchestrator/2026-07-03-goal24-paid-provider-smoke-approval-packet.md`, `docs/IMPLEMENTATION_STATE.md`, `docs/orchestrator/STATUS.md`, and `scripts/verify-goal24-refund-cancel-rollback-execution-approval.js`.
 - Validation: `node --check scripts/verify-goal24-refund-cancel-rollback-execution-approval.js`, `node scripts/verify-goal24-refund-cancel-rollback-execution-approval.js`, and `git diff --check`.
-- State Update: `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]; [RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`.
+- State Update: `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]; [RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]; [RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]`.
 
 ## Still Blocked
 
 - `[RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]`
 - `[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]`
-- `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
+- `[RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]`
 - `[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]`
 - `[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]`
 - `[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]`

@@ -3,6 +3,14 @@ const fs = require('fs');
 const assert = require('assert');
 
 const read = (file) => fs.readFileSync(file, 'utf8');
+const selectedWarehouseLookupBlocker = '[MISSING: exact selected Warehouse reservation lookup state for cleanup]';
+const legacyWarehouseWindowBlocker = '[MISSING: Warehouse hold/release duration]';
+const selectedWarehouseWindowMarker = `[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; ${selectedWarehouseLookupBlocker}`;
+const legacyWarehouseWindowMarker = `[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; ${legacyWarehouseWindowBlocker}`;
+const fullSelectedWarehouseWindowMarker = `[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [RESOLVED/NARROWED: Warehouse final bounded one-attempt approval is source-defined for packet planning only]; ${selectedWarehouseLookupBlocker}`;
+const resolvedWarehouseDurationMarker = `[RESOLVED/NARROWED: Warehouse hold/release duration is owner-approved for the bounded Goal 24 smoke as 15 minutes source-default TTL or shorter caller-supplied expiresAt]; ${selectedWarehouseLookupBlocker}`;
+const hasWarehouseWindowMarker = (source) => source.includes(selectedWarehouseWindowMarker) || source.includes(legacyWarehouseWindowMarker) || source.includes(fullSelectedWarehouseWindowMarker) || source.includes(resolvedWarehouseDurationMarker);
+const hasWarehouseFinalApprovalMarker = (source) => source.includes('[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]') || source.includes('[RESOLVED/NARROWED: Warehouse final bounded one-attempt approval is source-defined for packet planning only]') || source.includes('[RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]');
 const packet = read('docs/orchestrator/2026-07-03-goal24-paid-provider-smoke-approval-packet.md');
 const channelImplementationContract = read('docs/contracts/catalog-bundle-paid-provider-channel-implementation-contract.md');
 const channelContractApproval = read('reports/validation/VAL-GOAL-24-paid-provider-channel-contract-approval.md');
@@ -28,6 +36,29 @@ const currentBlockerReconciliation = read('reports/validation/VAL-GOAL-24-curren
 const authTokenProofCleanup = read('reports/validation/VAL-GOAL-24-auth-token-proof-cleanup-2026-07-04.md');
 const currentRuntimeReadinessSync = read('reports/validation/VAL-GOAL-24-current-runtime-readiness-sync-2026-07-04.md');
 const warehouse89222f8ReadbackConsumption = read('reports/validation/VAL-GOAL-24-warehouse-89222f8-readback-consumption-2026-07-04.md');
+const catalogCleanupRuntimeValuesConsumption = read('reports/validation/VAL-GOAL-24-catalog-consume-cleanup-runtime-values-59be11e-8bb22e2-d39bc0c-cf340f5-2026-07-04.md');
+const paymentsCleanupRuntimeValuesConsumption = read('../payments-microservice/reports/validation/VAL-GOAL-24-payments-consume-cleanup-packet-runtime-values-d39bc0c-cf340f5-2026-07-04.md');
+const ordersCleanupRuntimeValuesConsumption = read('../orders-microservice/reports/validation/VAL-GOAL-24-orders-consume-cleanup-packet-runtime-values-59be11e-d39bc0c-2026-07-04.md');
+const flipflopCleanupRuntimeValuesSync = read('../flipflop/reports/validation/VAL-GOAL-24-cleanup-packet-runtime-values-sync-2026-07-04.md');
+
+
+const catalogCleanupRuntimeValuesMarker = '[RESOLVED/NARROWED: Catalog consumed Payments 59be11e, Orders 8bb22e2, FlipFlop d39bc0c, and Warehouse cf340f5 cleanup runtime-values sync; packet shapes and Warehouse hold/final bounded approval are source-defined, while exact selected runtime values remain missing]';
+for (const [label, source] of [
+  ['Catalog cleanup runtime-values consumption report', catalogCleanupRuntimeValuesConsumption],
+  ['validation report', report],
+  ['implementation state', state],
+  ['orchestrator status', status],
+]) {
+  assert(source.includes(catalogCleanupRuntimeValuesMarker), `${label} missing Catalog cleanup runtime-values marker`);
+  assert(source.includes('[MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]'), `${label} missing selected Orders runtime-values blocker`);
+  assert(source.includes('[MISSING: exact selected Warehouse reservation lookup state for cleanup]'), `${label} missing selected Warehouse reservation lookup blocker`);
+  for (const boundary of ['mutation: false', 'provider_call: false', 'orders_mutation: false', 'warehouse_mutation: false', 'secret_output: false']) {
+    assert(source.includes(boundary), `${label} missing boundary ${boundary}`);
+  }
+}
+assert(paymentsCleanupRuntimeValuesConsumption.includes('[RESOLVED/NARROWED: Payments consumed FlipFlop d39bc0c cleanup packet runtime-values sync; Orders cleanup packet shape and Warehouse component-line cleanup packet shape are source-defined, while exact selected runtime values remain missing]'), 'Payments cleanup runtime-values marker missing');
+assert(ordersCleanupRuntimeValuesConsumption.includes('[RESOLVED/NARROWED: Orders consumed Payments 59be11e and FlipFlop d39bc0c cleanup packet runtime-values sync; Orders cleanup packet shape is source-defined, while exact selected target values and sideEffectsHandled acknowledgements remain missing]'), 'Orders cleanup runtime-values marker missing');
+assert(flipflopCleanupRuntimeValuesSync.includes('[RESOLVED/NARROWED: Orders cleanup packet shape and Warehouse component-line cleanup packet shape are source-defined; runtime remains blocked until the selected smoke supplies exact Orders packet values, sideEffectsHandled acknowledgements, provider proof, and deterministic Warehouse reservation lookup state]'), 'FlipFlop cleanup runtime-values marker missing');
 
 for (const [label, source] of [
   ['current runtime readiness sync report', currentRuntimeReadinessSync],
@@ -38,8 +69,8 @@ for (const [label, source] of [
   assert(source.includes('[RESOLVED/NARROWED: Catalog consumed FlipFlop 888cc13 actor-bound fixture quote and Warehouse 89222f8 live-readback consumption as current source-governance evidence]'), `${label} missing FlipFlop 888cc13 / Warehouse 89222f8 current readiness marker`);
   assert(source.includes('[RESOLVED/NARROWED: Catalog consumed Warehouse 89222f8 live current target row readback through protected Warehouse API without mutation]'), `${label} missing Warehouse 89222f8 current readiness marker`);
   assert(source.includes('[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]'), `${label} missing Payments rollback authority hard stop`);
-  assert(source.includes('[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]'), `${label} missing Orders cleanup hard stop`);
-  assert(source.includes('[MISSING: Warehouse hold/release duration]'), `${label} missing Warehouse hold/release duration hard stop`);
+  assert(source.includes('[MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]'), `${label} missing Orders cleanup hard stop`);
+  assert(source.includes('[MISSING: exact selected Warehouse reservation lookup state for cleanup]'), `${label} missing Warehouse hold/release duration hard stop`);
   assert(source.includes('[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]'), `${label} missing final evidence hard stop`);
 }
 
@@ -47,10 +78,10 @@ for (const [label, source] of [
 for (const marker of [
   'source_warehouse_commit: 89222f8 docs: consume goal24 warehouse live readback',
   '[RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]',
-  '[MISSING: Warehouse hold/release duration]',
-  '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
+  selectedWarehouseLookupBlocker,
+  '[RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]',
   '[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]',
-  '[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]',
+  '[MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]',
   '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
 ]) {
   assert(warehouse89222f8ReadbackConsumption.includes(marker), `Warehouse 89222f8 readback consumption report missing ${marker}`);
@@ -101,7 +132,8 @@ for (const [label, source] of [
   }
 }
 
-const flipflopChannelSupersessionMarker = '[RESOLVED/NARROWED: Codex Goal 24 integration thread supersedes earlier FlipFlop channel executor/runtime owner blockers; channel cleanup runtime remains blocked until bank/refund authority, exact provider proof, Orders side-effect acknowledgements, Warehouse target facts, Auth token source, and final redacted evidence path exist]';
+const flipflopChannelSupersessionMarker = '[RESOLVED/NARROWED: Codex Goal 24 integration thread supersedes earlier FlipFlop channel executor/runtime owner blockers; channel cleanup runtime remains blocked until bank/refund authority, exact provider proof, Orders side-effect acknowledgements, Warehouse deterministic reservation lookup state, Auth token source, and final redacted evidence path exist]';
+const historicalFlipflopChannelSupersessionMarker = '[RESOLVED/NARROWED: Codex Goal 24 integration thread supersedes earlier FlipFlop channel executor/runtime owner blockers; channel cleanup runtime remains blocked until bank/refund authority, exact provider proof, Orders side-effect acknowledgements, Warehouse target facts, Auth token source, and final redacted evidence path exist]';
 const sourceWaveFreezeMarker = '[RESOLVED/NARROWED: Goal 24 frozen source-governance wave GOAL24-SOURCE-WAVE-2026-07-04A records Catalog `e379b54 merge goal24 current source head sync`, FlipFlop `e1f3e3a merge goal24 current source head sync`, Payments `eab6351 merge goal24 current source head sync`, Orders `d53de9f merge goal24 current source head sync`, and Warehouse `11df002 merge goal24 warehouse target facts reconcile` as input heads for runtime planning; post-merge self heads are validation evidence only; runtime side effects remain blocked]';
 const sourceWaveBMarker = '[RESOLVED/NARROWED: Goal 24 source-governance wave GOAL24-SOURCE-WAVE-2026-07-04B input set records Auth `2faf719 docs: complete goal10 customer data wallet rollout`, Catalog `dde0f43 merge goal24 owner executor wording sync`, FlipFlop `e8abb44 merge goal24 implementation target facts wording sync`, Payments `9069fd3 merge goal24 payments source wave b`, Orders `908b6ee merge goal24 orders source wave b`, and Warehouse `3fdeabd merge goal24 live target readback wording sync` as Wave B input heads for renewed runtime planning; post-merge source-sync commits are validation evidence only; runtime side effects remain blocked]';
 const sourceWaveCMarker = '[RESOLVED/NARROWED: Goal 24 source-governance wave GOAL24-SOURCE-WAVE-2026-07-04C input set records Auth `2faf719 docs: complete goal10 customer data wallet rollout`, Catalog `6723b58 merge goal24 catalog cross-service rollup sync`, FlipFlop `2310c90 merge goal24 flipflop stale blocker wording sync`, Payments `080f293 merge goal24 payments source wave c`, Orders `d32abd2 merge goal24 orders source wave c`, and Warehouse `ea7b9e9 merge goal24 warehouse cleanup packet readback sync` as Wave C input heads for renewed runtime planning; post-merge source-sync commits are validation evidence only; runtime side effects remain blocked]';
@@ -142,8 +174,8 @@ const requiredMarkers = [
 ];
 
 
-const currentBlockerReconciliationMarker = '[RESOLVED/NARROWED: Catalog current blocker reconciliation distinguishes historical live-run executor/runtime validation owner wording from current runtime blockers; Codex owns source-controlled validation/stop authority only, while live execution remains blocked by Auth token source, Payments bank/refund authority, exact provider proof, Orders sideEffectsHandled, Warehouse hold/release duration/final approval, channel acknowledgement, and final redacted evidence path]';
-const historicalCurrentBlockerReconciliationMarker = '[RESOLVED/NARROWED: Catalog current blocker reconciliation distinguishes historical live-run executor/runtime validation owner wording from current runtime blockers; Codex owns source-controlled validation/stop authority only, while live execution remains blocked by Auth token source, Payments bank/refund authority, exact provider proof, Orders sideEffectsHandled, Warehouse live row/window/final approval, channel acknowledgement, and final redacted evidence path]';
+const currentBlockerReconciliationMarker = '[RESOLVED/NARROWED: Catalog current blocker reconciliation distinguishes historical live-run executor/runtime validation owner wording from current runtime blockers; Codex owns source-controlled validation/stop authority only, while live execution remains blocked by Auth token source, Payments bank/refund authority, exact provider proof, Orders sideEffectsHandled, exact selected Warehouse reservation lookup state, channel acknowledgement, and final redacted evidence path]';
+const historicalCurrentBlockerReconciliationMarker = '[RESOLVED/NARROWED: Catalog current blocker reconciliation distinguishes historical live-run executor/runtime validation owner wording from current runtime blockers; Codex owns source-controlled validation/stop authority only, while live execution remains blocked by Auth token source, Payments bank/refund authority, exact provider proof, Orders sideEffectsHandled, exact selected Warehouse reservation lookup state, channel acknowledgement, and final redacted evidence path]';
 for (const [label, source] of [
   ['approval packet', packet],
   ['channel implementation contract', channelImplementationContract],
@@ -153,7 +185,7 @@ for (const [label, source] of [
 ]) {
   assert(source.includes(currentBlockerReconciliationMarker) || (label === 'channel implementation contract' && source.includes(historicalCurrentBlockerReconciliationMarker)), `${label} missing current blocker reconciliation marker`);
   assert(source.includes('[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]'), `${label} missing Payments bank/refund authority blocker`);
-  assert(source.includes('[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]'), `${label} missing Orders sideEffectsHandled blocker`);
+  assert(source.includes('[MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]'), `${label} missing Orders sideEffectsHandled blocker`);
   assert(source.includes('[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]'), `${label} missing final evidence blocker`);
 }
 assert(packet.includes('[MISSING: named live-run executor for the exact side-effectful smoke]'), 'approval packet must keep live-run executor blocker separate from runtime validation owner');
@@ -333,9 +365,8 @@ for (const [label, source] of [
     '[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]',
     '[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]',
     '[MISSING: concrete side-effectful rollback run id and cleanup idempotency keys]',
-    '[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]',
-    '[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]',
-    '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
+    '[MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]',
+      '[RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]',
     '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
   ]) {
     assert(hasMarker(source, marker), `${label} missing source-wave freeze marker ${marker}`);
@@ -425,7 +456,7 @@ for (const [label, source] of [
   ['flipflop channel supersession report', flipflopChannelSupersessionReport],
   ['validation report', report],
 ]) {
-  assert(source.includes(flipflopChannelSupersessionMarker), `${label} missing FlipFlop channel supersession marker`);
+  assert(source.includes(flipflopChannelSupersessionMarker) || source.includes(historicalFlipflopChannelSupersessionMarker), `${label} missing FlipFlop channel supersession marker`);
   assert(source.includes('FlipFlop `5202c15 merge goal24 channel cleanup owner supersession`') || source.includes('5202c15 merge goal24 channel cleanup owner supersession'), `${label} missing FlipFlop 5202c15 historical consumption`);
 }
 for (const [label, source] of [
@@ -452,8 +483,8 @@ for (const [label, source] of [
   assert(!source.includes('[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]'), `${label} still contains stale broad Orders/Payments event-contract blocker`);
   assert(source.includes('[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]'), `${label} missing source-documented Warehouse candidate facts marker`);
   assert(source.includes('[RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]'), `${label} missing Warehouse 89222f8 live readback resolution marker`);
-  assert(source.includes('[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]'), `${label} missing renewed Warehouse window blocker`);
-  assert(source.includes('[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]'), `${label} missing final Warehouse mutation approval blocker`);
+  assert(hasWarehouseWindowMarker(source), `${label} missing renewed Warehouse window blocker`);
+  assert(hasWarehouseFinalApprovalMarker(source), `${label} missing final Warehouse bounded approval blocker`);
 }
 for (const [label, source] of [
   ['validation report', report],
@@ -462,7 +493,7 @@ for (const [label, source] of [
   ['orchestrator status', status],
   ['paid/provider channel contract approval report', channelContractApproval],
 ]) {
-  assert(source.includes('[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, Warehouse 89222f8 readback, and final mutation approval]'), `${label} missing narrowed Orders/Payments source mapping marker`);
+  assert(source.includes('[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, Warehouse 89222f8 readback, and final bounded approval]') || source.includes('[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, Warehouse 89222f8 readback, and final mutation approval]'), `${label} missing narrowed Orders/Payments source mapping marker`);
 }
 
 for (const value of [
@@ -476,8 +507,7 @@ for (const value of [
   'secret_output: false',
   'raw_customer_or_payment_evidence: false',
   '[RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]',
-  '[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]',
-  '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
+  '[RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]',
 ]) {
   assert(catalogWarehouseBlockerWordingSync.includes(value), `Catalog Warehouse blocker wording sync report missing ${value}`);
 }
@@ -487,15 +517,20 @@ for (const marker of [
   '[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]',
   '[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]',
   '[MISSING: concrete side-effectful rollback run id and cleanup idempotency keys]',
-  '[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]',
+  '[MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]',
   '[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]',
   '[RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]',
-  '[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]',
-  '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
+  '[RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]',
   '[RESOLVED/NARROWED: FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK and FIO_BANKA_PAYMENT_ORDER_TOKEN_EUR are present in the current ready Payments pod without value output; payment-order upload remains gated by FIO_BANKA_REFUND_UPLOAD_ENABLED=true, named bank/refund executor, exact future payment/order/provider hashes, concrete idempotency keys, and bank completion evidence]',
   '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
 ]) {
-  assert(flipflopChannelSupersessionReport.includes(marker), `FlipFlop channel supersession consumption missing blocker ${marker}`);
+  if (marker === '[MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]') {
+    assert(flipflopChannelSupersessionReport.includes(marker) || flipflopChannelSupersessionReport.includes('[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]'), `FlipFlop channel supersession consumption missing blocker ${marker}`);
+  } else if (marker === '[RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]') {
+    assert(hasWarehouseFinalApprovalMarker(flipflopChannelSupersessionReport), `FlipFlop channel supersession consumption missing blocker ${marker}`);
+  } else {
+    assert(flipflopChannelSupersessionReport.includes(marker), `FlipFlop channel supersession consumption missing blocker ${marker}`);
+  }
 }
 for (const boundary of [
   'mutation: false',
@@ -572,11 +607,14 @@ for (const marker of [
   '[RESOLVED/NARROWED: FlipFlop channel cleanup executor is the Codex Goal 24 integration thread for future source-controlled coordination]',
   '[MISSING: fresh Auth actor-bound token generated through the Auth c389c1e no-print/no-decode/no-persist pattern for the exact guarded discount-fixture step]',
   '[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]',
-  '[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]',
-  '[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]',
+  '[MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]',
   '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
 ]) {
-  assert(catalogOwnerExecutorWordingSync.includes(marker), `Catalog owner/executor wording sync report missing ${marker}`);
+  if (marker === '[MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]') {
+    assert(catalogOwnerExecutorWordingSync.includes(marker) || catalogOwnerExecutorWordingSync.includes('[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]'), `Catalog owner/executor wording sync report missing ${marker}`);
+  } else {
+    assert(catalogOwnerExecutorWordingSync.includes(marker), `Catalog owner/executor wording sync report missing ${marker}`);
+  }
 }
 for (const boundary of [
   'mutation: false',

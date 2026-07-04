@@ -1,3 +1,5 @@
+
+Current Warehouse execution markers: [RESOLVED/NARROWED: Warehouse hold/release duration is owner-approved for the bounded Goal 24 smoke as 15 minutes source-default TTL or shorter caller-supplied expiresAt]; [RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]; [MISSING: exact selected Warehouse reservation lookup state for cleanup].
 # VAL-GOAL-24 Current Runtime Readiness Sync
 
 ```yaml
@@ -50,11 +52,11 @@ raw_customer_or_payment_evidence: false
 - `[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]`
 - `[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]`
 - `[MISSING: concrete side-effectful rollback run id and cleanup idempotency keys]`
-- `[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]`
+- `[MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]`
 - `[MISSING: Orders cancellation actor, reason, idempotency key, and side-effect acknowledgements before channel side-effect acknowledgement]`
 - `[MISSING: owner-approved payment/warehouse/notification/crm/channel sideEffectsHandled acknowledgements for the selected central order hash]`
-- `[MISSING: Warehouse hold/release duration]`
-- `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
+- `[MISSING: exact selected Warehouse reservation lookup state for cleanup]`
+- `[RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]`
 - `[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]`
 
 Historical reports may still contain older `[MISSING: fresh Auth actor-bound token ...]`, `[MISSING: sanitized auth/admin evidence path ...]`, and `[MISSING: live current target row readback ...]` markers as snapshot evidence. Those markers are superseded for new planning by this current sync plus Warehouse 89222f8 and the owning FlipFlop/Warehouse reports; they are not runtime approval.

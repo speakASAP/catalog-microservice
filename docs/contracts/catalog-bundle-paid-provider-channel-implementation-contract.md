@@ -1,3 +1,5 @@
+
+Current Warehouse execution markers: [RESOLVED/NARROWED: Warehouse hold/release duration is owner-approved for the bounded Goal 24 smoke as 15 minutes source-default TTL or shorter caller-supplied expiresAt]; [RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]; [MISSING: exact selected Warehouse reservation lookup state for cleanup].
 # Catalog Bundle Paid/Provider And Channel Implementation Contract
 
 ```yaml
@@ -63,7 +65,7 @@ Before any paid/provider smoke, the owner must approve all canary facts:
 
 - `[MISSING: approved safe bundle target/product ids for paid/provider smoke]`
 - `[MISSING: approved payment method/provider mode and maximum amount for paid/provider smoke]`
-- `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: live current target row readback at execution time]; [RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
+- `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: live current target row readback at execution time]; [RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [RESOLVED/NARROWED: Warehouse final bounded one-attempt approval is source-defined for packet planning only]; [MISSING: exact selected Warehouse reservation lookup state for cleanup]`
 - `[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, live Warehouse readback, and final mutation approval]`
 - `[RESOLVED: active FlipFlop checkout paths pass central Orders UUIDs to Payments before provider creation]`
 - `[RESOLVED: runtime verification of Payments Orders service token/role for the current bridge mechanism]`
@@ -126,7 +128,7 @@ Merge order: Catalog contract record, Payments dirty-test cleanup and boundary v
 - `[RESOLVED/NARROWED: owner-approved channel implementation contract defined in docs/contracts/catalog-bundle-paid-provider-channel-implementation-contract.md]`
 - `[MISSING: approved safe bundle target/product ids for paid/provider smoke]`
 - `[MISSING: approved payment method/provider mode and maximum amount for paid/provider smoke]`
-- `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: live current target row readback at execution time]; [RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
+- `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: live current target row readback at execution time]; [RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [RESOLVED/NARROWED: Warehouse final bounded one-attempt approval is source-defined for packet planning only]; [MISSING: exact selected Warehouse reservation lookup state for cleanup]`
 - `[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, live Warehouse readback, and final mutation approval]`
 - `[RESOLVED: active FlipFlop checkout paths pass central Orders UUIDs to Payments before provider creation]`
 - `[RESOLVED: runtime verification of Payments Orders service token/role for the current bridge mechanism]`
@@ -142,12 +144,12 @@ The broad owner approval blocker is resolved only at the implementation-contract
 
 ## Current Goal 24 Blocker Reconciliation
 
-[RESOLVED/NARROWED: Catalog current blocker reconciliation distinguishes historical live-run executor/runtime validation owner wording from current runtime blockers; Codex owns source-controlled validation/stop authority only, while live execution remains blocked by Auth token source, Payments bank/refund authority, exact provider proof, Orders sideEffectsHandled, Warehouse live row/window/final approval, channel acknowledgement, and final redacted evidence path]
+[RESOLVED/NARROWED: Catalog current blocker reconciliation distinguishes historical live-run executor/runtime validation owner wording from current runtime blockers; Codex owns source-controlled validation/stop authority only, while live execution remains blocked by Auth token source, Payments bank/refund authority, exact provider proof, Orders sideEffectsHandled, exact selected Warehouse reservation lookup state, channel acknowledgement, and final redacted evidence path]
 
-The central Orders UUID and Payments Orders service-token lines above are current source-governance resolved/narrowed facts for the present bridge mechanism. They are not permission to run checkout or mutate Orders. Future execution remains blocked by the exact runtime packet, Auth token source, Payments bank/refund authority, Orders sideEffectsHandled, Warehouse live row/window/final approval, channel acknowledgement, and final redacted evidence path.
+The central Orders UUID and Payments Orders service-token lines above are current source-governance resolved/narrowed facts for the present bridge mechanism. They are not permission to run checkout or mutate Orders. Future execution remains blocked by the exact runtime packet, Auth token source, Payments bank/refund authority, Orders sideEffectsHandled, exact selected Warehouse reservation lookup state, channel acknowledgement, and final redacted evidence path.
 
 Current machine-checkable blockers:
 
 - `[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]`
-- `[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]`
+- `[MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]`
 - `[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]`

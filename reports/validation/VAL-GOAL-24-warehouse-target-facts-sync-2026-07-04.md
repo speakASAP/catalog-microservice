@@ -46,7 +46,7 @@ Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding P
 ## Preserved Runtime Blockers
 
 - `[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]`.
-- `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`.
+- `[RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]`.
 - `[MISSING: live current target row readback at execution time]`.
 - `[MISSING: timeout cleanup owner selection between Warehouse TTL/expiry-owned expire and explicit abort-owned release]`.
 - `[MISSING: deterministic Warehouse component reservation state for cleanup]`.

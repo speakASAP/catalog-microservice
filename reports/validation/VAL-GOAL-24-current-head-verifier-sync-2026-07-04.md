@@ -18,7 +18,7 @@ Remaining blockers:
 - [MISSING: owner-approved payment/warehouse/notification/crm/channel sideEffectsHandled acknowledgements for the selected central order hash].
 - [RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation].
 - [RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration].
-- [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation].
+- [RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback].
 - [MISSING: approved runtime route invocation evidence; do not call the route until all packet fields are present].
 - [MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof].
 

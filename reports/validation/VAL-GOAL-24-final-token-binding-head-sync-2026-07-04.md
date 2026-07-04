@@ -63,7 +63,7 @@ Allowed token proof markers remain runtime-gated: `tokenSourceType=on-host-token
 - `[MISSING: named runtime Orders cancellation actor/approvedBy and exact target order hash/state for the paid/provider packet]`.
 - `[MISSING: owner-approved payment/warehouse/notification/crm/channel sideEffectsHandled acknowledgements for the selected central order hash]`.
 - `[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]`.
-- `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`.
+- `[RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]`.
 - `[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]`.
 
 ## Boundary
