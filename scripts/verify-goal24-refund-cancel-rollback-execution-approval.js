@@ -80,6 +80,13 @@ for (const [label, source] of [
 }
 assert(packet.includes('[MISSING: named live-run executor for the exact side-effectful smoke]'), 'approval packet must keep live-run executor blocker separate from runtime validation owner');
 assert(!packet.includes('[MISSING: named live-run executor/runtime validation owner for the exact side-effectful smoke]'), 'approval packet must not keep combined live-run executor/runtime validation owner blocker');
+for (const stale of [
+  'runtime validation owner `[MISSING]`',
+  'runtime validation owner `[MISSING: assigned owner]`',
+  '[MISSING: runtime validation owner for live paid/provider bundle smoke]',
+]) {
+  assert(!packet.includes(stale), `approval packet must not keep stale runtime validation owner wording: ${stale}`);
+}
 assert(channelImplementationContract.includes('[RESOLVED: active FlipFlop checkout paths pass central Orders UUIDs to Payments before provider creation]'), 'channel implementation contract missing central Orders UUID resolved marker');
 assert(channelImplementationContract.includes('[RESOLVED: runtime verification of Payments Orders service token/role for the current bridge mechanism]'), 'channel implementation contract missing Payments Orders token resolved marker');
 

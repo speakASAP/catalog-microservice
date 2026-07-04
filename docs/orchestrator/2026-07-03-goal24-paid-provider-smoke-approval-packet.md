@@ -148,9 +148,9 @@ Parallel execution state:
 | Workstream | Status | Owner role | Scope | Validation evidence | Merge order |
 | --- | --- | --- | --- | --- | --- |
 | Catalog stale-head reconciliation | final integration | Catalog integration owner | Catalog docs/status/verifier only | `npm run verify:goal24-refund-cancel-rollback-execution-approval`, `npm run build`, `git diff --check` | current commit after validation |
-| Renewed execution packet | blocked | owner/runtime coordinator `[MISSING]` | exact `approvalWindow`, admin/token path, runtime validation owner, hard-stop authority | `[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]` | before any runtime smoke |
+| Renewed execution packet | blocked | owner/runtime coordinator `[MISSING]` | exact `approvalWindow`, admin/token path, source-controlled validation/stop authority, named live-run executor, hard-stop authority | `[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]`; `[MISSING: named live-run executor for the exact side-effectful smoke]` | before any runtime smoke |
 | Provider/Orders/Warehouse cleanup | dependency-gated | Payments, Orders, Warehouse, FlipFlop cleanup owners `[MISSING]` | provider callback/refund evidence, Orders correction actor/idempotency, Warehouse stock window/max quantity, channel cleanup | all side-effectful evidence remains `[MISSING]` | before final exact linked smoke |
-| Exact linked paid/provider smoke | blocked | runtime validation owner `[MISSING]` | one bounded future live run | `[MISSING: approved live smoke validation]` | last only |
+| Exact linked paid/provider smoke | blocked | Codex Goal 24 integration thread owns source-controlled validation/stop authority; live-run executor remains `[MISSING]` | one bounded future live run | `[MISSING: approved live smoke validation]`; `[MISSING: named live-run executor for the exact side-effectful smoke]` | last only |
 
 Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation.
 
@@ -264,13 +264,13 @@ Any future smoke must stop before the next side effect when one of these checks 
 | Orders central UUID and lifecycle bridge | dependency-gated | Orders lifecycle owner | Prove central Orders UUID flows to Payments and `orders.payment-status.v1` maps status to Warehouse effects | Orders docs/verifiers/source-policy | raw provider payloads, unapproved cancellations/refunds | Payments status bridge token proof | Orders payment-boundary/warehouse-handoff verifiers | Existing route allows Payments service role; runtime proof remains missing. |
 | Warehouse component stock rollback | dependency-gated | Warehouse reservation owner | Approve component-line hold/release/fulfill/cancel/return rollback for target bundle | Warehouse docs/verifiers/source-policy | aggregate bundle stock identity, live stock mutation without packet | Orders lifecycle mapping, stock window approval | Warehouse bundle component reservation validation | Warehouse approves component-line semantics only. |
 | Payments provider rollback | blocked | Payments provider/refund owner | Name provider method, provider rollback operation, webhook/callback proof, and refund/cancel limits | Payments docs/verifiers/source-policy | provider calls, live payment creation/refund without packet | owner provider selection and max amount | Payments paid-provider rollback readiness | Current Payments readiness says paid/provider remains blocked. |
-| Final live smoke integration | final integration | runtime validation owner `[MISSING: assigned owner]` | Execute one approved live run and sanitized report | approved runbook/report only | any side effect outside packet | all workstreams complete and owner-approved | `[MISSING: approved live smoke validation]` | Stop on first hard stop condition. |
+| Final live smoke integration | final integration | Codex Goal 24 integration thread owns source-controlled validation/stop authority; live-run executor remains `[MISSING: assigned owner]` | Execute one approved live run and sanitized report | approved runbook/report only | any side effect outside packet | all workstreams complete and owner-approved | `[MISSING: approved live smoke validation]`; `[MISSING: named live-run executor for the exact side-effectful smoke]` | Stop on first hard stop condition. |
 
 Shared contracts: this packet, Catalog `catalog.bundle.v1` contracts, FlipFlop paid/provider checkout gate, Orders create/payment-status contracts, Warehouse component reservation contract, Payments create/status/refund contracts.
 
 Integration owner: Catalog commerce integration owner until `[MISSING: dedicated paid/provider smoke owner]` is resolved.
 
-Validation owner: `[MISSING: runtime validation owner for live paid/provider bundle smoke]`.
+Validation owner: `[RESOLVED/NARROWED: Codex Goal 24 integration thread is the source-controlled validation/stop authority for future source-controlled smoke coordination]`; live execution remains blocked by `[MISSING: named live-run executor for the exact side-effectful smoke]`.
 
 Merge order: Catalog packet -> FlipFlop durable bundleId/checkout gate -> Orders central UUID/status bridge runtime proof -> Warehouse stock rollback plan -> Payments provider rollback plan -> final owner-approved smoke packet execution.
 
