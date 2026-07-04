@@ -274,6 +274,10 @@ for (const [label, source] of [
   assert(source.includes('[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]'), `${label} missing final Warehouse mutation approval blocker`);
 }
 for (const [label, source] of [
+  ['validation report', report],
+  ['approval packet', packet],
+  ['implementation state', state],
+  ['orchestrator status', status],
   ['paid/provider channel implementation contract', channelImplementationContract],
   ['paid/provider channel contract approval report', channelContractApproval],
 ]) {

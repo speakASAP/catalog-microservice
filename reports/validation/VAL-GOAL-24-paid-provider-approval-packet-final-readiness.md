@@ -1,4 +1,6 @@
 
+2026-07-04 continuation: Catalog consumes current Orders/Payments/Warehouse source policy for paid/provider cleanup. [RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, live Warehouse readback, and final mutation approval] This is source governance only and does not authorize checkout, payment, provider call, refund/reversal, Orders mutation, Warehouse mutation, channel cleanup, deploy, migration, DB write, secret/token output, or raw evidence capture.
+
 ## 2026-07-04 Payments Fiobanka Refund Gate Refresh
 
 Payments `e631ebd docs: sync goal24 flipflop supersession head` is deployed as `localhost:5000/payments-microservice:038c8e3`; sanitized runtime readback shows `FIO_BANKA_REFUND_UPLOAD_ENABLED=false`, `FIO_BANKA_API_KEY_CZK/EUR` present without values, and `FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK/EUR` absent. Fiobanka completed-transfer refund upload is source-defined only as guarded `PENDING_AUTHORIZATION` after Internetbanking authorization; it is not completed refund evidence and remains blocked by [MISSING: Vault properties FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK and FIO_BANKA_PAYMENT_ORDER_TOKEN_EUR for owner-approved payment-order upload].
