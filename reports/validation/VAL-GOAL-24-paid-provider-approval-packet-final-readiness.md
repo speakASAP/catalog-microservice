@@ -409,7 +409,7 @@ Wave B input heads (post-merge source-sync commits are validation evidence only)
 
 Catalog consumed Payments `b544e94 docs: correct goal24 fiobanka token endpoint evidence`.
 
-Payments evidence now resolves/narrows active endpoint delivery of `FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK/EUR` after bounded rollout restart. The active Payments endpoint pod on image `localhost:5000/payments-microservice:d403706` reports both payment-order token names present with sanitized length `64`, without value output. `FIO_BANKA_REFUND_UPLOAD_ENABLED=false`, so no Fiobanka payment-order upload can run from the current runtime.
+Payments evidence now resolves/narrows active endpoint delivery of `FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK/EUR` after bounded rollout restart. The active Payments endpoint pod on image `localhost:5000/payments-microservice:fd58097` reports both payment-order token names present with sanitized length `64`, without value output. `FIO_BANKA_REFUND_UPLOAD_ENABLED=false`, so no Fiobanka payment-order upload can run from the current runtime.
 
 Decision: the previous payment-order token runtime-delivery blocker is resolved/narrowed. Full completed-payment Fiobanka paid/refund smoke remains blocked by `[MISSING: FIO_BANKA_REFUND_UPLOAD_ENABLED=true for an owner-approved exact future refund upload window]`, `[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]`, `[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]`, concrete idempotency keys, and bank/Internetbanking authorization completion evidence.
 
@@ -427,6 +427,6 @@ No live checkout, payment creation, provider call, webhook replay, refund/revers
 
 ## 2026-07-04 Active Payments Token Provisioning Runtime Readback
 
-[RESOLVED/NARROWED: active Payments runtime image localhost:5000/payments-microservice:d403706 exposes FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK/EUR as present length-valid env vars without value output while FIO_BANKA_REFUND_UPLOAD_ENABLED=false]
+[RESOLVED/NARROWED: active Payments runtime image localhost:5000/payments-microservice:fd58097 exposes FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK/EUR as present length-valid env vars without value output while FIO_BANKA_REFUND_UPLOAD_ENABLED=false]
 
 Validation impact: token delivery is resolved/narrowed, but live side effects remain blocked by the upload flag/window, bank/refund authority, exact hashes, idempotency keys, Orders/Warehouse/channel packets, and final evidence path.
