@@ -463,3 +463,17 @@ Auth token-binding proof is not Payments provider authority, not Fiobanka refund
 Candidate source facts: bundle `919be990-1c76-4f9c-b100-829281c6a709`; component products `ce4a51aa-2d12-4ab7-a965-7a36609d01fc` and `dbc51dde-fc66-4511-b178-f929183f4647`; Warehouse `c0de0000-0000-4000-8000-000000000013`; max hold qty `1` per component.
 
 Runtime remains blocked by `[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]`, `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`, `[MISSING: live current target row readback at execution time]`, `[MISSING: timeout cleanup owner selection between Warehouse TTL/expiry-owned expire and explicit abort-owned release]`, and `[MISSING: deterministic Warehouse component reservation state for cleanup]`. Candidate target facts do not prove live current stock rows and do not authorize any Warehouse reservation or cleanup mutation.
+
+## 2026-07-04 Current Channel Owner/Config Sync
+
+[RESOLVED/NARROWED: Catalog consumed FlipFlop f004fe5 channel owner/config evidence as current source governance; live paid/provider side effects remain blocked]
+
+Current Catalog planning consumes the FlipFlop `f004fe5` source-governance markers for runtime coordination and channel cleanup:
+
+- `[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner and FlipFlop channel cleanup executor for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, and redacted evidence path exist]`.
+- `[RESOLVED/NARROWED: runtime config readback shows PAYMENT_SUCCESS_URL and PAYMENT_CANCEL_URL resolve to approved FlipFlop payment-result URLs without secret output]`.
+- `[RESOLVED/NARROWED: FlipFlop channel cleanup executor is the Codex Goal 24 integration thread for future source-controlled coordination]`.
+
+Historical pre-supersession lines that said the runtime validation owner, FlipFlop channel cleanup executor, or payment-result URL config readback were missing are retained only as earlier evidence. They are not current Catalog blockers. This does not supply Auth token source, Payments bank/refund authority, exact provider/payment/order hashes, Orders side-effect acknowledgements, Warehouse target rows/window/max quantity, or final redacted evidence.
+
+Current blockers remain `[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]`, `[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]`, `[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]`, `[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]`, `[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]`, `[MISSING: concrete side-effectful rollback run id and cleanup idempotency keys]`, `[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]`, `[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]`, `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`, and `[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]`.

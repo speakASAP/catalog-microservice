@@ -362,3 +362,17 @@ Catalog consumed current heads Catalog `906a31f merge goal24 flipflop channel su
 This report remains source-only and runtime-blocked. Current head sync does not authorize checkout, provider, refund/cancel/reversal, Orders, Warehouse, channel cleanup, deploy, migration, secret/token output, or raw evidence capture.
 
 Report: `reports/validation/VAL-GOAL-24-orders-payments-head-sync-2026-07-04.md`.
+
+## 2026-07-04 Current Channel Owner/Config Sync
+
+[RESOLVED/NARROWED: Catalog consumed FlipFlop f004fe5 channel owner/config evidence as current source governance; live paid/provider side effects remain blocked]
+
+Current Catalog planning consumes the FlipFlop `f004fe5` source-governance markers for runtime coordination and channel cleanup:
+
+- `[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner and FlipFlop channel cleanup executor for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, and redacted evidence path exist]`.
+- `[RESOLVED/NARROWED: runtime config readback shows PAYMENT_SUCCESS_URL and PAYMENT_CANCEL_URL resolve to approved FlipFlop payment-result URLs without secret output]`.
+- `[RESOLVED/NARROWED: FlipFlop channel cleanup executor is the Codex Goal 24 integration thread for future source-controlled coordination]`.
+
+Historical pre-supersession lines that said the runtime validation owner, FlipFlop channel cleanup executor, or payment-result URL config readback were missing are retained only as earlier evidence. They are not current Catalog blockers. This does not supply Auth token source, Payments bank/refund authority, exact provider/payment/order hashes, Orders side-effect acknowledgements, Warehouse target rows/window/max quantity, or final redacted evidence.
+
+Current blockers remain `[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]`, `[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]`, `[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]`, `[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]`, `[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]`, `[MISSING: concrete side-effectful rollback run id and cleanup idempotency keys]`, `[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]`, `[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]`, `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`, and `[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]`.
