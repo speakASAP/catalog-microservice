@@ -15,6 +15,7 @@ const flipflopTokenBindingContractConsumption = read('reports/validation/VAL-GOA
 const finalTokenBindingHeadSync = read('reports/validation/VAL-GOAL-24-final-token-binding-head-sync-2026-07-04.md');
 const warehouseTargetFactsSync = read('reports/validation/VAL-GOAL-24-warehouse-target-facts-sync-2026-07-04.md');
 const catalogChannelOwnerConfigCurrentSync = read('reports/validation/VAL-GOAL-24-catalog-channel-owner-config-current-sync-2026-07-04.md');
+const catalogOwnerExecutorWordingSync = read('reports/validation/VAL-GOAL-24-catalog-owner-executor-wording-sync-2026-07-04.md');
 const flipflopAutonomousRuntimeOwnership = read('../flipflop/reports/validation/VAL-GOAL-24-autonomous-runtime-ownership-packet-2026-07-04.md');
 const flipflopPaymentResultUrlReadback = read('../flipflop/reports/validation/VAL-GOAL-24-payment-result-url-runtime-readback.md');
 const warehouseCleanupPacket = read('../warehouse-microservice/docs/contracts/goal24-warehouse-cleanup-approval-packet.md');
@@ -286,8 +287,52 @@ for (const boundary of [
   assert(catalogChannelOwnerConfigCurrentSync.includes(boundary), `Catalog channel owner/config current sync missing boundary ${boundary}`);
 }
 
-console.log('Goal 24 refund/cancel rollback execution approval gate verified');
 
 for (const marker of ['[RESOLVED/NARROWED: sanitized runtime readback found completed Fiobanka provider-payment evidence but no central Orders or FlipFlop exact-order linkage for the retained Goal 24 payment]', '[RESOLVED: owner accepted owner-confirmed manual Fiobanka refund as sufficient Goal 24 closeout without exact order linkage]', '[RESOLVED/NARROWED: runtime readback found no linked central Orders or FlipFlop state, so no Orders/Warehouse post-paid correction is required for this evidence-only closeout]', 'completed Fiobanka rows checked: `2`', 'Orders lookup', 'FlipFlop readback']) {
   assert(linkageReport.includes(marker), `manual refund linkage report missing marker: ${marker}`);
 }
+
+
+const staleOwnerExecutorHardStops = [
+  '- `[MISSING: named runtime validation owner for the exact side-effectful smoke]`.',
+  '- `[MISSING: named FlipFlop channel cleanup executor]`.',
+];
+for (const [label, source] of [
+  ['approval packet', packet],
+  ['final readiness report', report],
+]) {
+  assert(source.includes('[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner and FlipFlop channel cleanup executor for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, and redacted evidence path exist]'), `${label} missing current Codex coordination owner/executor marker`);
+  assert(source.includes('[RESOLVED/NARROWED: FlipFlop channel cleanup executor is the Codex Goal 24 integration thread for future source-controlled coordination]'), `${label} missing current FlipFlop executor marker`);
+  for (const stale of staleOwnerExecutorHardStops) {
+    assert(!source.includes(stale), `${label} still lists stale owner/executor hard stop: ${stale}`);
+  }
+}
+for (const marker of [
+  '[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner and FlipFlop channel cleanup executor for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, and redacted evidence path exist]',
+  '[RESOLVED/NARROWED: FlipFlop channel cleanup executor is the Codex Goal 24 integration thread for future source-controlled coordination]',
+  '[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]',
+  '[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]',
+  '[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]',
+  '[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]',
+  '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
+]) {
+  assert(catalogOwnerExecutorWordingSync.includes(marker), `Catalog owner/executor wording sync report missing ${marker}`);
+}
+for (const boundary of [
+  'mutation: false',
+  'live_checkout_executed: false',
+  'discount_code_created: false',
+  'payment_creation: false',
+  'provider_call: false',
+  'orders_mutation: false',
+  'warehouse_mutation: false',
+  'channel_cleanup_mutation: false',
+  'deployment: false',
+  'secret_output: false',
+  'token_output: false',
+  'raw_customer_or_payment_evidence: false',
+]) {
+  assert(catalogOwnerExecutorWordingSync.includes(boundary), `Catalog owner/executor wording sync report missing boundary ${boundary}`);
+}
+
+console.log('Goal 24 refund/cancel rollback execution approval gate verified');

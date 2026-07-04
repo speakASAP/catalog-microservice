@@ -123,8 +123,17 @@ Current hard stops before any exact linked paid/provider attempt:
 
 - `[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]`.
 - `[MISSING: named admin/actor or approved token-handling path for guarded discount-code generation]`.
-- `[MISSING: named runtime validation owner for the exact side-effectful smoke]`.
-- `[MISSING: named FlipFlop channel cleanup executor]`.
+- `[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]`.
+- `[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]`.
+- `[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]`.
+- `[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]`.
+- `[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]`.
+- `[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]`.
+
+Current coordination facts:
+
+- `[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner and FlipFlop channel cleanup executor for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, and redacted evidence path exist]`.
+- `[RESOLVED/NARROWED: FlipFlop channel cleanup executor is the Codex Goal 24 integration thread for future source-controlled coordination]`.
 
 Boundary: no discount code, checkout, order, payment, provider call, Warehouse reservation, Orders mutation, FlipFlop mutation, DB write, deploy, migration, secret/token output, raw customer/order/payment/provider evidence, or marketplace/feed mutation is authorized by this packet until the fields above are source-controlled and owner-approved.
 
