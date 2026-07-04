@@ -2234,3 +2234,9 @@ Remaining blockers:
 Goal 24 Auth actor readback retained token hard stops:
 - `[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]`
 - `[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]`
+
+## 2026-07-04 Goal 24 Fiobanka Refund Wording Alignment
+
+[RESOLVED/NARROWED: Catalog Fiobanka refund wording now distinguishes runtime validation owner from live-run executor and records that Fiobanka completed-transfer rollback is not an automated provider-side Payments refund endpoint]
+
+Catalog consumes Payments source-governance semantics that owner-approved manual bank/service refund or guarded payment-order upload that remains `PENDING_AUTHORIZATION` until Internetbanking/bank completion evidence exists. A payment-order upload acknowledgement that remains `PENDING_AUTHORIZATION` is not refund/reversal completion evidence, transaction-polling/read-token readiness is not refund/reversal authority, and Catalog must preserve `[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]`, `[MISSING: owner-approved Fiobanka refund/reversal execution path and redacted provider evidence]`, exact Orders/Warehouse packet blockers, and final redacted evidence path before any new paid/provider runtime side effect.
