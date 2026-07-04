@@ -155,6 +155,18 @@ This supersedes historical missing runtime validation owner / FlipFlop channel c
 Report: `reports/validation/VAL-GOAL-24-flipflop-channel-supersession-consumption-2026-07-04.md`.
 
 
+
+## 2026-07-04 Orders/Payments Current Head Sync
+
+Catalog consumed current heads Catalog `906a31f merge goal24 flipflop channel supersession consumption`, FlipFlop `5202c15 merge goal24 channel cleanup owner supersession`, Payments `7822f2a merge goal24 cross-service head sync`, Orders `3901ec1 merge goal24 latest cleanup head sync`, and Warehouse `46a66dc docs: define goal24 warehouse cleanup packet` as source-governance inputs only.
+
+[RESOLVED/NARROWED: Codex Goal 24 integration thread supersedes earlier FlipFlop channel executor/runtime owner blockers; channel cleanup runtime remains blocked until bank/refund authority, exact provider proof, Orders side-effect acknowledgements, Warehouse target facts, Auth token source, and final redacted evidence path exist]
+
+This supersedes historical current-gate assertions for Orders `e3f6e18` and Payments `e631ebd`/`bf96f5d`. Runtime execution remains blocked by the existing `[MISSING: ...]` authority, exact proof, side-effect acknowledgement, Warehouse target, token-source, and redacted evidence fields.
+
+Report: `reports/validation/VAL-GOAL-24-orders-payments-head-sync-2026-07-04.md`.
+
+
 ## Non-Approval Boundaries
 
 This packet does not approve:

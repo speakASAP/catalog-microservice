@@ -9,6 +9,7 @@ const state = read('docs/IMPLEMENTATION_STATE.md');
 const status = read('docs/orchestrator/STATUS.md');
 const linkageReport = read('reports/validation/VAL-GOAL-24-manual-refund-linkage-readback.md');
 const flipflopChannelSupersessionReport = read('reports/validation/VAL-GOAL-24-flipflop-channel-supersession-consumption-2026-07-04.md');
+const ordersPaymentsHeadSyncReport = read('reports/validation/VAL-GOAL-24-orders-payments-head-sync-2026-07-04.md');
 
 const flipflopChannelSupersessionMarker = '[RESOLVED/NARROWED: Codex Goal 24 integration thread supersedes earlier FlipFlop channel executor/runtime owner blockers; channel cleanup runtime remains blocked until bank/refund authority, exact provider proof, Orders side-effect acknowledgements, Warehouse target facts, Auth token source, and final redacted evidence path exist]';
 
@@ -90,11 +91,37 @@ for (const marker of [
   'FlipFlop `5202c15 merge goal24 channel cleanup owner supersession`',
   'FlipFlop `1a79c6a docs: supersede goal24 channel cleanup owner blockers`',
   flipflopChannelSupersessionMarker,
-  'Orders `e3f6e18 docs: preserve goal24 orders cleanup packet`',
-  'Payments `e631ebd docs: sync goal24 flipflop supersession head`',
+  'Orders `3901ec1 merge goal24 latest cleanup head sync`',
+  'Payments `7822f2a merge goal24 cross-service head sync`',
   '[RESOLVED/NARROWED: Warehouse owner-approved cleanup operation for reserved-only, fulfilled/stock-decremented, return, partial component failure, and timeout component-line states; max quantity and live hold/release window remain missing]',
 ]) {
   assert(report.includes(marker) || state.includes(marker) || status.includes(marker), `current exact linked paid-flow gate missing marker: ${marker}`);
+}
+
+
+for (const [label, source] of [
+  ['orders/payments head sync report', ordersPaymentsHeadSyncReport],
+  ['approval packet', packet],
+  ['validation report', report],
+  ['implementation state', state],
+  ['orchestrator status', status],
+]) {
+  assert(source.includes('Orders `3901ec1 merge goal24 latest cleanup head sync`'), `${label} missing Orders 3901ec1 merge goal24 latest cleanup head sync consumption`);
+  assert(source.includes('Payments `7822f2a merge goal24 cross-service head sync`'), `${label} missing Payments 7822f2a merge goal24 cross-service head sync consumption`);
+  assert(source.includes('Catalog `906a31f merge goal24 flipflop channel supersession consumption`'), `${label} missing Catalog 906a31f merge goal24 flipflop channel supersession consumption`);
+}
+for (const boundary of [
+  'mutation: false',
+  'live_checkout_executed: false',
+  'provider_call: false',
+  'orders_mutation: false',
+  'warehouse_mutation: false',
+  'channel_cleanup_mutation: false',
+  'deployment: false',
+  'secret_output: false',
+  'raw_customer_or_payment_evidence: false',
+]) {
+  assert(ordersPaymentsHeadSyncReport.includes(boundary), `Orders/Payments head sync missing boundary ${boundary}`);
 }
 
 for (const [label, source] of [
