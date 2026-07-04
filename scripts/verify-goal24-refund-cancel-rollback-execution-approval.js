@@ -49,6 +49,9 @@ const ordersFinalOwnerHandoffReport = read('../orders-microservice/reports/valid
 const catalogOrdersFinalHandoffConsumption = read('reports/validation/VAL-GOAL-24-catalog-consume-orders-final-owner-handoff-d98fb19-2026-07-04.md');
 const warehouseOrdersNoGoConsumption = read('../warehouse-microservice/reports/validation/VAL-GOAL-24-warehouse-consume-live-no-go-preflight-9287e3f-cc49c08-d1eef3d-9a7c664-2026-07-04.md');
 const flipflopDurableMigrationReadiness = read('../flipflop/implementation-goals/GOAL-24-durable-bundleid-checkout-migration-readiness.md');
+const catalogCurrentPaymentsOrdersHeads = read('reports/validation/VAL-GOAL-24-catalog-consume-current-payments-orders-heads-2026-07-04.md');
+const paymentsPreSideEffectPacket = read('../payments-microservice/docs/orchestrator/2026-07-04-goal24-pre-side-effect-runtime-execution-packet.md');
+const ordersPaymentsPreSideEffectConsumption = read('../orders-microservice/reports/validation/VAL-GOAL-24-orders-consume-payments-pre-side-effect-packet-445c4e7-2026-07-04.md');
 
 
 const catalogLiveNoGoPreflightMarker = '[RESOLVED/NARROWED: Catalog consumed Payments cc49c08 live no-go preflight and Warehouse 686d49c blocker wording sync; runtime deployments are ready but paid/provider side effects remain hard-stopped until bank/refund authority, exact future smoke identities, Orders sideEffectsHandled acknowledgements, deterministic Warehouse reservation lookup state, channel acknowledgement, and final redacted evidence exist]';
@@ -754,6 +757,37 @@ for (const boundary of [
 ]) {
   assert(catalogOwnerExecutorWordingSync.includes(boundary), `Catalog owner/executor wording sync report missing boundary ${boundary}`);
 }
+
+
+
+const catalogCurrentPaymentsOrdersMarker = '[RESOLVED/NARROWED: Catalog consumed Payments 445c4e7 pre-side-effect packet, Orders 6360baa Payments pre-side-effect consumption, FlipFlop 793f8ef owner-authority sync, and Auth c389c1e actor token provisioning proof as source-governance inputs only; Catalog approval planning remains hard-stopped until a separate current side-effect execution window, exact future payment/order/provider hashes, Orders sideEffectsHandled acknowledgements, exact Warehouse reservation lookup state, channel acknowledgement, provider proof or unpaid acknowledgement, and final redacted evidence exist]';
+for (const [label, source] of [
+  ['Catalog current Payments/Orders heads report', catalogCurrentPaymentsOrdersHeads],
+  ['validation report', report],
+  ['implementation state', state],
+  ['orchestrator status', status],
+  ['approval packet', packet],
+]) {
+  assert(source.includes(catalogCurrentPaymentsOrdersMarker), `${label} missing current Payments/Orders heads marker`);
+  for (const blocker of [
+    '[MISSING: current side-effect execution window owned by a separate newer integration owner thread]',
+    '[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]',
+    '[MISSING: exact Orders target order hash/state, cancellation actor, approval id, safe reason code, idempotency key, and sideEffectsHandled payment|warehouse|notification|crm|channel acknowledgements for the future smoke]',
+    '[MISSING: exact selected Warehouse reservation lookup state for cleanup]',
+    '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
+  ]) {
+    assert(source.includes(blocker), `${label} missing blocker ${blocker}`);
+  }
+  assert(source.includes('warehouse_mutation: false'), `${label} missing Warehouse boundary`);
+  assert(source.includes('provider_call: false'), `${label} missing provider boundary`);
+}
+for (const markerText of [
+  'id: PAYMENTS-GOAL24-PRE-SIDE-EFFECT-RUNTIME-EXECUTION-PACKET',
+  '[MISSING: current side-effect execution window owned by a separate newer integration owner thread]',
+]) {
+  assert(paymentsPreSideEffectPacket.includes(markerText), `Payments pre-side-effect packet missing ${markerText}`);
+}
+assert(ordersPaymentsPreSideEffectConsumption.includes('[RESOLVED/NARROWED: Orders consumed Payments 445c4e7 pre-side-effect runtime execution packet as source-only provider-authenticity handoff evidence; Orders route invocation remains blocked until a separate current side-effect execution window'), 'Orders Payments 445c4e7 consumption marker missing');
 
 console.log('Goal 24 refund/cancel rollback execution approval gate verified');
 
