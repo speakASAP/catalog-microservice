@@ -13,9 +13,9 @@ deployment: false
 secret_output: false
 raw_customer_or_payment_evidence: false
 
-[RESOLVED/NARROWED: Catalog consumed current Goal 24 source-governance heads Catalog `b0ed9f5 merge goal24 current integration head sync`, FlipFlop `ad409fc merge goal24 current source head sync`, Payments `52f9b7e merge goal24 current source head sync`, Orders `d5d2114 merge goal24 current source head sync`, and Warehouse `11df002 merge goal24 warehouse target facts reconcile`; runtime side effects remain blocked]
+[RESOLVED/NARROWED: Goal 24 frozen source-governance wave GOAL24-SOURCE-WAVE-2026-07-04A records Catalog `e379b54 merge goal24 current source head sync`, FlipFlop `e1f3e3a merge goal24 current source head sync`, Payments `eab6351 merge goal24 current source head sync`, Orders `d53de9f merge goal24 current source head sync`, and Warehouse `11df002 merge goal24 warehouse target facts reconcile` as input heads for runtime planning; post-merge self heads are validation evidence only; runtime side effects remain blocked]
 
-The older Catalog reports that name FlipFlop `5202c15`, Payments `7822f2a`, Warehouse `46a66dc`, or Catalog pre-change `906a31f` remain historical source-context. They are superseded for new runtime planning by this current-head sync and must not be used as live smoke approval.
+The older Catalog reports that name FlipFlop `5202c15`, Payments `7822f2a`, Warehouse `46a66dc`, or Catalog pre-change `906a31f` remain historical source-context. They are superseded for new runtime planning by this source-wave freeze and must not be used as live smoke approval.
 
 ## Intent Preservation Chain
 
@@ -29,14 +29,14 @@ The older Catalog reports that name FlipFlop `5202c15`, Payments `7822f2a`, Ware
 - Code: `docs/orchestrator/STATUS.md`, `docs/IMPLEMENTATION_STATE.md`, `docs/orchestrator/2026-07-03-goal24-paid-provider-smoke-approval-packet.md`, `reports/validation/VAL-GOAL-24-current-head-sync-2026-07-04.md`, and `scripts/verify-goal24-refund-cancel-rollback-execution-approval.js`.
 - Validation: `npm run verify:goal24-refund-cancel-rollback-execution-approval`, `node --check scripts/verify-goal24-refund-cancel-rollback-execution-approval.js`, `npm run build`, and `git diff --check`.
 
-## Current Source Heads
+## Frozen Source-Governance Wave Inputs
 
-| Service | Current head consumed | Runtime authority |
+| Service | Frozen wave input head | Runtime authority |
 | --- | --- | --- |
-| Catalog | `b0ed9f5 merge goal24 current integration head sync` | integration docs/status only |
-| FlipFlop | `ad409fc merge goal24 current source head sync` | channel cleanup current-head source marker only |
-| Payments | `52f9b7e merge goal24 current source head sync` | provider/refund rollback docs only |
-| Orders | `d5d2114 merge goal24 current source head sync` | lifecycle/cancellation/idempotency source packet only |
+| Catalog | `e379b54 merge goal24 current source head sync` | integration docs/status only |
+| FlipFlop | `e1f3e3a merge goal24 current source head sync` | channel cleanup frozen-wave source marker only |
+| Payments | `eab6351 merge goal24 current source head sync` | provider/refund rollback docs only |
+| Orders | `d53de9f merge goal24 current source head sync` | lifecycle/cancellation/idempotency source packet only |
 | Warehouse | `11df002 merge goal24 warehouse target facts reconcile` | candidate target facts narrowed; live window/final approval still missing |
 
 ## Preserved Runtime Hard Stops

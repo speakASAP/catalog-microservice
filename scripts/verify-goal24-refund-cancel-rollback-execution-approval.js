@@ -13,7 +13,7 @@ const ordersPaymentsHeadSyncReport = read('reports/validation/VAL-GOAL-24-orders
 const currentHeadSyncReport = read('reports/validation/VAL-GOAL-24-current-head-sync-2026-07-04.md');
 
 const flipflopChannelSupersessionMarker = '[RESOLVED/NARROWED: Codex Goal 24 integration thread supersedes earlier FlipFlop channel executor/runtime owner blockers; channel cleanup runtime remains blocked until bank/refund authority, exact provider proof, Orders side-effect acknowledgements, Warehouse target facts, Auth token source, and final redacted evidence path exist]';
-const currentHeadSyncMarker = '[RESOLVED/NARROWED: Catalog consumed current Goal 24 source-governance heads Catalog `b0ed9f5 merge goal24 current integration head sync`, FlipFlop `ad409fc merge goal24 current source head sync`, Payments `52f9b7e merge goal24 current source head sync`, Orders `d5d2114 merge goal24 current source head sync`, and Warehouse `11df002 merge goal24 warehouse target facts reconcile`; runtime side effects remain blocked]';
+const sourceWaveFreezeMarker = '[RESOLVED/NARROWED: Goal 24 frozen source-governance wave GOAL24-SOURCE-WAVE-2026-07-04A records Catalog `e379b54 merge goal24 current source head sync`, FlipFlop `e1f3e3a merge goal24 current source head sync`, Payments `eab6351 merge goal24 current source head sync`, Orders `d53de9f merge goal24 current source head sync`, and Warehouse `11df002 merge goal24 warehouse target facts reconcile` as input heads for runtime planning; post-merge self heads are validation evidence only; runtime side effects remain blocked]';
 
 const requiredMarkers = [
   '## Refund/Cancel Rollback Execution Approval Decision',
@@ -81,17 +81,17 @@ assert(report.includes('future-only gates for new linked paid/provider smokes'),
 
 
 for (const [label, source] of [
-  ['current head sync report', currentHeadSyncReport],
+  ['source-wave freeze report', currentHeadSyncReport],
   ['approval packet', packet],
   ['implementation state', state],
   ['orchestrator status', status],
 ]) {
-  assert(source.includes(currentHeadSyncMarker), `${label} missing current head sync marker`);
+  assert(source.includes(sourceWaveFreezeMarker), `${label} missing source-wave freeze marker`);
   for (const marker of [
-    'Catalog `b0ed9f5 merge goal24 current integration head sync`',
-    'FlipFlop `ad409fc merge goal24 current source head sync`',
-    'Payments `52f9b7e merge goal24 current source head sync`',
-    'Orders `d5d2114 merge goal24 current source head sync`',
+    'Catalog `e379b54 merge goal24 current source head sync`',
+    'FlipFlop `e1f3e3a merge goal24 current source head sync`',
+    'Payments `eab6351 merge goal24 current source head sync`',
+    'Orders `d53de9f merge goal24 current source head sync`',
     'Warehouse `11df002 merge goal24 warehouse target facts reconcile`',
     '[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]',
     '[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]',
@@ -103,7 +103,7 @@ for (const [label, source] of [
     '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
     '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
   ]) {
-    assert(source.includes(marker), `${label} missing current head sync marker ${marker}`);
+    assert(source.includes(marker), `${label} missing source-wave freeze marker ${marker}`);
   }
 }
 for (const boundary of [
@@ -117,7 +117,7 @@ for (const boundary of [
   'secret_output: false',
   'raw_customer_or_payment_evidence: false',
 ]) {
-  assert(currentHeadSyncReport.includes(boundary), `current head sync report missing boundary ${boundary}`);
+  assert(currentHeadSyncReport.includes(boundary), `source-wave freeze report missing boundary ${boundary}`);
 }
 
 for (const marker of [
@@ -176,8 +176,8 @@ for (const [label, source] of [
   ['implementation state', state],
   ['orchestrator status', status],
 ]) {
-  assert(source.includes(currentHeadSyncMarker), `${label} missing current Catalog head sync marker`);
-  assert(source.includes('FlipFlop `ad409fc merge goal24 current source head sync`'), `${label} missing current FlipFlop ad409fc consumption`);
+  assert(source.includes(sourceWaveFreezeMarker), `${label} missing Catalog source-wave freeze marker`);
+  assert(source.includes('FlipFlop `e1f3e3a merge goal24 current source head sync`'), `${label} missing frozen-wave FlipFlop e1f3e3a consumption`);
   assert(source.includes('Warehouse `11df002 merge goal24 warehouse target facts reconcile`'), `${label} missing current Warehouse 11df002 consumption`);
 }
 for (const marker of [
