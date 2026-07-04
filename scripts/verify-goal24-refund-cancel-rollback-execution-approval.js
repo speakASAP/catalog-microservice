@@ -14,6 +14,9 @@ const currentHeadSyncReport = read('reports/validation/VAL-GOAL-24-current-head-
 const flipflopTokenBindingContractConsumption = read('reports/validation/VAL-GOAL-24-flipflop-token-binding-proof-contract-consumption-2026-07-04.md');
 const finalTokenBindingHeadSync = read('reports/validation/VAL-GOAL-24-final-token-binding-head-sync-2026-07-04.md');
 const warehouseTargetFactsSync = read('reports/validation/VAL-GOAL-24-warehouse-target-facts-sync-2026-07-04.md');
+const catalogChannelOwnerConfigCurrentSync = read('reports/validation/VAL-GOAL-24-catalog-channel-owner-config-current-sync-2026-07-04.md');
+const flipflopAutonomousRuntimeOwnership = read('../flipflop/reports/validation/VAL-GOAL-24-autonomous-runtime-ownership-packet-2026-07-04.md');
+const flipflopPaymentResultUrlReadback = read('../flipflop/reports/validation/VAL-GOAL-24-payment-result-url-runtime-readback.md');
 const warehouseCleanupPacket = read('../warehouse-microservice/docs/contracts/goal24-warehouse-cleanup-approval-packet.md');
 const paymentsTokenBindingConsumption = read('../payments-microservice/reports/validation/VAL-GOAL-24-payments-token-binding-proof-contract-consumption-2026-07-04.md');
 const ordersTokenBindingConsumption = read('../orders-microservice/reports/validation/VAL-GOAL-24-orders-token-binding-proof-contract-consumption-2026-07-04.md');
@@ -251,6 +254,36 @@ for (const boundary of [
   'raw_customer_or_payment_evidence: false',
 ]) {
   assert(flipflopChannelSupersessionReport.includes(boundary), `FlipFlop channel supersession consumption missing boundary ${boundary}`);
+}
+
+for (const marker of [
+  '[RESOLVED/NARROWED: Catalog consumed FlipFlop f004fe5 channel owner/config evidence as current source governance; live paid/provider side effects remain blocked]',
+  '[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner and FlipFlop channel cleanup executor for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, and redacted evidence path exist]',
+  '[RESOLVED/NARROWED: runtime config readback shows PAYMENT_SUCCESS_URL and PAYMENT_CANCEL_URL resolve to approved FlipFlop payment-result URLs without secret output]',
+  '[RESOLVED/NARROWED: FlipFlop channel cleanup executor is the Codex Goal 24 integration thread for future source-controlled coordination]',
+]) {
+  assert(catalogChannelOwnerConfigCurrentSync.includes(marker), `Catalog channel owner/config current sync missing ${marker}`);
+  assert(packet.includes(marker) || report.includes(marker) || state.includes(marker) || status.includes(marker), `Catalog docs missing current channel owner/config marker ${marker}`);
+}
+assert(flipflopAutonomousRuntimeOwnership.includes('[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner and FlipFlop channel cleanup executor for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, and redacted evidence path exist]'), 'FlipFlop autonomous runtime ownership source marker missing');
+assert(flipflopPaymentResultUrlReadback.includes('[RESOLVED/NARROWED: runtime config readback shows PAYMENT_SUCCESS_URL and PAYMENT_CANCEL_URL resolve to approved FlipFlop payment-result URLs without secret output]'), 'FlipFlop payment result URL source marker missing');
+assert(flipflopPaymentResultUrlReadback.includes('PAYMENT_SUCCESS_URL_STATE=set approved_payment_result_url'), 'FlipFlop success URL state missing');
+assert(flipflopPaymentResultUrlReadback.includes('PAYMENT_CANCEL_URL_STATE=set approved_payment_result_url'), 'FlipFlop cancel URL state missing');
+for (const boundary of [
+  'mutation: false',
+  'live_checkout_executed: false',
+  'payment_creation: false',
+  'provider_call: false',
+  'refund_or_reversal: false',
+  'orders_mutation: false',
+  'warehouse_mutation: false',
+  'channel_cleanup_mutation: false',
+  'deployment: false',
+  'secret_output: false',
+  'token_output: false',
+  'raw_customer_or_payment_evidence: false',
+]) {
+  assert(catalogChannelOwnerConfigCurrentSync.includes(boundary), `Catalog channel owner/config current sync missing boundary ${boundary}`);
 }
 
 console.log('Goal 24 refund/cancel rollback execution approval gate verified');
