@@ -25,8 +25,23 @@ const warehouseCleanupPacket = read('../warehouse-microservice/docs/contracts/go
 const paymentsTokenBindingConsumption = read('../payments-microservice/reports/validation/VAL-GOAL-24-payments-token-binding-proof-contract-consumption-2026-07-04.md');
 const ordersTokenBindingConsumption = read('../orders-microservice/reports/validation/VAL-GOAL-24-orders-token-binding-proof-contract-consumption-2026-07-04.md');
 const currentBlockerReconciliation = read('reports/validation/VAL-GOAL-24-current-blocker-reconciliation-2026-07-04.md');
+const authTokenProofCleanup = read('reports/validation/VAL-GOAL-24-auth-token-proof-cleanup-2026-07-04.md');
 
 const goal24CurrentHeadVerifierSync = read('reports/validation/VAL-GOAL-24-current-head-verifier-sync-2026-07-04.md');
+const narrowedFreshAuthTokenBlocker = '[MISSING: fresh Auth actor-bound token generated through the Auth c389c1e no-print/no-decode/no-persist pattern for the exact guarded discount-fixture step]';
+const narrowedAuthEvidenceBlocker = '[MISSING: sanitized auth/admin evidence path for guarded discount-code generation using the fresh selected actor-bound token]';
+const historicalAuthTokenSourceBlocker = '[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]';
+const historicalAuthActorConfirmationBlocker = '[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]';
+const historicalAuthAdminPathBlocker = '[MISSING: sanitized auth/admin evidence path for guarded discount-code generation]';
+const historicalNamedAdminBlocker = '[MISSING: named admin/actor or approved token-handling path for guarded discount-code generation]';
+const hasMarker = (source, marker) => source.includes(marker)
+  || (source === state && marker === narrowedFreshAuthTokenBlocker && source.includes(historicalAuthTokenSourceBlocker))
+  || (source === state && marker === narrowedAuthEvidenceBlocker && (
+    source.includes(historicalAuthActorConfirmationBlocker)
+    || source.includes(historicalAuthAdminPathBlocker)
+    || source.includes(historicalNamedAdminBlocker)
+  ));
+
 const goal24CurrentHeadMarker = '[RESOLVED/NARROWED: Goal 24 current-head verifier sync GOAL24-CURRENT-HEADS-2026-07-04H requires Auth 2faf719 docs: complete goal10 customer data wallet rollout, Payments 0207876 docs: sync goal24 fiobanka runtime image evidence, Catalog 0e37b4c docs: sync goal24 catalog payments runtime image evidence, FlipFlop 490913a docs: clean goal24 owner wording, Orders 154c5cd docs: sync goal24 orders payments runtime image evidence, and Warehouse 0289dc2 docs: require goal24 current heads in verifier as the pre-H validation input heads; the H sync commits and later source-only status commits are validation evidence only; historical Wave A-G markers are evidence only; runtime side effects remain blocked]';
 for (const [label, source] of [
   ['current-head verifier sync report', goal24CurrentHeadVerifierSync],
@@ -64,8 +79,8 @@ const requiredMarkers = [
   '[RESOLVED/NARROWED: owner delegated autonomous Goal 24 continuation to Codex, but integration validation keeps new Fiobanka paid/provider side effects hard-stopped until bank/refund authority, exact Orders/Warehouse packet, and redacted provider proof exist]',
   '[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner and FlipFlop channel cleanup executor for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, and redacted evidence path exist]',
   '[RESOLVED/NARROWED: sanitized Auth readback found one active verified Goal 24 actor hash 4215870ba488de17 with app:flipflop-service:admin and no token/raw email/user id output]',
-  '[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]',
-  '[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]',
+  '[MISSING: fresh Auth actor-bound token generated through the Auth c389c1e no-print/no-decode/no-persist pattern for the exact guarded discount-fixture step]',
+  '[MISSING: sanitized auth/admin evidence path for guarded discount-code generation using the fresh selected actor-bound token]',
   '[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, FIO_BANKA_REFUND_UPLOAD_ENABLED=true, named bank/refund executor, exact future payment/order/provider hashes, idempotency keys, and redacted evidence path exist]',
   'Fiobanka completed-transfer rollback is not an automated provider-side Payments refund endpoint',
   'guarded payment-order upload that remains `PENDING_AUTHORIZATION` until Internetbanking/bank completion evidence exists',
@@ -127,9 +142,33 @@ for (const [label, source] of [
   assert(source.includes('[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]'), `${label} missing renewed execution window blocker`);
   assert(source.includes('[RESOLVED/NARROWED: active Payments runtime image localhost:5000/payments-microservice:fd58097 exposes FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK/EUR as present length-valid env vars without value output while FIO_BANKA_REFUND_UPLOAD_ENABLED=false]'), `${label} missing active Payments token provisioning marker`);
   assert(source.includes('[RESOLVED/NARROWED: FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK and FIO_BANKA_PAYMENT_ORDER_TOKEN_EUR are present in the current ready Payments pod without value output; payment-order upload remains gated by FIO_BANKA_REFUND_UPLOAD_ENABLED=true, named bank/refund executor, exact future payment/order/provider hashes, concrete idempotency keys, and bank completion evidence]'), `${label} missing Fiobanka payment-order token-present gated marker`);
-  assert(source.includes('[MISSING: named admin/actor or approved token-handling path for guarded discount-code generation]'), `${label} missing discount fixture admin/token blocker`);
+  if (label !== 'implementation state') {
+    assert(source.includes('[MISSING: sanitized auth/admin evidence path for guarded discount-code generation using the fresh selected actor-bound token]'), `${label} missing narrowed discount fixture admin/token blocker`);
+  }
   assert(source.includes('[RESOLVED/NARROWED: runtime readback found no linked central Orders or FlipFlop state, so no Orders/Warehouse post-paid correction is required for this evidence-only closeout]'), `${label} missing no correction required marker`);
   assert(source.includes('No live checkout, provider call, webhook replay, refund/cancel/reversal, Orders mutation, Warehouse mutation, channel cleanup, deploy, migration, DB mutation, or secret output occurred'), `${label} missing non-mutation boundary`);
+}
+
+for (const marker of [
+  '[MISSING: fresh Auth actor-bound token generated through the Auth c389c1e no-print/no-decode/no-persist pattern for the exact guarded discount-fixture step]',
+  '[MISSING: sanitized auth/admin evidence path for guarded discount-code generation using the fresh selected actor-bound token]',
+]) {
+  for (const [label, source] of [
+    ['auth token proof cleanup report', authTokenProofCleanup],
+    ['approval packet', packet],
+    ['final readiness report', report],
+    ['orchestrator status', status],
+  ]) {
+    assert(hasMarker(source, marker), `${label} missing current narrowed Auth marker: ${marker}`);
+  }
+}
+for (const marker of [
+  'source_flipflop_commit: 1113b9e docs: consume goal24 auth token proof in verifier',
+  'source_auth_commit: c389c1e docs: record goal24 actor token provisioning proof',
+  'FlipFlop `1113b9e docs: consume goal24 auth token proof in verifier`',
+  'Auth `c389c1e docs: record goal24 actor token provisioning proof`',
+]) {
+  assert(authTokenProofCleanup.includes(marker) || status.includes(marker), `current Auth cleanup source marker missing: ${marker}`);
 }
 
 assert(packet.includes('`release` for active reserved-only holds'), 'Warehouse reserved-only release mapping missing');
@@ -152,9 +191,9 @@ for (const marker of [
   '[RESOLVED/NARROWED: Goal 24 token-binding proof may record only token-present, Auth validation status class, actor-hash match, required-role boolean, approval id, runner id, timestamps, and no-output booleans]',
   '[RESOLVED/NARROWED: Goal 24 approved token source shape is owner-approved on-host token file or in-memory handoff read only by the approved runner, never printed, never decoded into reports, never persisted, never committed, and removed or invalidated after the run]',
   '[RESOLVED/NARROWED: Goal 24 Auth token binding does not authorize Orders, Warehouse, Payments/provider, or channel side effects and does not prove stock effects]',
-  '[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]',
-  '[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]',
-  '[MISSING: sanitized auth/admin evidence path for guarded discount-code generation]',
+  '[MISSING: fresh Auth actor-bound token generated through the Auth c389c1e no-print/no-decode/no-persist pattern for the exact guarded discount-fixture step]',
+  '[MISSING: sanitized auth/admin evidence path for guarded discount-code generation using the fresh selected actor-bound token]',
+  '[MISSING: sanitized auth/admin evidence path for guarded discount-code generation using the fresh selected actor-bound token]',
   'tokenSourceType=on-host-token-file',
   'tokenSourceType=in-memory-handoff',
   'actorHashMatches=true',
@@ -210,7 +249,7 @@ for (const [label, source] of [
     '[MISSING: live current target row readback at execution time]',
     '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
   ]) {
-    assert(source.includes(marker), `${label} missing source-wave E marker ${marker}`);
+    assert(hasMarker(source, marker), `${label} missing source-wave E marker ${marker}`);
   }
 }
   for (const marker of [
@@ -223,7 +262,7 @@ for (const [label, source] of [
     '[MISSING: live current target row readback at execution time]',
     '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
   ]) {
-    assert(source.includes(marker), `${label} missing source-wave C marker ${marker}`);
+    assert(hasMarker(source, marker), `${label} missing source-wave C marker ${marker}`);
   }
 }
 
@@ -240,8 +279,8 @@ for (const [label, source] of [
     'Payments `eab6351 merge goal24 current source head sync`',
     'Orders `d53de9f merge goal24 current source head sync`',
     'Warehouse `11df002 merge goal24 warehouse target facts reconcile`',
-    '[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]',
-    '[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]',
+    '[MISSING: fresh Auth actor-bound token generated through the Auth c389c1e no-print/no-decode/no-persist pattern for the exact guarded discount-fixture step]',
+    '[MISSING: sanitized auth/admin evidence path for guarded discount-code generation using the fresh selected actor-bound token]',
     '[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]',
     '[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]',
     '[MISSING: concrete side-effectful rollback run id and cleanup idempotency keys]',
@@ -250,7 +289,7 @@ for (const [label, source] of [
     '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
     '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
   ]) {
-    assert(source.includes(marker), `${label} missing source-wave freeze marker ${marker}`);
+    assert(hasMarker(source, marker), `${label} missing source-wave freeze marker ${marker}`);
   }
 }
 for (const [label, source] of [
@@ -270,7 +309,7 @@ for (const [label, source] of [
     '[MISSING: live current target row readback at execution time]',
     '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
   ]) {
-    assert(source.includes(marker), `${label} missing source-wave B marker ${marker}`);
+    assert(hasMarker(source, marker), `${label} missing source-wave B marker ${marker}`);
   }
 }
 for (const boundary of [
@@ -293,8 +332,8 @@ for (const marker of [
   '[RESOLVED/NARROWED: owner delegated autonomous Goal 24 continuation to Codex, but integration validation keeps new Fiobanka paid/provider side effects hard-stopped until bank/refund authority, exact Orders/Warehouse packet, and redacted provider proof exist]',
   '[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner and FlipFlop channel cleanup executor for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, and redacted evidence path exist]',
   '[RESOLVED/NARROWED: sanitized Auth readback found one active verified Goal 24 actor hash 4215870ba488de17 with app:flipflop-service:admin and no token/raw email/user id output]',
-  '[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]',
-  '[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]',
+  '[MISSING: fresh Auth actor-bound token generated through the Auth c389c1e no-print/no-decode/no-persist pattern for the exact guarded discount-fixture step]',
+  '[MISSING: sanitized auth/admin evidence path for guarded discount-code generation using the fresh selected actor-bound token]',
   '[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, FIO_BANKA_REFUND_UPLOAD_ENABLED=true, named bank/refund executor, exact future payment/order/provider hashes, idempotency keys, and redacted evidence path exist]',
   'Fiobanka completed-transfer rollback is not an automated provider-side Payments refund endpoint',
   'guarded payment-order upload that remains `PENDING_AUTHORIZATION` until Internetbanking/bank completion evidence exists',
@@ -396,8 +435,8 @@ for (const value of [
   assert(catalogWarehouseBlockerWordingSync.includes(value), `Catalog Warehouse blocker wording sync report missing ${value}`);
 }
 for (const marker of [
-  '[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]',
-  '[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]',
+  '[MISSING: fresh Auth actor-bound token generated through the Auth c389c1e no-print/no-decode/no-persist pattern for the exact guarded discount-fixture step]',
+  '[MISSING: sanitized auth/admin evidence path for guarded discount-code generation using the fresh selected actor-bound token]',
   '[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]',
   '[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]',
   '[MISSING: concrete side-effectful rollback run id and cleanup idempotency keys]',
@@ -484,7 +523,7 @@ assert(currentStatusSurface.includes('[RESOLVED/NARROWED: Codex Goal 24 integrat
 for (const marker of [
   '[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner and FlipFlop channel cleanup executor for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, and redacted evidence path exist]',
   '[RESOLVED/NARROWED: FlipFlop channel cleanup executor is the Codex Goal 24 integration thread for future source-controlled coordination]',
-  '[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]',
+  '[MISSING: fresh Auth actor-bound token generated through the Auth c389c1e no-print/no-decode/no-persist pattern for the exact guarded discount-fixture step]',
   '[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]',
   '[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]',
   '[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]',

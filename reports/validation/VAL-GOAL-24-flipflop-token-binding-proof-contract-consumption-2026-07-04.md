@@ -46,9 +46,8 @@ Allowed redacted proof markers remain source-only until runtime owner input exis
 
 ## Preserved Runtime Blockers
 
-- `[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]`.
-- `[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]`.
-- `[MISSING: sanitized auth/admin evidence path for guarded discount-code generation]`.
+- `[MISSING: fresh Auth actor-bound token generated through the Auth c389c1e no-print/no-decode/no-persist pattern for the exact guarded discount-fixture step]`.
+- `[MISSING: sanitized auth/admin evidence path for guarded discount-code generation using the fresh selected actor-bound token]`.
 - `[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]`.
 - `[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]`.
 - `[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]`.
