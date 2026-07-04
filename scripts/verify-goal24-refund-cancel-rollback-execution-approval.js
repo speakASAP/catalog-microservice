@@ -59,7 +59,7 @@ for (const [label, source] of [
   ['orchestrator status', status],
 ]) {
   assert(source.includes(catalogLiveNoGoPreflightMarker), `${label} missing Catalog live no-go preflight marker`);
-  assert(source.includes('[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]'), `${label} missing Payments bank/refund authority blocker`);
+  assert(source.includes('[RESOLVED/NARROWED: owner statement names Sergey Stasok / Сергей Сташок as the human Payments/provider rollback owner, bank/refund authority, and bank/refund executor for Goal 24 runtime planning; runtime side effects remain blocked until exact future payment/order/provider hashes, provider proof, Orders/Warehouse/channel packets, idempotency keys, and final redacted evidence exist]'), `${label} missing Payments bank/refund authority blocker`);
   assert(source.includes('[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]'), `${label} missing future smoke identity blocker`);
   assert(source.includes('[MISSING: exact selected Warehouse reservation lookup state for cleanup]'), `${label} missing selected Warehouse reservation lookup blocker`);
   assert(source.includes('[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]'), `${label} missing final evidence blocker`);
@@ -71,8 +71,8 @@ for (const marker of [
   'status: runtime-ready-but-side-effect-hard-stopped',
   'Decision: `block` before checkout/payment/provider side effects.',
   '[RESOLVED/NARROWED: selected Fiobanka provider authenticity path is authenticated transaction polling]',
-  '[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]',
-  '[MISSING: named bank/refund executor, exact destination/source account proof, amount, reference, deadline, and redacted completion evidence for the future linked payment]',
+  '[RESOLVED/NARROWED: owner statement names Sergey Stasok / Сергей Сташок as the human Payments/provider rollback owner, bank/refund authority, and bank/refund executor for Goal 24 runtime planning; runtime side effects remain blocked until exact future payment/order/provider hashes, provider proof, Orders/Warehouse/channel packets, idempotency keys, and final redacted evidence exist]',
+  '[MISSING: exact destination/source account proof, amount, reference, deadline, and redacted completion evidence for the future linked payment]',
   '[MISSING: exact Orders target order hash/state, cancellation actor, approval id, safe reason code, idempotency key, and sideEffectsHandled payment|warehouse|notification|crm|channel acknowledgements for the future smoke]',
   '[MISSING: deterministic Warehouse component reservation state for cleanup]',
   '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
@@ -104,7 +104,7 @@ for (const [label, source] of [
   ['approval packet', packet],
 ]) {
   assert(source.includes(catalogOrdersFinalHandoffMarker), `${label} missing Catalog Orders final owner handoff marker`);
-  assert(source.includes('[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]'), `${label} missing Payments bank/refund authority blocker after Orders final handoff`);
+  assert(source.includes('[RESOLVED/NARROWED: owner statement names Sergey Stasok / Сергей Сташок as the human Payments/provider rollback owner, bank/refund authority, and bank/refund executor for Goal 24 runtime planning; runtime side effects remain blocked until exact future payment/order/provider hashes, provider proof, Orders/Warehouse/channel packets, idempotency keys, and final redacted evidence exist]'), `${label} missing Payments bank/refund authority blocker after Orders final handoff`);
   assert(source.includes('[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]'), `${label} missing future smoke identity blocker after Orders final handoff`);
   assert(source.includes('[MISSING: exact Orders target order hash/state, cancellation actor, approval id, safe reason code, idempotency key, and sideEffectsHandled payment|warehouse|notification|crm|channel acknowledgements for the future smoke]'), `${label} missing exact Orders packet blocker after Orders final handoff`);
   assert(source.includes('[MISSING: exact selected Warehouse reservation lookup state for cleanup]'), `${label} missing Warehouse lookup blocker after Orders final handoff`);
@@ -115,7 +115,7 @@ for (const [label, source] of [
   }
 }
 for (const marker of [
-  '[RESOLVED/NARROWED: Orders final owner handoff packet is source-defined for Goal 24 paid/provider cleanup after Catalog 7c85732 and FlipFlop 99dfe76; runtime route invocation remains hard-stopped until named Payments/bank authority, exact future payment/order/provider hashes, Orders actor/reason/idempotency/sideEffectsHandled, exact Warehouse reservation lookup state, channel acknowledgement, and final redacted evidence exist]',
+  '[RESOLVED/NARROWED: Orders final owner handoff packet is source-defined for Goal 24 paid/provider cleanup after Catalog 7c85732 and FlipFlop 99dfe76 plus Payments 4f21094 owner authority; runtime route invocation remains hard-stopped until exact future payment/order/provider hashes, Orders actor/reason/idempotency/sideEffectsHandled, exact Warehouse reservation lookup state, channel acknowledgement, provider proof, and final redacted evidence exist]',
   'Route shape: `PUT /api/orders/:id/status` with `status=cancelled`.',
   'Safe reasons: `GOAL24_PAID_PROVIDER_ROLLBACK` and `GOAL24_PROVIDER_UNPAID_CANCEL`.',
   'Orders idempotency namespace: `orders:goal24:post-paid-correction:<approvalId>:<paymentHash>`.',
@@ -190,7 +190,7 @@ for (const [label, source] of [
 ]) {
   assert(source.includes('[RESOLVED/NARROWED: Catalog consumed FlipFlop 888cc13 actor-bound fixture quote and Warehouse 89222f8 live-readback consumption as current source-governance evidence]'), `${label} missing FlipFlop 888cc13 / Warehouse 89222f8 current readiness marker`);
   assert(source.includes('[RESOLVED/NARROWED: Catalog consumed Warehouse 89222f8 live current target row readback through protected Warehouse API without mutation]'), `${label} missing Warehouse 89222f8 current readiness marker`);
-  assert(source.includes('[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]'), `${label} missing Payments rollback authority hard stop`);
+  assert(source.includes('[RESOLVED/NARROWED: owner statement names Sergey Stasok / Сергей Сташок as the human Payments/provider rollback owner, bank/refund authority, and bank/refund executor for Goal 24 runtime planning; runtime side effects remain blocked until exact future payment/order/provider hashes, provider proof, Orders/Warehouse/channel packets, idempotency keys, and final redacted evidence exist]'), `${label} missing Payments rollback authority hard stop`);
   assert(source.includes('[MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]'), `${label} missing Orders cleanup hard stop`);
   assert(source.includes('[MISSING: exact selected Warehouse reservation lookup state for cleanup]'), `${label} missing Warehouse hold/release duration hard stop`);
   assert(source.includes('[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]'), `${label} missing final evidence hard stop`);
@@ -202,7 +202,7 @@ for (const marker of [
   '[RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]',
   selectedWarehouseLookupBlocker,
   '[RESOLVED/NARROWED: final owner approval before live Warehouse reservation mutation is bounded to one Goal 24 component-line smoke attempt with max quantity 1 per component after live readback]',
-  '[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]',
+  '[RESOLVED/NARROWED: owner statement names Sergey Stasok / Сергей Сташок as the human Payments/provider rollback owner, bank/refund authority, and bank/refund executor for Goal 24 runtime planning; runtime side effects remain blocked until exact future payment/order/provider hashes, provider proof, Orders/Warehouse/channel packets, idempotency keys, and final redacted evidence exist]',
   '[MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]',
   '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
 ]) {
@@ -306,7 +306,7 @@ for (const [label, source] of [
   ['orchestrator status', status],
 ]) {
   assert(source.includes(currentBlockerReconciliationMarker) || (label === 'channel implementation contract' && source.includes(historicalCurrentBlockerReconciliationMarker)), `${label} missing current blocker reconciliation marker`);
-  assert(source.includes('[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]'), `${label} missing Payments bank/refund authority blocker`);
+  assert(source.includes('[RESOLVED/NARROWED: owner statement names Sergey Stasok / Сергей Сташок as the human Payments/provider rollback owner, bank/refund authority, and bank/refund executor for Goal 24 runtime planning; runtime side effects remain blocked until exact future payment/order/provider hashes, provider proof, Orders/Warehouse/channel packets, idempotency keys, and final redacted evidence exist]'), `${label} missing Payments bank/refund authority blocker`);
   assert(source.includes('[MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]'), `${label} missing Orders sideEffectsHandled blocker`);
   assert(source.includes('[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]'), `${label} missing final evidence blocker`);
 }
@@ -484,7 +484,7 @@ for (const [label, source] of [
     'Warehouse `11df002 merge goal24 warehouse target facts reconcile`',
     '[MISSING: fresh Auth actor-bound token generated through the Auth c389c1e no-print/no-decode/no-persist pattern for the exact guarded discount-fixture step]',
     '[MISSING: sanitized auth/admin evidence path for guarded discount-code generation using the fresh selected actor-bound token]',
-    '[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]',
+    '[RESOLVED/NARROWED: owner statement names Sergey Stasok / Сергей Сташок as the human Payments/provider rollback owner, bank/refund authority, and bank/refund executor for Goal 24 runtime planning; runtime side effects remain blocked until exact future payment/order/provider hashes, provider proof, Orders/Warehouse/channel packets, idempotency keys, and final redacted evidence exist]',
     '[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]',
     '[MISSING: concrete side-effectful rollback run id and cleanup idempotency keys]',
     '[MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]',
@@ -636,7 +636,7 @@ for (const value of [
 for (const marker of [
   '[MISSING: fresh Auth actor-bound token generated through the Auth c389c1e no-print/no-decode/no-persist pattern for the exact guarded discount-fixture step]',
   '[MISSING: sanitized auth/admin evidence path for guarded discount-code generation using the fresh selected actor-bound token]',
-  '[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]',
+  '[RESOLVED/NARROWED: owner statement names Sergey Stasok / Сергей Сташок as the human Payments/provider rollback owner, bank/refund authority, and bank/refund executor for Goal 24 runtime planning; runtime side effects remain blocked until exact future payment/order/provider hashes, provider proof, Orders/Warehouse/channel packets, idempotency keys, and final redacted evidence exist]',
   '[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]',
   '[MISSING: concrete side-effectful rollback run id and cleanup idempotency keys]',
   '[MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]',
@@ -728,7 +728,7 @@ for (const marker of [
   '[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner and FlipFlop channel cleanup executor for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, and redacted evidence path exist]',
   '[RESOLVED/NARROWED: FlipFlop channel cleanup executor is the Codex Goal 24 integration thread for future source-controlled coordination]',
   '[MISSING: fresh Auth actor-bound token generated through the Auth c389c1e no-print/no-decode/no-persist pattern for the exact guarded discount-fixture step]',
-  '[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]',
+  '[RESOLVED/NARROWED: owner statement names Sergey Stasok / Сергей Сташок as the human Payments/provider rollback owner, bank/refund authority, and bank/refund executor for Goal 24 runtime planning; runtime side effects remain blocked until exact future payment/order/provider hashes, provider proof, Orders/Warehouse/channel packets, idempotency keys, and final redacted evidence exist]',
   '[MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]',
   '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
 ]) {

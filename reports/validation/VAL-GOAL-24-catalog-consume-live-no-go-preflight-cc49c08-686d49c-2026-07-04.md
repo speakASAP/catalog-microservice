@@ -22,8 +22,8 @@ Catalog consumes the current Payments and Warehouse source evidence as a hard st
 
 Remaining runtime blockers:
 
-- [MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]
-- [MISSING: named bank/refund executor, exact destination/source account proof, amount, reference, deadline, and redacted completion evidence for the future linked payment]
+- [RESOLVED/NARROWED: owner statement names Sergey Stasok / Сергей Сташок as the human Payments/provider rollback owner, bank/refund authority, and bank/refund executor for Goal 24 runtime planning; runtime side effects remain blocked until exact future payment/order/provider hashes, provider proof, Orders/Warehouse/channel packets, idempotency keys, and final redacted evidence exist]
+- [MISSING: exact destination/source account proof, amount, reference, deadline, and redacted completion evidence for the future linked payment]
 - [MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]
 - [MISSING: Fiobanka provider-side completed-transfer refund/reversal/correction proof hash, or owner-approved unpaid no-provider-cancel acknowledgement]
 - [MISSING: concrete side-effectful rollback run id and cleanup idempotency keys derived from the future approval id and sanitized payment hash]
@@ -62,7 +62,7 @@ Parallel execution state:
 | Workstream | Status | Owner role | Remaining blocker | Merge/order dependency |
 | --- | --- | --- | --- | --- |
 | Catalog no-go consumer sync | source-complete | Catalog integration planner | none for source sync | before downstream refreshed runtime planning |
-| Payments provider/refund authority | blocked | named human with bank/refund authority | [MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime] | before checkout/payment side effects |
+| Payments provider/refund authority | blocked | named human with bank/refund authority | [RESOLVED/NARROWED: owner statement names Sergey Stasok / Сергей Сташок as the human Payments/provider rollback owner, bank/refund authority, and bank/refund executor for Goal 24 runtime planning; runtime side effects remain blocked until exact future payment/order/provider hashes, provider proof, Orders/Warehouse/channel packets, idempotency keys, and final redacted evidence exist] | before checkout/payment side effects |
 | Orders correction packet | dependency-gated | Orders lifecycle owner | exact selected order hash/state and sideEffectsHandled acknowledgements | after exact payment identity exists |
 | Warehouse cleanup packet | dependency-gated | Warehouse reservation owner | deterministic reservation lookup state for selected order | after selected order/reservation exists |
 | FlipFlop channel cleanup | dependency-gated | channel cleanup executor | selected central order hash acknowledgement and final evidence path | after provider/Orders/Warehouse evidence |

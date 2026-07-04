@@ -49,7 +49,7 @@ raw_customer_or_payment_evidence: false
 
 - `[MISSING: provider webhook/callback evidence that marks the paid order complete without manual payment-state bypass]`
 - `[MISSING: Fiobanka provider-side completed-transfer refund/reversal/correction proof path with redacted evidence]`
-- `[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]`
+- `[RESOLVED/NARROWED: owner statement names Sergey Stasok / Сергей Сташок as the human Payments/provider rollback owner, bank/refund authority, and bank/refund executor for Goal 24 runtime planning; runtime side effects remain blocked until exact future payment/order/provider hashes, provider proof, Orders/Warehouse/channel packets, idempotency keys, and final redacted evidence exist]`
 - `[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]`
 - `[MISSING: concrete side-effectful rollback run id and cleanup idempotency keys]`
 - `[MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]`
