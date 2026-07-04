@@ -43,6 +43,10 @@ const flipflopCleanupRuntimeValuesSync = read('../flipflop/reports/validation/VA
 const catalogLiveNoGoPreflightConsumption = read('reports/validation/VAL-GOAL-24-catalog-consume-live-no-go-preflight-cc49c08-686d49c-2026-07-04.md');
 const paymentsLiveNoGoPreflight = read('../payments-microservice/reports/validation/VAL-GOAL-24-live-paid-provider-no-go-preflight-2026-07-04.md');
 const warehouseCurrentStatus = read('../warehouse-microservice/docs/orchestrator/STATUS.md');
+const catalogOrdersWarehouseNoGoConsumption = read('reports/validation/VAL-GOAL-24-catalog-consume-orders-warehouse-no-go-9287e3f-eee2f20-2026-07-04.md');
+const ordersNoGoCurrentHeadsConsumption = read('../orders-microservice/reports/validation/VAL-GOAL-24-orders-consume-goal24-source-only-current-heads-2026-07-04.md');
+const warehouseOrdersNoGoConsumption = read('../warehouse-microservice/reports/validation/VAL-GOAL-24-warehouse-consume-live-no-go-preflight-9287e3f-cc49c08-d1eef3d-9a7c664-2026-07-04.md');
+const flipflopDurableMigrationReadiness = read('../flipflop/implementation-goals/GOAL-24-durable-bundleid-checkout-migration-readiness.md');
 
 
 const catalogLiveNoGoPreflightMarker = '[RESOLVED/NARROWED: Catalog consumed Payments cc49c08 live no-go preflight and Warehouse 686d49c blocker wording sync; runtime deployments are ready but paid/provider side effects remain hard-stopped until bank/refund authority, exact future smoke identities, Orders sideEffectsHandled acknowledgements, deterministic Warehouse reservation lookup state, channel acknowledgement, and final redacted evidence exist]';
@@ -84,6 +88,46 @@ for (const marker of [
   'warehouse_mutation: false',
 ]) {
   assert(warehouseCurrentStatus.includes(marker), `Warehouse current status missing ${marker}`);
+}
+
+
+
+const catalogOrdersWarehouseNoGoMarker = '[RESOLVED/NARROWED: Catalog consumed Orders 9287e3f live no-go consumer sync and Warehouse eee2f20 Orders no-go consumer sync as source-governance inputs only; Catalog approval planning remains hard-stopped until bank/refund authority, exact future smoke identities, Orders sideEffectsHandled acknowledgements, exact Warehouse reservation lookup state, channel acknowledgement, and final redacted evidence exist]';
+for (const [label, source] of [
+  ['Catalog Orders/Warehouse no-go consumption report', catalogOrdersWarehouseNoGoConsumption],
+  ['validation report', report],
+  ['implementation state', state],
+  ['orchestrator status', status],
+  ['approval packet', packet],
+]) {
+  assert(source.includes(catalogOrdersWarehouseNoGoMarker), `${label} missing Catalog Orders/Warehouse no-go marker`);
+  assert(source.includes('[MISSING: exact Orders target order hash/state, cancellation actor, approval id, safe reason code, idempotency key, and sideEffectsHandled payment|warehouse|notification|crm|channel acknowledgements for the future smoke]'), `${label} missing exact Orders runtime packet blocker`);
+  assert(source.includes('[MISSING: exact selected Warehouse reservation lookup state for cleanup]'), `${label} missing selected Warehouse reservation lookup blocker`);
+  assert(source.includes('[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]'), `${label} missing final evidence blocker`);
+  assert(source.includes('Catalog must not infer Warehouse stock effects from Payments refund state or Orders no-go state'), `${label} missing no stock inference boundary`);
+  for (const boundary of ['mutation: false', 'orders_route_invocation: false', 'warehouse_mutation: false', 'provider_call: false', 'secret_output: false']) {
+    assert(source.includes(boundary), `${label} missing boundary ${boundary}`);
+  }
+}
+for (const marker of [
+  '[RESOLVED/NARROWED: Orders consumed Payments cc49c08 live no-go preflight, Catalog d1eef3d live no-go preflight consumption, Warehouse 686d49c blocker wording, and FlipFlop 9a7c664 durable migration provider marker as source-governance inputs only; runtime Orders route invocation and cleanup side effects remain blocked]',
+  '[MISSING: exact Orders target order hash/state, cancellation actor, approval id, safe reason code, idempotency key, and sideEffectsHandled payment|warehouse|notification|crm|channel acknowledgements for the future smoke]',
+  'Orders must not infer Warehouse stock effects from Payments refund state',
+]) {
+  assert(ordersNoGoCurrentHeadsConsumption.includes(marker), `Orders no-go consumption missing ${marker}`);
+}
+for (const marker of [
+  '[RESOLVED/NARROWED: Warehouse consumed Orders 9287e3f live no-go consumer sync, Payments cc49c08 live no-go preflight, Catalog d1eef3d no-go consumer sync, and FlipFlop 9a7c664 durable migration provider marker as source-governance inputs only; Warehouse stock/reservation effects remain hard-stopped until exact selected reservation lookup state, selected order/payment/provider hashes, Orders sideEffectsHandled acknowledgements, provider proof or unpaid acknowledgement, channel acknowledgement, and final redacted evidence exist]',
+  '[MISSING: exact selected Warehouse reservation lookup state for cleanup]',
+  'A Payments refund alone is not Warehouse return evidence.',
+]) {
+  assert(warehouseOrdersNoGoConsumption.includes(marker), `Warehouse no-go consumption missing ${marker}`);
+}
+for (const marker of [
+  'runtime_progression: source-rollout-enabled-paid-provider-blocked',
+  '[RESOLVED/NARROWED: FlipFlop source rollout maps durable catalog.bundle.v1 bundleId into central Orders bundleEvidence without changing totals, stock identity, or provider state]',
+]) {
+  assert(flipflopDurableMigrationReadiness.includes(marker), `FlipFlop durable migration readiness missing ${marker}`);
 }
 
 
