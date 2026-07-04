@@ -71,3 +71,20 @@ Wave B input heads (post-merge source-sync commits are validation evidence only)
 | Payments | `9069fd3 merge goal24 payments source wave b` | provider/refund hard-stop source governance only |
 | Orders | `908b6ee merge goal24 orders source wave b` | lifecycle/cancellation/idempotency source governance only |
 | Warehouse | `3fdeabd merge goal24 live target readback wording sync` | component-line cleanup source governance only |
+
+## 2026-07-04 Current Source-Governance Head Sync Wave C
+
+[RESOLVED/NARROWED: Goal 24 source-governance wave GOAL24-SOURCE-WAVE-2026-07-04C input set records Auth `2faf719 docs: complete goal10 customer data wallet rollout`, Catalog `6723b58 merge goal24 catalog cross-service rollup sync`, FlipFlop `2310c90 merge goal24 flipflop stale blocker wording sync`, Payments `080f293 merge goal24 payments source wave c`, Orders `d32abd2 merge goal24 orders source wave c`, and Warehouse `ea7b9e9 merge goal24 warehouse cleanup packet readback sync` as Wave C input heads for renewed runtime planning; post-merge source-sync commits are validation evidence only; runtime side effects remain blocked]
+
+Wave C supersedes Wave B for renewed runtime planning only. It does not authorize live checkout, discount-code creation, payment creation, provider calls, refund/reversal, Orders/Warehouse/channel mutation, deploy, migration, DB write, secret/token output, raw customer/order/payment/provider evidence, or direct Warehouse mutation. Runtime remains blocked by `[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]`, `[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]`, `[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]`, `[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]`, `[MISSING: concrete side-effectful rollback run id and cleanup idempotency keys]`, `[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]`, `[MISSING: live current target row readback at execution time]`, `[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]`, `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`, and `[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]`.
+
+Wave C input heads (post-merge source-sync commits are validation evidence only):
+
+| Service | Input head | Scope |
+| --- | --- | --- |
+| Auth | `2faf719 docs: complete goal10 customer data wallet rollout` | token-binding source governance only |
+| Catalog | `6723b58 merge goal24 catalog cross-service rollup sync` | bundle/target source governance only |
+| FlipFlop | `2310c90 merge goal24 flipflop stale blocker wording sync` | channel cleanup source governance only |
+| Payments | `080f293 merge goal24 payments source wave c` | provider/refund source governance only |
+| Orders | `d32abd2 merge goal24 orders source wave c` | lifecycle/cancellation source governance only |
+| Warehouse | `ea7b9e9 merge goal24 warehouse cleanup packet readback sync` | component-line cleanup source governance only |
