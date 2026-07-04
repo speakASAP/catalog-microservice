@@ -474,6 +474,12 @@ for (const [label, source] of [
     assert(!source.includes(stale), `${label} still lists stale owner/executor hard stop: ${stale}`);
   }
 }
+const currentStatusSurface = status.split('\n').slice(0, 40).join('\n');
+for (const stale of staleOwnerExecutorHardStops) {
+  assert(!currentStatusSurface.includes(stale.replace('- `', '').replace('`.', '')), 'current Catalog status still lists stale owner/executor hard stop: ' + stale);
+}
+assert(currentStatusSurface.includes('[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner and FlipFlop channel cleanup executor for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, and redacted evidence path exist]'), 'current Catalog status missing owner/executor narrowing marker');
+
 for (const marker of [
   '[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner and FlipFlop channel cleanup executor for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, and redacted evidence path exist]',
   '[RESOLVED/NARROWED: FlipFlop channel cleanup executor is the Codex Goal 24 integration thread for future source-controlled coordination]',
