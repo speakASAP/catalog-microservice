@@ -16,6 +16,7 @@ const finalTokenBindingHeadSync = read('reports/validation/VAL-GOAL-24-final-tok
 const warehouseTargetFactsSync = read('reports/validation/VAL-GOAL-24-warehouse-target-facts-sync-2026-07-04.md');
 const catalogChannelOwnerConfigCurrentSync = read('reports/validation/VAL-GOAL-24-catalog-channel-owner-config-current-sync-2026-07-04.md');
 const catalogOwnerExecutorWordingSync = read('reports/validation/VAL-GOAL-24-catalog-owner-executor-wording-sync-2026-07-04.md');
+const catalogWarehouseBlockerWordingSync = read('reports/validation/VAL-GOAL-24-catalog-warehouse-blocker-wording-sync-2026-07-04.md');
 const flipflopAutonomousRuntimeOwnership = read('../flipflop/reports/validation/VAL-GOAL-24-autonomous-runtime-ownership-packet-2026-07-04.md');
 const flipflopPaymentResultUrlReadback = read('../flipflop/reports/validation/VAL-GOAL-24-payment-result-url-runtime-readback.md');
 const warehouseCleanupPacket = read('../warehouse-microservice/docs/contracts/goal24-warehouse-cleanup-approval-packet.md');
@@ -250,6 +251,34 @@ for (const [label, source] of [
   assert(source.includes(sourceWaveFreezeMarker), `${label} missing Catalog source-wave freeze marker`);
   assert(source.includes('FlipFlop `e1f3e3a merge goal24 current source head sync`'), `${label} missing frozen-wave FlipFlop e1f3e3a consumption`);
   assert(source.includes('Warehouse `11df002 merge goal24 warehouse target facts reconcile`'), `${label} missing current Warehouse 11df002 consumption`);
+}
+for (const [label, source] of [
+  ['validation report', report],
+  ['approval packet', packet],
+  ['implementation state', state],
+  ['orchestrator status', status],
+]) {
+  assert(!source.includes('[MISSING: owner-approved Warehouse stock hold/release window and max quantity]'), `${label} still contains stale Warehouse hold/max blocker`);
+  assert(source.includes('[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]'), `${label} missing source-documented Warehouse candidate facts marker`);
+  assert(source.includes('[MISSING: live current target row readback at execution time]'), `${label} missing live current Warehouse readback blocker`);
+  assert(source.includes('[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]'), `${label} missing renewed Warehouse window blocker`);
+  assert(source.includes('[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]'), `${label} missing final Warehouse mutation approval blocker`);
+}
+for (const value of [
+  'mutation: false',
+  'live_checkout_executed: false',
+  'provider_call: false',
+  'orders_mutation: false',
+  'warehouse_mutation: false',
+  'warehouse_direct_mutation: false',
+  'db_write: false',
+  'secret_output: false',
+  'raw_customer_or_payment_evidence: false',
+  '[MISSING: live current target row readback at execution time]',
+  '[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]',
+  '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
+]) {
+  assert(catalogWarehouseBlockerWordingSync.includes(value), `Catalog Warehouse blocker wording sync report missing ${value}`);
 }
 for (const marker of [
   '[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]',
