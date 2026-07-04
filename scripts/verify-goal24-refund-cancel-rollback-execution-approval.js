@@ -261,8 +261,11 @@ for (const [label, source] of [
   ['orchestrator status', status],
   ['paid/provider channel implementation contract', channelImplementationContract],
   ['paid/provider channel contract approval report', channelContractApproval],
+  ['orders/payments head sync report', ordersPaymentsHeadSyncReport],
+  ['FlipFlop channel supersession consumption report', flipflopChannelSupersessionReport],
 ]) {
   assert(!source.includes('[MISSING: owner-approved Warehouse stock hold/release window and max quantity]'), `${label} still contains stale Warehouse hold/max blocker`);
+  assert(!source.includes('[MISSING: owner-approved Warehouse stock hold/release window, max quantity, target rows]'), `${label} still contains stale Warehouse hold/max/target rows blocker`);
   assert(source.includes('[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]'), `${label} missing source-documented Warehouse candidate facts marker`);
   assert(source.includes('[MISSING: live current target row readback at execution time]'), `${label} missing live current Warehouse readback blocker`);
   assert(source.includes('[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]'), `${label} missing renewed Warehouse window blocker`);
@@ -291,7 +294,10 @@ for (const marker of [
   '[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]',
   '[MISSING: concrete side-effectful rollback run id and cleanup idempotency keys]',
   '[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]',
-  '[MISSING: owner-approved Warehouse stock hold/release window, max quantity, target rows]',
+  '[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]',
+  '[MISSING: live current target row readback at execution time]',
+  '[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]',
+  '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
   '[MISSING: Vault properties FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK and FIO_BANKA_PAYMENT_ORDER_TOKEN_EUR for owner-approved payment-order upload]',
   '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
 ]) {
