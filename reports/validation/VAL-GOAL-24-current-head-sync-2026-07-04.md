@@ -13,7 +13,7 @@ deployment: false
 secret_output: false
 raw_customer_or_payment_evidence: false
 
-[RESOLVED/NARROWED: Catalog consumed current Goal 24 source-governance heads Catalog `51eac73 merge goal24 orders payments head sync`, FlipFlop `b2a4b4d merge goal24 current source head sync`, Payments `53ce5cc merge goal24 orders head sync`, Orders `3901ec1 merge goal24 latest cleanup head sync`, and Warehouse `11df002 merge goal24 warehouse target facts reconcile`; runtime side effects remain blocked]
+[RESOLVED/NARROWED: Catalog consumed current Goal 24 source-governance heads Catalog `b0ed9f5 merge goal24 current integration head sync`, FlipFlop `ad409fc merge goal24 current source head sync`, Payments `52f9b7e merge goal24 current source head sync`, Orders `d5d2114 merge goal24 current source head sync`, and Warehouse `11df002 merge goal24 warehouse target facts reconcile`; runtime side effects remain blocked]
 
 The older Catalog reports that name FlipFlop `5202c15`, Payments `7822f2a`, Warehouse `46a66dc`, or Catalog pre-change `906a31f` remain historical source-context. They are superseded for new runtime planning by this current-head sync and must not be used as live smoke approval.
 
@@ -33,10 +33,10 @@ The older Catalog reports that name FlipFlop `5202c15`, Payments `7822f2a`, Ware
 
 | Service | Current head consumed | Runtime authority |
 | --- | --- | --- |
-| Catalog | `51eac73 merge goal24 orders payments head sync` | integration docs/status only |
-| FlipFlop | `b2a4b4d merge goal24 current source head sync` | channel cleanup current-head source marker only |
-| Payments | `53ce5cc merge goal24 orders head sync` | provider/refund rollback docs only |
-| Orders | `3901ec1 merge goal24 latest cleanup head sync` | lifecycle/cancellation/idempotency source packet only |
+| Catalog | `b0ed9f5 merge goal24 current integration head sync` | integration docs/status only |
+| FlipFlop | `ad409fc merge goal24 current source head sync` | channel cleanup current-head source marker only |
+| Payments | `52f9b7e merge goal24 current source head sync` | provider/refund rollback docs only |
+| Orders | `d5d2114 merge goal24 current source head sync` | lifecycle/cancellation/idempotency source packet only |
 | Warehouse | `11df002 merge goal24 warehouse target facts reconcile` | candidate target facts narrowed; live window/final approval still missing |
 
 ## Preserved Runtime Hard Stops
