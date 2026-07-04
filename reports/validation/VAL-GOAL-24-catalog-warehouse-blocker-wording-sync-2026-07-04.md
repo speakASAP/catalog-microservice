@@ -33,12 +33,12 @@ Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding P
 - Coding Prompt: do not infer live Warehouse stock effects from source-documented Catalog candidate facts.
 - Code: `reports/validation/VAL-GOAL-24-paid-provider-approval-packet-final-readiness.md`, `docs/orchestrator/2026-07-03-goal24-paid-provider-smoke-approval-packet.md`, `docs/IMPLEMENTATION_STATE.md`, `docs/orchestrator/STATUS.md`, and `scripts/verify-goal24-refund-cancel-rollback-execution-approval.js`.
 - Validation: `node --check scripts/verify-goal24-refund-cancel-rollback-execution-approval.js`, `node scripts/verify-goal24-refund-cancel-rollback-execution-approval.js`, and `git diff --check`.
-- State Update: `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: live current target row readback at execution time]; [MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`.
+- State Update: `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: live current target row readback at execution time]; [RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`.
 
 ## Still Blocked
 
 - `[MISSING: live current target row readback at execution time]`
-- `[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]`
+- `[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]`
 - `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
 - `[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]`
 - `[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]`

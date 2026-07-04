@@ -49,7 +49,7 @@ Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding P
 - `[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]`
 - `[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]`
 - `[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]`
-- `[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]`
+- `[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]`
 - `[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]`
 
 ## Boundary

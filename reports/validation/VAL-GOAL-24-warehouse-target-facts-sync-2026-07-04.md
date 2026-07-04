@@ -45,7 +45,7 @@ Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding P
 
 ## Preserved Runtime Blockers
 
-- `[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]`.
+- `[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]`.
 - `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`.
 - `[MISSING: live current target row readback at execution time]`.
 - `[MISSING: timeout cleanup owner selection between Warehouse TTL/expiry-owned expire and explicit abort-owned release]`.

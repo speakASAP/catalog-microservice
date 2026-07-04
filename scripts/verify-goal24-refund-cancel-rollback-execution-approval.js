@@ -246,7 +246,7 @@ for (const [label, source] of [
     '[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]',
     '[MISSING: concrete side-effectful rollback run id and cleanup idempotency keys]',
     '[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]',
-    '[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]',
+    '[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]',
     '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
     '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
   ]) {
@@ -365,7 +365,7 @@ for (const [label, source] of [
   assert(!source.includes('[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]'), `${label} still contains stale broad Orders/Payments event-contract blocker`);
   assert(source.includes('[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]'), `${label} missing source-documented Warehouse candidate facts marker`);
   assert(source.includes('[MISSING: live current target row readback at execution time]'), `${label} missing live current Warehouse readback blocker`);
-  assert(source.includes('[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]'), `${label} missing renewed Warehouse window blocker`);
+  assert(source.includes('[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]'), `${label} missing renewed Warehouse window blocker`);
   assert(source.includes('[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]'), `${label} missing final Warehouse mutation approval blocker`);
 }
 for (const [label, source] of [
@@ -390,7 +390,7 @@ for (const value of [
   'secret_output: false',
   'raw_customer_or_payment_evidence: false',
   '[MISSING: live current target row readback at execution time]',
-  '[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]',
+  '[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]',
   '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
 ]) {
   assert(catalogWarehouseBlockerWordingSync.includes(value), `Catalog Warehouse blocker wording sync report missing ${value}`);
@@ -404,7 +404,7 @@ for (const marker of [
   '[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]',
   '[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]',
   '[MISSING: live current target row readback at execution time]',
-  '[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]',
+  '[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]',
   '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
   '[RESOLVED/NARROWED: FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK and FIO_BANKA_PAYMENT_ORDER_TOKEN_EUR are present in the current ready Payments pod without value output; payment-order upload remains gated by FIO_BANKA_REFUND_UPLOAD_ENABLED=true, named bank/refund executor, exact future payment/order/provider hashes, concrete idempotency keys, and bank completion evidence]',
   '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
@@ -487,7 +487,7 @@ for (const marker of [
   '[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]',
   '[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]',
   '[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]',
-  '[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]',
+  '[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]',
   '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
 ]) {
   assert(catalogOwnerExecutorWordingSync.includes(marker), `Catalog owner/executor wording sync report missing ${marker}`);
