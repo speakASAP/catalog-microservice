@@ -26,6 +26,20 @@ const paymentsTokenBindingConsumption = read('../payments-microservice/reports/v
 const ordersTokenBindingConsumption = read('../orders-microservice/reports/validation/VAL-GOAL-24-orders-token-binding-proof-contract-consumption-2026-07-04.md');
 const currentBlockerReconciliation = read('reports/validation/VAL-GOAL-24-current-blocker-reconciliation-2026-07-04.md');
 const authTokenProofCleanup = read('reports/validation/VAL-GOAL-24-auth-token-proof-cleanup-2026-07-04.md');
+const currentRuntimeReadinessSync = read('reports/validation/VAL-GOAL-24-current-runtime-readiness-sync-2026-07-04.md');
+
+for (const [label, source] of [
+  ['current runtime readiness sync report', currentRuntimeReadinessSync],
+  ['implementation state', state],
+  ['orchestrator status', status],
+]) {
+  assert(source.includes('[RESOLVED/NARROWED: Catalog consumed FlipFlop 888cc13 actor-bound fixture quote and Warehouse live-readback consumption as current source-governance evidence]'), `${label} missing FlipFlop 888cc13 current readiness marker`);
+  assert(source.includes('[RESOLVED/NARROWED: Catalog consumed Warehouse dfab9ec live current target row readback through protected Warehouse API without mutation]'), `${label} missing Warehouse dfab9ec current readiness marker`);
+  assert(source.includes('[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]'), `${label} missing Payments rollback authority hard stop`);
+  assert(source.includes('[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]'), `${label} missing Orders cleanup hard stop`);
+  assert(source.includes('[MISSING: Warehouse hold/release duration]'), `${label} missing Warehouse hold/release duration hard stop`);
+  assert(source.includes('[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]'), `${label} missing final evidence hard stop`);
+}
 
 const goal24CurrentHeadVerifierSync = read('reports/validation/VAL-GOAL-24-current-head-verifier-sync-2026-07-04.md');
 const narrowedFreshAuthTokenBlocker = '[MISSING: fresh Auth actor-bound token generated through the Auth c389c1e no-print/no-decode/no-persist pattern for the exact guarded discount-fixture step]';
