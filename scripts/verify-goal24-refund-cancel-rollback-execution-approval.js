@@ -267,11 +267,19 @@ for (const [label, source] of [
   assert(!source.includes('[MISSING: owner-approved Warehouse stock hold/release window and max quantity]'), `${label} still contains stale Warehouse hold/max blocker`);
   assert(!source.includes('[MISSING: owner-approved Warehouse stock hold/release window, max quantity, target rows]'), `${label} still contains stale Warehouse hold/max/target rows blocker`);
   assert(!source.includes('[MISSING: owner-approved Orders cancellation/refund correction actor, reason, sideEffectsHandled acknowledgement, and route]'), `${label} still contains stale Orders route-missing blocker`);
+  assert(!source.includes('[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]'), `${label} still contains stale broad Orders/Payments event-contract blocker`);
   assert(source.includes('[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]'), `${label} missing source-documented Warehouse candidate facts marker`);
   assert(source.includes('[MISSING: live current target row readback at execution time]'), `${label} missing live current Warehouse readback blocker`);
   assert(source.includes('[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]'), `${label} missing renewed Warehouse window blocker`);
   assert(source.includes('[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]'), `${label} missing final Warehouse mutation approval blocker`);
 }
+for (const [label, source] of [
+  ['paid/provider channel implementation contract', channelImplementationContract],
+  ['paid/provider channel contract approval report', channelContractApproval],
+]) {
+  assert(source.includes('[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, live Warehouse readback, and final mutation approval]'), `${label} missing narrowed Orders/Payments source mapping marker`);
+}
+
 for (const value of [
   'mutation: false',
   'live_checkout_executed: false',
