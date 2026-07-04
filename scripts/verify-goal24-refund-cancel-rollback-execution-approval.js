@@ -24,6 +24,7 @@ const flipflopPaymentResultUrlReadback = read('../flipflop/reports/validation/VA
 const warehouseCleanupPacket = read('../warehouse-microservice/docs/contracts/goal24-warehouse-cleanup-approval-packet.md');
 const paymentsTokenBindingConsumption = read('../payments-microservice/reports/validation/VAL-GOAL-24-payments-token-binding-proof-contract-consumption-2026-07-04.md');
 const ordersTokenBindingConsumption = read('../orders-microservice/reports/validation/VAL-GOAL-24-orders-token-binding-proof-contract-consumption-2026-07-04.md');
+const currentBlockerReconciliation = read('reports/validation/VAL-GOAL-24-current-blocker-reconciliation-2026-07-04.md');
 
 const flipflopChannelSupersessionMarker = '[RESOLVED/NARROWED: Codex Goal 24 integration thread supersedes earlier FlipFlop channel executor/runtime owner blockers; channel cleanup runtime remains blocked until bank/refund authority, exact provider proof, Orders side-effect acknowledgements, Warehouse target facts, Auth token source, and final redacted evidence path exist]';
 const sourceWaveFreezeMarker = '[RESOLVED/NARROWED: Goal 24 frozen source-governance wave GOAL24-SOURCE-WAVE-2026-07-04A records Catalog `e379b54 merge goal24 current source head sync`, FlipFlop `e1f3e3a merge goal24 current source head sync`, Payments `eab6351 merge goal24 current source head sync`, Orders `d53de9f merge goal24 current source head sync`, and Warehouse `11df002 merge goal24 warehouse target facts reconcile` as input heads for runtime planning; post-merge self heads are validation evidence only; runtime side effects remain blocked]';
@@ -62,6 +63,25 @@ const requiredMarkers = [
   'Catalog consumed FlipFlop `5202c15 merge goal24 channel cleanup owner supersession`',
   flipflopChannelSupersessionMarker,
 ];
+
+
+const currentBlockerReconciliationMarker = '[RESOLVED/NARROWED: Catalog current blocker reconciliation distinguishes historical live-run executor/runtime validation owner wording from current runtime blockers; Codex owns source-controlled validation/stop authority only, while live execution remains blocked by Auth token source, Payments bank/refund authority, exact provider proof, Orders sideEffectsHandled, Warehouse live row/window/final approval, channel acknowledgement, and final redacted evidence path]';
+for (const [label, source] of [
+  ['approval packet', packet],
+  ['channel implementation contract', channelImplementationContract],
+  ['current blocker reconciliation report', currentBlockerReconciliation],
+  ['implementation state', state],
+  ['orchestrator status', status],
+]) {
+  assert(source.includes(currentBlockerReconciliationMarker), `${label} missing current blocker reconciliation marker`);
+  assert(source.includes('[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]'), `${label} missing Payments bank/refund authority blocker`);
+  assert(source.includes('[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]'), `${label} missing Orders sideEffectsHandled blocker`);
+  assert(source.includes('[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]'), `${label} missing final evidence blocker`);
+}
+assert(packet.includes('[MISSING: named live-run executor for the exact side-effectful smoke]'), 'approval packet must keep live-run executor blocker separate from runtime validation owner');
+assert(!packet.includes('[MISSING: named live-run executor/runtime validation owner for the exact side-effectful smoke]'), 'approval packet must not keep combined live-run executor/runtime validation owner blocker');
+assert(channelImplementationContract.includes('[RESOLVED: active FlipFlop checkout paths pass central Orders UUIDs to Payments before provider creation]'), 'channel implementation contract missing central Orders UUID resolved marker');
+assert(channelImplementationContract.includes('[RESOLVED: runtime verification of Payments Orders service token/role for the current bridge mechanism]'), 'channel implementation contract missing Payments Orders token resolved marker');
 
 for (const marker of requiredMarkers) {
   assert(packet.includes(marker), `approval packet missing marker: ${marker}`);

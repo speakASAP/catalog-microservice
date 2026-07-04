@@ -65,8 +65,8 @@ Before any paid/provider smoke, the owner must approve all canary facts:
 - `[MISSING: approved payment method/provider mode and maximum amount for paid/provider smoke]`
 - `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: live current target row readback at execution time]; [MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
 - `[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, live Warehouse readback, and final mutation approval]`
-- `[MISSING: proof that active checkout paths pass central Orders UUIDs to Payments]`
-- `[MISSING: runtime verification of Payments Orders service token/role]`
+- `[RESOLVED: active FlipFlop checkout paths pass central Orders UUIDs to Payments before provider creation]`
+- `[RESOLVED: runtime verification of Payments Orders service token/role for the current bridge mechanism]`
 
 If any paid/provider step cannot prove rollback before mutation, the implementation must stop at dry-run or validation-only evidence.
 
@@ -128,8 +128,8 @@ Merge order: Catalog contract record, Payments dirty-test cleanup and boundary v
 - `[MISSING: approved payment method/provider mode and maximum amount for paid/provider smoke]`
 - `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: live current target row readback at execution time]; [MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
 - `[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, live Warehouse readback, and final mutation approval]`
-- `[MISSING: proof that active checkout paths pass central Orders UUIDs to Payments]`
-- `[MISSING: runtime verification of Payments Orders service token/role]`
+- `[RESOLVED: active FlipFlop checkout paths pass central Orders UUIDs to Payments before provider creation]`
+- `[RESOLVED: runtime verification of Payments Orders service token/role for the current bridge mechanism]`
 - `[MISSING: selected first channel for external bundle implementation canary]`
 - `[MISSING: owner-approved live test listing/feed/import plan and cleanup plan]`
 - `[MISSING: qualifying historical paid multi-product Orders rows for non-empty central Orders replay evidence]`
@@ -138,3 +138,16 @@ Merge order: Catalog contract record, Payments dirty-test cleanup and boundary v
 ## State Update
 
 The broad owner approval blocker is resolved only at the implementation-contract level. Runtime remains fail-closed until exact paid/provider, stock, rollback, and channel canary inputs are approved and validated by the owning services.
+
+
+## Current Goal 24 Blocker Reconciliation
+
+[RESOLVED/NARROWED: Catalog current blocker reconciliation distinguishes historical live-run executor/runtime validation owner wording from current runtime blockers; Codex owns source-controlled validation/stop authority only, while live execution remains blocked by Auth token source, Payments bank/refund authority, exact provider proof, Orders sideEffectsHandled, Warehouse live row/window/final approval, channel acknowledgement, and final redacted evidence path]
+
+The central Orders UUID and Payments Orders service-token lines above are current source-governance resolved/narrowed facts for the present bridge mechanism. They are not permission to run checkout or mutate Orders. Future execution remains blocked by the exact runtime packet, Auth token source, Payments bank/refund authority, Orders sideEffectsHandled, Warehouse live row/window/final approval, channel acknowledgement, and final redacted evidence path.
+
+Current machine-checkable blockers:
+
+- `[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]`
+- `[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]`
+- `[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]`
