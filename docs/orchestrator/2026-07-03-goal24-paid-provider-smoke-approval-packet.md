@@ -1,3 +1,5 @@
+
+2026-07-04 continuation: Catalog consumes current Orders/Payments/Warehouse source policy for paid/provider cleanup. [RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, live Warehouse readback, and final mutation approval] This is source governance only and does not authorize checkout, payment, provider call, refund/reversal, Orders mutation, Warehouse mutation, channel cleanup, deploy, migration, DB write, secret/token output, or raw evidence capture.
 # Goal 24 Paid/Provider Smoke Approval Packet
 
 ```yaml
