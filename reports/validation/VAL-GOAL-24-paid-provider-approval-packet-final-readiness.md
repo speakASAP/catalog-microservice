@@ -414,3 +414,13 @@ Payments evidence now resolves/narrows active endpoint delivery of `FIO_BANKA_PA
 Decision: the previous payment-order token runtime-delivery blocker is resolved/narrowed. Full completed-payment Fiobanka paid/refund smoke remains blocked by `[MISSING: FIO_BANKA_REFUND_UPLOAD_ENABLED=true for an owner-approved exact future refund upload window]`, `[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]`, `[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]`, concrete idempotency keys, and bank/Internetbanking authorization completion evidence.
 
 No live checkout, payment, refund upload, provider call, bank transfer, Orders/Warehouse/channel mutation, deploy, migration, DB write, secret output, raw provider payload, or raw order/payment evidence occurred in this Catalog reconciliation.
+
+## 2026-07-04 Payments Owner Approval Intake 003 Sync
+
+Catalog consumed Payments `4133a21 docs: record goal24 owner approval intake 003`.
+
+[RESOLVED/NARROWED: owner-approved bounded paid/provider smoke intake GOAL24-PAID-PROVIDER-SMOKE-20260704-CODEX-OWNER-APPROVED-003 covers Fiobanka QR, flipflop-service, catalog.bundle.v1 919be990-1c76-4f9c-b100-829281c6a709, component qty 1 each, max 300 CZK, one attempt, window 2026-07-04T09:00:08+02:00 through 2026-07-04T23:59:59+02:00 Europe/Prague, and sanitized evidence path reports/validation/VAL-GOAL-24-live-paid-provider-runtime-evidence-2026-07-04.md; runtime remains blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, and final redacted evidence exist]
+
+Decision: approval-window/provider/amount/evidence-path intake is resolved/narrowed for the selected Goal 24 Fiobanka QR path, but runtime execution remains hard-stopped until the packet records the named human Payments/provider rollback owner with bank/refund authority, named bank/refund executor, exact future payment/order/provider hashes, concrete idempotency keys, exact Orders side-effect acknowledgements, Warehouse live readback/final mutation approval, and final redacted evidence. `FIO_BANKA_REFUND_UPLOAD_ENABLED` remains disabled until an exact owner-approved refund upload window.
+
+No live checkout, payment creation, provider call, webhook replay, refund/reversal, Orders mutation, Warehouse mutation, channel cleanup, deploy, migration, DB write, secret/token output, raw provider payload, or raw customer/order/payment evidence occurred.
