@@ -13,7 +13,7 @@ const ordersPaymentsHeadSyncReport = read('reports/validation/VAL-GOAL-24-orders
 const currentHeadSyncReport = read('reports/validation/VAL-GOAL-24-current-head-sync-2026-07-04.md');
 
 const flipflopChannelSupersessionMarker = '[RESOLVED/NARROWED: Codex Goal 24 integration thread supersedes earlier FlipFlop channel executor/runtime owner blockers; channel cleanup runtime remains blocked until bank/refund authority, exact provider proof, Orders side-effect acknowledgements, Warehouse target facts, Auth token source, and final redacted evidence path exist]';
-const currentHeadSyncMarker = '[RESOLVED/NARROWED: Catalog consumed current Goal 24 source-governance heads Catalog `51eac73 merge goal24 orders payments head sync`, FlipFlop `b2a4b4d merge goal24 current source head sync`, Payments `53ce5cc merge goal24 orders head sync`, Orders `3901ec1 merge goal24 latest cleanup head sync`, and Warehouse `11df002 merge goal24 warehouse target facts reconcile`; runtime side effects remain blocked]';
+const currentHeadSyncMarker = '[RESOLVED/NARROWED: Catalog consumed current Goal 24 source-governance heads Catalog `b0ed9f5 merge goal24 current integration head sync`, FlipFlop `ad409fc merge goal24 current source head sync`, Payments `52f9b7e merge goal24 current source head sync`, Orders `d5d2114 merge goal24 current source head sync`, and Warehouse `11df002 merge goal24 warehouse target facts reconcile`; runtime side effects remain blocked]';
 
 const requiredMarkers = [
   '## Refund/Cancel Rollback Execution Approval Decision',
@@ -88,10 +88,10 @@ for (const [label, source] of [
 ]) {
   assert(source.includes(currentHeadSyncMarker), `${label} missing current head sync marker`);
   for (const marker of [
-    'Catalog `51eac73 merge goal24 orders payments head sync`',
-    'FlipFlop `b2a4b4d merge goal24 current source head sync`',
-    'Payments `53ce5cc merge goal24 orders head sync`',
-    'Orders `3901ec1 merge goal24 latest cleanup head sync`',
+    'Catalog `b0ed9f5 merge goal24 current integration head sync`',
+    'FlipFlop `ad409fc merge goal24 current source head sync`',
+    'Payments `52f9b7e merge goal24 current source head sync`',
+    'Orders `d5d2114 merge goal24 current source head sync`',
     'Warehouse `11df002 merge goal24 warehouse target facts reconcile`',
     '[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]',
     '[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]',
@@ -177,7 +177,7 @@ for (const [label, source] of [
   ['orchestrator status', status],
 ]) {
   assert(source.includes(currentHeadSyncMarker), `${label} missing current Catalog head sync marker`);
-  assert(source.includes('FlipFlop `b2a4b4d merge goal24 current source head sync`'), `${label} missing current FlipFlop b2a4b4d consumption`);
+  assert(source.includes('FlipFlop `ad409fc merge goal24 current source head sync`'), `${label} missing current FlipFlop ad409fc consumption`);
   assert(source.includes('Warehouse `11df002 merge goal24 warehouse target facts reconcile`'), `${label} missing current Warehouse 11df002 consumption`);
 }
 for (const marker of [
