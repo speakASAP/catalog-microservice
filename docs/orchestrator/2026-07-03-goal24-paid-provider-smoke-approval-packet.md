@@ -453,3 +453,13 @@ Runtime remains blocked by `[MISSING: approved token source path, such as an on-
 [RESOLVED/NARROWED: Payments consumed FlipFlop f004fe5, Catalog 47b652c, and Orders 5ec6454 token-binding proof contract as source governance only; provider/payment side effects remain blocked]
 
 Auth token-binding proof is not Payments provider authority, not Fiobanka refund/reversal proof, not exact payment evidence, not Orders cleanup authorization, and not Warehouse stock evidence. Runtime remains blocked by token source/token-binding proof, provider rollback owner/bank authority, exact future payment/order/provider hashes, concrete rollback run id and idempotency keys, exact Orders cleanup packet, Warehouse target facts, and final redacted evidence path.
+
+## 2026-07-04 Warehouse Target Facts Sync
+
+[RESOLVED/NARROWED: Catalog consumed Warehouse 11df002 target-facts reconcile as source governance only; live Warehouse reservation/cleanup mutation remains blocked]
+
+[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]
+
+Candidate source facts: bundle `919be990-1c76-4f9c-b100-829281c6a709`; component products `ce4a51aa-2d12-4ab7-a965-7a36609d01fc` and `dbc51dde-fc66-4511-b178-f929183f4647`; Warehouse `c0de0000-0000-4000-8000-000000000013`; max hold qty `1` per component.
+
+Runtime remains blocked by `[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]`, `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`, `[MISSING: live current target row readback at execution time]`, `[MISSING: timeout cleanup owner selection between Warehouse TTL/expiry-owned expire and explicit abort-owned release]`, and `[MISSING: deterministic Warehouse component reservation state for cleanup]`. Candidate target facts do not prove live current stock rows and do not authorize any Warehouse reservation or cleanup mutation.
