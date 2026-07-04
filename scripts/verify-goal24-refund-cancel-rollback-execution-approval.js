@@ -11,6 +11,7 @@ const linkageReport = read('reports/validation/VAL-GOAL-24-manual-refund-linkage
 const flipflopChannelSupersessionReport = read('reports/validation/VAL-GOAL-24-flipflop-channel-supersession-consumption-2026-07-04.md');
 const ordersPaymentsHeadSyncReport = read('reports/validation/VAL-GOAL-24-orders-payments-head-sync-2026-07-04.md');
 const currentHeadSyncReport = read('reports/validation/VAL-GOAL-24-current-head-sync-2026-07-04.md');
+const flipflopTokenBindingContractConsumption = read('reports/validation/VAL-GOAL-24-flipflop-token-binding-proof-contract-consumption-2026-07-04.md');
 
 const flipflopChannelSupersessionMarker = '[RESOLVED/NARROWED: Codex Goal 24 integration thread supersedes earlier FlipFlop channel executor/runtime owner blockers; channel cleanup runtime remains blocked until bank/refund authority, exact provider proof, Orders side-effect acknowledgements, Warehouse target facts, Auth token source, and final redacted evidence path exist]';
 const sourceWaveFreezeMarker = '[RESOLVED/NARROWED: Goal 24 frozen source-governance wave GOAL24-SOURCE-WAVE-2026-07-04A records Catalog `e379b54 merge goal24 current source head sync`, FlipFlop `e1f3e3a merge goal24 current source head sync`, Payments `eab6351 merge goal24 current source head sync`, Orders `d53de9f merge goal24 current source head sync`, and Warehouse `11df002 merge goal24 warehouse target facts reconcile` as input heads for runtime planning; post-merge self heads are validation evidence only; runtime side effects remain blocked]';
@@ -79,6 +80,46 @@ assert(!report.includes('[MISSING: runtime FIO_BANKA_API_KEY read-token configur
 assert(report.includes('Retained Evidence Closeout Supersession'), 'validation report missing retained evidence closeout supersession section');
 assert(report.includes('future-only gates for new linked paid/provider smokes'), 'validation report must mark exact-linkage blockers as future-only after closeout');
 
+
+
+for (const marker of [
+  '[RESOLVED/NARROWED: Catalog consumed FlipFlop f004fe5 token-binding proof contract as source governance only; runtime Auth token source and token-to-actor proof remain blocked]',
+  '[RESOLVED/NARROWED: Goal 24 token-binding proof may record only token-present, Auth validation status class, actor-hash match, required-role boolean, approval id, runner id, timestamps, and no-output booleans]',
+  '[RESOLVED/NARROWED: Goal 24 approved token source shape is owner-approved on-host token file or in-memory handoff read only by the approved runner, never printed, never decoded into reports, never persisted, never committed, and removed or invalidated after the run]',
+  '[RESOLVED/NARROWED: Goal 24 Auth token binding does not authorize Orders, Warehouse, Payments/provider, or channel side effects and does not prove stock effects]',
+  '[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]',
+  '[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]',
+  '[MISSING: sanitized auth/admin evidence path for guarded discount-code generation]',
+  'tokenSourceType=on-host-token-file',
+  'tokenSourceType=in-memory-handoff',
+  'actorHashMatches=true',
+  'requiredAdminRolePresent=true',
+  'tokenOutput=false',
+  'decodedJwtOutput=false',
+  'rawUserOutput=false',
+  'secretOutput=false',
+  'tokenSourceDestroyedOrInvalidated=true',
+  'Auth token-binding proof is not Warehouse stock evidence and is not Orders cleanup authorization',
+]) {
+  assert(flipflopTokenBindingContractConsumption.includes(marker), `FlipFlop token-binding consumption report missing ${marker}`);
+  assert(packet.includes(marker) || state.includes(marker) || status.includes(marker), `Catalog docs missing token-binding consumption marker ${marker}`);
+}
+for (const boundary of [
+  'mutation: false',
+  'live_auth_login: false',
+  'token_issuance: false',
+  'token_output: false',
+  'decoded_jwt_output: false',
+  'secret_output: false',
+  'raw_user_output: false',
+  'provider_call: false',
+  'live_checkout_executed: false',
+  'orders_mutation: false',
+  'warehouse_mutation: false',
+  'channel_cleanup_mutation: false',
+]) {
+  assert(flipflopTokenBindingContractConsumption.includes(boundary), `FlipFlop token-binding consumption report missing boundary ${boundary}`);
+}
 
 for (const [label, source] of [
   ['source-wave freeze report', currentHeadSyncReport],
