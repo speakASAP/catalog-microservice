@@ -30,6 +30,7 @@ const flipflopChannelSupersessionMarker = '[RESOLVED/NARROWED: Codex Goal 24 int
 const sourceWaveFreezeMarker = '[RESOLVED/NARROWED: Goal 24 frozen source-governance wave GOAL24-SOURCE-WAVE-2026-07-04A records Catalog `e379b54 merge goal24 current source head sync`, FlipFlop `e1f3e3a merge goal24 current source head sync`, Payments `eab6351 merge goal24 current source head sync`, Orders `d53de9f merge goal24 current source head sync`, and Warehouse `11df002 merge goal24 warehouse target facts reconcile` as input heads for runtime planning; post-merge self heads are validation evidence only; runtime side effects remain blocked]';
 const sourceWaveBMarker = '[RESOLVED/NARROWED: Goal 24 source-governance wave GOAL24-SOURCE-WAVE-2026-07-04B input set records Auth `2faf719 docs: complete goal10 customer data wallet rollout`, Catalog `dde0f43 merge goal24 owner executor wording sync`, FlipFlop `e8abb44 merge goal24 implementation target facts wording sync`, Payments `9069fd3 merge goal24 payments source wave b`, Orders `908b6ee merge goal24 orders source wave b`, and Warehouse `3fdeabd merge goal24 live target readback wording sync` as Wave B input heads for renewed runtime planning; post-merge source-sync commits are validation evidence only; runtime side effects remain blocked]';
 const sourceWaveCMarker = '[RESOLVED/NARROWED: Goal 24 source-governance wave GOAL24-SOURCE-WAVE-2026-07-04C input set records Auth `2faf719 docs: complete goal10 customer data wallet rollout`, Catalog `6723b58 merge goal24 catalog cross-service rollup sync`, FlipFlop `2310c90 merge goal24 flipflop stale blocker wording sync`, Payments `080f293 merge goal24 payments source wave c`, Orders `d32abd2 merge goal24 orders source wave c`, and Warehouse `ea7b9e9 merge goal24 warehouse cleanup packet readback sync` as Wave C input heads for renewed runtime planning; post-merge source-sync commits are validation evidence only; runtime side effects remain blocked]';
+const sourceWaveEMarker = '[RESOLVED/NARROWED: Goal 24 source-governance wave GOAL24-SOURCE-WAVE-2026-07-04E input set records Auth `2faf719 docs: complete goal10 customer data wallet rollout`, Catalog `6cdd4f5 docs: clarify goal24 catalog current surface`, FlipFlop `7f2fcb9 docs: sync goal24 url readback owner wording`, Payments `da1e9a6 docs: sync goal24 payments readiness owner wording`, Orders `4dca5e6 docs: sync goal24 orders source wave d`, and Warehouse `ea7b9e9 merge goal24 warehouse cleanup packet readback sync` as Wave E input heads for renewed runtime planning; post-merge source-sync commits are validation evidence only; runtime provider/payment/Orders/Warehouse/channel side effects remain blocked]';
 const currentSurfaceNoteMarker = '[RESOLVED/NARROWED: Catalog top-level Wave C entries are frozen source-governance planning inputs, while later validation-owner wording sync commits are validation evidence only and must not be treated as renewed runtime authority]';
 
 const requiredMarkers = [
@@ -179,6 +180,26 @@ for (const [label, source] of [
   ['orchestrator status', status],
 ]) {
   assert(source.includes(sourceWaveCMarker), `${label} missing source-wave C marker`);
+for (const [label, source] of [
+  ['source-wave freeze report', currentHeadSyncReport],
+  ['approval packet', packet],
+  ['implementation state', state],
+  ['orchestrator status', status],
+]) {
+  assert(source.includes(sourceWaveEMarker), `${label} missing source-wave E marker`);
+  for (const marker of [
+    'Auth `2faf719 docs: complete goal10 customer data wallet rollout`',
+    'Catalog `6cdd4f5 docs: clarify goal24 catalog current surface`',
+    'FlipFlop `7f2fcb9 docs: sync goal24 url readback owner wording`',
+    'Payments `da1e9a6 docs: sync goal24 payments readiness owner wording`',
+    'Orders `4dca5e6 docs: sync goal24 orders source wave d`',
+    'Warehouse `ea7b9e9 merge goal24 warehouse cleanup packet readback sync`',
+    '[MISSING: live current target row readback at execution time]',
+    '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
+  ]) {
+    assert(source.includes(marker), `${label} missing source-wave E marker ${marker}`);
+  }
+}
   for (const marker of [
     'Auth `2faf719 docs: complete goal10 customer data wallet rollout`',
     'Catalog `6723b58 merge goal24 catalog cross-service rollup sync`',

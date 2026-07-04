@@ -531,3 +531,22 @@ Current Catalog-tracked runtime blockers are:
 - `[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]`
 - `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
 - `[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]`
+
+## 2026-07-04 Current Source-Governance Head Sync Wave E
+
+[RESOLVED/NARROWED: Goal 24 source-governance wave GOAL24-SOURCE-WAVE-2026-07-04E input set records Auth `2faf719 docs: complete goal10 customer data wallet rollout`, Catalog `6cdd4f5 docs: clarify goal24 catalog current surface`, FlipFlop `7f2fcb9 docs: sync goal24 url readback owner wording`, Payments `da1e9a6 docs: sync goal24 payments readiness owner wording`, Orders `4dca5e6 docs: sync goal24 orders source wave d`, and Warehouse `ea7b9e9 merge goal24 warehouse cleanup packet readback sync` as Wave E input heads for renewed runtime planning; post-merge source-sync commits are validation evidence only; runtime provider/payment/Orders/Warehouse/channel side effects remain blocked]
+
+Wave E supersedes Wave D for renewed runtime planning only. It consumes the latest Payments and FlipFlop owner-wording/verifier commits plus the already-current Catalog, Orders, Warehouse, and Auth source-governance heads. It does not authorize checkout, discount-code creation, payment creation, provider calls, refund/reversal, Orders route invocation, Warehouse mutation, channel cleanup, deploy, migration, DB write, secret/token output, raw customer/order/payment/provider evidence, or any direct Warehouse stock mutation.
+
+Runtime remains blocked by `[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]`, `[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]`, `[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]`, `[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]`, `[MISSING: concrete side-effectful rollback run id and cleanup idempotency keys]`, `[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]`, `[MISSING: named runtime Orders cancellation actor/approvedBy and exact target order hash/state for the paid/provider packet]`, `[MISSING: owner-approved payment/warehouse/notification/crm/channel sideEffectsHandled acknowledgements for the selected central order hash]`, `[MISSING: live current target row readback at execution time]`, `[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]`, `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`, `[MISSING: approved runtime route invocation evidence; do not call the route until all packet fields are present]`, and `[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]`.
+
+Wave E input heads (post-merge source-sync commits are validation evidence only):
+
+| Service | Input head | Scope |
+| --- | --- | --- |
+| Auth | `2faf719 docs: complete goal10 customer data wallet rollout` | token-binding source governance only |
+| Catalog | `6cdd4f5 docs: clarify goal24 catalog current surface` | current bundle/target/blocker surface only |
+| FlipFlop | `7f2fcb9 docs: sync goal24 url readback owner wording` | auth/admin, URL readback, and channel cleanup source governance only |
+| Payments | `da1e9a6 docs: sync goal24 payments readiness owner wording` | provider/refund/current hard-stop source governance only |
+| Orders | `4dca5e6 docs: sync goal24 orders source wave d` | lifecycle/cancellation/idempotency source governance only |
+| Warehouse | `ea7b9e9 merge goal24 warehouse cleanup packet readback sync` | component-line cleanup source governance only |
