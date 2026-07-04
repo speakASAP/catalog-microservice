@@ -28,6 +28,7 @@ const ordersTokenBindingConsumption = read('../orders-microservice/reports/valid
 const flipflopChannelSupersessionMarker = '[RESOLVED/NARROWED: Codex Goal 24 integration thread supersedes earlier FlipFlop channel executor/runtime owner blockers; channel cleanup runtime remains blocked until bank/refund authority, exact provider proof, Orders side-effect acknowledgements, Warehouse target facts, Auth token source, and final redacted evidence path exist]';
 const sourceWaveFreezeMarker = '[RESOLVED/NARROWED: Goal 24 frozen source-governance wave GOAL24-SOURCE-WAVE-2026-07-04A records Catalog `e379b54 merge goal24 current source head sync`, FlipFlop `e1f3e3a merge goal24 current source head sync`, Payments `eab6351 merge goal24 current source head sync`, Orders `d53de9f merge goal24 current source head sync`, and Warehouse `11df002 merge goal24 warehouse target facts reconcile` as input heads for runtime planning; post-merge self heads are validation evidence only; runtime side effects remain blocked]';
 const sourceWaveBMarker = '[RESOLVED/NARROWED: Goal 24 source-governance wave GOAL24-SOURCE-WAVE-2026-07-04B input set records Auth `2faf719 docs: complete goal10 customer data wallet rollout`, Catalog `dde0f43 merge goal24 owner executor wording sync`, FlipFlop `e8abb44 merge goal24 implementation target facts wording sync`, Payments `9069fd3 merge goal24 payments source wave b`, Orders `908b6ee merge goal24 orders source wave b`, and Warehouse `3fdeabd merge goal24 live target readback wording sync` as Wave B input heads for renewed runtime planning; post-merge source-sync commits are validation evidence only; runtime side effects remain blocked]';
+const sourceWaveCMarker = '[RESOLVED/NARROWED: Goal 24 source-governance wave GOAL24-SOURCE-WAVE-2026-07-04C input set records Auth `2faf719 docs: complete goal10 customer data wallet rollout`, Catalog `6723b58 merge goal24 catalog cross-service rollup sync`, FlipFlop `2310c90 merge goal24 flipflop stale blocker wording sync`, Payments `080f293 merge goal24 payments source wave c`, Orders `d32abd2 merge goal24 orders source wave c`, and Warehouse `ea7b9e9 merge goal24 warehouse cleanup packet readback sync` as Wave C input heads for renewed runtime planning; post-merge source-sync commits are validation evidence only; runtime side effects remain blocked]';
 
 const requiredMarkers = [
   '## Refund/Cancel Rollback Execution Approval Decision',
@@ -132,6 +133,27 @@ for (const boundary of [
   'channel_cleanup_mutation: false',
 ]) {
   assert(flipflopTokenBindingContractConsumption.includes(boundary), `FlipFlop token-binding consumption report missing boundary ${boundary}`);
+}
+
+for (const [label, source] of [
+  ['source-wave freeze report', currentHeadSyncReport],
+  ['approval packet', packet],
+  ['implementation state', state],
+  ['orchestrator status', status],
+]) {
+  assert(source.includes(sourceWaveCMarker), `${label} missing source-wave C marker`);
+  for (const marker of [
+    'Auth `2faf719 docs: complete goal10 customer data wallet rollout`',
+    'Catalog `6723b58 merge goal24 catalog cross-service rollup sync`',
+    'FlipFlop `2310c90 merge goal24 flipflop stale blocker wording sync`',
+    'Payments `080f293 merge goal24 payments source wave c`',
+    'Orders `d32abd2 merge goal24 orders source wave c`',
+    'Warehouse `ea7b9e9 merge goal24 warehouse cleanup packet readback sync`',
+    '[MISSING: live current target row readback at execution time]',
+    '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
+  ]) {
+    assert(source.includes(marker), `${label} missing source-wave C marker ${marker}`);
+  }
 }
 
 for (const [label, source] of [
@@ -409,3 +431,7 @@ for (const boundary of [
 }
 
 console.log('Goal 24 refund/cancel rollback execution approval gate verified');
+
+assert(packet.includes('historical read-only available=118/108'), 'approval packet must label Warehouse available readback historical only');
+assert(packet.includes('historical read-only reserved=0/0'), 'approval packet must label Warehouse reserved readback historical only');
+assert(packet.includes('[MISSING: live current target row readback at execution time]'), 'approval packet must preserve live Warehouse readback blocker');
