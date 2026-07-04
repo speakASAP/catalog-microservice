@@ -25,7 +25,7 @@ raw_customer_or_payment_evidence: false
 Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update
 
 - Vision: Catalog Goal 24 readiness must not preserve stale Warehouse blocker wording after Warehouse/Catalog split source-documented candidate facts from live execution facts.
-- Goal Impact: current Catalog readiness now states that candidate target rows/max quantity are source-documented, while live Warehouse readback, renewed window/hold duration, and final mutation approval remain blocked.
+- Goal Impact: current Catalog readiness now states that candidate target rows/max quantity are source-documented, while Warehouse 89222f8 live readback is resolved/narrowed; renewed window/hold duration, and final mutation approval remain blocked.
 - System: Catalog owns bundle/component identity; Warehouse owns live stock readback, reservation/cleanup mutation, and hold/release duration; Orders owns cleanup packet and side-effect acknowledgements; Payments owns provider/refund authority.
 - Feature: Catalog Warehouse blocker wording sync.
 - Task: update current Catalog readiness/status/state wording and verifier coverage for the Warehouse target-facts split.
@@ -33,11 +33,11 @@ Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding P
 - Coding Prompt: do not infer live Warehouse stock effects from source-documented Catalog candidate facts.
 - Code: `reports/validation/VAL-GOAL-24-paid-provider-approval-packet-final-readiness.md`, `docs/orchestrator/2026-07-03-goal24-paid-provider-smoke-approval-packet.md`, `docs/IMPLEMENTATION_STATE.md`, `docs/orchestrator/STATUS.md`, and `scripts/verify-goal24-refund-cancel-rollback-execution-approval.js`.
 - Validation: `node --check scripts/verify-goal24-refund-cancel-rollback-execution-approval.js`, `node scripts/verify-goal24-refund-cancel-rollback-execution-approval.js`, and `git diff --check`.
-- State Update: `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: live current target row readback at execution time]; [RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`.
+- State Update: `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]; [RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`.
 
 ## Still Blocked
 
-- `[MISSING: live current target row readback at execution time]`
+- `[RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]`
 - `[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]`
 - `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
 - `[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]`

@@ -25,7 +25,7 @@ raw_customer_or_payment_evidence: false
 - Goal Impact: Catalog consumes the latest FlipFlop and Warehouse source-controlled runtime evidence without authorizing checkout, payment, provider, Orders, Warehouse, or channel side effects.
 - System: Catalog owns integration packet status; FlipFlop owns checkout/quote/channel readiness; Warehouse owns component row readback and stock mutation approval; Payments owns Fiobanka provider/refund evidence; Orders owns cleanup packet execution.
 - Feature: current runtime readiness source-governance sync.
-- Task: record that FlipFlop `888cc13` and Warehouse `dfab9ec` narrow the current Auth fixture and Warehouse live-readback blockers while preserving the remaining provider/Orders/Warehouse/channel hard stops.
+- Task: record that FlipFlop `888cc13` and Warehouse `89222f8` narrow the current Auth fixture and Warehouse live-readback blockers while preserving the remaining provider/Orders/Warehouse/channel hard stops.
 - Execution Plan: docs/verifier only; no live checkout, no provider call, no webhook replay, no refund/reversal, no Orders route invocation, no Warehouse mutation, no deploy, no DB write, no secret/token output.
 - Coding Prompt: do not rewrite historical Wave snapshots; add a current source-governance sync and keep every still-missing runtime fact explicit.
 - Code: `reports/validation/VAL-GOAL-24-current-runtime-readiness-sync-2026-07-04.md`, `docs/IMPLEMENTATION_STATE.md`, `docs/orchestrator/STATUS.md`, `scripts/verify-goal24-refund-cancel-rollback-execution-approval.js`.
@@ -35,13 +35,13 @@ raw_customer_or_payment_evidence: false
 ## Consumed Current Heads
 
 - FlipFlop `888cc13 docs: consume goal24 warehouse live readback`.
-- Warehouse `dfab9ec docs: record goal24 warehouse live readback`.
+- Warehouse `89222f8 docs: consume goal24 warehouse live readback`.
 - Payments `ff069eb docs: narrow goal24 auth blockers` remains current and keeps provider/refund execution blocked.
 - Auth `c389c1e docs: record goal24 actor token provisioning proof` remains current for actor-bound token generation proof.
 - Orders current primary editable lane is not touched here because `/home/ssf/Documents/Github/orders-microservice` has an active dirty branch.
 
-[RESOLVED/NARROWED: Catalog consumed FlipFlop 888cc13 actor-bound fixture quote and Warehouse live-readback consumption as current source-governance evidence]
-[RESOLVED/NARROWED: Catalog consumed Warehouse dfab9ec live current target row readback through protected Warehouse API without mutation]
+[RESOLVED/NARROWED: Catalog consumed FlipFlop 888cc13 actor-bound fixture quote and Warehouse 89222f8 live-readback consumption as current source-governance evidence]
+[RESOLVED/NARROWED: Catalog consumed Warehouse 89222f8 live current target row readback through protected Warehouse API without mutation]
 
 ## Current Remaining Hard Stops
 
@@ -57,4 +57,4 @@ raw_customer_or_payment_evidence: false
 - `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
 - `[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]`
 
-Historical reports may still contain older `[MISSING: fresh Auth actor-bound token ...]`, `[MISSING: sanitized auth/admin evidence path ...]`, and `[MISSING: live current target row readback ...]` markers as snapshot evidence. Those markers are superseded for new planning by this current sync plus the owning FlipFlop/Warehouse reports; they are not runtime approval.
+Historical reports may still contain older `[MISSING: fresh Auth actor-bound token ...]`, `[MISSING: sanitized auth/admin evidence path ...]`, and `[MISSING: live current target row readback ...]` markers as snapshot evidence. Those markers are superseded for new planning by this current sync plus Warehouse 89222f8 and the owning FlipFlop/Warehouse reports; they are not runtime approval.

@@ -1,5 +1,5 @@
 
-2026-07-04 continuation: Catalog consumes current Orders/Payments/Warehouse source policy for paid/provider cleanup. [RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, live Warehouse readback, and final mutation approval] This is source governance only and does not authorize checkout, payment, provider call, refund/reversal, Orders mutation, Warehouse mutation, channel cleanup, deploy, migration, DB write, secret/token output, or raw evidence capture.
+2026-07-04 continuation: Catalog consumes current Orders/Payments/Warehouse source policy for paid/provider cleanup. [RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, Warehouse 89222f8 readback, and final mutation approval] This is source governance only and does not authorize checkout, payment, provider call, refund/reversal, Orders mutation, Warehouse mutation, channel cleanup, deploy, migration, DB write, secret/token output, or raw evidence capture.
 # Goal 24 Paid/Provider Smoke Approval Packet
 
 ```yaml
@@ -140,7 +140,7 @@ Boundary: no discount code, checkout, order, payment, provider call, Warehouse r
 
 ## 2026-07-04 Stale-Head Reconciliation
 
-Catalog consumed the orchestrator-provided clean heads: Catalog `c52600d`, Orders `b138458 docs: record goal24 orders approval intake`, Payments `a8e09a0 docs: require goal24 current heads in verifier`, Warehouse `0289dc2 docs: require goal24 current heads in verifier`, and FlipFlop `490913a docs: clean goal24 owner wording`. These are read-only readiness inputs only; they do not approve side-effectful checkout, provider, Orders, Warehouse, channel, deploy, migration, or DB mutation.
+Catalog consumed the orchestrator-provided clean heads and later Warehouse 89222f8 live-readback source-governance evidence: Catalog `c52600d`, Orders `b138458 docs: record goal24 orders approval intake`, Payments `a8e09a0 docs: require goal24 current heads in verifier`, Warehouse `0289dc2 docs: require goal24 current heads in verifier`, and FlipFlop `490913a docs: clean goal24 owner wording`. These are read-only readiness inputs only; they do not approve side-effectful checkout, provider, Orders, Warehouse, channel, deploy, migration, or DB mutation.
 
 Parallel execution state:
 
@@ -401,15 +401,15 @@ Boundary: this confirmation did not run a new paid transfer, automated refund, p
 
 ## 2026-07-04 FlipFlop Autonomous Approval Decision Sync
 
-Catalog consumed FlipFlop `85ecb11 docs: record goal24 autonomous approval decision` as a source-policy integration input only. [RESOLVED/NARROWED: owner delegated autonomous Goal 24 continuation to Codex, but integration validation keeps new Fiobanka paid/provider side effects hard-stopped until bank/refund authority, exact Orders/Warehouse packet, and redacted provider proof exist] New side-effectful paid/provider runtime execution remains blocked on exact bank/refund authority, provider proof, Orders side-effect acknowledgements, Warehouse live target rows/window/max quantity, Fiobanka payment-order runtime flag/bank-executor completion evidence, and final redacted runtime evidence.
+Catalog consumed FlipFlop `85ecb11 docs: record goal24 autonomous approval decision` as a source-policy integration input only. [RESOLVED/NARROWED: owner delegated autonomous Goal 24 continuation to Codex, but integration validation keeps new Fiobanka paid/provider side effects hard-stopped until bank/refund authority, exact Orders/Warehouse packet, and redacted provider proof exist] New side-effectful paid/provider runtime execution remains blocked on exact bank/refund authority, provider proof, Orders side-effect acknowledgements, Warehouse hold/release duration/final approval, Fiobanka payment-order runtime flag/bank-executor completion evidence, and final redacted runtime evidence.
 
 ## 2026-07-04 FlipFlop Runtime Ownership Sync
 
-Catalog consumed FlipFlop `490913a docs: clean goal24 owner wording` as source-governance input only. [RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner and FlipFlop channel cleanup executor for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, and redacted evidence path exist] New side-effectful paid/provider runtime execution remains blocked on named Auth admin actor/token source, human Payments/provider bank/refund authority, exact provider proof, Orders side-effect acknowledgements, Warehouse live target rows/window/max quantity, Fiobanka payment-order runtime flag/bank-executor completion evidence, and final redacted runtime evidence.
+Catalog consumed FlipFlop `490913a docs: clean goal24 owner wording` as source-governance input only. [RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner and FlipFlop channel cleanup executor for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, and redacted evidence path exist] New side-effectful paid/provider runtime execution remains blocked on named Auth admin actor/token source, human Payments/provider bank/refund authority, exact provider proof, Orders side-effect acknowledgements, Warehouse hold/release duration/final approval, Fiobanka payment-order runtime flag/bank-executor completion evidence, and final redacted runtime evidence.
 
 ## 2026-07-04 Payments Runtime Validation Owner Sync
 
-Catalog consumed Payments `a8e09a0 docs: require goal24 current heads in verifier` as source-governance input only. [RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, FIO_BANKA_REFUND_UPLOAD_ENABLED=true, named bank/refund executor, exact future payment/order/provider hashes, idempotency keys, and redacted evidence path exist] New side-effectful paid/provider runtime execution remains blocked on human Payments/provider bank/refund authority, exact provider proof, Orders side-effect acknowledgements, Warehouse live target rows/window/max quantity, Fiobanka payment-order runtime flag/bank-executor completion evidence, and final redacted runtime evidence.
+Catalog consumed Payments `a8e09a0 docs: require goal24 current heads in verifier` as source-governance input only. [RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, FIO_BANKA_REFUND_UPLOAD_ENABLED=true, named bank/refund executor, exact future payment/order/provider hashes, idempotency keys, and redacted evidence path exist] New side-effectful paid/provider runtime execution remains blocked on human Payments/provider bank/refund authority, exact provider proof, Orders side-effect acknowledgements, Warehouse hold/release duration/final approval, Fiobanka payment-order runtime flag/bank-executor completion evidence, and final redacted runtime evidence.
 
 
 ## 2026-07-04 FlipFlop Auth Actor Readback
@@ -472,7 +472,7 @@ Auth token-binding proof is not Payments provider authority, not Fiobanka refund
 
 Candidate source facts: bundle `919be990-1c76-4f9c-b100-829281c6a709`; component products `ce4a51aa-2d12-4ab7-a965-7a36609d01fc` and `dbc51dde-fc66-4511-b178-f929183f4647`; Warehouse `c0de0000-0000-4000-8000-000000000013`; max hold qty `1` per component.
 
-Runtime remains blocked by `[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]`, `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`, `[MISSING: live current target row readback at execution time]`, `[MISSING: timeout cleanup owner selection between Warehouse TTL/expiry-owned expire and explicit abort-owned release]`, and `[MISSING: deterministic Warehouse component reservation state for cleanup]`. Candidate target facts do not prove live current stock rows and do not authorize any Warehouse reservation or cleanup mutation.
+Runtime remains blocked by `[RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]`, `[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]`, `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`, `[MISSING: timeout cleanup owner selection between Warehouse TTL/expiry-owned expire and explicit abort-owned release]`, and `[MISSING: deterministic Warehouse component reservation state for cleanup]`. Candidate target facts do not prove Warehouse mutation approval and does not authorize any Warehouse reservation or cleanup mutation.
 
 ## 2026-07-04 Current Channel Owner/Config Sync
 
@@ -509,11 +509,11 @@ Wave B input heads (post-merge source-sync commits are validation evidence only)
 
 [RESOLVED/NARROWED: Goal 24 source-governance wave GOAL24-SOURCE-WAVE-2026-07-04C input set records Auth `2faf719 docs: complete goal10 customer data wallet rollout`, Catalog `6723b58 merge goal24 catalog cross-service rollup sync`, FlipFlop `2310c90 merge goal24 flipflop stale blocker wording sync`, Payments `080f293 merge goal24 payments source wave c`, Orders `d32abd2 merge goal24 orders source wave c`, and Warehouse `ea7b9e9 merge goal24 warehouse cleanup packet readback sync` as Wave C input heads for renewed runtime planning; post-merge source-sync commits are validation evidence only; runtime side effects remain blocked]
 
-Historical Warehouse row readbacks in this packet are source-context only. Runtime remains blocked by `[MISSING: live current target row readback at execution time]`, `[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]`, and `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`.
+Historical Warehouse row readbacks in this packet are source-context only. Current Warehouse live row readback is consumed through Warehouse 89222f8 as `[RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]`. Runtime remains blocked by `[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]` and `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`.
 
 ## 2026-07-04 Current Blocker Reconciliation
 
-[RESOLVED/NARROWED: Catalog current blocker reconciliation distinguishes historical live-run executor/runtime validation owner wording from current runtime blockers; Codex owns source-controlled validation/stop authority only, while live execution remains blocked by Auth token source, Payments bank/refund authority, exact provider proof, Orders sideEffectsHandled, Warehouse live row/window/final approval, channel acknowledgement, and final redacted evidence path]
+[RESOLVED/NARROWED: Catalog current blocker reconciliation distinguishes historical live-run executor/runtime validation owner wording from current runtime blockers; Codex owns source-controlled validation/stop authority only, while live execution remains blocked by Auth token source, Payments bank/refund authority, exact provider proof, Orders sideEffectsHandled, Warehouse hold/release duration/final approval, channel acknowledgement, and final redacted evidence path]
 
 Historical packet rows that asked for a named runtime validation owner are superseded for source-governance by the Codex Goal 24 integration thread. This does not approve a live checkout, provider call, refund/reversal, Orders mutation, Warehouse mutation, channel cleanup, deploy, migration, DB write, token/secret output, or raw evidence capture.
 
@@ -526,7 +526,7 @@ Current Catalog-tracked runtime blockers are:
 - `[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]`
 - `[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]`
 - `[MISSING: owner-approved channel side-effect acknowledgement for the selected central order hash]`
-- `[MISSING: live current target row readback at execution time]`
+- `[RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]`
 - `[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]`
 - `[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
 - `[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]`

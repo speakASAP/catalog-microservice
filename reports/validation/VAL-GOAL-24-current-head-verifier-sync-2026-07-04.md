@@ -16,7 +16,7 @@ Remaining blockers:
 - [MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements].
 - [MISSING: named runtime Orders cancellation actor/approvedBy and exact target order hash/state for the paid/provider packet].
 - [MISSING: owner-approved payment/warehouse/notification/crm/channel sideEffectsHandled acknowledgements for the selected central order hash].
-- [MISSING: live current target row readback at execution time].
+- [RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation].
 - [RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration].
 - [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation].
 - [MISSING: approved runtime route invocation evidence; do not call the route until all packet fields are present].

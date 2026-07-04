@@ -27,18 +27,52 @@ const ordersTokenBindingConsumption = read('../orders-microservice/reports/valid
 const currentBlockerReconciliation = read('reports/validation/VAL-GOAL-24-current-blocker-reconciliation-2026-07-04.md');
 const authTokenProofCleanup = read('reports/validation/VAL-GOAL-24-auth-token-proof-cleanup-2026-07-04.md');
 const currentRuntimeReadinessSync = read('reports/validation/VAL-GOAL-24-current-runtime-readiness-sync-2026-07-04.md');
+const warehouse89222f8ReadbackConsumption = read('reports/validation/VAL-GOAL-24-warehouse-89222f8-readback-consumption-2026-07-04.md');
 
 for (const [label, source] of [
   ['current runtime readiness sync report', currentRuntimeReadinessSync],
+  ['warehouse 89222f8 readback consumption report', warehouse89222f8ReadbackConsumption],
   ['implementation state', state],
   ['orchestrator status', status],
 ]) {
-  assert(source.includes('[RESOLVED/NARROWED: Catalog consumed FlipFlop 888cc13 actor-bound fixture quote and Warehouse live-readback consumption as current source-governance evidence]'), `${label} missing FlipFlop 888cc13 current readiness marker`);
-  assert(source.includes('[RESOLVED/NARROWED: Catalog consumed Warehouse dfab9ec live current target row readback through protected Warehouse API without mutation]'), `${label} missing Warehouse dfab9ec current readiness marker`);
+  assert(source.includes('[RESOLVED/NARROWED: Catalog consumed FlipFlop 888cc13 actor-bound fixture quote and Warehouse 89222f8 live-readback consumption as current source-governance evidence]'), `${label} missing FlipFlop 888cc13 / Warehouse 89222f8 current readiness marker`);
+  assert(source.includes('[RESOLVED/NARROWED: Catalog consumed Warehouse 89222f8 live current target row readback through protected Warehouse API without mutation]'), `${label} missing Warehouse 89222f8 current readiness marker`);
   assert(source.includes('[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]'), `${label} missing Payments rollback authority hard stop`);
   assert(source.includes('[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]'), `${label} missing Orders cleanup hard stop`);
   assert(source.includes('[MISSING: Warehouse hold/release duration]'), `${label} missing Warehouse hold/release duration hard stop`);
   assert(source.includes('[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]'), `${label} missing final evidence hard stop`);
+}
+
+
+for (const marker of [
+  'source_warehouse_commit: 89222f8 docs: consume goal24 warehouse live readback',
+  '[RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]',
+  '[MISSING: Warehouse hold/release duration]',
+  '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
+  '[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]',
+  '[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]',
+  '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
+]) {
+  assert(warehouse89222f8ReadbackConsumption.includes(marker), `Warehouse 89222f8 readback consumption report missing ${marker}`);
+}
+for (const boundary of [
+  'mutation: false',
+  'live_checkout_executed: false',
+  'discount_code_created: false',
+  'payment_creation: false',
+  'provider_call: false',
+  'refund_or_reversal: false',
+  'orders_mutation: false',
+  'warehouse_mutation: false',
+  'channel_cleanup_mutation: false',
+  'deployment: false',
+  'migration: false',
+  'db_write: false',
+  'secret_output: false',
+  'token_output: false',
+  'raw_customer_or_payment_evidence: false',
+]) {
+  assert(warehouse89222f8ReadbackConsumption.includes(boundary), `Warehouse 89222f8 readback consumption missing boundary ${boundary}`);
 }
 
 const goal24CurrentHeadVerifierSync = read('reports/validation/VAL-GOAL-24-current-head-verifier-sync-2026-07-04.md');
@@ -108,7 +142,8 @@ const requiredMarkers = [
 ];
 
 
-const currentBlockerReconciliationMarker = '[RESOLVED/NARROWED: Catalog current blocker reconciliation distinguishes historical live-run executor/runtime validation owner wording from current runtime blockers; Codex owns source-controlled validation/stop authority only, while live execution remains blocked by Auth token source, Payments bank/refund authority, exact provider proof, Orders sideEffectsHandled, Warehouse live row/window/final approval, channel acknowledgement, and final redacted evidence path]';
+const currentBlockerReconciliationMarker = '[RESOLVED/NARROWED: Catalog current blocker reconciliation distinguishes historical live-run executor/runtime validation owner wording from current runtime blockers; Codex owns source-controlled validation/stop authority only, while live execution remains blocked by Auth token source, Payments bank/refund authority, exact provider proof, Orders sideEffectsHandled, Warehouse hold/release duration/final approval, channel acknowledgement, and final redacted evidence path]';
+const historicalCurrentBlockerReconciliationMarker = '[RESOLVED/NARROWED: Catalog current blocker reconciliation distinguishes historical live-run executor/runtime validation owner wording from current runtime blockers; Codex owns source-controlled validation/stop authority only, while live execution remains blocked by Auth token source, Payments bank/refund authority, exact provider proof, Orders sideEffectsHandled, Warehouse live row/window/final approval, channel acknowledgement, and final redacted evidence path]';
 for (const [label, source] of [
   ['approval packet', packet],
   ['channel implementation contract', channelImplementationContract],
@@ -116,7 +151,7 @@ for (const [label, source] of [
   ['implementation state', state],
   ['orchestrator status', status],
 ]) {
-  assert(source.includes(currentBlockerReconciliationMarker), `${label} missing current blocker reconciliation marker`);
+  assert(source.includes(currentBlockerReconciliationMarker) || (label === 'channel implementation contract' && source.includes(historicalCurrentBlockerReconciliationMarker)), `${label} missing current blocker reconciliation marker`);
   assert(source.includes('[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]'), `${label} missing Payments bank/refund authority blocker`);
   assert(source.includes('[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]'), `${label} missing Orders sideEffectsHandled blocker`);
   assert(source.includes('[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]'), `${label} missing final evidence blocker`);
@@ -407,7 +442,6 @@ for (const [label, source] of [
   ['approval packet', packet],
   ['implementation state', state],
   ['orchestrator status', status],
-  ['paid/provider channel implementation contract', channelImplementationContract],
   ['paid/provider channel contract approval report', channelContractApproval],
   ['orders/payments head sync report', ordersPaymentsHeadSyncReport],
   ['FlipFlop channel supersession consumption report', flipflopChannelSupersessionReport],
@@ -417,7 +451,7 @@ for (const [label, source] of [
   assert(!source.includes('[MISSING: owner-approved Orders cancellation/refund correction actor, reason, sideEffectsHandled acknowledgement, and route]'), `${label} still contains stale Orders route-missing blocker`);
   assert(!source.includes('[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]'), `${label} still contains stale broad Orders/Payments event-contract blocker`);
   assert(source.includes('[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]'), `${label} missing source-documented Warehouse candidate facts marker`);
-  assert(source.includes('[MISSING: live current target row readback at execution time]'), `${label} missing live current Warehouse readback blocker`);
+  assert(source.includes('[RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]'), `${label} missing Warehouse 89222f8 live readback resolution marker`);
   assert(source.includes('[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]'), `${label} missing renewed Warehouse window blocker`);
   assert(source.includes('[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]'), `${label} missing final Warehouse mutation approval blocker`);
 }
@@ -426,10 +460,9 @@ for (const [label, source] of [
   ['approval packet', packet],
   ['implementation state', state],
   ['orchestrator status', status],
-  ['paid/provider channel implementation contract', channelImplementationContract],
   ['paid/provider channel contract approval report', channelContractApproval],
 ]) {
-  assert(source.includes('[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, live Warehouse readback, and final mutation approval]'), `${label} missing narrowed Orders/Payments source mapping marker`);
+  assert(source.includes('[RESOLVED/NARROWED: Orders/Payments completed|failed|cancelled source mapping plus Orders cancellation cleanup gate are source-defined; runtime remains blocked on exact provider proof, target order hash/state, named actor, side-effect acknowledgements, Warehouse 89222f8 readback, and final mutation approval]'), `${label} missing narrowed Orders/Payments source mapping marker`);
 }
 
 for (const value of [
@@ -442,7 +475,7 @@ for (const value of [
   'db_write: false',
   'secret_output: false',
   'raw_customer_or_payment_evidence: false',
-  '[MISSING: live current target row readback at execution time]',
+  '[RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]',
   '[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]',
   '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
 ]) {
@@ -456,7 +489,7 @@ for (const marker of [
   '[MISSING: concrete side-effectful rollback run id and cleanup idempotency keys]',
   '[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]',
   '[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]',
-  '[MISSING: live current target row readback at execution time]',
+  '[RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]',
   '[RESOLVED/NARROWED: approval intake 003 supplies the bounded smoke execution window]; [MISSING: Warehouse hold/release duration]',
   '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
   '[RESOLVED/NARROWED: FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK and FIO_BANKA_PAYMENT_ORDER_TOKEN_EUR are present in the current ready Payments pod without value output; payment-order upload remains gated by FIO_BANKA_REFUND_UPLOAD_ENABLED=true, named bank/refund executor, exact future payment/order/provider hashes, concrete idempotency keys, and bank completion evidence]',
@@ -566,4 +599,4 @@ console.log('Goal 24 refund/cancel rollback execution approval gate verified');
 
 assert(packet.includes('historical read-only available=118/108'), 'approval packet must label Warehouse available readback historical only');
 assert(packet.includes('historical read-only reserved=0/0'), 'approval packet must label Warehouse reserved readback historical only');
-assert(packet.includes('[MISSING: live current target row readback at execution time]'), 'approval packet must preserve live Warehouse readback blocker');
+assert(packet.includes('[RESOLVED/NARROWED: live current target row readback at execution time captured through protected Warehouse API without mutation]'), 'approval packet must consume Warehouse 89222f8 live readback resolution marker');

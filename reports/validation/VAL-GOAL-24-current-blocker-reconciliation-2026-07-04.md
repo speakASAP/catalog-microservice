@@ -15,7 +15,7 @@ Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding P
 - Coding Prompt: preserve `[MISSING: ...]` for unavailable runtime facts; do not infer authority from source-governance markers.
 - Code: approval packet, channel implementation contract, status, and verifier.
 - Validation: `npm run verify:goal24-refund-cancel-rollback-execution-approval`, `npm run build`, `git diff --check`.
-- State Update: [RESOLVED/NARROWED: Catalog current blocker reconciliation distinguishes historical live-run executor/runtime validation owner wording from current runtime blockers; Codex owns source-controlled validation/stop authority only, while live execution remains blocked by Auth token source, Payments bank/refund authority, exact provider proof, Orders sideEffectsHandled, Warehouse live row/window/final approval, channel acknowledgement, and final redacted evidence path]
+- State Update: [RESOLVED/NARROWED: Catalog current blocker reconciliation distinguishes historical live-run executor/runtime validation owner wording from current runtime blockers; Codex owns source-controlled validation/stop authority only, while live execution remains blocked by Auth token source, Payments bank/refund authority, exact provider proof, Orders sideEffectsHandled, Warehouse hold/release duration/final approval, channel acknowledgement, and final redacted evidence path]
 
 Current runtime blockers remain the approved token source, token-to-actor proof, Payments bank/refund authority, future payment/order/provider hashes, Orders sideEffectsHandled packet, channel side-effect acknowledgement, Warehouse live row/window/final approval, and final redacted evidence path.
 
