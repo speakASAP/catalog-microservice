@@ -445,3 +445,11 @@ This source sync does not authorize side effects. Runtime remains blocked by `[M
 Allowed proof markers remain runtime-gated: `tokenSourceType=on-host-token-file`; `tokenSourceType=in-memory-handoff`; `actorHashMatches=true`; `requiredAdminRolePresent=true`; `tokenOutput=false`; `decodedJwtOutput=false`; `rawUserOutput=false`; `secretOutput=false`; `tokenSourceDestroyedOrInvalidated=true`.
 
 Runtime remains blocked by `[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]`, `[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]`, `[MISSING: sanitized auth/admin evidence path for guarded discount-code generation]`, provider authority, exact Orders cleanup packet, Warehouse target facts, and final redacted evidence path. Auth token-binding proof is not Warehouse stock evidence and is not Orders cleanup authorization.
+
+## 2026-07-04 Final Token Binding Source-Governance Head Sync
+
+[RESOLVED/NARROWED: Goal 24 token-binding source-governance heads synced: FlipFlop f004fe5, Catalog 47b652c, Orders 5ec6454, Payments b371f8e, Warehouse 11df002; runtime side effects remain blocked]
+
+[RESOLVED/NARROWED: Payments consumed FlipFlop f004fe5, Catalog 47b652c, and Orders 5ec6454 token-binding proof contract as source governance only; provider/payment side effects remain blocked]
+
+Auth token-binding proof is not Payments provider authority, not Fiobanka refund/reversal proof, not exact payment evidence, not Orders cleanup authorization, and not Warehouse stock evidence. Runtime remains blocked by token source/token-binding proof, provider rollback owner/bank authority, exact future payment/order/provider hashes, concrete rollback run id and idempotency keys, exact Orders cleanup packet, Warehouse target facts, and final redacted evidence path.

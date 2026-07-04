@@ -12,6 +12,9 @@ const flipflopChannelSupersessionReport = read('reports/validation/VAL-GOAL-24-f
 const ordersPaymentsHeadSyncReport = read('reports/validation/VAL-GOAL-24-orders-payments-head-sync-2026-07-04.md');
 const currentHeadSyncReport = read('reports/validation/VAL-GOAL-24-current-head-sync-2026-07-04.md');
 const flipflopTokenBindingContractConsumption = read('reports/validation/VAL-GOAL-24-flipflop-token-binding-proof-contract-consumption-2026-07-04.md');
+const finalTokenBindingHeadSync = read('reports/validation/VAL-GOAL-24-final-token-binding-head-sync-2026-07-04.md');
+const paymentsTokenBindingConsumption = read('../payments-microservice/reports/validation/VAL-GOAL-24-payments-token-binding-proof-contract-consumption-2026-07-04.md');
+const ordersTokenBindingConsumption = read('../orders-microservice/reports/validation/VAL-GOAL-24-orders-token-binding-proof-contract-consumption-2026-07-04.md');
 
 const flipflopChannelSupersessionMarker = '[RESOLVED/NARROWED: Codex Goal 24 integration thread supersedes earlier FlipFlop channel executor/runtime owner blockers; channel cleanup runtime remains blocked until bank/refund authority, exact provider proof, Orders side-effect acknowledgements, Warehouse target facts, Auth token source, and final redacted evidence path exist]';
 const sourceWaveFreezeMarker = '[RESOLVED/NARROWED: Goal 24 frozen source-governance wave GOAL24-SOURCE-WAVE-2026-07-04A records Catalog `e379b54 merge goal24 current source head sync`, FlipFlop `e1f3e3a merge goal24 current source head sync`, Payments `eab6351 merge goal24 current source head sync`, Orders `d53de9f merge goal24 current source head sync`, and Warehouse `11df002 merge goal24 warehouse target facts reconcile` as input heads for runtime planning; post-merge self heads are validation evidence only; runtime side effects remain blocked]';
