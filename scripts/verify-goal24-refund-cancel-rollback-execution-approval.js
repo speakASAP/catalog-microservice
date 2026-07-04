@@ -4,6 +4,8 @@ const assert = require('assert');
 
 const read = (file) => fs.readFileSync(file, 'utf8');
 const packet = read('docs/orchestrator/2026-07-03-goal24-paid-provider-smoke-approval-packet.md');
+const channelImplementationContract = read('docs/contracts/catalog-bundle-paid-provider-channel-implementation-contract.md');
+const channelContractApproval = read('reports/validation/VAL-GOAL-24-paid-provider-channel-contract-approval.md');
 const report = read('reports/validation/VAL-GOAL-24-paid-provider-approval-packet-final-readiness.md');
 const state = read('docs/IMPLEMENTATION_STATE.md');
 const status = read('docs/orchestrator/STATUS.md');
@@ -257,6 +259,8 @@ for (const [label, source] of [
   ['approval packet', packet],
   ['implementation state', state],
   ['orchestrator status', status],
+  ['paid/provider channel implementation contract', channelImplementationContract],
+  ['paid/provider channel contract approval report', channelContractApproval],
 ]) {
   assert(!source.includes('[MISSING: owner-approved Warehouse stock hold/release window and max quantity]'), `${label} still contains stale Warehouse hold/max blocker`);
   assert(source.includes('[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]'), `${label} missing source-documented Warehouse candidate facts marker`);

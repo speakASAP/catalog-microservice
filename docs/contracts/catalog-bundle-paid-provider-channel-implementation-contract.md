@@ -63,7 +63,7 @@ Before any paid/provider smoke, the owner must approve all canary facts:
 
 - `[MISSING: approved safe bundle target/product ids for paid/provider smoke]`
 - `[MISSING: approved payment method/provider mode and maximum amount for paid/provider smoke]`
-- `[MISSING: approved Warehouse stock hold/release window and max quantity]`
+- `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: live current target row readback at execution time]; [MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
 - `[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]`
 - `[MISSING: proof that active checkout paths pass central Orders UUIDs to Payments]`
 - `[MISSING: runtime verification of Payments Orders service token/role]`
@@ -126,7 +126,7 @@ Merge order: Catalog contract record, Payments dirty-test cleanup and boundary v
 - `[RESOLVED/NARROWED: owner-approved channel implementation contract defined in docs/contracts/catalog-bundle-paid-provider-channel-implementation-contract.md]`
 - `[MISSING: approved safe bundle target/product ids for paid/provider smoke]`
 - `[MISSING: approved payment method/provider mode and maximum amount for paid/provider smoke]`
-- `[MISSING: approved Warehouse stock hold/release window and max quantity]`
+- `[RESOLVED/NARROWED: candidate target component stock rows and max component quantity are source-documented from Catalog packet]; [MISSING: live current target row readback at execution time]; [MISSING: renewed owner-approved execution window and Warehouse hold/release duration]; [MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]`
 - `[MISSING: Orders/Payments provider-success, provider-cancel, refund, and post-fulfillment cancellation event contract that maps to Warehouse fulfill/cancel/return calls]`
 - `[MISSING: proof that active checkout paths pass central Orders UUIDs to Payments]`
 - `[MISSING: runtime verification of Payments Orders service token/role]`
