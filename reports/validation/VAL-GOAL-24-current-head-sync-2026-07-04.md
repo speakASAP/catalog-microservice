@@ -88,3 +88,7 @@ Wave C input heads (post-merge source-sync commits are validation evidence only)
 | Payments | `080f293 merge goal24 payments source wave c` | provider/refund source governance only |
 | Orders | `d32abd2 merge goal24 orders source wave c` | lifecycle/cancellation source governance only |
 | Warehouse | `ea7b9e9 merge goal24 warehouse cleanup packet readback sync` | component-line cleanup source governance only |
+
+## 2026-07-04 Current Surface Note
+
+[RESOLVED/NARROWED: Catalog top-level Wave C entries are frozen source-governance planning inputs, while later validation-owner wording sync commits are validation evidence only and must not be treated as renewed runtime authority]. This report preserves Wave C as historical planning input and does not authorize checkout, payment/provider calls, Orders/Warehouse/channel mutations, deploy, migration, DB write, secret/token output, or raw evidence capture.
