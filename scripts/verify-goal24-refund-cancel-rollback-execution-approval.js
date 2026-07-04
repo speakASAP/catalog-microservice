@@ -40,6 +40,51 @@ const catalogCleanupRuntimeValuesConsumption = read('reports/validation/VAL-GOAL
 const paymentsCleanupRuntimeValuesConsumption = read('../payments-microservice/reports/validation/VAL-GOAL-24-payments-consume-cleanup-packet-runtime-values-d39bc0c-cf340f5-2026-07-04.md');
 const ordersCleanupRuntimeValuesConsumption = read('../orders-microservice/reports/validation/VAL-GOAL-24-orders-consume-cleanup-packet-runtime-values-59be11e-d39bc0c-2026-07-04.md');
 const flipflopCleanupRuntimeValuesSync = read('../flipflop/reports/validation/VAL-GOAL-24-cleanup-packet-runtime-values-sync-2026-07-04.md');
+const catalogLiveNoGoPreflightConsumption = read('reports/validation/VAL-GOAL-24-catalog-consume-live-no-go-preflight-cc49c08-686d49c-2026-07-04.md');
+const paymentsLiveNoGoPreflight = read('../payments-microservice/reports/validation/VAL-GOAL-24-live-paid-provider-no-go-preflight-2026-07-04.md');
+const warehouseCurrentStatus = read('../warehouse-microservice/docs/orchestrator/STATUS.md');
+
+
+const catalogLiveNoGoPreflightMarker = '[RESOLVED/NARROWED: Catalog consumed Payments cc49c08 live no-go preflight and Warehouse 686d49c blocker wording sync; runtime deployments are ready but paid/provider side effects remain hard-stopped until bank/refund authority, exact future smoke identities, Orders sideEffectsHandled acknowledgements, deterministic Warehouse reservation lookup state, channel acknowledgement, and final redacted evidence exist]';
+for (const [label, source] of [
+  ['Catalog live no-go preflight consumption report', catalogLiveNoGoPreflightConsumption],
+  ['validation report', report],
+  ['implementation state', state],
+  ['orchestrator status', status],
+]) {
+  assert(source.includes(catalogLiveNoGoPreflightMarker), `${label} missing Catalog live no-go preflight marker`);
+  assert(source.includes('[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]'), `${label} missing Payments bank/refund authority blocker`);
+  assert(source.includes('[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]'), `${label} missing future smoke identity blocker`);
+  assert(source.includes('[MISSING: exact selected Warehouse reservation lookup state for cleanup]'), `${label} missing selected Warehouse reservation lookup blocker`);
+  assert(source.includes('[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]'), `${label} missing final evidence blocker`);
+  for (const boundary of ['mutation: false', 'provider_call: false', 'orders_mutation: false', 'warehouse_mutation: false', 'secret_output: false']) {
+    assert(source.includes(boundary), `${label} missing boundary ${boundary}`);
+  }
+}
+for (const marker of [
+  'status: runtime-ready-but-side-effect-hard-stopped',
+  'Decision: `block` before checkout/payment/provider side effects.',
+  '[RESOLVED/NARROWED: selected Fiobanka provider authenticity path is authenticated transaction polling]',
+  '[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]',
+  '[MISSING: named bank/refund executor, exact destination/source account proof, amount, reference, deadline, and redacted completion evidence for the future linked payment]',
+  '[MISSING: exact Orders target order hash/state, cancellation actor, approval id, safe reason code, idempotency key, and sideEffectsHandled payment|warehouse|notification|crm|channel acknowledgements for the future smoke]',
+  '[MISSING: deterministic Warehouse component reservation state for cleanup]',
+  '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
+  'checkout_created: false',
+  'provider_call: false',
+  'warehouse_mutation: false',
+]) {
+  assert(paymentsLiveNoGoPreflight.includes(marker), `Payments live no-go preflight missing ${marker}`);
+}
+for (const marker of [
+  '2026-07-04: Goal 24 Warehouse consumed Catalog `fa88917`, Payments `59be11e`, Orders `8bb22e2`, and FlipFlop `9a7c664` source-only cleanup runtime-values sync.',
+  '[RESOLVED/NARROWED: Warehouse consumed Catalog fa88917, Payments 59be11e, Orders 8bb22e2, and FlipFlop 9a7c664 cleanup runtime-values sync; hold duration and one-attempt final bounded reservation approval are source-defined for packet planning only, while exact selected reservation lookup state remains missing]',
+  '[MISSING: exact selected Warehouse reservation lookup state for cleanup]',
+  'Warehouse must not infer stock effects from Payments refund state, provider state, Auth token state, or channel cleanup state.',
+  'warehouse_mutation: false',
+]) {
+  assert(warehouseCurrentStatus.includes(marker), `Warehouse current status missing ${marker}`);
+}
 
 
 const catalogCleanupRuntimeValuesMarker = '[RESOLVED/NARROWED: Catalog consumed Payments 59be11e, Orders 8bb22e2, FlipFlop d39bc0c, and Warehouse cf340f5 cleanup runtime-values sync; packet shapes and Warehouse hold/final bounded approval are source-defined, while exact selected runtime values remain missing]';
