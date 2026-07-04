@@ -45,6 +45,8 @@ const paymentsLiveNoGoPreflight = read('../payments-microservice/reports/validat
 const warehouseCurrentStatus = read('../warehouse-microservice/docs/orchestrator/STATUS.md');
 const catalogOrdersWarehouseNoGoConsumption = read('reports/validation/VAL-GOAL-24-catalog-consume-orders-warehouse-no-go-9287e3f-eee2f20-2026-07-04.md');
 const ordersNoGoCurrentHeadsConsumption = read('../orders-microservice/reports/validation/VAL-GOAL-24-orders-consume-goal24-source-only-current-heads-2026-07-04.md');
+const ordersFinalOwnerHandoffReport = read('../orders-microservice/reports/validation/VAL-GOAL-24-orders-final-owner-handoff-packet-2026-07-04.md');
+const catalogOrdersFinalHandoffConsumption = read('reports/validation/VAL-GOAL-24-catalog-consume-orders-final-owner-handoff-d98fb19-2026-07-04.md');
 const warehouseOrdersNoGoConsumption = read('../warehouse-microservice/reports/validation/VAL-GOAL-24-warehouse-consume-live-no-go-preflight-9287e3f-cc49c08-d1eef3d-9a7c664-2026-07-04.md');
 const flipflopDurableMigrationReadiness = read('../flipflop/implementation-goals/GOAL-24-durable-bundleid-checkout-migration-readiness.md');
 
@@ -91,6 +93,37 @@ for (const marker of [
 }
 
 
+
+
+const catalogOrdersFinalHandoffMarker = '[RESOLVED/NARROWED: Catalog consumed Orders d98fb19 final owner handoff packet as source-governance evidence; Orders cleanup route invocation remains hard-stopped until named Payments/bank authority, exact future payment/order/provider hashes, Orders actor/reason/idempotency/sideEffectsHandled, exact Warehouse reservation lookup state, channel acknowledgement, and final redacted evidence exist]';
+for (const [label, source] of [
+  ['Catalog Orders final handoff consumption report', catalogOrdersFinalHandoffConsumption],
+  ['validation report', report],
+  ['implementation state', state],
+  ['orchestrator status', status],
+  ['approval packet', packet],
+]) {
+  assert(source.includes(catalogOrdersFinalHandoffMarker), `${label} missing Catalog Orders final owner handoff marker`);
+  assert(source.includes('[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]'), `${label} missing Payments bank/refund authority blocker after Orders final handoff`);
+  assert(source.includes('[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]'), `${label} missing future smoke identity blocker after Orders final handoff`);
+  assert(source.includes('[MISSING: exact Orders target order hash/state, cancellation actor, approval id, safe reason code, idempotency key, and sideEffectsHandled payment|warehouse|notification|crm|channel acknowledgements for the future smoke]'), `${label} missing exact Orders packet blocker after Orders final handoff`);
+  assert(source.includes('[MISSING: exact selected Warehouse reservation lookup state for cleanup]'), `${label} missing Warehouse lookup blocker after Orders final handoff`);
+  assert(source.includes('[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]'), `${label} missing final evidence blocker after Orders final handoff`);
+  assert(source.includes('Catalog consumes Orders `d98fb19 docs: add goal24 orders final owner handoff packet` as source governance only') || source.includes('Goal 24 Catalog consumed Orders `d98fb19 docs: add goal24 orders final owner handoff packet` source-only'), `${label} missing source-only Orders d98fb19 consumption wording`);
+  for (const boundary of ['mutation: false', 'orders_route_invocation: false', 'orders_mutation: false', 'warehouse_mutation: false', 'provider_call: false', 'secret_output: false']) {
+    assert(source.includes(boundary), `${label} missing boundary ${boundary} after Orders final handoff`);
+  }
+}
+for (const marker of [
+  '[RESOLVED/NARROWED: Orders final owner handoff packet is source-defined for Goal 24 paid/provider cleanup after Catalog 7c85732 and FlipFlop 99dfe76; runtime route invocation remains hard-stopped until named Payments/bank authority, exact future payment/order/provider hashes, Orders actor/reason/idempotency/sideEffectsHandled, exact Warehouse reservation lookup state, channel acknowledgement, and final redacted evidence exist]',
+  'Route shape: `PUT /api/orders/:id/status` with `status=cancelled`.',
+  'Safe reasons: `GOAL24_PAID_PROVIDER_ROLLBACK` and `GOAL24_PROVIDER_UNPAID_CANCEL`.',
+  'Orders idempotency namespace: `orders:goal24:post-paid-correction:<approvalId>:<paymentHash>`.',
+  'Side-effect gate: `sideEffectsHandled.payment|warehouse|notification|crm|channel=true`.',
+  '[MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]',
+]) {
+  assert(ordersFinalOwnerHandoffReport.includes(marker), `Orders final owner handoff report missing ${marker}`);
+}
 
 const catalogOrdersWarehouseNoGoMarker = '[RESOLVED/NARROWED: Catalog consumed Orders 9287e3f live no-go consumer sync and Warehouse eee2f20 Orders no-go consumer sync as source-governance inputs only; Catalog approval planning remains hard-stopped until bank/refund authority, exact future smoke identities, Orders sideEffectsHandled acknowledgements, exact Warehouse reservation lookup state, channel acknowledgement, and final redacted evidence exist]';
 for (const [label, source] of [

@@ -432,3 +432,15 @@ No live checkout, payment creation, provider call, webhook replay, refund/revers
 [RESOLVED/NARROWED: active Payments runtime image localhost:5000/payments-microservice:fd58097 exposes FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK/EUR as present length-valid env vars without value output while FIO_BANKA_REFUND_UPLOAD_ENABLED=false]
 
 Validation impact: token delivery is resolved/narrowed, but live side effects remain blocked by the upload flag/window, bank/refund authority, exact hashes, idempotency keys, Orders/Warehouse/channel packets, and final evidence path.
+
+## 2026-07-04 Orders d98fb19 Final Owner Handoff Consumption
+
+[RESOLVED/NARROWED: Catalog consumed Orders d98fb19 final owner handoff packet as source-governance evidence; Orders cleanup route invocation remains hard-stopped until named Payments/bank authority, exact future payment/order/provider hashes, Orders actor/reason/idempotency/sideEffectsHandled, exact Warehouse reservation lookup state, channel acknowledgement, and final redacted evidence exist]
+
+Catalog consumes Orders `d98fb19 docs: add goal24 orders final owner handoff packet` as source governance only. Orders route shape, safe reason codes, idempotency namespace, sideEffectsHandled gate, provider evidence hash, Warehouse handoff field, and no-stock-inference boundary are source-defined packet requirements, not runtime permission.
+
+Runtime remains blocked by [MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]; [MISSING: named bank/refund executor, exact destination/source account proof, amount, reference, deadline, and redacted completion evidence for the future linked payment]; [MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]; [MISSING: Fiobanka provider-side completed-transfer refund/reversal/correction proof hash, or owner-approved unpaid no-provider-cancel acknowledgement]; [MISSING: exact Orders target order hash/state, cancellation actor, approval id, safe reason code, idempotency key, and sideEffectsHandled payment|warehouse|notification|crm|channel acknowledgements for the future smoke]; [MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]; [MISSING: exact selected Warehouse reservation lookup state for cleanup]; [MISSING: owner-approved channel side-effect acknowledgement for the selected central order hash]; [MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof].
+
+Boundary: mutation: false; live_checkout_executed: false; checkout_created: false; payment_created: false; provider_call: false; refund_or_reversal: false; orders_route_invocation: false; orders_mutation: false; warehouse_reservation: false; warehouse_mutation: false; warehouse_cleanup: false; channel_cleanup_mutation: false; deployment: false; migration: false; db_write: false; secret_output: false; token_output: false; raw_provider_payload_output: false; raw_customer_or_payment_evidence: false.
+
+Report: `reports/validation/VAL-GOAL-24-catalog-consume-orders-final-owner-handoff-d98fb19-2026-07-04.md`.
