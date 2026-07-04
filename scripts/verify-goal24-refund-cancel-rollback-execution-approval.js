@@ -60,13 +60,13 @@ const requiredMarkers = [
   '[RESOLVED/NARROWED: sanitized runtime readback found completed Fiobanka provider-payment evidence but no central Orders or FlipFlop exact-order linkage for the retained Goal 24 payment]',
   '[RESOLVED: owner accepted owner-confirmed manual Fiobanka refund as sufficient Goal 24 closeout without exact order linkage]',
   '[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]',
-  '[MISSING: Vault properties FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK and FIO_BANKA_PAYMENT_ORDER_TOKEN_EUR for owner-approved payment-order upload]',
+  '[RESOLVED/NARROWED: FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK and FIO_BANKA_PAYMENT_ORDER_TOKEN_EUR are present in the current ready Payments pod without value output; payment-order upload remains gated by FIO_BANKA_REFUND_UPLOAD_ENABLED=true, named bank/refund executor, exact future payment/order/provider hashes, concrete idempotency keys, and bank completion evidence]',
   '[RESOLVED/NARROWED: owner delegated autonomous Goal 24 continuation to Codex, but integration validation keeps new Fiobanka paid/provider side effects hard-stopped until bank/refund authority, exact Orders/Warehouse packet, and redacted provider proof exist]',
   '[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner and FlipFlop channel cleanup executor for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, and redacted evidence path exist]',
   '[RESOLVED/NARROWED: sanitized Auth readback found one active verified Goal 24 actor hash 4215870ba488de17 with app:flipflop-service:admin and no token/raw email/user id output]',
   '[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]',
   '[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]',
-  '[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, Fiobanka payment-order Vault write tokens, and redacted evidence path exist]',
+  '[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, FIO_BANKA_REFUND_UPLOAD_ENABLED=true, named bank/refund executor, exact future payment/order/provider hashes, idempotency keys, and redacted evidence path exist]',
   'Fiobanka completed-transfer rollback is not an automated provider-side Payments refund endpoint',
   'guarded payment-order upload that remains `PENDING_AUTHORIZATION` until Internetbanking/bank completion evidence exists',
   '[RESOLVED/NARROWED: runtime readback found no linked central Orders or FlipFlop state, so no Orders/Warehouse post-paid correction is required for this evidence-only closeout]',
@@ -125,8 +125,8 @@ for (const [label, source] of [
   assert(source.includes('[RESOLVED: owner accepted owner-confirmed manual Fiobanka refund as sufficient Goal 24 closeout without exact order linkage]'), `${label} missing owner accepted no-linkage closeout marker`);
   assert(source.includes('[RESOLVED/NARROWED: sanitized runtime readback found completed Fiobanka provider-payment evidence but no central Orders or FlipFlop exact-order linkage for the retained Goal 24 payment]'), `${label} missing sanitized no-linkage readback marker`);
   assert(source.includes('[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]'), `${label} missing renewed execution window blocker`);
-  assert(source.includes('[RESOLVED/NARROWED: active Payments runtime image localhost:5000/payments-microservice:fd58097 exposes FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK/EUR as present length-valid env vars without value output while FIO_BANKA_REFUND_UPLOAD_ENABLED=false]'), `${label} missing active Payments token provisioning marker`);
-  assert(source.includes('[MISSING: Vault properties FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK and FIO_BANKA_PAYMENT_ORDER_TOKEN_EUR for owner-approved payment-order upload]'), `${label} missing Fiobanka payment-order Vault blocker`);
+  assert(source.includes('[RESOLVED/NARROWED: active Payments runtime image localhost:5000/payments-microservice:d403706 exposes FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK/EUR as present length-valid env vars without value output while FIO_BANKA_REFUND_UPLOAD_ENABLED=false]'), `${label} missing active Payments token provisioning marker`);
+  assert(source.includes('[RESOLVED/NARROWED: FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK and FIO_BANKA_PAYMENT_ORDER_TOKEN_EUR are present in the current ready Payments pod without value output; payment-order upload remains gated by FIO_BANKA_REFUND_UPLOAD_ENABLED=true, named bank/refund executor, exact future payment/order/provider hashes, concrete idempotency keys, and bank completion evidence]'), `${label} missing Fiobanka payment-order token-present gated marker`);
   assert(source.includes('[MISSING: named admin/actor or approved token-handling path for guarded discount-code generation]'), `${label} missing discount fixture admin/token blocker`);
   assert(source.includes('[RESOLVED/NARROWED: runtime readback found no linked central Orders or FlipFlop state, so no Orders/Warehouse post-paid correction is required for this evidence-only closeout]'), `${label} missing no correction required marker`);
   assert(source.includes('No live checkout, provider call, webhook replay, refund/cancel/reversal, Orders mutation, Warehouse mutation, channel cleanup, deploy, migration, DB mutation, or secret output occurred'), `${label} missing non-mutation boundary`);
@@ -289,13 +289,13 @@ for (const boundary of [
 
 for (const marker of [
   '[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]',
-  '[MISSING: Vault properties FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK and FIO_BANKA_PAYMENT_ORDER_TOKEN_EUR for owner-approved payment-order upload]',
+  '[RESOLVED/NARROWED: FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK and FIO_BANKA_PAYMENT_ORDER_TOKEN_EUR are present in the current ready Payments pod without value output; payment-order upload remains gated by FIO_BANKA_REFUND_UPLOAD_ENABLED=true, named bank/refund executor, exact future payment/order/provider hashes, concrete idempotency keys, and bank completion evidence]',
   '[RESOLVED/NARROWED: owner delegated autonomous Goal 24 continuation to Codex, but integration validation keeps new Fiobanka paid/provider side effects hard-stopped until bank/refund authority, exact Orders/Warehouse packet, and redacted provider proof exist]',
   '[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner and FlipFlop channel cleanup executor for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, and redacted evidence path exist]',
   '[RESOLVED/NARROWED: sanitized Auth readback found one active verified Goal 24 actor hash 4215870ba488de17 with app:flipflop-service:admin and no token/raw email/user id output]',
   '[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]',
   '[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]',
-  '[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, Fiobanka payment-order Vault write tokens, and redacted evidence path exist]',
+  '[RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, FIO_BANKA_REFUND_UPLOAD_ENABLED=true, named bank/refund executor, exact future payment/order/provider hashes, idempotency keys, and redacted evidence path exist]',
   'Fiobanka completed-transfer rollback is not an automated provider-side Payments refund endpoint',
   'guarded payment-order upload that remains `PENDING_AUTHORIZATION` until Internetbanking/bank completion evidence exists',
   '[RESOLVED/NARROWED: deployed FlipFlop bundle-preserving fixture gate and renewed runtime quote evidence passed before checkout]',
@@ -406,7 +406,7 @@ for (const marker of [
   '[MISSING: live current target row readback at execution time]',
   '[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]',
   '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
-  '[MISSING: Vault properties FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK and FIO_BANKA_PAYMENT_ORDER_TOKEN_EUR for owner-approved payment-order upload]',
+  '[RESOLVED/NARROWED: FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK and FIO_BANKA_PAYMENT_ORDER_TOKEN_EUR are present in the current ready Payments pod without value output; payment-order upload remains gated by FIO_BANKA_REFUND_UPLOAD_ENABLED=true, named bank/refund executor, exact future payment/order/provider hashes, concrete idempotency keys, and bank completion evidence]',
   '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
 ]) {
   assert(flipflopChannelSupersessionReport.includes(marker), `FlipFlop channel supersession consumption missing blocker ${marker}`);
