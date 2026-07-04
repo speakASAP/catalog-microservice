@@ -10,8 +10,10 @@ const status = read('docs/orchestrator/STATUS.md');
 const linkageReport = read('reports/validation/VAL-GOAL-24-manual-refund-linkage-readback.md');
 const flipflopChannelSupersessionReport = read('reports/validation/VAL-GOAL-24-flipflop-channel-supersession-consumption-2026-07-04.md');
 const ordersPaymentsHeadSyncReport = read('reports/validation/VAL-GOAL-24-orders-payments-head-sync-2026-07-04.md');
+const currentHeadSyncReport = read('reports/validation/VAL-GOAL-24-current-head-sync-2026-07-04.md');
 
 const flipflopChannelSupersessionMarker = '[RESOLVED/NARROWED: Codex Goal 24 integration thread supersedes earlier FlipFlop channel executor/runtime owner blockers; channel cleanup runtime remains blocked until bank/refund authority, exact provider proof, Orders side-effect acknowledgements, Warehouse target facts, Auth token source, and final redacted evidence path exist]';
+const currentHeadSyncMarker = '[RESOLVED/NARROWED: Catalog consumed current Goal 24 source-governance heads Catalog `51eac73 merge goal24 orders payments head sync`, FlipFlop `b2a4b4d merge goal24 current source head sync`, Payments `53ce5cc merge goal24 orders head sync`, Orders `3901ec1 merge goal24 latest cleanup head sync`, and Warehouse `11df002 merge goal24 warehouse target facts reconcile`; runtime side effects remain blocked]';
 
 const requiredMarkers = [
   '## Refund/Cancel Rollback Execution Approval Decision',
@@ -77,6 +79,47 @@ assert(!report.includes('[MISSING: runtime FIO_BANKA_API_KEY read-token configur
 assert(report.includes('Retained Evidence Closeout Supersession'), 'validation report missing retained evidence closeout supersession section');
 assert(report.includes('future-only gates for new linked paid/provider smokes'), 'validation report must mark exact-linkage blockers as future-only after closeout');
 
+
+for (const [label, source] of [
+  ['current head sync report', currentHeadSyncReport],
+  ['approval packet', packet],
+  ['implementation state', state],
+  ['orchestrator status', status],
+]) {
+  assert(source.includes(currentHeadSyncMarker), `${label} missing current head sync marker`);
+  for (const marker of [
+    'Catalog `51eac73 merge goal24 orders payments head sync`',
+    'FlipFlop `b2a4b4d merge goal24 current source head sync`',
+    'Payments `53ce5cc merge goal24 orders head sync`',
+    'Orders `3901ec1 merge goal24 latest cleanup head sync`',
+    'Warehouse `11df002 merge goal24 warehouse target facts reconcile`',
+    '[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]',
+    '[MISSING: confirmation that the token belongs to actor hash 4215870ba488de17 and carries app:flipflop-service:admin or global:superadmin]',
+    '[MISSING: named human Payments/provider rollback execution owner with bank/refund authority for runtime]',
+    '[MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]',
+    '[MISSING: concrete side-effectful rollback run id and cleanup idempotency keys]',
+    '[MISSING: exact Orders cleanup packet and sideEffectsHandled acknowledgements]',
+    '[MISSING: renewed owner-approved execution window and Warehouse hold/release duration]',
+    '[MISSING: final owner approval before any live Warehouse reservation/cleanup mutation]',
+    '[MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]',
+  ]) {
+    assert(source.includes(marker), `${label} missing current head sync marker ${marker}`);
+  }
+}
+for (const boundary of [
+  'mutation: false',
+  'live_checkout_executed: false',
+  'provider_call: false',
+  'orders_mutation: false',
+  'warehouse_mutation: false',
+  'channel_cleanup_mutation: false',
+  'deployment: false',
+  'secret_output: false',
+  'raw_customer_or_payment_evidence: false',
+]) {
+  assert(currentHeadSyncReport.includes(boundary), `current head sync report missing boundary ${boundary}`);
+}
+
 for (const marker of [
   '[MISSING: renewed owner-approved execution window for Europe/Prague after 2026-07-03T23:59:59+02:00]',
   '[MISSING: Vault properties FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK and FIO_BANKA_PAYMENT_ORDER_TOKEN_EUR for owner-approved payment-order upload]',
@@ -101,14 +144,11 @@ for (const marker of [
 
 for (const [label, source] of [
   ['orders/payments head sync report', ordersPaymentsHeadSyncReport],
-  ['approval packet', packet],
   ['validation report', report],
-  ['implementation state', state],
-  ['orchestrator status', status],
 ]) {
-  assert(source.includes('Orders `3901ec1 merge goal24 latest cleanup head sync`'), `${label} missing Orders 3901ec1 merge goal24 latest cleanup head sync consumption`);
-  assert(source.includes('Payments `7822f2a merge goal24 cross-service head sync`'), `${label} missing Payments 7822f2a merge goal24 cross-service head sync consumption`);
-  assert(source.includes('Catalog `906a31f merge goal24 flipflop channel supersession consumption`'), `${label} missing Catalog 906a31f merge goal24 flipflop channel supersession consumption`);
+  assert(source.includes('Orders `3901ec1 merge goal24 latest cleanup head sync`'), `${label} missing Orders 3901ec1 historical consumption`);
+  assert(source.includes('Payments `7822f2a merge goal24 cross-service head sync`'), `${label} missing Payments 7822f2a historical consumption`);
+  assert(source.includes('Catalog `906a31f merge goal24 flipflop channel supersession consumption`'), `${label} missing Catalog 906a31f historical consumption`);
 }
 for (const boundary of [
   'mutation: false',
@@ -126,13 +166,19 @@ for (const boundary of [
 
 for (const [label, source] of [
   ['flipflop channel supersession report', flipflopChannelSupersessionReport],
-  ['approval packet', packet],
   ['validation report', report],
+]) {
+  assert(source.includes(flipflopChannelSupersessionMarker), `${label} missing FlipFlop channel supersession marker`);
+  assert(source.includes('FlipFlop `5202c15 merge goal24 channel cleanup owner supersession`') || source.includes('5202c15 merge goal24 channel cleanup owner supersession'), `${label} missing FlipFlop 5202c15 historical consumption`);
+}
+for (const [label, source] of [
+  ['approval packet', packet],
   ['implementation state', state],
   ['orchestrator status', status],
 ]) {
-  assert(source.includes(flipflopChannelSupersessionMarker), `${label} missing FlipFlop channel supersession marker`);
-  assert(source.includes('FlipFlop `5202c15 merge goal24 channel cleanup owner supersession`') || source.includes('5202c15 merge goal24 channel cleanup owner supersession'), `${label} missing FlipFlop 5202c15 consumption`);
+  assert(source.includes(currentHeadSyncMarker), `${label} missing current Catalog head sync marker`);
+  assert(source.includes('FlipFlop `b2a4b4d merge goal24 current source head sync`'), `${label} missing current FlipFlop b2a4b4d consumption`);
+  assert(source.includes('Warehouse `11df002 merge goal24 warehouse target facts reconcile`'), `${label} missing current Warehouse 11df002 consumption`);
 }
 for (const marker of [
   '[MISSING: approved token source path, such as an on-host token file path or in-memory handoff, with explicit no-print/no-decode/no-persist handling]',
