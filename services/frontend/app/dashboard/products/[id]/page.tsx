@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { productsApi, Product, ProductSalesChannel, ProductSalesStatistics, ProductWarehouseAvailabilityItem, ProductWarehouseLogisticsOption } from '@/lib/api/products';
+import { productsApi, Product, ProductBundleCandidatesResponse, ProductRelation, ProductSalesChannel, ProductSalesStatistics, ProductWarehouseAvailabilityItem, ProductWarehouseLogisticsOption } from '@/lib/api/products';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import MediaManagement from '@/components/MediaManagement';
 import PricingManagement from '@/components/PricingManagement';
@@ -66,6 +66,20 @@ const deliveryExceptionKeys = [
 
 const formatQuantity = (value: number | null | undefined) => Number(value ?? 0).toLocaleString("cs-CZ");
 
+const formatMoney = (amount: number | null | undefined, currency = "CZK") => {
+  if (amount === null || amount === undefined || !Number.isFinite(Number(amount))) {
+    return "[MISSING: current product price]";
+  }
+  return `${Number(amount).toLocaleString("cs-CZ")} ${currency}`;
+};
+
+const formatPercent = (value: number | null | undefined) => {
+  if (value === null || value === undefined || !Number.isFinite(Number(value))) {
+    return "unknown";
+  }
+  return `${Math.round(Number(value) * 100)}%`;
+};
+
 const isReservableRoute = (route: ProductWarehouseLogisticsOption) => {
   if (!route.canReserveFromWarehouse || Number(route.available ?? 0) <= 0) {
     return false;
@@ -110,6 +124,10 @@ export default function EditProductPage() {
   const [warehouseAvailability, setWarehouseAvailability] = useState<ProductWarehouseAvailabilityItem | null>(null);
   const [warehouseAvailabilityLoading, setWarehouseAvailabilityLoading] = useState(false);
   const [warehouseAvailabilityError, setWarehouseAvailabilityError] = useState<string | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<ProductRelation[]>([]);
+  const [bundleCandidates, setBundleCandidates] = useState<ProductBundleCandidatesResponse | null>(null);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+  const [recommendationsError, setRecommendationsError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     sku: '',
     title: '',
@@ -172,6 +190,40 @@ export default function EditProductPage() {
     }
   }, [productId]);
 
+
+  const loadProductRecommendations = useCallback(async () => {
+    setRecommendationsLoading(true);
+    setRecommendationsError(null);
+
+    try {
+      const [relatedResponse, bundleResponse] = await Promise.all([
+        productsApi.getRelatedProducts(productId),
+        productsApi.getBundleCandidates(productId, { limit: 3, currency: "CZK" }),
+      ]);
+
+      if (relatedResponse.success && relatedResponse.data) {
+        setRelatedProducts(relatedResponse.data);
+      } else {
+        setRelatedProducts([]);
+        setRecommendationsError(relatedResponse.error?.message || "Related products are unavailable.");
+      }
+
+      if (bundleResponse.success && bundleResponse.data) {
+        setBundleCandidates(bundleResponse.data);
+      } else {
+        setBundleCandidates(null);
+        setRecommendationsError((current) => current || bundleResponse.error?.message || "Bundle candidates are unavailable.");
+      }
+    } catch (error) {
+      console.error("Failed to load product recommendations:", error);
+      setRelatedProducts([]);
+      setBundleCandidates(null);
+      setRecommendationsError("Product recommendations are unavailable.");
+    } finally {
+      setRecommendationsLoading(false);
+    }
+  }, [productId]);
+
   const loadProduct = useCallback(async () => {
     try {
       const response = await productsApi.getProduct(productId);
@@ -205,8 +257,9 @@ export default function EditProductPage() {
       loadProduct();
       loadSalesStats();
       loadWarehouseAvailability();
+      loadProductRecommendations();
     }
-  }, [productId, loadProduct, loadSalesStats, loadWarehouseAvailability]);
+  }, [productId, loadProduct, loadSalesStats, loadWarehouseAvailability, loadProductRecommendations]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -303,6 +356,12 @@ export default function EditProductPage() {
   const warehouseRouteStatus = getWarehouseRouteStatus(warehouseAvailability);
   const warehouseRows = warehouseAvailability?.warehouses ?? [];
   const warehouseRoutes = warehouseAvailability?.logistics?.options ?? [];
+  const recommendationBlockers = Array.from(new Set([
+    ...(bundleCandidates?.blockers ?? []),
+    ...((bundleCandidates?.candidates ?? []).flatMap((candidate) => candidate.pricing.blockers ?? [])),
+  ]));
+  const relatedProductCount = relatedProducts.length;
+  const bundleCandidateRows = bundleCandidates?.candidates ?? [];
   const canEditProduct = canMutateCatalogProduct(product, user);
 
   return (
@@ -503,6 +562,151 @@ export default function EditProductPage() {
         <AukroPublishPanel productId={productId} />
 
         <ChannelSalesPanel productId={productId} />
+
+
+        <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Related products and bundles</h2>
+              <p className="text-sm text-gray-600">Read-only Catalog recommendations from product relations and order affinity.</p>
+              {recommendationsError && (
+                <p className="mt-2 text-sm text-amber-700">{recommendationsError}</p>
+              )}
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-right">
+              <div className="text-xs font-semibold uppercase text-gray-500">Candidates</div>
+              <div className="text-3xl font-extrabold text-gray-900">{recommendationsLoading ? "..." : bundleCandidateRows.length}</div>
+              <div className="text-xs text-gray-500">{relatedProductCount} related rows</div>
+            </div>
+          </div>
+
+          {recommendationsLoading ? (
+            <div className="mt-5 flex min-h-[120px] items-center justify-center rounded-xl border border-gray-200 bg-gray-50">
+              <LoadingSpinner size="sm" />
+            </div>
+          ) : (
+            <>
+              {recommendationBlockers.length > 0 && (
+                <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                  <div className="text-sm font-semibold text-amber-900">Display blockers</div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {recommendationBlockers.map((blocker) => (
+                      <span key={blocker} className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-amber-800">
+                        {blocker}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {relatedProducts.length === 0 && bundleCandidateRows.length === 0 ? (
+                <div className="mt-5 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-5 text-sm text-gray-600">
+                  No related products or bundle candidates returned for this product.
+                </div>
+              ) : (
+                <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
+                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                    <h3 className="font-bold text-gray-900">Related product rows</h3>
+                    {relatedProducts.length === 0 ? (
+                      <div className="mt-3 rounded-lg border border-dashed border-gray-300 bg-white p-3 text-sm text-gray-600">
+                        No related product rows returned.
+                      </div>
+                    ) : (
+                      <div className="mt-3 divide-y divide-gray-200 overflow-hidden rounded-lg border border-gray-200 bg-white">
+                        {relatedProducts.slice(0, 5).map((relation) => (
+                          <div key={relation.id} className="p-3 text-sm">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <div className="truncate font-semibold text-gray-900">{relation.targetProductId}</div>
+                                <div className="text-xs text-gray-500">{relation.relationType} / {relation.source}</div>
+                              </div>
+                              <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-700">
+                                {formatPercent(relation.confidence)}
+                              </span>
+                            </div>
+                            <div className="mt-2 text-xs text-gray-500">Score {Number(relation.score).toLocaleString("cs-CZ")}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
+                    {bundleCandidateRows.length === 0 ? (
+                      <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-5 text-sm text-gray-600">
+                        No bundle candidates returned.
+                      </div>
+                    ) : (
+                      bundleCandidateRows.map((candidate) => {
+                        const candidateCurrency = candidate.pricing.currency || "CZK";
+                        return (
+                          <div key={candidate.candidateId} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                              <div>
+                                <h3 className="font-bold text-gray-900">Bundle candidate</h3>
+                                <div className="text-xs text-gray-500">Read-only evidence from {candidate.relation.source}</div>
+                              </div>
+                              <span className={`w-fit rounded-full px-2.5 py-1 text-xs font-semibold ${candidate.pricing.freeShippingEligible ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
+                                {candidate.pricing.freeShippingEligible ? "Free-shipping eligible" : "Eligibility pending"}
+                              </span>
+                            </div>
+
+                            <div className="mt-3 space-y-2">
+                              {candidate.items.map((item) => (
+                                <div key={item.productId} className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm">
+                                  <div className="min-w-0">
+                                    <div className="truncate font-semibold text-gray-900">{item.title}</div>
+                                    <div className="truncate text-xs text-gray-500">{item.sku}</div>
+                                  </div>
+                                  <div className="shrink-0 text-right font-semibold text-gray-900">
+                                    {formatMoney(item.price?.amount, item.price?.currency || candidateCurrency)}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                              <div className="rounded-lg border border-gray-200 bg-white p-3">
+                                <div className="text-xs font-semibold uppercase text-gray-500">Subtotal</div>
+                                <div className="mt-1 font-bold text-gray-900">{formatMoney(candidate.pricing.subtotal, candidateCurrency)}</div>
+                              </div>
+                              <div className="rounded-lg border border-gray-200 bg-white p-3">
+                                <div className="text-xs font-semibold uppercase text-gray-500">Top-up</div>
+                                <div className="mt-1 font-bold text-gray-900">
+                                  {candidate.pricing.topUpAmount === null
+                                    ? "[MISSING: free-shipping threshold contract]"
+                                    : formatMoney(candidate.pricing.topUpAmount, candidateCurrency)}
+                                </div>
+                              </div>
+                              <div className="rounded-lg border border-gray-200 bg-white p-3">
+                                <div className="text-xs font-semibold uppercase text-gray-500">Threshold</div>
+                                <div className="mt-1 font-bold text-gray-900">
+                                  {candidate.pricing.freeShippingThreshold === undefined
+                                    ? "[MISSING: free-shipping threshold contract]"
+                                    : formatMoney(candidate.pricing.freeShippingThreshold, candidateCurrency)}
+                                </div>
+                              </div>
+                            </div>
+
+                            {candidate.pricing.blockers.length > 0 && (
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {candidate.pricing.blockers.map((blocker) => (
+                                  <span key={`${candidate.candidateId}-${blocker}`} className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">
+                                    {blocker}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </section>
 
 
         <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg">
