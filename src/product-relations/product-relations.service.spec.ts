@@ -7,6 +7,10 @@ const targetProductA = '00000000-0000-4000-8000-000000000001';
 const targetProductB = '00000000-0000-4000-8000-000000000002';
 const targetProductC = '00000000-0000-4000-8000-000000000003';
 const hiddenTargetProduct = '00000000-0000-4000-8000-000000000099';
+const inactiveTargetProduct = '00000000-0000-4000-8000-000000000098';
+const invisibleTargetProduct = '00000000-0000-4000-8000-000000000097';
+const categoryA = '00000000-0000-4000-8000-0000000000a1';
+const categoryB = '00000000-0000-4000-8000-0000000000b2';
 
 const jwtActor = {
   type: 'jwt' as const,
@@ -33,6 +37,16 @@ const relationRow = (overrides: Partial<ProductRelation>): ProductRelation => ({
   evidence: {},
   createdAt: new Date('2026-07-02T00:00:00.000Z'),
   updatedAt: new Date('2026-07-02T00:00:00.000Z'),
+  ...overrides,
+});
+
+const productRow = (overrides: any = {}) => ({
+  id: sourceProductId,
+  sku: 'SKU-SOURCE',
+  title: 'Source product',
+  isActive: true,
+  lifecycle: 'active',
+  categories: [{ id: categoryA, name: 'Category A' }],
   ...overrides,
 });
 
@@ -316,6 +330,131 @@ describe('ProductRelationsService', () => {
       targetProductB,
       targetProductC,
     ]);
+  });
+
+  it('keeps persisted general relations ahead of category fallback', async () => {
+    const persistedRelation = relationRow({
+      id: 'rel-persisted',
+      targetProductId: targetProductA,
+      relationType: 'related',
+      source: 'manual',
+    });
+    const repository = {
+      find: jest.fn(async () => [persistedRelation]),
+    };
+    const productsService = {
+      findOne: jest.fn(async (id: string) => productRow({ id })),
+      findAll: jest.fn(),
+    };
+    const service = new ProductRelationsService(repository as any, productsService as any);
+
+    const result = await service.findRelated(sourceProductId, {
+      scope: { actor: jwtActor },
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      id: 'rel-persisted',
+      targetProductId: targetProductA,
+      relationType: 'related',
+      source: 'manual',
+    });
+    expect(productsService.findAll).not.toHaveBeenCalled();
+  });
+
+  it('returns deterministic active visible same-category fallback products when no relations exist', async () => {
+    const repository = {
+      find: jest.fn(async () => []),
+    };
+    const productsByCategory: Record<string, any[]> = {
+      [categoryA]: [
+        productRow({ id: sourceProductId, sku: 'SKU-SOURCE', title: 'Source product', categories: [{ id: categoryA }, { id: categoryB }] }),
+        productRow({ id: targetProductB, sku: 'SKU-B', title: 'Beta target', categories: [{ id: categoryA }, { id: categoryB }] }),
+        productRow({ id: targetProductA, sku: 'SKU-A', title: 'Alpha target', categories: [{ id: categoryA }] }),
+        productRow({ id: inactiveTargetProduct, sku: 'SKU-INACTIVE', title: 'Inactive target', isActive: false, categories: [{ id: categoryA }] }),
+        productRow({ id: invisibleTargetProduct, sku: 'SKU-INVISIBLE', title: 'Invisible target', categories: [] }),
+      ],
+      [categoryB]: [
+        productRow({ id: targetProductC, sku: 'SKU-C', title: 'Alpha target', categories: [{ id: categoryB }] }),
+        productRow({ id: targetProductB, sku: 'SKU-B', title: 'Beta target', categories: [{ id: categoryA }, { id: categoryB }] }),
+      ],
+    };
+    const productsService = {
+      findOne: jest.fn(async (id: string) => productRow({
+        id,
+        categories: [{ id: categoryA }, { id: categoryB }],
+      })),
+      findAll: jest.fn(async (query: { categoryId: string }) => ({
+        items: productsByCategory[query.categoryId] ?? [],
+        total: productsByCategory[query.categoryId]?.length ?? 0,
+        page: 1,
+        limit: 200,
+      })),
+    };
+    const service = new ProductRelationsService(repository as any, productsService as any);
+
+    const result = await service.findRelated(sourceProductId, {
+      scope: { actor: jwtActor },
+    });
+
+    expect(productsService.findAll).toHaveBeenCalledWith(expect.objectContaining({
+      categoryId: categoryA,
+      isActive: true,
+      lifecycle: 'active',
+    }), { actor: jwtActor });
+    expect(productsService.findAll).toHaveBeenCalledWith(expect.objectContaining({
+      categoryId: categoryB,
+      isActive: true,
+      lifecycle: 'active',
+    }), { actor: jwtActor });
+    expect(result.map((relation) => relation.targetProductId)).toEqual([
+      targetProductB,
+      targetProductA,
+      targetProductC,
+    ]);
+    expect(result.map((relation) => relation.targetProductId)).not.toContain(sourceProductId);
+    expect(result.map((relation) => relation.targetProductId)).not.toContain(inactiveTargetProduct);
+    expect(result.map((relation) => relation.targetProductId)).not.toContain(invisibleTargetProduct);
+    expect(result[0]).toMatchObject({
+      relationType: 'related',
+      source: 'category_type_fallback',
+      score: 1,
+      confidence: 0.5,
+      evidence: {
+        sourceSystem: 'catalog-microservice',
+        strategy: 'category_type_fallback',
+        sharedCategoryIds: [categoryA, categoryB],
+      },
+    });
+    expect(result[1].evidence).toMatchObject({
+      sharedCategoryIds: [categoryA],
+    });
+  });
+
+  it('does not add category fallback to explicit relation type requests', async () => {
+    const repository = {
+      find: jest.fn(async () => []),
+    };
+    const productsService = {
+      findOne: jest.fn(async (id: string) => productRow({
+        id,
+        categories: [{ id: categoryA }],
+      })),
+      findAll: jest.fn(),
+    };
+    const service = new ProductRelationsService(repository as any, productsService as any);
+
+    const result = await service.findRelated(sourceProductId, {
+      relationType: 'order_affinity',
+      scope: { actor: jwtActor },
+    });
+
+    expect(result).toEqual([]);
+    expect(repository.find).toHaveBeenCalledWith({
+      where: { sourceProductId, relationType: 'order_affinity' },
+      order: { score: 'DESC', confidence: 'DESC', targetProductId: 'ASC' },
+    });
+    expect(productsService.findAll).not.toHaveBeenCalled();
   });
 
   it('replaces a complete order-affinity window and prunes only matching stale rows', async () => {

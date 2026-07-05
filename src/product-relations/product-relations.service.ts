@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException, Optional } from '@n
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, Repository } from 'typeorm';
 import type { CatalogActor } from '../auth/catalog-auth.guard';
+import type { Product } from '../products/product.entity';
 import { ProductsService } from '../products/products.service';
 import { PricingService } from '../pricing/pricing.service';
 import { ProductRelation, ProductRelationEvidence } from './product-relation.entity';
@@ -13,6 +14,9 @@ type ProductRelationAccessScope = {
 const ORDER_AFFINITY_RELATION_TYPE = 'order_affinity';
 const MARKETING_ORDER_AFFINITY_SOURCE = 'marketing_order_affinity';
 const MAX_ORDER_AFFINITY_BATCH_ITEMS = 500;
+const CATEGORY_FALLBACK_RELATION_TYPE = 'related';
+const CATEGORY_FALLBACK_SOURCE = 'category_type_fallback';
+const MAX_CATEGORY_FALLBACK_RELATIONS = 20;
 
 type ProductRelationFindOptions = {
   relationType?: string;
@@ -185,7 +189,7 @@ export class ProductRelationsService {
     options: ProductRelationFindOptions = {},
   ): Promise<ProductRelationResponse[]> {
     const scope = options.scope ?? {};
-    await this.productsService.findOne(sourceProductId, scope as any);
+    const sourceProduct = await this.productsService.findOne(sourceProductId, scope as any);
 
     const relationType = this.normalizeOptionalRelationType(options.relationType);
     const where: FindOptionsWhere<ProductRelation> = { sourceProductId };
@@ -198,9 +202,15 @@ export class ProductRelationsService {
       order: { score: 'DESC', confidence: 'DESC', targetProductId: 'ASC' },
     });
     const visibleRelations = await this.filterVisibleTargets(relations, scope);
-    return visibleRelations
+    const persistedResponses = visibleRelations
       .sort((left, right) => this.compareRelations(left, right))
       .map((relation) => this.toResponse(relation));
+
+    if (relationType || relations.length > 0) {
+      return persistedResponses;
+    }
+
+    return this.findCategoryFallbackRelated(sourceProduct, scope);
   }
 
   async findBundleCandidates(
@@ -830,6 +840,108 @@ export class ProductRelationsService {
     }));
 
     return checks.filter((relation): relation is ProductRelation => relation !== null);
+  }
+
+
+  private async findCategoryFallbackRelated(
+    sourceProduct: Product,
+    scope: ProductRelationAccessScope,
+  ): Promise<ProductRelationResponse[]> {
+    const sourceCategoryIds = this.productCategoryIds(sourceProduct);
+    if (!sourceCategoryIds.length) {
+      return [];
+    }
+
+    const candidates = new Map<string, { product: Product; sharedCategoryIds: Set<string> }>();
+    for (const categoryId of sourceCategoryIds) {
+      const result = await this.productsService.findAll({
+        page: 1,
+        limit: 200,
+        isActive: true,
+        lifecycle: 'active',
+        categoryId,
+      } as any, scope as any);
+
+      for (const product of result.items) {
+        if (product.id === sourceProduct.id || product.isActive === false || product.lifecycle !== 'active') {
+          continue;
+        }
+        const sharedCategoryIds = this.productCategoryIds(product).filter((id) => sourceCategoryIds.includes(id));
+        if (!sharedCategoryIds.length) {
+          continue;
+        }
+        const existing = candidates.get(product.id);
+        if (existing) {
+          sharedCategoryIds.forEach((id) => existing.sharedCategoryIds.add(id));
+        } else {
+          candidates.set(product.id, {
+            product,
+            sharedCategoryIds: new Set(sharedCategoryIds),
+          });
+        }
+      }
+    }
+
+    return Array.from(candidates.values())
+      .sort((left, right) => this.compareCategoryFallbackCandidates(left, right))
+      .slice(0, MAX_CATEGORY_FALLBACK_RELATIONS)
+      .map(({ product, sharedCategoryIds }) => this.categoryFallbackResponse(
+        sourceProduct.id,
+        product,
+        Array.from(sharedCategoryIds).sort(),
+        sourceCategoryIds.length,
+      ));
+  }
+
+  private productCategoryIds(product: Product): string[] {
+    return Array.from(new Set((product.categories ?? [])
+      .map((category) => category?.id)
+      .filter((id): id is string => typeof id === 'string' && id.length > 0)))
+      .sort();
+  }
+
+  private compareCategoryFallbackCandidates(
+    left: { product: Product; sharedCategoryIds: Set<string> },
+    right: { product: Product; sharedCategoryIds: Set<string> },
+  ): number {
+    const sharedCategoryCount = right.sharedCategoryIds.size - left.sharedCategoryIds.size;
+    if (sharedCategoryCount !== 0) {
+      return sharedCategoryCount;
+    }
+    const title = (left.product.title ?? '').localeCompare(right.product.title ?? '');
+    if (title !== 0) {
+      return title;
+    }
+    const sku = (left.product.sku ?? '').localeCompare(right.product.sku ?? '');
+    if (sku !== 0) {
+      return sku;
+    }
+    return left.product.id.localeCompare(right.product.id);
+  }
+
+  private categoryFallbackResponse(
+    sourceProductId: string,
+    targetProduct: Product,
+    sharedCategoryIds: string[],
+    sourceCategoryCount: number,
+  ): ProductRelationResponse {
+    const score = sourceCategoryCount > 0 ? sharedCategoryIds.length / sourceCategoryCount : 0;
+    return {
+      id: `${CATEGORY_FALLBACK_SOURCE}:${sourceProductId}:${targetProduct.id}`,
+      sourceProductId,
+      targetProductId: targetProduct.id,
+      relationType: CATEGORY_FALLBACK_RELATION_TYPE,
+      score,
+      confidence: 0.5,
+      source: CATEGORY_FALLBACK_SOURCE,
+      evidence: {
+        sourceSystem: 'catalog-microservice',
+        strategy: 'category_type_fallback',
+        sharedCategoryIds,
+      },
+      createdAt: new Date(0),
+      updatedAt: new Date(0),
+    };
   }
 
   private canAccessAllProducts(actor?: CatalogActor): boolean {
