@@ -666,6 +666,67 @@ export interface ProductWarehouseAvailabilityResponse {
   items: ProductWarehouseAvailabilityItem[];
 }
 
+export interface ProductRelation {
+  id: string;
+  sourceProductId: string;
+  targetProductId: string;
+  relationType: string;
+  score: number;
+  confidence: number;
+  source: string;
+  evidence: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProductBundleCandidateItem {
+  productId: string;
+  sku: string;
+  title: string;
+  price: {
+    amount: number;
+    currency: string;
+    source: "sale" | "base";
+  } | null;
+}
+
+export interface ProductBundleCandidate {
+  candidateId: string;
+  productIds: string[];
+  items: ProductBundleCandidateItem[];
+  relation: {
+    relationId: string;
+    relationType: "order_affinity";
+    source: "marketing_order_affinity" | string;
+    score: number;
+    confidence: number;
+  };
+  pricing: {
+    currency?: string;
+    subtotal: number | null;
+    freeShippingThreshold?: number;
+    suggestedBundlePrice: number | null;
+    topUpAmount: number | null;
+    freeShippingEligible: boolean;
+    blockers: string[];
+  };
+}
+
+export interface ProductBundleCandidatesResponse {
+  sourceProductId: string;
+  relationType: "order_affinity";
+  source: "marketing_order_affinity";
+  freeShippingThreshold?: number;
+  candidates: ProductBundleCandidate[];
+  blockers: string[];
+}
+
+export interface ProductBundleCandidatesQuery {
+  limit?: number;
+  freeShippingThreshold?: number;
+  currency?: string;
+}
+
 function productQualityReviewQueryString(query?: ProductQualityReviewQuery | ProductQualityReviewExportQuery) {
   const params = new URLSearchParams();
   if (query?.page) params.append('page', query.page.toString());
@@ -699,6 +760,23 @@ export const productsApi = {
 
   async getProduct(id: string) {
     return apiClient.get<Product>(`/products/${id}`);
+  },
+
+
+  async getRelatedProducts(id: string, relationType?: string) {
+    const params = new URLSearchParams();
+    if (relationType) params.append("relationType", relationType);
+    const queryString = params.toString();
+    return apiClient.get<ProductRelation[]>(`/products/${id}/related${queryString ? `?${queryString}` : ""}`);
+  },
+
+  async getBundleCandidates(id: string, query?: ProductBundleCandidatesQuery) {
+    const params = new URLSearchParams();
+    if (query?.limit) params.append("limit", query.limit.toString());
+    if (query?.freeShippingThreshold !== undefined) params.append("freeShippingThreshold", query.freeShippingThreshold.toString());
+    if (query?.currency) params.append("currency", query.currency);
+    const queryString = params.toString();
+    return apiClient.get<ProductBundleCandidatesResponse>(`/products/${id}/bundle-candidates${queryString ? `?${queryString}` : ""}`);
   },
 
   async getProductBySku(sku: string) {
