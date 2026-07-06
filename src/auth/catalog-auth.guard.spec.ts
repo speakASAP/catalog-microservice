@@ -69,7 +69,9 @@ describe('CatalogAuthGuard', () => {
       sub: 'user-1',
       email: 'user@example.test',
       roles: ['catalog:write', 'custom:role'],
+      source: undefined,
       authMethod: 'auth-validate',
+      isMarathonOnlyAuthUser: false,
     });
     expect(request.serviceActor).toBeUndefined();
   });
@@ -126,7 +128,107 @@ describe('CatalogAuthGuard', () => {
       sub: 'registered-user-1',
       email: undefined,
       roles: [],
+      source: undefined,
       authMethod: 'auth-validate',
+      isMarathonOnlyAuthUser: false,
+    });
+  });
+
+  it('denies marathon-only imported Auth users for generic authenticated routes', async () => {
+    const reflector = { getAllAndOverride: jest.fn().mockReturnValue(['catalog:authenticated']) } as unknown as Reflector;
+    const guard = new CatalogAuthGuard(reflector);
+    const request = buildRequest({ authorization: 'Bearer marathon-only-token' });
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        valid: true,
+        user: {
+          sub: 'marathon-import-user-1',
+          source: 'marathon-import',
+          roles: ['app:marathon:user'],
+          perApplicationPreferences: { marathon: { imported: true } },
+        },
+      }),
+    } as any);
+
+    await expect(guard.canActivate(buildContext(request))).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+    expect(request.catalogActor).toBeUndefined();
+  });
+
+  it('denies marathon-admin-only Auth users for generic authenticated routes', async () => {
+    const reflector = { getAllAndOverride: jest.fn().mockReturnValue(['catalog:authenticated']) } as unknown as Reflector;
+    const guard = new CatalogAuthGuard(reflector);
+    const request = buildRequest({ authorization: 'Bearer marathon-admin-only-token' });
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        valid: true,
+        user: {
+          sub: 'marathon-admin-only-1',
+          source: 'marathon',
+          roles: ['app:marathon:admin'],
+          perApplicationPreferences: { authSources: { marathon: { source: 'marathon' } } },
+        },
+      }),
+    } as any);
+
+    await expect(guard.canActivate(buildContext(request))).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+    expect(request.catalogActor).toBeUndefined();
+  });
+
+  it('denies nested authSources marathon-only Auth users for generic authenticated routes', async () => {
+    const reflector = { getAllAndOverride: jest.fn().mockReturnValue(['catalog:authenticated']) } as unknown as Reflector;
+    const guard = new CatalogAuthGuard(reflector);
+    const request = buildRequest({ authorization: 'Bearer nested-marathon-only-token' });
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        valid: true,
+        user: {
+          sub: 'nested-marathon-only-1',
+          roles: [],
+          perApplicationPreferences: { authSources: { marathon: { source: 'marathon' } } },
+        },
+      }),
+    } as any);
+
+    await expect(guard.canActivate(buildContext(request))).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+    expect(request.catalogActor).toBeUndefined();
+  });
+
+  it('allows marathon-marked Auth users with explicit catalog or global roles', async () => {
+    const reflector = { getAllAndOverride: jest.fn().mockReturnValue(['global:platform_admin']) } as unknown as Reflector;
+    const guard = new CatalogAuthGuard(reflector);
+    const request = buildRequest({ authorization: 'Bearer explicit-role-token' });
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        valid: true,
+        user: {
+          sub: 'catalog-admin-1',
+          source: 'marathon-import',
+          roles: ['app:marathon:user', 'global:platform_admin'],
+          perApplicationPreferences: { marathon: { imported: true } },
+        },
+      }),
+    } as any);
+
+    await expect(guard.canActivate(buildContext(request))).resolves.toBe(true);
+
+    expect(request.catalogActor).toEqual({
+      type: 'jwt',
+      sub: 'catalog-admin-1',
+      email: undefined,
+      roles: ['app:marathon:user', 'global:platform_admin'],
+      source: 'marathon-import',
+      authMethod: 'auth-validate',
+      isMarathonOnlyAuthUser: false,
     });
   });
 

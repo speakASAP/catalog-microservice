@@ -15,6 +15,8 @@ type AuthValidateUser = {
   sub?: string;
   email?: string;
   roles?: string[];
+  source?: string;
+  perApplicationPreferences?: Record<string, unknown>;
   [key: string]: unknown;
 };
 
@@ -31,6 +33,7 @@ export type CatalogActor = {
   source?: string;
   serviceName?: string;
   authMethod?: 'auth-validate' | 'internal-service-token';
+  isMarathonOnlyAuthUser?: boolean;
 };
 
 export type CatalogAuthenticatedRequest = Request & {
@@ -65,8 +68,9 @@ export class CatalogAuthGuard implements CanActivate {
       ]) ?? this.defaultWriteRoles;
 
     const actor = await this.resolveActor(request);
+    const allowsGenericAuthenticated = requiredRoles.includes('catalog:authenticated');
     const hasRequiredRole =
-      requiredRoles.includes('catalog:authenticated') ||
+      (allowsGenericAuthenticated && !actor.isMarathonOnlyAuthUser) ||
       requiredRoles.some((role) => actor.roles.includes(role));
     if (!hasRequiredRole) {
       throw new ForbiddenException('Insufficient catalog permissions');
@@ -165,13 +169,53 @@ export class CatalogAuthGuard implements CanActivate {
       throw new UnauthorizedException('Invalid token subject');
     }
 
+    const roles = Array.isArray(user.roles) ? user.roles : [];
+
     return {
       type: 'jwt',
       sub,
       email: user.email,
-      roles: Array.isArray(user.roles) ? user.roles : [],
+      roles,
+      source: typeof user.source === 'string' ? user.source : undefined,
       authMethod: 'auth-validate',
+      isMarathonOnlyAuthUser: this.isMarathonOnlyAuthUser(user, roles),
     };
+  }
+
+  private isMarathonOnlyAuthUser(user: AuthValidateUser, roles: string[]): boolean {
+    const source = typeof user.source === 'string' ? user.source.toLowerCase() : '';
+    const hasMarathonMarker =
+      roles.includes('app:marathon:user') ||
+      source.includes('marathon') ||
+      this.hasMarathonPreferences(user.perApplicationPreferences);
+
+    if (!hasMarathonMarker) {
+      return false;
+    }
+
+    return roles.every((role) => role.startsWith('app:marathon:') || role.startsWith('marathon:'));
+  }
+
+  private hasMarathonPreferences(preferences: AuthValidateUser['perApplicationPreferences']): boolean {
+    return this.containsMarathonMarker(preferences);
+  }
+
+  private containsMarathonMarker(value: unknown, depth = 0): boolean {
+    if (value == null || depth > 4) {
+      return false;
+    }
+    if (typeof value === 'string') {
+      return value.toLowerCase().includes('marathon');
+    }
+    if (Array.isArray(value)) {
+      return value.some((entry) => this.containsMarathonMarker(entry, depth + 1));
+    }
+    if (typeof value === 'object') {
+      return Object.entries(value as Record<string, unknown>).some(([key, entry]) => (
+        key.toLowerCase().includes('marathon') || this.containsMarathonMarker(entry, depth + 1)
+      ));
+    }
+    return false;
   }
 
   private safeEqual(a: string, b: string): boolean {
