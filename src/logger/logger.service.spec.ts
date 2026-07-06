@@ -31,6 +31,7 @@ describe('LoggerService', () => {
     process.env.LOGGING_SERVICE_URL = 'http://logging-microservice:3300/';
     process.env.LOGGING_SERVICE_API_PATH = '/api/custom-logs';
     process.env.SERVICE_NAME = 'catalog-test';
+    process.env.LOGGING_SERVICE_TOKEN = 'catalog-log-token';
 
     const logger = new LoggerService();
     logger.log('catalog started', 'Bootstrap');
@@ -44,12 +45,13 @@ describe('LoggerService', () => {
         service: 'catalog-test',
         metadata: { context: 'Bootstrap' },
       }),
-      { timeout: 1500 },
+      { timeout: 1500, headers: { Authorization: 'Bearer catalog-log-token' } },
     );
   });
 
-  it('uses the default API path and fails open when the transport rejects', () => {
+  it('uses the default API path, omits auth when token is unset, and fails open when the transport rejects', () => {
     process.env.LOGGING_SERVICE_URL = 'http://logging-microservice:3300';
+    delete process.env.LOGGING_SERVICE_TOKEN;
     mockedAxios.post.mockRejectedValue(new Error('network down'));
 
     const logger = new LoggerService();

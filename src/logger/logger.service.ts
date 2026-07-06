@@ -165,8 +165,12 @@ export class LoggerService implements NestLoggerService {
         ? this.loggingTimeoutMs
         : 1500;
 
+    const token = process.env.LOGGING_SERVICE_TOKEN?.trim();
+    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+    const requestOptions = headers ? { timeout, headers } : { timeout };
+
     void axios
-      .post(endpoint, payload, { timeout })
+      .post(endpoint, payload, requestOptions)
       .catch(() => undefined);
   }
 
