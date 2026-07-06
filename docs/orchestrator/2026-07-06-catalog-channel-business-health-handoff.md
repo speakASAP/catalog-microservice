@@ -9,9 +9,28 @@
 - Task: Define what Catalog can prove, what can be aggregated, how mismatches are classified, and which external mutation facts remain gated.
 - Execution Plan: This document. No source implementation or runtime mutation is included in this pass.
 - Coding Prompt: If a future verifier is added, keep it source-only/read-only, use existing protected Catalog/Warehouse readiness endpoints, do not print secrets or raw customer data, and preserve `[MISSING: ...]` blockers instead of fabricating stock/channel authority.
-- Code: `docs/orchestrator/2026-07-06-catalog-channel-business-health-handoff.md` only.
-- Validation: `git diff --check` on the remote `catalog-microservice` checkout after this handoff is written.
+- Code: `src/business-health/**`, `src/app.module.ts`, `package.json`, `scripts/verify-business-health-catalog-channel-contract.js`, and `docs/orchestrator/2026-07-06-catalog-channel-business-health-handoff.md`.
+- Validation: `npm run verify:business-health-catalog-channel-contract`, `npm run build`, and `git diff --check` on the remote `catalog-microservice` checkout.
 - State Update: This handoff is a read-only orchestration artifact. It does not update product, pricing, stock, deployment, Kubernetes, secret, or marketplace state.
+
+## Implemented Service-Owned Evidence Endpoint
+
+Catalog now exposes a source-only business-health envelope at `GET /api/business-health/channel-availability`. The actual route includes the global `api` prefix configured in `src/main.ts`.
+
+- Contract ID: `catalog.channel_availability_business_health.v1`.
+- Business-health process contract: `stock-order-marketplace-business-health.v1`.
+- Runtime behavior: source-only/read-only; `mutatesCatalog=false`, `mutatesWarehouse=false`, `mutatesMarketplace=false`, `runtimeDataQueried=false`, `productionDbQueried=false`, and `liveSyntheticMutationAuthorized=false`.
+- Status: `blocked` until an owner-approved live runtime packet defines exact products, channels, protected Catalog credentials, Warehouse comparison scope, and marketplace/channel ownership evidence.
+- Validation command: `npm run verify:business-health-catalog-channel-contract`; it checks controller/service/types/module/docs/package markers and rejects Repository/TypeORM query, live fetch/axios, marketplace mutation, stock reservation, and publish/de-list patterns inside `src/business-health/**`.
+- Intent chain marker: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation.
+
+Current source blockers preserved by the endpoint:
+
+- `[MISSING: approved live Catalog channel availability runtime evidence packet for target products]`.
+- `[MISSING: exact target product IDs and channel list for live business-health proof]`.
+- `[MISSING: approved protected Catalog service token or JWT for live coverage/projection/readiness checks]`.
+- `[MISSING: channel-owner credentials/ownership packet for marketplace-side listing status proof]`.
+- `[MISSING: approved Warehouse stock authority runtime packet if live Warehouse totals must be compared]`.
 
 ## Catalog Ownership Boundaries
 

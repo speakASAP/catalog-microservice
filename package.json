@@ -26,7 +26,8 @@
     "report:allegro-stock-reconciliation": "node scripts/report-allegro-stock-reconciliation.js",
     "validate:product-quality": "node scripts/validate-product-quality.js",
     "verify:bpcp-consumer": "node scripts/verify-bpcp-consumer.js",
-    "verify:goal24-refund-cancel-rollback-execution-approval": "node scripts/verify-goal24-refund-cancel-rollback-execution-approval.js"
+    "verify:goal24-refund-cancel-rollback-execution-approval": "node scripts/verify-goal24-refund-cancel-rollback-execution-approval.js",
+    "verify:business-health-catalog-channel-contract": "node scripts/verify-business-health-catalog-channel-contract.js"
   },
   "dependencies": {
     "@nestjs/axios": "^3.0.1",

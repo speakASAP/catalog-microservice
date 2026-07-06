@@ -19,6 +19,7 @@ import { CatalogAccessModule } from "./catalog-access/catalog-access.module";
 import { ProductRelationsModule } from './product-relations/product-relations.module';
 import { BpcpEventsModule } from './bpcp-events/bpcp-events.module';
 import { BundlesModule } from './bundles/bundles.module';
+import { BusinessHealthModule } from './business-health/business-health.module';
 
 /**
  * Main application module for Catalog Microservice
@@ -64,6 +65,7 @@ import { BundlesModule } from './bundles/bundles.module';
     ProductRelationsModule,
     BpcpEventsModule,
     BundlesModule,
+    BusinessHealthModule,
   ],
 })
 export class AppModule {}
