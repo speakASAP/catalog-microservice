@@ -182,6 +182,10 @@ export class ProductQueryDto {
   categoryId?: string;
 
   @IsOptional()
+  @IsString()
+  supplierId?: string;
+
+  @IsOptional()
   @IsIn(['own', 'effective', 'alfares', 'community', 'all'])
   catalogScope?: ProductCatalogScope;
 

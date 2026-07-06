@@ -69,6 +69,23 @@ function getProductSource(product: Product) {
   return { label: 'Private', tone: 'bg-gray-100 text-gray-700' };
 }
 
+function getSupplierSummary(availability?: ProductWarehouseAvailabilityItem) {
+  const supplierIds = Array.from(new Set(
+    (availability?.warehouses || [])
+      .filter((warehouse) => Number(warehouse.quantity ?? warehouse.available ?? 0) > 0)
+      .map((warehouse) => warehouse.supplierId)
+      .filter((supplierId): supplierId is string => Boolean(supplierId)),
+  ));
+
+  if (supplierIds.length === 0) {
+    return { label: 'No supplier stock', detail: '' };
+  }
+  return {
+    label: supplierIds.length === 1 ? supplierIds[0] : `${supplierIds.length} suppliers`,
+    detail: supplierIds.length === 1 ? 'Supplier stock' : supplierIds.join(', '),
+  };
+}
+
 export default function AdminProductsPage() {
   const router = useRouter();
   const { user } = useAuth();
@@ -79,6 +96,7 @@ export default function AdminProductsPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<ActiveFilter>('active');
   const [lifecycleFilter, setLifecycleFilter] = useState<LifecycleFilter>('all');
+  const [supplierFilter, setSupplierFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [totalPages, setTotalPages] = useState(1);
@@ -106,7 +124,8 @@ export default function AdminProductsPage() {
     isActive: activeFilter === 'all' ? undefined : activeFilter === 'active',
     lifecycle: lifecycleFilter === 'all' ? undefined : lifecycleFilter,
     catalogSources: selectedCatalogSources,
-  }), [activeFilter, debouncedSearch, lifecycleFilter, page, pageSize, selectedCatalogSources]);
+    supplierId: supplierFilter.trim() || undefined,
+  }), [activeFilter, debouncedSearch, lifecycleFilter, page, pageSize, selectedCatalogSources, supplierFilter]);
 
   const loadProducts = useCallback(async () => {
     if (!catalogSettings) return;
@@ -187,7 +206,7 @@ export default function AdminProductsPage() {
   useEffect(() => {
     setSelectedIds(new Set());
     setBulkStatus(null);
-  }, [activeFilter, lifecycleFilter, debouncedSearch, pageSize]);
+  }, [activeFilter, lifecycleFilter, debouncedSearch, pageSize, supplierFilter]);
 
   const selectedCount = selectedIds.size;
   const pageIds = products.map((product) => product.id);
@@ -414,6 +433,21 @@ export default function AdminProductsPage() {
           </select>
         </label>
 
+        <label className="block">
+          <span className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-gray-600">Supplier ID</span>
+          <input
+            type="text"
+            value={supplierFilter}
+            onChange={(event) => {
+              setPage(1);
+              setSupplierFilter(event.target.value);
+            }}
+            placeholder="Filter by supplier ID"
+            disabled={bulkBusy}
+            className="w-full rounded-lg border border-gray-300 px-2.5 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+          />
+        </label>
+
         <fieldset className="space-y-2 border-t border-gray-200 pt-4">
           <legend className="text-[11px] font-bold uppercase tracking-wider text-gray-600">Catalog sources</legend>
           <label className="flex cursor-pointer items-start gap-2 text-sm font-semibold text-gray-800">
@@ -447,6 +481,7 @@ export default function AdminProductsPage() {
     catalogSettings,
     lifecycleFilter,
     search,
+    supplierFilter,
     setSidebarControls,
     settingsSaving,
   ]);
@@ -565,6 +600,9 @@ export default function AdminProductsPage() {
                       Source
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Supplier
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Status
                     </th>
                     <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
@@ -576,6 +614,8 @@ export default function AdminProductsPage() {
                   {products.map((product) => {
                     const image = getPrimaryImage(product);
                     const source = getProductSource(product);
+                    const availability = availabilityByProductId[product.id];
+                    const supplier = getSupplierSummary(availability);
 
                     return (
                       <tr key={product.id} className="hover:bg-blue-50/50 transition-colors">
@@ -644,6 +684,12 @@ export default function AdminProductsPage() {
                           <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${source.tone}`}>
                             {source.label}
                           </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
+                          <div className="max-w-[180px] truncate font-bold text-gray-800" title={supplier.detail || supplier.label}>
+                            {availabilityLoading && !availability ? 'Loading...' : supplier.label}
+                          </div>
+                          {supplier.detail && <div className="max-w-[180px] truncate text-gray-500" title={supplier.detail}>{supplier.detail}</div>}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {(() => {

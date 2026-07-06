@@ -817,7 +817,7 @@ export class ProductsService {
    * Find all products with pagination and filters
    */
   async findAll(query: ProductQueryDto, scope: ProductAccessScope = {}): Promise<{ items: Product[]; total: number; page: number; limit: number }> {
-    const { page = 1, limit = 20, search, isActive, lifecycle, categoryId, catalogScope, catalogSources } = query;
+    const { page = 1, limit = 20, search, isActive, lifecycle, categoryId, catalogScope, catalogSources, supplierId } = query;
     const skip = (page - 1) * limit;
 
     this.logger.log(`Finding products: page=${page}, limit=${limit}, search=${search}`, 'ProductsService');
@@ -849,6 +849,24 @@ export class ProductsService {
         .andWhere('category.id = :categoryId', { categoryId });
     }
 
+    if (supplierId) {
+      const candidateRows = await queryBuilder
+        .clone()
+        .select('product.id', 'id')
+        .orderBy('product.createdAt', 'DESC')
+        .getRawMany<{ id: string }>();
+      const supplierProductIds = await this.filterProductIdsBySupplier(
+        candidateRows.map((row) => row.id).filter(Boolean),
+        supplierId,
+      );
+
+      if (supplierProductIds.length === 0) {
+        return { items: [], total: 0, page, limit };
+      }
+
+      queryBuilder.andWhere('product.id IN (:...supplierProductIds)', { supplierProductIds });
+    }
+
     // Include relations
     queryBuilder
       .leftJoinAndSelect('product.categories', 'categories')
@@ -860,7 +878,7 @@ export class ProductsService {
 
     const [items, total] = await queryBuilder.getManyAndCount();
 
-    this.logger.log(`Found ${total} products`, 'ProductsService');
+    this.logger.log(`Found ${total} products`);
 
     return { items, total, page, limit };
   }
@@ -2660,6 +2678,70 @@ export class ProductsService {
     }
   }
 
+
+  private async filterProductIdsBySupplier(productIds: string[], supplierId: string): Promise<string[]> {
+    const normalizedSupplierId = String(supplierId || '').trim();
+    if (!normalizedSupplierId || productIds.length === 0) {
+      return [];
+    }
+
+    const matched = new Set<string>();
+    for (let index = 0; index < productIds.length; index += 100) {
+      const chunk = productIds.slice(index, index + 100);
+      const rows = await this.fetchWarehouseAvailabilityRows(chunk);
+      for (const row of rows) {
+        const warehouses = Array.isArray(row?.warehouses) ? row.warehouses : [];
+        const supplied = warehouses.some((warehouse: any) => {
+          const rowSupplierId = String(warehouse?.supplierId || '').trim();
+          const quantity = this.toPositiveInteger(warehouse?.quantity ?? warehouse?.available ?? 0);
+          return rowSupplierId === normalizedSupplierId && quantity > 0;
+        });
+        if (supplied && typeof row?.productId === 'string') {
+          matched.add(row.productId);
+        }
+      }
+    }
+    return productIds.filter((productId) => matched.has(productId));
+  }
+
+  private async fetchWarehouseAvailabilityRows(productIds: string[]): Promise<any[]> {
+    const token = this.getWarehouseServiceToken();
+    if (!token) {
+      throw new BadRequestException('[MISSING: Catalog-to-Warehouse service credential for supplier product filtering]');
+    }
+    const baseUrl = (process.env.WAREHOUSE_SERVICE_URL || process.env.WAREHOUSE_BASE_URL || 'http://warehouse-microservice:3201').replace(/\/$/, '');
+    try {
+      const response = await axios.post(
+        `${baseUrl}/api/stock/availability/batch`,
+        { productIds },
+        {
+          timeout: Number(process.env.WAREHOUSE_AVAILABILITY_TIMEOUT_MS || 5000),
+          headers: {
+            Authorization: this.asBearerToken(token),
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+      const rows = response.data?.data ?? response.data;
+      return Array.isArray(rows) ? rows : [];
+    } catch (error: any) {
+      this.logger.warn(
+        `Warehouse supplier filter unavailable: ${error?.response?.status ?? error?.message ?? 'unknown error'}`,
+        'ProductsService',
+      );
+      throw new BadRequestException('Warehouse supplier filter is unavailable. Try again after Warehouse availability is reachable.');
+    }
+  }
+
+  private getWarehouseServiceToken(): string | null {
+    const token =
+      process.env.WAREHOUSE_SERVICE_TOKEN ||
+      process.env.WAREHOUSE_INTERNAL_SERVICE_TOKEN ||
+      process.env.CATALOG_INTERNAL_SERVICE_TOKEN ||
+      process.env.INTERNAL_SERVICE_TOKEN ||
+      process.env.JWT_TOKEN;
+    return token?.trim() || null;
+  }
 
   private getOrdersBaseUrl(): string {
     return (process.env.ORDERS_SERVICE_URL || process.env.ORDERS_BASE_URL || 'http://orders-microservice:3203').replace(/\/$/, '');

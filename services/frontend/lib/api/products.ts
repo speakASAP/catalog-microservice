@@ -174,6 +174,7 @@ export interface ProductQuery {
   lifecycle?: 'draft' | 'active' | 'archived' | 'needs_review';
   catalogScope?: ProductCatalogScope;
   catalogSources?: ProductCatalogSource[];
+  supplierId?: string;
 }
 
 export interface PaginatedResponse<T> {
@@ -753,6 +754,7 @@ export const productsApi = {
     if (query?.lifecycle) params.append('lifecycle', query.lifecycle);
     if (query?.catalogScope) params.append('catalogScope', query.catalogScope);
     if (query?.catalogSources) params.append('catalogSources', query.catalogSources.join(','));
+    if (query?.supplierId) params.append('supplierId', query.supplierId);
 
     const queryString = params.toString();
     return apiClient.get<Product[] | PaginatedResponse<Product>>(`/products${queryString ? `?${queryString}` : ''}`);
