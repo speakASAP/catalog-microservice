@@ -41,6 +41,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       icon: '📦',
     },
     {
+      title: 'Suppliers',
+      href: '/dashboard/suppliers',
+      icon: '🏭',
+    },
+    {
       title: 'Categories',
       href: '/dashboard/categories',
       icon: '📁',
