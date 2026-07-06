@@ -39,7 +39,7 @@ describe('LoggerService', () => {
     expect(mockedAxios.post).toHaveBeenCalledWith(
       'http://logging-microservice:3300/api/custom-logs',
       expect.objectContaining({
-        level: 'log',
+        level: 'info',
         message: 'catalog started',
         service: 'catalog-test',
         metadata: { context: 'Bootstrap' },

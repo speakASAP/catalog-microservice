@@ -10,9 +10,10 @@ type CatalogWriteAuditDetails = {
 };
 
 type LogLevel = 'log' | 'error' | 'warn' | 'debug' | 'verbose';
+type CentralLogLevel = 'info' | 'error' | 'warn' | 'debug';
 
 type CentralLogPayload = {
-  level: LogLevel;
+  level: CentralLogLevel;
   message: string;
   service: string;
   timestamp: string;
@@ -150,7 +151,7 @@ export class LoggerService implements NestLoggerService {
     const correlationId =
       this.extractCorrelationId(options.request) || this.extractCorrelationIdFromMetadata(options.metadata);
     const payload: CentralLogPayload = {
-      level,
+      level: this.toCentralLevel(level),
       message: this.redactString(message),
       service: this.serviceName,
       timestamp: new Date().toISOString(),
@@ -167,6 +168,11 @@ export class LoggerService implements NestLoggerService {
     void axios
       .post(endpoint, payload, { timeout })
       .catch(() => undefined);
+  }
+
+  private toCentralLevel(level: LogLevel): CentralLogLevel {
+    if (level === 'error' || level === 'warn' || level === 'debug') return level;
+    return 'info';
   }
 
   private centralLoggingEndpoint(): string | null {
