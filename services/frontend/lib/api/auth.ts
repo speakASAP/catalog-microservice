@@ -75,7 +75,7 @@ export const authSessionKeys = {
 export const authApi = {
   async login(credentials: LoginCredentials) {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials),
@@ -122,7 +122,7 @@ export const authApi = {
   },
 
   async register(data: RegisterData) {
-    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+    const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -147,7 +147,7 @@ export const authApi = {
       return { success: false, error: 'No token available' };
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
+    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -179,7 +179,7 @@ export const authApi = {
       offset: String(params.offset ?? 0),
     });
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/admin/users?${search.toString()}`, {
+    const response = await fetch(`${API_BASE_URL}/auth/admin/users?${search.toString()}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
