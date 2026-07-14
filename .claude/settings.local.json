@@ -6,9 +6,9 @@
       "Skill(update-config)",
       "mcp__plugin_playwright_playwright__browser_navigate",
       "mcp__plugin_playwright_playwright__browser_evaluate",
-      "Bash(/usr/bin/find *",
       "WebFetch(domain:aukro.cz)",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "Bash(/usr/bin/find *)"
     ]
   },
   "enableAllProjectMcpServers": true,

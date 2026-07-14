@@ -53,7 +53,7 @@ process.stdout.write(badPods.join("\n"));
 }
 
 echo -e "${BLUE}╔════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║  catalog-microservice - Kubernetes Deployment${NC}"
+echo -e "${BLUE}║      catalog-microservice - Kubernetes Deployment      ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════════════════════╝${NC}"
 
 if [ ! -d "$K8S_DIR" ]; then
