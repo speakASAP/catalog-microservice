@@ -176,14 +176,25 @@ export default function MediaManagement({ productId }: MediaManagementProps) {
     }
   };
 
-  const persistMediaOrder = async (orderedMedia: Media[]) => {
-    await Promise.all(
-      orderedMedia.map((item, position) => (
-        item.position === position
-          ? Promise.resolve()
-          : mediaApi.updateMedia(item.id, { position })
-      )),
+  const persistMediaOrder = async (
+    orderedMedia: Media[],
+    previousPositions: Map<string, number>,
+  ) => {
+    const updates = orderedMedia
+      .map((item, position) => ({ item, position }))
+      .filter(({ item, position }) => previousPositions.get(item.id) !== position);
+
+    if (updates.length === 0) {
+      return;
+    }
+
+    const results = await Promise.all(
+      updates.map(({ item, position }) => mediaApi.updateMedia(item.id, { position })),
     );
+
+    if (results.some((response) => !response.success)) {
+      throw new Error('Failed to persist media order');
+    }
   };
 
   const moveMedia = async (id: string, offset: number) => {
@@ -199,6 +210,7 @@ export default function MediaManagement({ productId }: MediaManagementProps) {
       return;
     }
 
+    const previousPositions = new Map(media.map((item, index) => [item.id, index]));
     const nextMedia = [...media];
     const [movedItem] = nextMedia.splice(currentIndex, 1);
     nextMedia.splice(targetIndex, 0, movedItem);
@@ -207,7 +219,8 @@ export default function MediaManagement({ productId }: MediaManagementProps) {
     setMedia(reorderedMedia);
     setReordering(true);
     try {
-      await persistMediaOrder(reorderedMedia);
+      await persistMediaOrder(reorderedMedia, previousPositions);
+      await loadMedia();
     } catch (error) {
       console.error('Failed to reorder media:', error);
       alert('Failed to reorder media');
