@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { productsApi } from '@/lib/api/products';
+import { mediaApi } from '@/lib/api/media';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function CreateProductPage() {
@@ -22,6 +23,8 @@ export default function CreateProductPage() {
     isActive: true,
     resaleEnabled: false,
   });
+  const [photoUrls, setPhotoUrls] = useState<string[]>(['']);
+  const [videoUrl, setVideoUrl] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -29,6 +32,18 @@ export default function CreateProductPage() {
       ...formData,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
     });
+  };
+
+  const handlePhotoUrlChange = (index: number, value: string) => {
+    setPhotoUrls((current) => current.map((url, i) => (i === index ? value : url)));
+  };
+
+  const addPhotoUrlField = () => {
+    setPhotoUrls((current) => [...current, '']);
+  };
+
+  const removePhotoUrlField = (index: number) => {
+    setPhotoUrls((current) => current.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,8 +74,34 @@ export default function CreateProductPage() {
       }
 
       const response = await productsApi.createProduct(productData);
-      if (response.success) {
-        router.push('/dashboard/products');
+      if (response.success && response.data) {
+        const productId = response.data.id;
+        const trimmedPhotoUrls = photoUrls.map((url) => url.trim()).filter(Boolean);
+        const trimmedVideoUrl = videoUrl.trim();
+
+        await Promise.all([
+          ...trimmedPhotoUrls.map((url, index) =>
+            mediaApi.createMedia({
+              productId,
+              type: 'image',
+              url,
+              position: index,
+              isPrimary: index === 0,
+            }),
+          ),
+          ...(trimmedVideoUrl
+            ? [
+                mediaApi.createMedia({
+                  productId,
+                  type: 'video',
+                  url: trimmedVideoUrl,
+                  position: trimmedPhotoUrls.length,
+                }),
+              ]
+            : []),
+        ]);
+
+        router.push(`/dashboard/products/${productId}`);
       } else {
         alert('Failed to create product');
       }
@@ -227,17 +268,62 @@ export default function CreateProductPage() {
             />
           </div>
 
+          <div className="md:col-span-2 rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <p className="text-sm font-semibold text-amber-800">
+              New products always start as a Draft, regardless of this setting.
+            </p>
+            <p className="text-sm text-amber-700 mt-1">
+              Add photo/video links below, then activate the product from the product page once it&apos;s ready to sell.
+            </p>
+          </div>
+
           <div className="md:col-span-2">
-            <label className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                name="isActive"
-                checked={formData.isActive}
-                onChange={handleChange}
-                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <span className="text-sm font-semibold text-gray-700">Product is active</span>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Photo links
             </label>
+            <div className="space-y-3">
+              {photoUrls.map((url, index) => (
+                <div key={index} className="flex gap-2">
+                  <input
+                    type="url"
+                    value={url}
+                    onChange={(e) => handlePhotoUrlChange(index, e.target.value)}
+                    className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    placeholder="https://example.com/photo.jpg"
+                  />
+                  {photoUrls.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removePhotoUrlField(index)}
+                      className="px-4 py-3 border-2 border-gray-300 rounded-xl font-semibold text-gray-600 hover:bg-gray-50 transition-all"
+                      aria-label="Remove photo link"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addPhotoUrlField}
+                className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-all"
+              >
+                + Add another photo link
+              </button>
+            </div>
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Video link
+            </label>
+            <input
+              type="url"
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              placeholder="https://example.com/video.mp4"
+            />
           </div>
 
           <div className="md:col-span-2">

@@ -1,0 +1,834 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - paragraph [ref=e5]:
+        - heading "Aukro používá soubory cookies" [level=5] [ref=e6]
+        - text: My i
+        - link "naši partneři" [ref=e7] [cursor=pointer]:
+          - /url: javascript:Didomi.preferences.show('vendors')
+        - text: ukládáme a přistupujeme k informacím z vašeho zařízení, které nejsou citlivé, jako soubory cookie nebo jedinečný identifikátor zařízení a zpracováváme osobní údaje jako IP adresy a identifikátory souborů cookie za účelem zpracování dat, jako je zobrazování personalizovaných reklam, měření preferencí našich návštěvníků atd. Vaše předvolby můžete kdykoli změnit v našich Zásadách ochrany osobních údajů na tomto webu. Někteří partneři nepožadují souhlas se zpracováním vašich údajů a spoléhají se na svůj oprávněný obchodní zájem. Proti zpracování těchto údajů můžete vznést námitku kliknutím na „Další informace".
+      - button "Podívejte se na našich 29 partnerů" [ref=e8] [cursor=pointer]
+      - paragraph [ref=e10]:
+        - heading "My a naši partneři zpracováváme údaje následujícím způsobem:" [level=2] [ref=e11]
+        - generic [ref=e12]: Personalizovaná reklama a obsah, měření reklam a obsahu, průzkum publika a rozvoj služeb, Přesné údaje o zeměpisné poloze a identifikace pomocí skenování zařízení, Ukládání a/nebo přístup k informacím v zařízení, Ukládání a/nebo přístup k informacím zařízení, Zpracování údajů vydavateli a dalšími partnery
+    - generic [ref=e13]:
+      - 'button "Další informace: Nastavte své souhlasy" [ref=e14] [cursor=pointer]': Další informace
+      - 'button "Odmítnout: Nesouhlasit s naším zpracováním údajů a zavřít" [ref=e15] [cursor=pointer]': Odmítnout
+      - 'button "Souhlasím a pokračovat: Souhlasit s naším zpracováním údajů a zavřít" [ref=e16] [cursor=pointer]': Souhlasím a pokračovat
+  - generic [ref=e18]:
+    - button "Přeskočit na hlavní obsah" [ref=e19]
+    - generic [ref=e22]:
+      - generic [ref=e23]: warning
+      - generic [ref=e24]: Vážení uživatelé, z důvodu výpadku na straně banky evidujeme problémy s párováním plateb. Načtení plateb tak může být zpožděno, data nahráváme do systému manuálně. Přijetí plateb není ohroženo. Děkujeme za pochopení.
+      - generic [ref=e26] [cursor=pointer]: close
+    - generic [ref=e31]:
+      - generic [ref=e34]:
+        - link "Logo Aukro.cz" [ref=e37] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e66] [cursor=pointer]:
+          - button "Vyhledat" [ref=e67]
+          - searchbox "Hledat" [ref=e75]
+          - combobox "Výběr kategorie" [ref=e78]:
+            - option "Všechny kategorie" [selected]
+            - option "Aukro Sběratelství & Umění"
+            - option "Najít uživatele"
+            - option "Skončené"
+            - option "─" [disabled]
+            - option "Starožitnosti"
+            - option "Umění"
+            - option "Starožitný porcelán"
+            - option "Antikvariát"
+            - option "Numismatika"
+            - option "Vojenské sběratelské předměty"
+            - option "Bankovky"
+            - option "Modelářství"
+            - option "Filatelie"
+            - option "Cenné papíry"
+            - option "Faleristika"
+            - option "Filumenie"
+            - option "Kinder vajíčka"
+            - option "Memorabilie"
+            - option "Minerály a zkameněliny"
+            - option "Nápojový průmysl"
+            - option "Odznaky, nášivky a medaile"
+            - option "Pohlednice"
+            - option "Sportovní sbírky"
+            - option "Telefonní karty do sbírek"
+            - option "Ostatní sběratelské předměty"
+            - option "Merch Influencerů"
+            - option "Hudební merch - CZ/SK"
+            - option "Hudební merch - Zahraniční"
+            - option "Sportovní merch"
+            - option "Filmový a seriálový merch"
+            - option "Kulturní merch"
+            - option "Herní merch"
+            - option "Knižní a komiksový merch"
+            - option "Merch firem a značek"
+            - option "Politický merch"
+            - option "Knihy"
+            - option "Komiksy"
+            - option "Časopisy"
+            - option "Učebnice"
+            - option "Mapy a průvodce"
+            - option "Kalendáře"
+            - option "Noviny"
+            - option "Hudba"
+            - option "Hudební nástroje a aparatury"
+            - option "Film"
+            - option "Příslušenství k hudbě a filmu"
+            - option "Ostatní v kategorii hudba a film"
+        - generic [ref=e80]:
+          - button "Účet uživatele" [ref=e83] [cursor=pointer]:
+            - generic [ref=e84]: account_circle
+          - button "Košík" [ref=e89] [cursor=pointer]
+          - generic "Tlačítko Menu" [ref=e96] [cursor=pointer]: menu
+      - generic [ref=e101]:
+        - link "Numismatika" [ref=e103] [cursor=pointer]:
+          - /url: https://aukro.cz/numismatika
+        - link "Bankovky" [ref=e106] [cursor=pointer]:
+          - /url: https://aukro.cz/bankovky
+        - link "Militaria" [ref=e109] [cursor=pointer]:
+          - /url: https://aukro.cz/vojenske-sberatelske-predmety
+        - link "Starožitnosti" [ref=e112] [cursor=pointer]:
+          - /url: https://aukro.cz/starozitnosti
+        - link "Umění" [ref=e115] [cursor=pointer]:
+          - /url: https://aukro.cz/umeni
+        - link "Modelářství" [ref=e118] [cursor=pointer]:
+          - /url: https://aukro.cz/modelarstvi
+        - link "Filatelie" [ref=e121] [cursor=pointer]:
+          - /url: https://aukro.cz/filatelie
+        - generic [ref=e123]: Vše
+    - button "Přeskočit na hlavní obsah" [ref=e145]
+    - main [ref=e147]:
+      - generic [ref=e150]:
+        - generic [ref=e151]: warning
+        - generic [ref=e152]: Vážení uživatelé, z důvodu výpadku na straně banky evidujeme problémy s párováním plateb. Načtení plateb tak může být zpožděno, data nahráváme do systému manuálně. Přijetí plateb není ohroženo. Děkujeme za pochopení.
+        - generic [ref=e154] [cursor=pointer]: close
+      - generic [ref=e167]:
+        - generic [ref=e169]:
+          - link "Tlačítko domů" [ref=e171] [cursor=pointer]:
+            - /url: /
+          - link "Tlačítko domů" [ref=e187] [cursor=pointer]:
+            - /url: /sberatelstvi
+            - generic [ref=e188]: Sběratelství
+          - link "Tlačítko domů" [ref=e197] [cursor=pointer]:
+            - /url: /vojenske-sberatelske-predmety
+            - generic [ref=e198]: Vojenské
+          - link "Tlačítko domů" [ref=e207] [cursor=pointer]:
+            - /url: /sberatelske-zbrane
+            - generic [ref=e208]: Zbraně
+          - link "Tlačítko domů" [ref=e217] [cursor=pointer]:
+            - /url: /sberatelske-chladne-zbrane
+            - generic [ref=e218]: Chladné zbraně
+            - generic [ref=e219]: (1875 nabídek)
+        - generic [ref=e223]:
+          - generic [ref=e224]: SKONČENO
+          - generic [ref=e226]: Nabídka už bohužel skončila, ale níže jsme vám našli pár podobných.
+        - generic [ref=e230]:
+          - heading "Nabídka již skončila. Podívejte se na podobné nabídky" [level=2] [ref=e231]
+          - generic [ref=e234]:
+            - generic [ref=e236]:
+              - link "Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD Oblíbené Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD 4 přihazují 160 Kč Končí za 1 den, 19 hodin" [ref=e239] [cursor=pointer]:
+                - /url: /rarita-nuz-dyka-cccp-sovetsky-bodak-armada-valka-dustojnik-znacen-nkvd-7125587036
+                - generic [ref=e240]:
+                  - img "Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD" [ref=e243]
+                  - button "Oblíbené" [ref=e246]:
+                    - generic [ref=e247]: "12"
+                - generic [ref=e256]:
+                  - heading "Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD" [level=2] [ref=e259]
+                  - generic [ref=e261]:
+                    - generic [ref=e262]:
+                      - generic [ref=e263]: 4 přihazují
+                      - generic [ref=e264]: 160 Kč
+                    - generic [ref=e277]:
+                      - generic [ref=e278]: Končí za
+                      - generic [ref=e279]: 1 den, 19 hodin
+              - link "Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD Oblíbené Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD 8 přihazuje 290 Kč Končí za 1 den, 19 hodin" [ref=e283] [cursor=pointer]:
+                - /url: /rarita-nuz-dyka-cccp-sovetsky-bodak-armada-valka-dustojnik-znacen-nkvd-7125586930
+                - generic [ref=e284]:
+                  - img "Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD" [ref=e287]
+                  - button "Oblíbené" [ref=e290]:
+                    - generic [ref=e291]: "19"
+                - generic [ref=e300]:
+                  - heading "Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD" [level=2] [ref=e303]
+                  - generic [ref=e305]:
+                    - generic [ref=e306]:
+                      - generic [ref=e307]: 8 přihazuje
+                      - generic [ref=e308]: 290 Kč
+                    - generic [ref=e321]:
+                      - generic [ref=e322]: Končí za
+                      - generic [ref=e323]: 1 den, 19 hodin
+              - link "Rarita CCCP Sovětská Lahev Armáda Válka Důstojník Nůž Dýka SSSR Hvězda Oblíbené Rarita CCCP Sovětská Lahev Armáda Válka Důstojník Nůž Dýka SSSR Hvězda 1 přihazuje 1 Kč Končí za 1 den, 20 hodin" [ref=e327] [cursor=pointer]:
+                - /url: /rarita-cccp-sovetska-lahev-armada-valka-dustojnik-nuz-dyka-sssr-hvezda-7125590001
+                - generic [ref=e328]:
+                  - img "Rarita CCCP Sovětská Lahev Armáda Válka Důstojník Nůž Dýka SSSR Hvězda" [ref=e331]
+                  - button "Oblíbené" [ref=e334]:
+                    - generic [ref=e335]: "7"
+                - generic [ref=e344]:
+                  - heading "Rarita CCCP Sovětská Lahev Armáda Válka Důstojník Nůž Dýka SSSR Hvězda" [level=2] [ref=e347]
+                  - generic [ref=e349]:
+                    - generic [ref=e350]:
+                      - generic [ref=e351]: 1 přihazuje
+                      - generic [ref=e352]: 1 Kč
+                    - generic [ref=e365]:
+                      - generic [ref=e366]: Končí za
+                      - generic [ref=e367]: 1 den, 20 hodin
+              - link "SOVĚTSKÝ NŮŽ CCCP VÁLKA SBĚRATELSKÝ NŮŽ CCCP USSR KOST RUSKO Oblíbené TOP Seller SOVĚTSKÝ NŮŽ CCCP VÁLKA SBĚRATELSKÝ NŮŽ CCCP USSR KOST RUSKO 9x zakoupeno 1 000 Kč Běžná cena 1 800 Kč -44 % Končí za 2 dny, 19 hodin" [ref=e371] [cursor=pointer]:
+                - /url: /sovetsky-nuz-cccp-valka-sberatelsky-nuz-cccp-ussr-kost-rusko-7109767481
+                - generic [ref=e372]:
+                  - img "SOVĚTSKÝ NŮŽ CCCP VÁLKA SBĚRATELSKÝ NŮŽ CCCP USSR KOST RUSKO" [ref=e375]
+                  - button "Oblíbené" [ref=e378]:
+                    - generic [ref=e379]: "24"
+                  - generic [ref=e388]: TOP Seller
+                - generic [ref=e398]:
+                  - heading "SOVĚTSKÝ NŮŽ CCCP VÁLKA SBĚRATELSKÝ NŮŽ CCCP USSR KOST RUSKO" [level=2] [ref=e401]
+                  - generic [ref=e403]:
+                    - generic [ref=e404]:
+                      - generic [ref=e405]: 9x zakoupeno
+                      - generic [ref=e406]: 1 000 Kč
+                    - generic [ref=e419]:
+                      - generic [ref=e420]: Běžná cena
+                      - generic [ref=e423]:
+                        - generic [ref=e424]: 1 800 Kč
+                        - generic [ref=e425]: "-44 %"
+                    - generic [ref=e426]:
+                      - generic [ref=e427]: Končí za
+                      - generic [ref=e428]: 2 dny, 19 hodin
+              - link "SOVĚTSKÝ NŮŽ CCCP VÁLKA SBĚRATELSKÝ NŮŽ CCCP USSR KOST RUSKO Oblíbené TOP Seller SOVĚTSKÝ NŮŽ CCCP VÁLKA SBĚRATELSKÝ NŮŽ CCCP USSR KOST RUSKO 14x zakoupeno 1 000 Kč Běžná cena 1 800 Kč -44 % Končí za 27 dní, 18 hodin" [ref=e432] [cursor=pointer]:
+                - /url: /sovetsky-nuz-cccp-valka-sberatelsky-nuz-cccp-ussr-kost-rusko-7100249538
+                - generic [ref=e433]:
+                  - img "SOVĚTSKÝ NŮŽ CCCP VÁLKA SBĚRATELSKÝ NŮŽ CCCP USSR KOST RUSKO" [ref=e436]
+                  - button "Oblíbené" [ref=e439]:
+                    - generic [ref=e440]: "31"
+                  - generic [ref=e449]: TOP Seller
+                - generic [ref=e459]:
+                  - heading "SOVĚTSKÝ NŮŽ CCCP VÁLKA SBĚRATELSKÝ NŮŽ CCCP USSR KOST RUSKO" [level=2] [ref=e462]
+                  - generic [ref=e464]:
+                    - generic [ref=e465]:
+                      - generic [ref=e466]: 14x zakoupeno
+                      - generic [ref=e467]: 1 000 Kč
+                    - generic [ref=e480]:
+                      - generic [ref=e481]: Běžná cena
+                      - generic [ref=e484]:
+                        - generic [ref=e485]: 1 800 Kč
+                        - generic [ref=e486]: "-44 %"
+                    - generic [ref=e487]:
+                      - generic [ref=e488]: Končí za
+                      - generic [ref=e489]: 27 dní, 18 hodin
+              - link "vychazkovy bodak mauser 1898 , 1 sv valka značen vyrobcem a rokem, top Oblíbené vychazkovy bodak mauser 1898 , 1 sv valka značen vyrobcem a rokem, top Kup teď 4 800 Kč Končí za 3 dny, 19 hodin" [ref=e493] [cursor=pointer]:
+                - /url: /vychazkovy-bodak-mauser-1898-1-sv-valka-znacen-vyrobcem-a-rokem-top-7123741546
+                - generic [ref=e494]:
+                  - img "vychazkovy bodak mauser 1898 , 1 sv valka značen vyrobcem a rokem, top" [ref=e497]
+                  - button "Oblíbené" [ref=e500]:
+                    - generic [ref=e501]: "15"
+                - generic [ref=e510]:
+                  - heading "vychazkovy bodak mauser 1898 , 1 sv valka značen vyrobcem a rokem, top" [level=2] [ref=e513]
+                  - generic [ref=e515]:
+                    - generic [ref=e516]:
+                      - generic [ref=e517]: Kup teď
+                      - generic [ref=e518]: 4 800 Kč
+                    - generic [ref=e521]:
+                      - generic [ref=e522]: Končí za
+                      - generic [ref=e523]: 3 dny, 19 hodin
+              - link "Rarita! Dýka hasičského důstojníka, Francie, II. impérium. Oblíbené Rarita! Dýka hasičského důstojníka, Francie, II. impérium. 8 přihazuje 270 Kč Končí za 5 dní, 19 hodin" [ref=e527] [cursor=pointer]:
+                - /url: /rarita-dyka-hasicskeho-dustojnika-francie-ii-imperium-7125871583
+                - generic [ref=e528]:
+                  - img "Rarita! Dýka hasičského důstojníka, Francie, II. impérium." [ref=e531]
+                  - button "Oblíbené" [ref=e534]:
+                    - generic [ref=e535]: "24"
+                - generic [ref=e544]:
+                  - heading "Rarita! Dýka hasičského důstojníka, Francie, II. impérium." [level=2] [ref=e547]
+                  - generic [ref=e549]:
+                    - generic [ref=e550]:
+                      - generic [ref=e551]: 8 přihazuje
+                      - generic [ref=e552]: 270 Kč
+                    - generic [ref=e565]:
+                      - generic [ref=e566]: Končí za
+                      - generic [ref=e567]: 5 dní, 19 hodin
+            - button "Další" [ref=e595] [cursor=pointer]
+        - generic [ref=e604]:
+          - generic [ref=e605]:
+            - generic [ref=e606]:
+              - img "Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD - Vojenské sběratelské předměty" [ref=e610] [cursor=pointer]
+              - img "Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD - Vojenské sběratelské předměty" [ref=e614] [cursor=pointer]
+              - img "Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD - Vojenské sběratelské předměty" [ref=e618] [cursor=pointer]
+              - img "Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD - Vojenské sběratelské předměty" [ref=e622] [cursor=pointer]
+              - img "Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD - Vojenské sběratelské předměty" [ref=e626] [cursor=pointer]
+              - img "Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD - Vojenské sběratelské předměty" [ref=e630] [cursor=pointer]
+              - img "Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD - Vojenské sběratelské předměty" [ref=e634] [cursor=pointer]
+              - generic [ref=e635]:
+                - generic [ref=e636] [cursor=pointer]: "+2"
+                - img "Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD - Vojenské sběratelské předměty" [ref=e639] [cursor=pointer]
+            - img "Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD - Vojenské sběratelské předměty" [ref=e642]
+          - generic [ref=e643]:
+            - heading "Název aukce" [level=1] [ref=e648]:
+              - generic [ref=e649]: Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD
+            - generic [ref=e655]:
+              - generic [ref=e657]:
+                - generic [ref=e659]:
+                  - generic [ref=e660]:
+                    - generic "Stav aukce" [ref=e661]: Skončeno
+                    - generic [ref=e664]:
+                      - generic [ref=e665]:
+                        - generic [ref=e666]: person
+                        - generic [ref=e669]: 5 přihazovalo
+                      - generic [ref=e670]: 993 Kč
+                    - generic [ref=e681]:
+                      - generic [ref=e682]: Ukončeno v úterý 7. 7. 2026, 23:07:00
+                      - generic [ref=e687]: Vyhráno uživatelem a...z
+                  - button [ref=e697] [cursor=pointer]:
+                    - img "button icon" [ref=e701]:
+                      - generic [ref=e702]: Zobrazit podobné nabídky
+                - generic [ref=e705]:
+                  - generic [ref=e717]:
+                    - text: Bezpečné přihazování s
+                    - link "Aukro Ochranou kupujících" [ref=e718] [cursor=pointer]:
+                      - /url: https://aukro.cz/stranka/aukro-ochrana-kupujicich
+                  - generic [ref=e731]:
+                    - text: Nakupujete od
+                    - link "ověřeného prodejce" [ref=e732] [cursor=pointer]:
+                      - /url: https://aukro.cz/stranka/aukro-ochrana-kupujicich#dobryprodejce
+                  - link "Jak funguje aukce?" [ref=e747] [cursor=pointer]:
+                    - /url: https://aukro.cz/stranka/aukce-na-aukru
+              - generic [ref=e748]:
+                - generic [ref=e753]:
+                  - generic [ref=e754]: Prodejce
+                  - generic [ref=e761]:
+                    - link "Odkaz na Prodejce" [ref=e762] [cursor=pointer]:
+                      - /url: /uzivatel/sebastiaan69/nabidky
+                      - generic [ref=e763]: account_circle
+                    - generic [ref=e772]:
+                      - link "sebastiaan69" [ref=e773] [cursor=pointer]:
+                        - /url: /uzivatel/sebastiaan69/nabidky
+                      - generic [ref=e788]:
+                        - link "100 % (882)" [ref=e789] [cursor=pointer]:
+                          - /url: /uzivatel/sebastiaan69
+                          - generic [ref=e796]: 100 %
+                          - generic [ref=e797]: (882)
+                        - link "230" [ref=e798] [cursor=pointer]:
+                          - /url: /uzivatel/sebastiaan69
+                        - link "Odkaz na Prodejce" [ref=e807] [cursor=pointer]:
+                          - /url: /uzivatel/sebastiaan69/nabidky
+                      - generic [ref=e808]:
+                        - link "praha" [ref=e809] [cursor=pointer]:
+                          - /url: /uzivatel/sebastiaan69/nabidky
+                        - link "Odkaz na Prodejce" [ref=e818] [cursor=pointer]:
+                          - /url: /uzivatel/sebastiaan69/nabidky
+                  - generic [ref=e820]:
+                    - generic "Přidat do oblíbených" [ref=e822]:
+                      - button [ref=e823] [cursor=pointer]:
+                        - img "button icon" [ref=e827]
+                    - link [ref=e837] [cursor=pointer]:
+                      - /url: /uzivatel/sebastiaan69/nabidky
+                      - button [ref=e839]:
+                        - img "button icon" [ref=e843]:
+                          - generic [ref=e844]: Všechny nabídky
+                - generic [ref=e850]:
+                  - generic [ref=e851]: Doprava
+                  - generic [ref=e868] [cursor=pointer]:
+                    - generic [ref=e869]: Doporučená zásilka
+                    - generic [ref=e870]: 99 Kč
+                  - generic [ref=e871]: Podrobnosti
+                - generic [ref=e877]:
+                  - generic [ref=e878]: Platba a služby
+                  - generic [ref=e881]:
+                    - generic [ref=e884] [cursor=pointer]:
+                      - generic [ref=e885]: Kartou online
+                      - generic [ref=e932]: Bankovním převodem
+                    - generic [ref=e945] [cursor=pointer]:
+                      - generic [ref=e947]:
+                        - text: Aukro Ochrana kupujících
+                        - generic [ref=e958]: 5 Kč + 5 %
+                      - generic [ref=e959]: nebo
+                      - generic [ref=e965]:
+                        - text: Servisní poplatek
+                        - generic [ref=e966]: 2,5 %
+                  - generic [ref=e967]: Podrobnosti
+                - button [ref=e975] [cursor=pointer]:
+                  - img "button icon" [ref=e979]:
+                    - generic [ref=e980]:
+                      - generic [ref=e981]: share
+                      - generic [ref=e985]: Sdílet nabídku
+          - generic [ref=e990]:
+            - generic [ref=e991]: Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD
+            - generic [ref=e992]:
+              - generic [ref=e993]: Popis předmětu
+              - generic [ref=e996]:
+                - paragraph [ref=e1010]: Nabízím velice zajímavý nůž CCCP, na čepeli značený NKVD-viz foto, v krásném původním stavu
+                - generic [ref=e1011]:
+                  - separator [ref=e1012]
+                  - generic [ref=e1013]:
+                    - link "Portepe" [ref=e1015] [cursor=pointer]:
+                      - /url: https://aukro.cz/lp/portepe
+                    - link "Uton" [ref=e1027] [cursor=pointer]:
+                      - /url: https://aukro.cz/lp/mikov-uton
+                    - link "Mikov" [ref=e1039] [cursor=pointer]:
+                      - /url: https://aukro.cz/lp/mikov
+                    - link "Nože" [ref=e1051] [cursor=pointer]:
+                      - /url: https://aukro.cz/lp/noze
+                    - link "Victorinox" [ref=e1063] [cursor=pointer]:
+                      - /url: https://aukro.cz/lp/victorinox
+                    - link "Poplašné pistole" [ref=e1075] [cursor=pointer]:
+                      - /url: https://aukro.cz/lp/poplasne-pistole
+                    - link "Zásobníky na náboje" [ref=e1087] [cursor=pointer]:
+                      - /url: https://aukro.cz/lp/zasobniky-na-naboje
+                    - link "Vetterli" [ref=e1099] [cursor=pointer]:
+                      - /url: https://aukro.cz/lp/vetterli
+                    - link "Sig Sauer" [ref=e1111] [cursor=pointer]:
+                      - /url: https://aukro.cz/lp/sig-sauer
+                    - link "Lefaucheux" [ref=e1123] [cursor=pointer]:
+                      - /url: https://aukro.cz/lp/lefaucheux
+                    - link "Vysvědčení" [ref=e1135] [cursor=pointer]:
+                      - /url: https://aukro.cz/lp/vysvedceni
+                    - link "Gdyně" [ref=e1147] [cursor=pointer]:
+                      - /url: https://aukro.cz/lp/gdyne
+                    - link "Red Bull" [ref=e1159] [cursor=pointer]:
+                      - /url: https://aukro.cz/lp/red-bull
+                    - link "Gewehr 88" [ref=e1171] [cursor=pointer]:
+                      - /url: https://aukro.cz/lp/gewehr-88
+                    - link "Kahany" [ref=e1183] [cursor=pointer]:
+                      - /url: https://aukro.cz/lp/kahany
+                    - link "Vojenské telefony" [ref=e1195] [cursor=pointer]:
+                      - /url: https://aukro.cz/lp/vojenske-telefony
+                    - link "Rambo nože" [ref=e1207] [cursor=pointer]:
+                      - /url: https://aukro.cz/lp/rambo-noze
+                    - link "Brokovnice" [ref=e1219] [cursor=pointer]:
+                      - /url: https://aukro.cz/lp/brokovnice
+                    - link "Schutzstaffel (SS)" [ref=e1231] [cursor=pointer]:
+                      - /url: https://aukro.cz/lp/schutzstaffel-ss
+                    - link "Český lev" [ref=e1243] [cursor=pointer]:
+                      - /url: https://aukro.cz/lp/cesky-lev
+                    - link "Pistole P08" [ref=e1255] [cursor=pointer]:
+                      - /url: https://aukro.cz/lp/pistole-p08
+                    - link "Rumunské vojenské sběratelské předměty" [ref=e1267] [cursor=pointer]:
+                      - /url: https://aukro.cz/lp/rumunske-vojenske-sberatelske-predmety
+                    - link "Limoges" [ref=e1279] [cursor=pointer]:
+                      - /url: https://aukro.cz/lp/limoges
+                - generic [ref=e1290]:
+                  - generic [ref=e1291]: Nabídka č. 7124914683
+                  - generic [ref=e1292]: Vystaveno 30. 6. 2026, 23:07
+                  - generic [ref=e1293]: "Zobrazení: 58"
+          - generic [ref=e1295]:
+            - generic [ref=e1297]:
+              - heading "Podobné nabídky tohoto prodejce" [level=2] [ref=e1298]
+              - generic [ref=e1315]:
+                - link "Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD Oblíbené Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD 8 přihazuje 290 Kč Končí za 1 den, 19 hodin" [ref=e1318] [cursor=pointer]:
+                  - /url: /rarita-nuz-dyka-cccp-sovetsky-bodak-armada-valka-dustojnik-znacen-nkvd-7125586930
+                  - generic [ref=e1319]:
+                    - img "Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD" [ref=e1322]
+                    - button "Oblíbené" [ref=e1325]:
+                      - generic [ref=e1326]: "19"
+                  - generic [ref=e1335]:
+                    - heading "Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD" [level=2] [ref=e1338]
+                    - generic [ref=e1340]:
+                      - generic [ref=e1341]:
+                        - generic [ref=e1342]: 8 přihazuje
+                        - generic [ref=e1343]: 290 Kč
+                      - generic [ref=e1356]:
+                        - generic [ref=e1357]: Končí za
+                        - generic [ref=e1358]: 1 den, 19 hodin
+                - link "Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD Oblíbené Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD 4 přihazují 160 Kč Končí za 1 den, 19 hodin" [ref=e1362] [cursor=pointer]:
+                  - /url: /rarita-nuz-dyka-cccp-sovetsky-bodak-armada-valka-dustojnik-znacen-nkvd-7125587036
+                  - generic [ref=e1363]:
+                    - img "Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD" [ref=e1366]
+                    - button "Oblíbené" [ref=e1369]:
+                      - generic [ref=e1370]: "12"
+                  - generic [ref=e1379]:
+                    - heading "Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD" [level=2] [ref=e1382]
+                    - generic [ref=e1384]:
+                      - generic [ref=e1385]:
+                        - generic [ref=e1386]: 4 přihazují
+                        - generic [ref=e1387]: 160 Kč
+                      - generic [ref=e1400]:
+                        - generic [ref=e1401]: Končí za
+                        - generic [ref=e1402]: 1 den, 19 hodin
+                - link "Rarita CCCP Sovětská Lahev Armáda Válka Důstojník Nůž Dýka SSSR Hvězda Oblíbené Rarita CCCP Sovětská Lahev Armáda Válka Důstojník Nůž Dýka SSSR Hvězda 1 přihazuje 1 Kč Končí za 1 den, 20 hodin" [ref=e1406] [cursor=pointer]:
+                  - /url: /rarita-cccp-sovetska-lahev-armada-valka-dustojnik-nuz-dyka-sssr-hvezda-7125590001
+                  - generic [ref=e1407]:
+                    - img "Rarita CCCP Sovětská Lahev Armáda Válka Důstojník Nůž Dýka SSSR Hvězda" [ref=e1410]
+                    - button "Oblíbené" [ref=e1413]:
+                      - generic [ref=e1414]: "7"
+                  - generic [ref=e1423]:
+                    - heading "Rarita CCCP Sovětská Lahev Armáda Válka Důstojník Nůž Dýka SSSR Hvězda" [level=2] [ref=e1426]
+                    - generic [ref=e1428]:
+                      - generic [ref=e1429]:
+                        - generic [ref=e1430]: 1 přihazuje
+                        - generic [ref=e1431]: 1 Kč
+                      - generic [ref=e1444]:
+                        - generic [ref=e1445]: Končí za
+                        - generic [ref=e1446]: 1 den, 20 hodin
+            - generic [ref=e1451]:
+              - heading "Více nabídek od tohoto prodejce" [level=2] [ref=e1452]
+              - generic [ref=e1469]:
+                - link "Rarita Autíčko Kov Originál SchucoMB Auto Veterán Klíček Německo 1968 Oblíbené Rarita Autíčko Kov Originál SchucoMB Auto Veterán Klíček Německo 1968 3 přihazují 137 Kč Končí za 1 den, 20 hodin" [ref=e1472] [cursor=pointer]:
+                  - /url: /rarita-auticko-kov-original-schucomb-auto-veteran-klicek-nemecko-1968-7125589938
+                  - generic [ref=e1473]:
+                    - img "Rarita Autíčko Kov Originál SchucoMB Auto Veterán Klíček Německo 1968" [ref=e1476]
+                    - button "Oblíbené" [ref=e1479]:
+                      - generic [ref=e1480]: "14"
+                  - generic [ref=e1489]:
+                    - heading "Rarita Autíčko Kov Originál SchucoMB Auto Veterán Klíček Německo 1968" [level=2] [ref=e1492]
+                    - generic [ref=e1494]:
+                      - generic [ref=e1495]:
+                        - generic [ref=e1496]: 3 přihazují
+                        - generic [ref=e1497]: 137 Kč
+                      - generic [ref=e1510]:
+                        - generic [ref=e1511]: Končí za
+                        - generic [ref=e1512]: 1 den, 20 hodin
+                - link "Rarita Kov Staré Auto Marklin Mercedes Autíčko Veterán Model 1/43 1939 Oblíbené Rarita Kov Staré Auto Marklin Mercedes Autíčko Veterán Model 1/43 1939 4 přihazují 242 Kč Končí za 1 den, 20 hodin" [ref=e1516] [cursor=pointer]:
+                  - /url: /rarita-kov-stare-auto-marklin-mercedes-auticko-veteran-model-1-43-1939-7125589983
+                  - generic [ref=e1517]:
+                    - img "Rarita Kov Staré Auto Marklin Mercedes Autíčko Veterán Model 1/43 1939" [ref=e1520]
+                    - button "Oblíbené" [ref=e1523]:
+                      - generic [ref=e1524]: "27"
+                  - generic [ref=e1533]:
+                    - heading "Rarita Kov Staré Auto Marklin Mercedes Autíčko Veterán Model 1/43 1939" [level=2] [ref=e1536]
+                    - generic [ref=e1538]:
+                      - generic [ref=e1539]:
+                        - generic [ref=e1540]: 4 přihazují
+                        - generic [ref=e1541]: 242 Kč
+                      - generic [ref=e1554]:
+                        - generic [ref=e1555]: Končí za
+                        - generic [ref=e1556]: 1 den, 20 hodin
+                - link "Rarita Plast Bakelit Auto Amerika Autíčko Hračka JB jak Igra Kdn 1955 Oblíbené Rarita Plast Bakelit Auto Amerika Autíčko Hračka JB jak Igra Kdn 1955 4 přihazují 90 Kč Končí za 1 den, 20 hodin" [ref=e1560] [cursor=pointer]:
+                  - /url: /rarita-plast-bakelit-auto-amerika-auticko-hracka-jb-jak-igra-kdn-1955-7125590422
+                  - generic [ref=e1561]:
+                    - img "Rarita Plast Bakelit Auto Amerika Autíčko Hračka JB jak Igra Kdn 1955" [ref=e1564]
+                    - button "Oblíbené" [ref=e1567]:
+                      - generic [ref=e1568]: "17"
+                  - generic [ref=e1577]:
+                    - heading "Rarita Plast Bakelit Auto Amerika Autíčko Hračka JB jak Igra Kdn 1955" [level=2] [ref=e1580]
+                    - generic [ref=e1582]:
+                      - generic [ref=e1583]:
+                        - generic [ref=e1584]: 4 přihazují
+                        - generic [ref=e1585]: 90 Kč
+                      - generic [ref=e1598]:
+                        - generic [ref=e1599]: Končí za
+                        - generic [ref=e1600]: 1 den, 20 hodin
+                - link "Rarita Autíčko Kov Válka Armáda Německo WH Panzer Tank HK Hračka 1945 Oblíbené Rarita Autíčko Kov Válka Armáda Německo WH Panzer Tank HK Hračka 1945 3 přihazují 116 Kč Končí za 1 den, 20 hodin" [ref=e1604] [cursor=pointer]:
+                  - /url: /rarita-auticko-kov-valka-armada-nemecko-wh-panzer-tank-hk-hracka-1945-7125590507
+                  - generic [ref=e1605]:
+                    - img "Rarita Autíčko Kov Válka Armáda Německo WH Panzer Tank HK Hračka 1945" [ref=e1608]
+                    - button "Oblíbené" [ref=e1611]:
+                      - generic [ref=e1612]: "7"
+                  - generic [ref=e1621]:
+                    - heading "Rarita Autíčko Kov Válka Armáda Německo WH Panzer Tank HK Hračka 1945" [level=2] [ref=e1624]
+                    - generic [ref=e1626]:
+                      - generic [ref=e1627]:
+                        - generic [ref=e1628]: 3 přihazují
+                        - generic [ref=e1629]: 116 Kč
+                      - generic [ref=e1642]:
+                        - generic [ref=e1643]: Končí za
+                        - generic [ref=e1644]: 1 den, 20 hodin
+            - generic [ref=e1649]:
+              - heading "Populární nabídky v této kategorii" [level=2] [ref=e1650]
+              - generic [ref=e1667]:
+                - link "UTON 0003 vzor 75 Oblíbené UTON 0003 vzor 75 5 přihazuje 3 761 Kč Končí za 12 hodin, 48 minut" [ref=e1670] [cursor=pointer]:
+                  - /url: /uton-0003-vzor-75-7125478154
+                  - generic [ref=e1671]:
+                    - img "UTON 0003 vzor 75" [ref=e1674]
+                    - button "Oblíbené" [ref=e1677]:
+                      - generic [ref=e1678]: "59"
+                  - generic [ref=e1687]:
+                    - heading "UTON 0003 vzor 75" [level=2] [ref=e1690]
+                    - generic [ref=e1692]:
+                      - generic [ref=e1693]:
+                        - generic [ref=e1694]: 5 přihazuje
+                        - generic [ref=e1695]: 3 761 Kč
+                      - generic [ref=e1708]:
+                        - generic [ref=e1709]: Končí za
+                        - generic [ref=e1710]: 12 hodin, 48 minut
+                - link "Bodák norský M1894 pro pušky Krag Jorgensen-SUPER STAV-1KČ Oblíbené Bodák norský M1894 pro pušky Krag Jorgensen-SUPER STAV-1KČ 3 přihazují 1 060 Kč Končí za 16 hodin, 22 minut" [ref=e1718] [cursor=pointer]:
+                  - /url: /bodak-norsky-m1894-pro-pusky-krag-jorgensen-super-stav-1kc-7125485590
+                  - generic [ref=e1719]:
+                    - img "Bodák norský M1894 pro pušky Krag Jorgensen-SUPER STAV-1KČ" [ref=e1722]
+                    - button "Oblíbené" [ref=e1725]:
+                      - generic [ref=e1726]: "23"
+                  - generic [ref=e1735]:
+                    - heading "Bodák norský M1894 pro pušky Krag Jorgensen-SUPER STAV-1KČ" [level=2] [ref=e1738]
+                    - generic [ref=e1740]:
+                      - generic [ref=e1741]:
+                        - generic [ref=e1742]: 3 přihazují
+                        - generic [ref=e1743]: 1 060 Kč
+                      - generic [ref=e1756]:
+                        - generic [ref=e1757]: Končí za
+                        - generic [ref=e1758]: 16 hodin, 22 minut
+                - link "Šavle / kord / palaš M1845, September 1915, masivní, zachovalá Oblíbené Šavle / kord / palaš M1845, September 1915, masivní, zachovalá 15 přihazuje 2 100 Kč Končí za 18 hodin, 4 minuty" [ref=e1766] [cursor=pointer]:
+                  - /url: /savle-kord-palas-m1845-september-1915-masivni-zachovala-7121514679
+                  - generic [ref=e1767]:
+                    - img "Šavle / kord / palaš M1845, September 1915, masivní, zachovalá" [ref=e1770]
+                    - button "Oblíbené" [ref=e1773]:
+                      - generic [ref=e1774]: "36"
+                  - generic [ref=e1783]:
+                    - heading "Šavle / kord / palaš M1845, September 1915, masivní, zachovalá" [level=2] [ref=e1786]
+                    - generic [ref=e1788]:
+                      - generic [ref=e1789]:
+                        - generic [ref=e1790]: 15 přihazuje
+                        - generic [ref=e1791]: 2 100 Kč
+                      - generic [ref=e1804]:
+                        - generic [ref=e1805]: Končí za
+                        - generic [ref=e1806]: 18 hodin, 4 minuty
+                - link "Jatagan 19. stol. s pochvou Oblíbené Jatagan 19. stol. s pochvou 3 přihazují 6 700 Kč Končí za 20 hodin, 9 minut" [ref=e1814] [cursor=pointer]:
+                  - /url: /jatagan-19-stol-s-pochvou-7125513287
+                  - generic [ref=e1815]:
+                    - img "Jatagan 19. stol. s pochvou" [ref=e1818]
+                    - button "Oblíbené" [ref=e1821]:
+                      - generic [ref=e1822]: "18"
+                  - generic [ref=e1831]:
+                    - heading "Jatagan 19. stol. s pochvou" [level=2] [ref=e1834]
+                    - generic [ref=e1836]:
+                      - generic [ref=e1837]:
+                        - generic [ref=e1838]: 3 přihazují
+                        - generic [ref=e1839]: 6 700 Kč
+                      - generic [ref=e1852]:
+                        - generic [ref=e1853]: Končí za
+                        - generic [ref=e1854]: 20 hodin, 9 minut
+                - link "Starý meč Oblíbené Starý meč 1 přihazuje 8 000 Kč Končí za 1 den, 12 hodin" [ref=e1862] [cursor=pointer]:
+                  - /url: /stary-mec-7125559753
+                  - generic [ref=e1863]:
+                    - img "Starý meč" [ref=e1866]
+                    - button "Oblíbené" [ref=e1869]:
+                      - generic [ref=e1870]: "26"
+                  - generic [ref=e1879]:
+                    - heading "Starý meč" [level=2] [ref=e1882]
+                    - generic [ref=e1884]:
+                      - generic [ref=e1885]:
+                        - generic [ref=e1886]: 1 přihazuje
+                        - generic [ref=e1887]: 8 000 Kč
+                      - generic [ref=e1900]:
+                        - generic [ref=e1901]: Končí za
+                        - generic [ref=e1902]: 1 den, 12 hodin
+                - link "Bajonet / bodák / M1843 Italský pěchotní tesák, vzácnej !!! Značen Z.G Oblíbené Bajonet / bodák / M1843 Italský pěchotní tesák, vzácnej !!! Značen Z.G 8 přihazuje 715 Kč Končí za 1 den, 18 hodin" [ref=e1906] [cursor=pointer]:
+                  - /url: /bajonet-bodak-m1843-italsky-pechotni-tesak-vzacnej-znacen-z-g-7122296724
+                  - generic [ref=e1907]:
+                    - img "Bajonet / bodák / M1843 Italský pěchotní tesák, vzácnej !!! Značen Z.G" [ref=e1910]
+                    - button "Oblíbené" [ref=e1913]:
+                      - generic [ref=e1914]: "37"
+                  - generic [ref=e1923]:
+                    - heading "Bajonet / bodák / M1843 Italský pěchotní tesák, vzácnej !!! Značen Z.G" [level=2] [ref=e1926]
+                    - generic [ref=e1928]:
+                      - generic [ref=e1929]:
+                        - generic [ref=e1930]: 8 přihazuje
+                        - generic [ref=e1931]: 715 Kč
+                      - generic [ref=e1944]:
+                        - generic [ref=e1945]: Končí za
+                        - generic [ref=e1946]: 1 den, 18 hodin
+            - generic [ref=e1975]:
+              - heading "Nové nabídky v této kategorii" [level=2] [ref=e1976]
+              - generic [ref=e1993]:
+                - link "TULEJOVY BODAK 18 ST KŘESADLOVA PUŠKA Oblíbené TULEJOVY BODAK 18 ST KŘESADLOVA PUŠKA Kup teď 2 800 Kč Končí za 29 dní, 21 hodin" [ref=e1996] [cursor=pointer]:
+                  - /url: /tulejovy-bodak-18-st-kresadlova-puska-7125991588
+                  - generic [ref=e1997]:
+                    - img "TULEJOVY BODAK 18 ST KŘESADLOVA PUŠKA" [ref=e2000]
+                    - button "Oblíbené" [ref=e2003]
+                  - generic [ref=e2012]:
+                    - heading "TULEJOVY BODAK 18 ST KŘESADLOVA PUŠKA" [level=2] [ref=e2015]
+                    - generic [ref=e2017]:
+                      - generic [ref=e2018]:
+                        - generic [ref=e2019]: Kup teď
+                        - generic [ref=e2020]: 2 800 Kč
+                      - generic [ref=e2023]:
+                        - generic [ref=e2024]: Končí za
+                        - generic [ref=e2025]: 29 dní, 21 hodin
+                - link "Meč důstojníka španělského letectva 1950 rok Oblíbené Meč důstojníka španělského letectva 1950 rok 1 přihazuje 1 Kč Končí za 4 dny, 20 hodin" [ref=e2029] [cursor=pointer]:
+                  - /url: /mec-dustojnika-spanelskeho-letectva-1950-rok-7125989710
+                  - generic [ref=e2030]:
+                    - img "Meč důstojníka španělského letectva 1950 rok" [ref=e2033]
+                    - button "Oblíbené" [ref=e2036]:
+                      - generic [ref=e2037]: "1"
+                  - generic [ref=e2046]:
+                    - heading "Meč důstojníka španělského letectva 1950 rok" [level=2] [ref=e2049]
+                    - generic [ref=e2051]:
+                      - generic [ref=e2052]:
+                        - generic [ref=e2053]: 1 přihazuje
+                        - generic [ref=e2054]: 1 Kč
+                      - generic [ref=e2067]:
+                        - generic [ref=e2068]: Končí za
+                        - generic [ref=e2069]: 4 dny, 20 hodin
+                - link "Nůž Oblíbené Nůž Žádný příhoz 50 Kč Kup teď 200 Kč Končí za 6 dní, 20 hodin" [ref=e2073] [cursor=pointer]:
+                  - /url: /nuz-7125989568
+                  - generic [ref=e2074]:
+                    - img "Nůž" [ref=e2077]
+                    - button "Oblíbené" [ref=e2080]
+                  - generic [ref=e2089]:
+                    - heading "Nůž" [level=2] [ref=e2092]
+                    - generic [ref=e2094]:
+                      - generic [ref=e2095]:
+                        - generic [ref=e2096]: Žádný příhoz
+                        - generic [ref=e2097]: 50 Kč
+                      - generic [ref=e2110]:
+                        - generic [ref=e2111]: Kup teď
+                        - generic [ref=e2112]: 200 Kč
+                      - generic [ref=e2113]:
+                        - generic [ref=e2114]: Končí za
+                        - generic [ref=e2115]: 6 dní, 20 hodin
+                - link "Šavle Oblíbené Šavle Žádný příhoz 17 000 Kč Končí za 6 dní, 19 hodin" [ref=e2119] [cursor=pointer]:
+                  - /url: /savle-7125987167
+                  - generic [ref=e2120]:
+                    - img "Šavle" [ref=e2123]
+                    - button "Oblíbené" [ref=e2126]
+                  - generic [ref=e2135]:
+                    - heading "Šavle" [level=2] [ref=e2138]
+                    - generic [ref=e2140]:
+                      - generic [ref=e2141]:
+                        - generic [ref=e2142]: Žádný příhoz
+                        - generic [ref=e2143]: 17 000 Kč
+                      - generic [ref=e2146]:
+                        - generic [ref=e2147]: Končí za
+                        - generic [ref=e2148]: 6 dní, 19 hodin
+                - link "BODAK MAUSER Argentina m1891 Oblíbené BODAK MAUSER Argentina m1891 Žádný příhoz 1 Kč Končí za 4 dny, 19 hodin" [ref=e2152] [cursor=pointer]:
+                  - /url: /bodak-mauser-argentina-m1891-7125986773
+                  - generic [ref=e2153]:
+                    - img "BODAK MAUSER Argentina m1891" [ref=e2156]
+                    - button "Oblíbené" [ref=e2159]:
+                      - generic [ref=e2160]: "2"
+                  - generic [ref=e2169]:
+                    - heading "BODAK MAUSER Argentina m1891" [level=2] [ref=e2172]
+                    - generic [ref=e2174]:
+                      - generic [ref=e2175]:
+                        - generic [ref=e2176]: Žádný příhoz
+                        - generic [ref=e2177]: 1 Kč
+                      - generic [ref=e2190]:
+                        - generic [ref=e2191]: Končí za
+                        - generic [ref=e2192]: 4 dny, 19 hodin
+                - link "1 valka Německý bajonet nahradí Mauser ersatz 1918 Oblíbené 1 valka Německý bajonet nahradí Mauser ersatz 1918 1 přihazuje 1 Kč Končí za 4 dny, 19 hodin" [ref=e2196] [cursor=pointer]:
+                  - /url: /1-valka-nemecky-bajonet-nahradi-mauser-ersatz-1918-7125986461
+                  - generic [ref=e2197]:
+                    - img "1 valka Německý bajonet nahradí Mauser ersatz 1918" [ref=e2200]
+                    - button "Oblíbené" [ref=e2203]:
+                      - generic [ref=e2204]: "1"
+                  - generic [ref=e2213]:
+                    - heading "1 valka Německý bajonet nahradí Mauser ersatz 1918" [level=2] [ref=e2216]
+                    - generic [ref=e2218]:
+                      - generic [ref=e2219]:
+                        - generic [ref=e2220]: 1 přihazuje
+                        - generic [ref=e2221]: 1 Kč
+                      - generic [ref=e2234]:
+                        - generic [ref=e2235]: Končí za
+                        - generic [ref=e2236]: 4 dny, 19 hodin
+            - heading "Naposledy jste navštívili" [level=2] [ref=e2266]
+    - generic [ref=e2283]:
+      - generic [ref=e2286]:
+        - generic [ref=e2287]:
+          - generic [ref=e2288]: O Aukru
+          - list [ref=e2289]:
+            - listitem [ref=e2290]:
+              - link "Kdo jsme" [ref=e2291] [cursor=pointer]:
+                - /url: https://aukro.cz/stranka/o-nas
+            - listitem [ref=e2292]:
+              - link "Charitativní aukce" [ref=e2293] [cursor=pointer]:
+                - /url: https://aukro.cz/stranka/charitativni-aukce
+            - listitem [ref=e2294]:
+              - link "Pro média" [ref=e2295] [cursor=pointer]:
+                - /url: https://aukro.cz/stranka/kontakt
+            - listitem [ref=e2296]:
+              - link "Volná místa" [ref=e2297] [cursor=pointer]:
+                - /url: https://www.startupjobs.cz/startup/aukro-s-r-o
+            - listitem [ref=e2298]:
+              - link "Ochrana osobních údajů" [ref=e2299] [cursor=pointer]:
+                - /url: https://aukro.cz/docs/pravidla-ochrany-osobnich-udaju
+            - listitem [ref=e2300]:
+              - link "Přístupnost" [ref=e2301] [cursor=pointer]:
+                - /url: https://aukro.cz/stranka/eaa
+        - generic [ref=e2302]:
+          - generic [ref=e2303]: Pro kupující
+          - list [ref=e2304]:
+            - listitem [ref=e2305]:
+              - link "Jak to funguje?" [ref=e2306] [cursor=pointer]:
+                - /url: https://aukro.cz/stranka/vitejte-na-aukru
+            - listitem [ref=e2307]:
+              - link "Videoakademie" [ref=e2308] [cursor=pointer]:
+                - /url: https://aukro.cz/stranka/videoakademie-aukro
+            - listitem [ref=e2309]:
+              - link "Oblíbená vyhledávání" [ref=e2310] [cursor=pointer]:
+                - /url: https://aukro.cz/stranka/oblibene-hledani-prodejci
+            - listitem [ref=e2311]:
+              - link "Expert doporučuje" [ref=e2312] [cursor=pointer]:
+                - /url: https://aukro.cz/stranka/experti-doporucuji
+            - listitem [ref=e2313]:
+              - link "Aukro Ochrana kupujících" [ref=e2314] [cursor=pointer]:
+                - /url: https://aukro.cz/stranka/aukro-ochrana-kupujicich
+            - listitem [ref=e2315]:
+              - link "Naši partneři" [ref=e2316] [cursor=pointer]:
+                - /url: https://aukro.cz/stranka/spoluprace
+            - listitem [ref=e2317]:
+              - link "Sběratelské veletrhy" [ref=e2318] [cursor=pointer]:
+                - /url: https://aukro.cz/stranka/sberatelske-veletrhy
+        - generic [ref=e2319]:
+          - generic [ref=e2320]: Pro prodejce
+          - list [ref=e2321]:
+            - listitem [ref=e2322]:
+              - link "Proč prodávat na Aukru?" [ref=e2323] [cursor=pointer]:
+                - /url: https://aukro.cz/stranka/prodej-na-aukru
+            - listitem [ref=e2324]:
+              - link "Videoakademie pro prodejce" [ref=e2325] [cursor=pointer]:
+                - /url: https://aukro.cz/stranka/videoakademie
+            - listitem [ref=e2326]:
+              - link "Balíkovna přes Aukro" [ref=e2327] [cursor=pointer]:
+                - /url: https://aukro.cz/stranka/balikovna-pres-aukro
+            - listitem [ref=e2328]:
+              - link "Zásilkovna přes Aukro" [ref=e2329] [cursor=pointer]:
+                - /url: https://aukro.cz/stranka/zasilkovna-pres-aukro
+            - listitem [ref=e2330]:
+              - link "PPL přes Aukro" [ref=e2331] [cursor=pointer]:
+                - /url: https://aukro.cz/stranka/ppl-pres-aukro
+            - listitem [ref=e2332]:
+              - link "Zaslat.cz kurýr přes Aukro" [ref=e2333] [cursor=pointer]:
+                - /url: https://aukro.cz/stranka/kuryr-pres-aukro
+            - listitem [ref=e2334]:
+              - link "Prodej pro firmy a podnikatele" [ref=e2335] [cursor=pointer]:
+                - /url: https://aukro.cz/stranka/stante-se-prodejcem-na-aukru
+            - listitem [ref=e2336]:
+              - link "Propagace a vylepšování nabídek" [ref=e2337] [cursor=pointer]:
+                - /url: https://aukro.cz/stranka/propagace-a-vylepsovani-nabidek
+            - listitem [ref=e2338]:
+              - link "Ceník poplatků a služeb" [ref=e2339] [cursor=pointer]:
+                - /url: https://aukro.cz/stranka/cenik/
+            - listitem [ref=e2340]:
+              - link "Aukro obaly" [ref=e2341] [cursor=pointer]:
+                - /url: https://aukro.cz/stranka/aukro-obaly
+        - generic [ref=e2342]:
+          - generic [ref=e2343]: Zákaznická péče
+          - list [ref=e2344]:
+            - listitem [ref=e2345]:
+              - link "Novinky" [ref=e2346] [cursor=pointer]:
+                - /url: https://aukro.cz/news
+            - listitem [ref=e2347]:
+              - link "Nejčastější dotazy a odpovědi" [ref=e2348] [cursor=pointer]:
+                - /url: https://aukro.cz/kontakt
+      - generic [ref=e2351]:
+        - generic [ref=e2352]:
+          - link "email" [ref=e2355] [cursor=pointer]:
+            - /url: https://aukro.cz/kontakt
+            - paragraph [ref=e2363]: Nápověda a kontakt
+          - generic [ref=e2364]:
+            - link "twitter" [ref=e2366] [cursor=pointer]:
+              - /url: https://x.com/Aukro
+            - link "facebook" [ref=e2375] [cursor=pointer]:
+              - /url: https://facebook.com/Aukrocz
+            - link "youtube" [ref=e2384] [cursor=pointer]:
+              - /url: https://www.youtube.com/user/aukrocz
+            - link "instagram" [ref=e2393] [cursor=pointer]:
+              - /url: https://www.instagram.com/aukro_czsk/
+        - generic [ref=e2401]:
+          - link "Stahujte na Google Play" [ref=e2404] [cursor=pointer]:
+            - /url: https://play.google.com/store/apps/details?id=cz.aukro.twa
+            - paragraph [ref=e2421]:
+              - generic [ref=e2422]: Stahujte na
+              - text: Google Play
+          - link "Stahujte na App Store" [ref=e2425] [cursor=pointer]:
+            - /url: https://apps.apple.com/cz/app/aukro-cz/id1529499348
+            - paragraph [ref=e2433]:
+              - generic [ref=e2434]: Stahujte na
+              - text: App Store
+      - generic [ref=e2475]:
+        - paragraph [ref=e2477]: © 2003–2026 AUKRO s.r.o
+        - generic [ref=e2478]:
+          - generic [ref=e2479]: Užívání služeb Aukro znamená souhlas s
+          - link "Obchodními podmínkami" [ref=e2481] [cursor=pointer]:
+            - /url: https://aukro.cz/docs/obchodni-podminky
+          - link "Informace o cookies" [ref=e2482] [cursor=pointer]:
+            - /url: /docs/cookies
+          - generic [ref=e2483]: Správa preferencí cookies
+          - link "Mapa kategorií" [ref=e2484] [cursor=pointer]:
+            - /url: /mapa-kategorii
