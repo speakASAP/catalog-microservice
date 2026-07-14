@@ -315,7 +315,8 @@ export default function MediaManagement({ productId }: MediaManagementProps) {
                 URL
               </label>
               <input
-                type="url"
+                type="text"
+                inputMode="url"
                 value={newMediaUrl}
                 onChange={(e) => setNewMediaUrl(e.target.value)}
                 placeholder="https://example.com/image.jpg"

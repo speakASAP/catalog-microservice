@@ -371,7 +371,8 @@ export default function EditProductPage() {
         <p className="text-xl text-blue-50">{product.title}</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
+      <div className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
+        <form id="product-edit-form" onSubmit={handleSubmit} className="space-y-6">
         {!canEditProduct && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
             This product is visible for resale, but only the owner can edit the catalog record.
@@ -544,8 +545,9 @@ export default function EditProductPage() {
             </label>
           </div>
         </div>
+      </form>
 
-        {/* Media Management */}
+        {/* Media Management — outside product form so optional URL fields never block Save Changes */}
         <MediaManagement productId={productId} />
 
         {/* Pricing Management */}
@@ -994,6 +996,7 @@ export default function EditProductPage() {
         <div className="flex gap-4 pt-6 border-t border-gray-200">
           <button
             type="submit"
+            form="product-edit-form"
             disabled={saving || !canEditProduct}
             className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -1007,7 +1010,7 @@ export default function EditProductPage() {
             Cancel
           </button>
         </div>
-      </form>
+      </div>
     </div>
   );
 }
