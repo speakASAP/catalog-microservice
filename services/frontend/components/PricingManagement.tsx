@@ -138,17 +138,6 @@ export default function PricingManagement({ productId }: PricingManagementProps)
     }
   };
 
-  const calculateMargin = () => {
-    if (formData.basePrice && formData.costPrice) {
-      const base = parseFloat(formData.basePrice);
-      const cost = parseFloat(formData.costPrice);
-      if (cost > 0) {
-        const margin = ((base - cost) / cost) * 100;
-        setFormData({ ...formData, marginPercent: margin.toFixed(2) });
-      }
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -217,15 +206,29 @@ export default function PricingManagement({ productId }: PricingManagementProps)
           <form onSubmit={handleSubmit} className="mb-6 p-4 bg-gray-50 rounded-lg space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Base Price <span className="text-red-500">*</span>
+                <label
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                  title="The standard listed price customers pay before any discounts. This is what's shown as the regular price in the catalog."
+                >
+                  Base Price <span className="text-red-500">*</span> ℹ️
                 </label>
                 <input
                   type="number"
                   step="0.01"
                   required
                   value={formData.basePrice}
-                  onChange={(e) => setFormData({ ...formData, basePrice: e.target.value })}
+                  onChange={(e) => {
+                    const basePrice = e.target.value;
+                    setFormData((prev) => {
+                      const next = { ...prev, basePrice };
+                      const base = parseFloat(basePrice);
+                      const cost = parseFloat(prev.costPrice);
+                      if (base && cost > 0) {
+                        next.marginPercent = (((base - cost) / cost) * 100).toFixed(2);
+                      }
+                      return next;
+                    });
+                  }}
                   className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
                   placeholder="0.00"
                 />
@@ -246,43 +249,60 @@ export default function PricingManagement({ productId }: PricingManagementProps)
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Cost Price
+                <label
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                  title="What this product costs you to buy or produce (your wholesale/supplier cost). Not shown to customers — used to calculate profit margin."
+                >
+                  Cost Price ℹ️
                 </label>
                 <input
                   type="number"
                   step="0.01"
                   value={formData.costPrice}
                   onChange={(e) => {
-                    setFormData({ ...formData, costPrice: e.target.value });
-                    setTimeout(calculateMargin, 100);
+                    const costPrice = e.target.value;
+                    setFormData((prev) => {
+                      const next = { ...prev, costPrice };
+                      const base = parseFloat(prev.basePrice);
+                      const cost = parseFloat(costPrice);
+                      if (base && cost > 0) {
+                        next.marginPercent = (((base - cost) / cost) * 100).toFixed(2);
+                      }
+                      return next;
+                    });
                   }}
                   className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
                   placeholder="0.00"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Margin %
+                <label
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                  title="Your profit margin as a percentage: ((Base Price − Cost Price) / Cost Price) × 100. Auto-calculated when both Base Price and Cost Price are set, but you can override it manually."
+                >
+                  Margin % ℹ️
                 </label>
                 <input
                   type="number"
                   step="0.01"
                   value={formData.marginPercent}
-                  onChange={(e) => setFormData({ ...formData, marginPercent: e.target.value })}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, marginPercent: e.target.value }))}
                   className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
                   placeholder="0.00"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Sale Price
+                <label
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                  title="A temporary discounted price shown to customers instead of the Base Price (e.g. during a promotion). Leave blank if this price isn't currently on sale."
+                >
+                  Sale Price ℹ️
                 </label>
                 <input
                   type="number"
                   step="0.01"
                   value={formData.salePrice}
-                  onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, salePrice: e.target.value }))}
                   className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
                   placeholder="0.00"
                 />

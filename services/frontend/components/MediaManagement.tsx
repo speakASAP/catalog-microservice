@@ -312,11 +312,10 @@ export default function MediaManagement({ productId }: MediaManagementProps) {
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                URL <span className="text-red-500">*</span>
+                URL
               </label>
               <input
                 type="url"
-                required
                 value={newMediaUrl}
                 onChange={(e) => setNewMediaUrl(e.target.value)}
                 placeholder="https://example.com/image.jpg"

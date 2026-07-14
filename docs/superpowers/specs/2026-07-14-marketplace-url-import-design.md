@@ -1,144 +1,146 @@
-# Design: Create Draft Product from a Marketplace Listing URL
+# Design: Import Photos from an Aukro Listing Link
 
 ## Problem
 
-Sellers currently create products manually, copy-pasting title/description/photo
-URLs from a marketplace listing (e.g. Aukro.cz) they're relisting. This is slow
-and error-prone. We want: paste a listing URL, get a draft `Product` with
-title, description, and photos already populated.
+When creating a product, sellers often relist an item they already listed on
+Aukro.cz. They currently copy each photo URL by hand from the Aukro gallery.
+We want: paste the Aukro listing link into the New Product form, click
+Import, and have all gallery photos (best available quality) appended to the
+form's photo link fields.
 
-## Scope
+## Scope (explicitly decided)
 
-First adapter: **Aukro.cz**. Built as a pluggable importer registry so future
-marketplaces (Bazos.cz, eBay, ...) can be added as new adapters without
-touching the core import flow. Note: the existing "bazos"/"aukro" code in this
-repo (`products.controller.ts` sell-on-aukro/sell-on-bazos endpoints) is the
-*opposite* direction — publishing an existing Catalog product out to those
-marketplaces. This feature is strictly inbound (marketplace → draft product)
-and shares no code with that outbound flow.
+- **Aukro only.** No generic/pluggable marketplace-importer abstraction —
+  build a focused Aukro-specific import path. A second marketplace, if it
+  ever comes up, gets its own equally-focused addition rather than an
+  up-front abstraction.
+- **Photos only.** No title/description import, no video import (the Aukro
+  API used here has no video field for this listing type).
+- **Fills existing UI, not a new creation path.** This augments the New
+  Product form's existing "Photo links" fields (added earlier this session).
+  It does **not** create the product — the seller still reviews/edits links
+  and clicks "Create Product" themselves.
 
-## How Aukro listing data is obtained
+Note: existing "sell-on-aukro"/"sell-on-bazos" code in this repo
+(`products.controller.ts`) is the *opposite* direction — publishing an
+existing Catalog product out to those marketplaces. This feature is strictly
+inbound (Aukro listing → photo URLs) and shares no code with that flow.
 
-Aukro's Angular SSR frontend is itself backed by a plain JSON REST endpoint:
+## How Aukro listing photos are obtained
+
+Aukro's Angular SSR frontend is backed by a plain JSON REST endpoint:
 
 ```
-GET https://aukro.cz/backend-web/api/offers/{itemId}/offerDetail
+GET https://aukro.cz/backend-web/api/offers/{itemId}/offerDetail?pageType=DETAIL&requestedFor=DETAIL&itemDetailModsEnabled=true&itemModVisitType=DIRECT&itemModDeviceType=DESKTOP
 ```
 
-Verified via direct `curl` (no auth, no special headers, no JS rendering
-required) against the URL the user provided
+Verified via direct `curl` (with a browser `User-Agent`; no auth, no JS
+rendering required) against the URL the user provided
 (`https://aukro.cz/rarita-nuz-dyka-cccp-sovetsky-bodak-armada-valka-dustojnik-znacen-nkvd-7124914683`).
 The `itemId` (`7124914683`) is the trailing numeric segment of the listing
-slug. The response includes: `name`, `descriptionStripped` (plain text),
-`descriptionInHtml`, `category` (breadcrumb array), `price`/`buyNowPrice`, and
-`images.original` — an ordered array of full-resolution photo URLs specific to
-this listing (the raw HTML `<img>` tags on the page are polluted with
-unrelated "related items" thumbnails, so the API response is used instead of
-HTML scraping).
+slug. The response's `images` field has five resolution variants (`small`,
+`medium_preview`, `medium`, `large`, `original`) of the same files, each an
+array of `{ position, url }` ordered to match the gallery. `images.original`
+has no resize-path segment inserted into the URL — it is the unscaled
+best-quality file. The raw HTML `<img>` tags on the page are not used because
+the page also embeds "related items" thumbnails that are indistinguishable
+from the listing's own gallery by markup alone; the JSON API has no such
+pollution.
 
-Because this is a plain HTTP JSON API, no headless browser (Playwright) is
-needed for the Aukro adapter. The importer interface stays adapter-agnostic
-so a future marketplace that *does* require JS rendering could still use
-Playwright internally without changing the surrounding design.
+Because this is a plain HTTP JSON API, no headless browser is needed.
+
+## Security: SSRF guard
+
+This endpoint makes the server fetch a user-supplied URL. Without a
+restriction, an authenticated user could point it at internal/arbitrary
+hosts. Mitigation: reject any URL whose hostname is not exactly `aukro.cz` or
+`www.aukro.cz` before making any outbound request, and only ever construct
+the outbound request URL ourselves (from the extracted numeric item ID)
+rather than forwarding the user's URL verbatim.
 
 ## Architecture
 
-New module: `src/product-import/`
+Extend the existing `media` module (this is fundamentally about fetching
+media, and doesn't need a product to exist yet, so it doesn't belong on
+`ProductsController`):
 
 ```
-product-import/
-  product-import.module.ts
-  product-import.service.ts
-  product-import.controller.ts
-  importers/
-    marketplace-importer.interface.ts
-    aukro.importer.ts
+src/media/
+  media.controller.ts       (+ new route)
+  media.service.ts           (+ new method)
+  aukro-import.ts             (new: URL validation + fetch + mapping, kept
+                               separate from media.service.ts's DB-facing
+                               methods since it has no repository dependency)
 ```
 
-### `MarketplaceImporter` interface
+### `aukro-import.ts`
 
 ```ts
-interface ImportedListing {
-  title: string;
-  descriptionText: string;
-  priceAmount?: number;
-  priceCurrency?: string;
-  categoryPath?: string[];
-  images: string[]; // ordered, best resolution available
-  sourceUrl: string;
-  sourceMarketplace: string; // e.g. 'aukro'
-  externalId: string;
+export function extractAukroItemId(url: string): string {
+  // throws BadRequestException if hostname isn't aukro.cz/www.aukro.cz
+  // or no trailing -<digits> segment found
 }
 
-interface MarketplaceImporter {
-  readonly key: string; // e.g. 'aukro'
-  canHandle(url: string): boolean;
-  fetch(url: string): Promise<ImportedListing>;
+export async function fetchAukroPhotoUrls(url: string): Promise<string[]> {
+  const itemId = extractAukroItemId(url);
+  // axios.get the offerDetail endpoint with a browser User-Agent
+  // throws BadGatewayException (with upstream status) on non-2xx or
+  // malformed response
+  // returns images.original sorted by position, mapped to .url
 }
 ```
 
-### `AukroImporter`
+### `MediaController`
 
-- `canHandle`: hostname is `aukro.cz` or `www.aukro.cz`.
-- `fetch`: extract `itemId` via regex on the URL path (trailing `-(\d+)`
-  before any query string/fragment); `axios.get` the `offerDetail` endpoint;
-  map fields into `ImportedListing` using `images.original`; throw a typed
-  `MarketplaceFetchError` (carrying the upstream HTTP status) on failure.
+```
+POST /media/import/aukro
+  @UseGuards(CatalogAuthGuard)   // same pattern as create/upload
+  body: { url: string }
+  -> { success: true, data: { photoUrls: string[] } }
+```
 
-### `ProductImportService.importFromUrl(url, scope)`
-
-1. Find the first importer whose `canHandle(url)` is true; if none, throw
-   `BadRequestException('Unsupported marketplace URL')`.
-2. Call `importer.fetch(url)`. On `MarketplaceFetchError`, rethrow as a
-   `BadGatewayException` carrying the upstream status/message.
-3. Compute `sku = \`${importer.key.toUpperCase()}-${listing.externalId}\`` (e.g.
-   `AUKRO-7124914683`). Look up an existing product with this SKU; if found,
-   throw `ConflictException` with the existing product's `id` in the response
-   body so the frontend can link to it instead of creating a duplicate.
-4. Build a `CreateProductDto`:
-   - `sku`, `title: listing.title`
-   - `description: listing.descriptionText`
-   - `descriptionRich: descriptionDocumentFromText(listing.descriptionText)`
-   - `tags: ['source:' + importer.key, 'source-id:' + listing.externalId]`
-   - lifecycle stays at the existing default-to-draft behavior used by manual
-     product creation (no change needed there).
-5. Call `ProductsService.create(dto, scope)` (existing method, unchanged).
-6. For each of up to the first 12 `listing.images`, `axios.get` with
-   `responseType: 'arraybuffer'`, then call the existing
-   `MediaService.upload({ productId, file: { buffer, originalname, mimetype,
-   size }, position: index, isPrimary: index === 0 })`. If an individual
-   image download fails, log and skip it — do not fail the whole import.
-7. Return the created product (same shape as `POST /api/products`).
-
-### Controller endpoint
-
-`POST /api/products/import-from-url` on the existing `ProductsController`,
-guarded by `CatalogAuthGuard` (same as other write endpoints), body
-`{ url: string }`, delegates to `ProductImportService.importFromUrl`.
+Delegates straight to `fetchAukroPhotoUrls`. No `MediaService`/DB involvement
+— this only returns URLs for the frontend to hold in form state, the same as
+if the seller had typed them in by hand. Errors surface as
+`{ success: false, error: { code, message } }` via the existing global
+exception shape (matching how other controllers already respond), not a
+raw 500.
 
 ## Frontend
 
-`services/frontend/app/dashboard/products/new/page.tsx` gets a new box above
-the existing manual form: a URL input + "Create draft from link" button,
-calling a new `productsApi.importFromUrl(url)`. On success, redirect to
-`/dashboard/products/{productId}` exactly like the manual-entry success path
-already does. On 409 (duplicate), show a message linking to the existing
-product. The manual form below is unchanged, still usable directly or to
-edit/complete the imported draft afterward.
+`services/frontend/lib/api/media.ts`: add
+`mediaApi.importAukroPhotos(url): Promise<ApiResponse<{ photoUrls: string[] }>>`
+calling `apiClient.post('/media/import/aukro', { url })`.
+
+`services/frontend/app/dashboard/products/new/page.tsx`: above the existing
+"Photo links" field list, add:
+- A URL input (labelled "Import photos from Aukro link") + "Import" button.
+- On click: call `mediaApi.importAukroPhotos(url)`, show a small loading
+  state on the button.
+- On success: merge returned URLs into `photoUrls` state — fill existing
+  empty slots first (left to right), then append new rows for the
+  remainder. Manually-typed links already present are preserved, never
+  overwritten.
+- On failure: an inline error message next to the import field (not a
+  blocking `alert()`), so a bad link doesn't derail the rest of the form the
+  seller may have already filled in.
+- No change to the Title/SKU/description fields — this box only ever writes
+  to `photoUrls`.
 
 ## Error handling summary
 
 | Condition | Response |
 |---|---|
-| URL doesn't match any importer | 400 |
-| Upstream marketplace fetch fails (e.g. listing deleted) | 502, upstream status/message included |
-| SKU already imported | 409, includes existing product id |
-| One or more images fail to download | Import still succeeds; failed images are skipped and logged |
+| URL hostname isn't aukro.cz/www.aukro.cz, or no numeric item ID found | 400, inline form error |
+| Upstream Aukro fetch fails (deleted listing, network error, unexpected shape) | 502, inline form error with the upstream message |
 
 ## Testing
 
-- `AukroImporter.fetch()` unit test against a saved fixture of the real
-  `offerDetail` JSON response (captured from the URL used during design).
-- `ProductImportService.importFromUrl()` unit tests: happy path, unsupported
-  URL, duplicate SKU, partial image-download failure.
-- No live e2e test against Aukro's production API in CI (fixture-based only).
+- Unit test for `extractAukroItemId`: valid listing URL, wrong host, no
+  trailing digits.
+- Unit test for `fetchAukroPhotoUrls` against a saved fixture of the real
+  `offerDetail` JSON response (captured from the URL used during design,
+  10 photos) — asserts the returned array is sorted by `position` and uses
+  the `original` variant.
+- No live e2e test against Aukro's production API in CI (fixture-based
+  only).
