@@ -3,6 +3,7 @@
  */
 
 import { apiClient, type ApiResponse } from './client';
+import type { WheelEvent } from 'react';
 
 export interface ProductMedia {
   id: string;
@@ -728,6 +729,40 @@ export interface ProductBundleCandidatesQuery {
   currency?: string;
 }
 
+export function formatDimensionInputValue(value?: number | null): string {
+  if (value === null || value === undefined || !Number.isFinite(Number(value)) || Number(value) <= 0) {
+    return '';
+  }
+  return String(value);
+}
+
+export function parsePositiveMeasurement(value: string): number | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return undefined;
+  }
+  return parsed;
+}
+
+export function buildDimensionsCmFromForm(fields: { length: string; width: string; height: string }) {
+  const dimensions: NonNullable<Product['dimensionsCm']> = {};
+  const length = parsePositiveMeasurement(fields.length);
+  const width = parsePositiveMeasurement(fields.width);
+  const height = parsePositiveMeasurement(fields.height);
+  if (length !== undefined) dimensions.length = length;
+  if (width !== undefined) dimensions.width = width;
+  if (height !== undefined) dimensions.height = height;
+  return Object.keys(dimensions).length ? dimensions : undefined;
+}
+
+export function preventNumberInputScroll(event: WheelEvent<HTMLInputElement>) {
+  event.currentTarget.blur();
+}
+
 function productQualityReviewQueryString(query?: ProductQualityReviewQuery | ProductQualityReviewExportQuery) {
   const params = new URLSearchParams();
   if (query?.page) params.append('page', query.page.toString());
@@ -762,6 +797,10 @@ export const productsApi = {
 
   async getProduct(id: string) {
     return apiClient.get<Product>(`/products/${id}`);
+  },
+
+  async getProductReadiness(id: string) {
+    return apiClient.get<ProductQualityReadiness>(`/products/${id}/readiness`);
   },
 
 

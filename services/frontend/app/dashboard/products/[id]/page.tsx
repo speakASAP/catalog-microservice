@@ -2,7 +2,22 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { productsApi, Product, ProductBundleCandidatesResponse, ProductRelation, ProductSalesChannel, ProductSalesStatistics, ProductWarehouseAvailabilityItem, ProductWarehouseLogisticsOption } from '@/lib/api/products';
+import {
+  productsApi,
+  Product,
+  ProductBundleCandidatesResponse,
+  ProductQualityIssue,
+  ProductQualityReadiness,
+  ProductRelation,
+  ProductSalesChannel,
+  ProductSalesStatistics,
+  ProductWarehouseAvailabilityItem,
+  ProductWarehouseLogisticsOption,
+  buildDimensionsCmFromForm,
+  formatDimensionInputValue,
+  parsePositiveMeasurement,
+  preventNumberInputScroll,
+} from '@/lib/api/products';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import MediaManagement from '@/components/MediaManagement';
 import PricingManagement from '@/components/PricingManagement';
@@ -80,6 +95,17 @@ const formatPercent = (value: number | null | undefined) => {
   return `${Math.round(Number(value) * 100)}%`;
 };
 
+const ACTIVATION_EXCLUDED_ISSUE_CODES = new Set(['draft_product', 'needs_review', 'inactive_product', 'archived_product']);
+
+const getActivationBlockers = (readiness: ProductQualityReadiness | null): ProductQualityIssue[] => {
+  if (!readiness) {
+    return [];
+  }
+  return readiness.issues.filter(
+    (issue) => issue.severity === 'blocking' && !ACTIVATION_EXCLUDED_ISSUE_CODES.has(issue.code),
+  );
+};
+
 const isReservableRoute = (route: ProductWarehouseLogisticsOption) => {
   if (!route.canReserveFromWarehouse || Number(route.available ?? 0) <= 0) {
     return false;
@@ -128,6 +154,7 @@ export default function EditProductPage() {
   const [bundleCandidates, setBundleCandidates] = useState<ProductBundleCandidatesResponse | null>(null);
   const [recommendationsLoading, setRecommendationsLoading] = useState(false);
   const [recommendationsError, setRecommendationsError] = useState<string | null>(null);
+  const [productReadiness, setProductReadiness] = useState<ProductQualityReadiness | null>(null);
   const [formData, setFormData] = useState({
     sku: '',
     title: '',
@@ -224,6 +251,17 @@ export default function EditProductPage() {
     }
   }, [productId]);
 
+  const loadProductReadiness = useCallback(async () => {
+    try {
+      const response = await productsApi.getProductReadiness(productId);
+      if (response.success && response.data) {
+        setProductReadiness(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to load product readiness:', error);
+    }
+  }, [productId]);
+
   const loadProduct = useCallback(async () => {
     try {
       const response = await productsApi.getProduct(productId);
@@ -238,9 +276,9 @@ export default function EditProductPage() {
           manufacturer: p.manufacturer || '',
           ean: p.ean || '',
           weightKg: p.weightKg?.toString() || '',
-          length: p.dimensionsCm?.length?.toString() || '',
-          width: p.dimensionsCm?.width?.toString() || '',
-          height: p.dimensionsCm?.height?.toString() || '',
+          length: formatDimensionInputValue(p.dimensionsCm?.length),
+          width: formatDimensionInputValue(p.dimensionsCm?.width),
+          height: formatDimensionInputValue(p.dimensionsCm?.height),
           isActive: p.isActive !== false,
           resaleEnabled: p.resaleEnabled === true,
         });
@@ -255,11 +293,12 @@ export default function EditProductPage() {
   useEffect(() => {
     if (productId) {
       loadProduct();
+      loadProductReadiness();
       loadSalesStats();
       loadWarehouseAvailability();
       loadProductRecommendations();
     }
-  }, [productId, loadProduct, loadSalesStats, loadWarehouseAvailability, loadProductRecommendations]);
+  }, [productId, loadProduct, loadProductReadiness, loadSalesStats, loadWarehouseAvailability, loadProductRecommendations]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -289,26 +328,23 @@ export default function EditProductPage() {
         resaleEnabled: formData.resaleEnabled,
       };
 
-      if (formData.weightKg) {
-        productData.weightKg = parseFloat(formData.weightKg);
+      const weightKg = parsePositiveMeasurement(formData.weightKg);
+      if (weightKg !== undefined) {
+        productData.weightKg = weightKg;
       }
 
-      if (formData.length || formData.width || formData.height) {
-        productData.dimensionsCm = {};
-        if (formData.length) productData.dimensionsCm.length = parseFloat(formData.length);
-        if (formData.width) productData.dimensionsCm.width = parseFloat(formData.width);
-        if (formData.height) productData.dimensionsCm.height = parseFloat(formData.height);
-      }
+      productData.dimensionsCm = buildDimensionsCmFromForm(formData) ?? {};
 
       const response = await productsApi.updateProduct(productId, productData);
       if (response.success) {
         router.push('/dashboard/products');
       } else {
-        alert('Failed to update product');
+        await loadProductReadiness();
+        alert(response.error?.message || 'Failed to update product');
       }
     } catch (error) {
       console.error('Failed to update product:', error);
-      alert('Failed to update product');
+      alert(error instanceof Error ? error.message : 'Failed to update product');
     } finally {
       setSaving(false);
     }
@@ -363,6 +399,7 @@ export default function EditProductPage() {
   const relatedProductCount = relatedProducts.length;
   const bundleCandidateRows = bundleCandidates?.candidates ?? [];
   const canEditProduct = canMutateCatalogProduct(product, user);
+  const activationBlockers = formData.isActive ? getActivationBlockers(productReadiness) : [];
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -466,9 +503,11 @@ export default function EditProductPage() {
             <input
               type="number"
               step="0.001"
+              min="0"
               name="weightKg"
               value={formData.weightKg}
               onChange={handleChange}
+              onWheel={preventNumberInputScroll}
               className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
             />
           </div>
@@ -480,9 +519,11 @@ export default function EditProductPage() {
             <input
               type="number"
               step="0.1"
+              min="0"
               name="length"
               value={formData.length}
               onChange={handleChange}
+              onWheel={preventNumberInputScroll}
               className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
             />
           </div>
@@ -494,9 +535,11 @@ export default function EditProductPage() {
             <input
               type="number"
               step="0.1"
+              min="0"
               name="width"
               value={formData.width}
               onChange={handleChange}
+              onWheel={preventNumberInputScroll}
               className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
             />
           </div>
@@ -508,9 +551,11 @@ export default function EditProductPage() {
             <input
               type="number"
               step="0.1"
+              min="0"
               name="height"
               value={formData.height}
               onChange={handleChange}
+              onWheel={preventNumberInputScroll}
               className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
             />
           </div>
@@ -526,6 +571,16 @@ export default function EditProductPage() {
               />
               <span className="text-sm font-semibold text-gray-700">Product is active</span>
             </label>
+            {activationBlockers.length > 0 && (
+              <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                <p className="font-semibold">Activation blocked until these are resolved:</p>
+                <ul className="mt-2 list-disc space-y-1 pl-5">
+                  {activationBlockers.map((issue) => (
+                    <li key={issue.code}>{issue.message}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           <div className="md:col-span-2">
@@ -551,7 +606,7 @@ export default function EditProductPage() {
         <MediaManagement productId={productId} />
 
         {/* Pricing Management */}
-        <PricingManagement productId={productId} />
+        <PricingManagement productId={productId} onPricingChanged={loadProductReadiness} />
 
         <ProductContentPreviewPanel product={product} />
 

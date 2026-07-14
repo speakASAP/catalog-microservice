@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { productsApi } from '@/lib/api/products';
+import { productsApi, buildDimensionsCmFromForm, parsePositiveMeasurement, preventNumberInputScroll } from '@/lib/api/products';
 import { mediaApi } from '@/lib/api/media';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
@@ -62,15 +62,14 @@ export default function CreateProductPage() {
         resaleEnabled: formData.resaleEnabled,
       };
 
-      if (formData.weightKg) {
-        productData.weightKg = parseFloat(formData.weightKg);
+      const weightKg = parsePositiveMeasurement(formData.weightKg);
+      if (weightKg !== undefined) {
+        productData.weightKg = weightKg;
       }
 
-      if (formData.length || formData.width || formData.height) {
-        productData.dimensionsCm = {};
-        if (formData.length) productData.dimensionsCm.length = parseFloat(formData.length);
-        if (formData.width) productData.dimensionsCm.width = parseFloat(formData.width);
-        if (formData.height) productData.dimensionsCm.height = parseFloat(formData.height);
+      const dimensionsCm = buildDimensionsCmFromForm(formData);
+      if (dimensionsCm) {
+        productData.dimensionsCm = dimensionsCm;
       }
 
       const response = await productsApi.createProduct(productData);
@@ -215,9 +214,11 @@ export default function CreateProductPage() {
             <input
               type="number"
               step="0.001"
+              min="0"
               name="weightKg"
               value={formData.weightKg}
               onChange={handleChange}
+              onWheel={preventNumberInputScroll}
               className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
               placeholder="0.5"
             />
@@ -230,9 +231,11 @@ export default function CreateProductPage() {
             <input
               type="number"
               step="0.1"
+              min="0"
               name="length"
               value={formData.length}
               onChange={handleChange}
+              onWheel={preventNumberInputScroll}
               className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
               placeholder="10"
             />
@@ -245,9 +248,11 @@ export default function CreateProductPage() {
             <input
               type="number"
               step="0.1"
+              min="0"
               name="width"
               value={formData.width}
               onChange={handleChange}
+              onWheel={preventNumberInputScroll}
               className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
               placeholder="10"
             />
@@ -260,9 +265,11 @@ export default function CreateProductPage() {
             <input
               type="number"
               step="0.1"
+              min="0"
               name="height"
               value={formData.height}
               onChange={handleChange}
+              onWheel={preventNumberInputScroll}
               className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
               placeholder="10"
             />

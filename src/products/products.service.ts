@@ -794,7 +794,7 @@ export class ProductsService {
 
     const saved = await this.withProductTransaction(async (repository, manager) => {
       const product = repository.create({
-        ...this.withResaleDefaults(this.withLifecycleDefaults(this.withCanonicalContentDefaults(createProductDto))),
+        ...this.withResaleDefaults(this.withLifecycleDefaults(this.withPhysicalMeasurementsDefaults(this.withCanonicalContentDefaults(createProductDto)))),
         ownerUserId: this.resolveOwnerUserId(scope.actor),
       });
       const created = await repository.save(product);
@@ -978,7 +978,7 @@ export class ProductsService {
     const updated = await this.withProductTransaction(async (repository, manager) => {
       const product = await this.findOneWithRepository(repository, id, scope, 'mutate');
       const before = this.snapshotProductForEvent(product);
-      Object.assign(product, this.withResaleDefaults(this.withLifecycleDefaults(this.withCanonicalContentDefaults(updateProductDto, product), product), product));
+      Object.assign(product, this.withResaleDefaults(this.withLifecycleDefaults(this.withPhysicalMeasurementsDefaults(this.withCanonicalContentDefaults(updateProductDto, product)), product), product));
       await this.assertProductQualityAllowsActivation(product, updateProductDto);
 
       const saved = await repository.save(product);
@@ -1326,6 +1326,39 @@ export class ProductsService {
     }
 
     return next;
+  }
+
+  private withPhysicalMeasurementsDefaults<T extends Partial<Product>>(data: T): T {
+    const next = { ...data } as Partial<Product>;
+
+    if (Object.prototype.hasOwnProperty.call(next, 'dimensionsCm')) {
+      next.dimensionsCm = this.normalizeDimensionsCm(next.dimensionsCm) ?? null;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(next, 'weightKg')) {
+      const weight = Number(next.weightKg);
+      next.weightKg = Number.isFinite(weight) && weight > 0 ? weight : null;
+    }
+
+    return next as T;
+  }
+
+  private normalizeDimensionsCm(
+    dimensions?: Product['dimensionsCm'] | null,
+  ): Product['dimensionsCm'] | undefined {
+    if (!dimensions) {
+      return undefined;
+    }
+
+    const normalized: NonNullable<Product['dimensionsCm']> = {};
+    for (const key of ['length', 'width', 'height'] as const) {
+      const value = Number(dimensions[key]);
+      if (Number.isFinite(value) && value > 0) {
+        normalized[key] = value;
+      }
+    }
+
+    return Object.keys(normalized).length ? normalized : undefined;
   }
 
   private withResaleDefaults<T extends Partial<Product>>(data: T, current?: Product): T {

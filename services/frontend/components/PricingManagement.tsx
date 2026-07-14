@@ -11,9 +11,10 @@ import LoadingSpinner from './LoadingSpinner';
 
 interface PricingManagementProps {
   productId: string;
+  onPricingChanged?: () => void;
 }
 
-export default function PricingManagement({ productId }: PricingManagementProps) {
+export default function PricingManagement({ productId, onPricingChanged }: PricingManagementProps) {
   const [pricing, setPricing] = useState<ProductPricing[]>([]);
   const [currentPrice, setCurrentPrice] = useState<ProductPricing | null>(null);
   const [loading, setLoading] = useState(true);
@@ -108,6 +109,7 @@ export default function PricingManagement({ productId }: PricingManagementProps)
         setShowForm(false);
         loadPricing();
         loadCurrentPrice();
+        onPricingChanged?.();
       } else {
         alert('Failed to create pricing');
       }
@@ -129,6 +131,7 @@ export default function PricingManagement({ productId }: PricingManagementProps)
       if (response.success) {
         loadPricing();
         loadCurrentPrice();
+        onPricingChanged?.();
       } else {
         alert('Failed to delete pricing');
       }
