@@ -9,6 +9,9 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 export default function CreateProductPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [importUrl, setImportUrl] = useState('');
+  const [importLoading, setImportLoading] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     sku: '',
     title: '',
@@ -44,6 +47,27 @@ export default function CreateProductPage() {
 
   const removePhotoUrlField = (index: number) => {
     setPhotoUrls((current) => current.filter((_, i) => i !== index));
+  };
+
+  const handleImportFromUrl = async () => {
+    const url = importUrl.trim();
+    if (!url) {
+      return;
+    }
+    setImportLoading(true);
+    setImportError(null);
+    try {
+      const response = await productsApi.importFromUrl(url);
+      if (response.success && response.data) {
+        router.push(`/dashboard/products/${response.data.id}`);
+      } else {
+        setImportError(response.error?.message || 'Failed to import from URL');
+      }
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : 'Failed to import from URL');
+    } finally {
+      setImportLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -117,6 +141,39 @@ export default function CreateProductPage() {
       <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white">
         <h1 className="text-4xl font-extrabold mb-2">➕ Create New Product</h1>
         <p className="text-xl text-blue-50">Add a new product to the catalog</p>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-lg p-6 space-y-3 border-2 border-indigo-100">
+        <h2 className="text-lg font-bold text-gray-800">Import from a marketplace link</h2>
+        <p className="text-sm text-gray-600">
+          Paste a listing URL (e.g. an Aukro.cz auction) to create a draft product with its
+          title, description, and photos already filled in.
+        </p>
+        <form
+          className="flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleImportFromUrl();
+          }}
+        >
+          <input
+            type="url"
+            value={importUrl}
+            onChange={(e) => setImportUrl(e.target.value)}
+            placeholder="https://aukro.cz/..."
+            className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+          />
+          <button
+            type="submit"
+            disabled={importLoading || !importUrl.trim()}
+            className="whitespace-nowrap bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {importLoading ? <LoadingSpinner size="sm" /> : 'Create draft from link'}
+          </button>
+        </form>
+        {importError && (
+          <p className="text-sm font-semibold text-red-600">{importError}</p>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-8 space-y-6">

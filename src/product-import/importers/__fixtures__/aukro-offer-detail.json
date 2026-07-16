@@ -1,0 +1,18 @@
+{
+  "id": 7124914683,
+  "name": "Rarita Nůž Dýka CCCP Sovětský Bodák Armáda Válka Důstojník Značen NKVD",
+  "descriptionStripped": "Nabízím velice zajímavý nůž CCCP, na čepeli značený NKVD-viz foto, v krásném původním stavu",
+  "category": [
+    { "id": 8531, "shortName": "Sběratelství", "name": "Sběratelství", "level": 0 },
+    { "id": 8473, "shortName": "Vojenské", "name": "Vojenské sběratelské předměty", "level": 1 },
+    { "id": 6509, "shortName": "Zbraně", "name": "Sběratelské zbraně", "level": 2 },
+    { "id": 6507, "shortName": "Chladné zbraně", "name": "Chladné zbraně", "level": 3 }
+  ],
+  "images": {
+    "original": [
+      { "position": 0, "url": "https://cdn.aukro.cz/images/sk1751574261895/rarita-nuz-dyka-cccp-sovetsky-bodak-armada-valka-dustojnik-znacen-nkvd-233703706.jpeg" },
+      { "position": 1, "url": "https://cdn.aukro.cz/images/sk1749673090939/rarita-nuz-dyka-cccp-sovetsky-bodak-armada-valka-dustojnik-znacen-nkvd-231803164.jpeg" },
+      { "position": 2, "url": "https://cdn.aukro.cz/images/sk1751574262945/rarita-nuz-dyka-cccp-sovetsky-bodak-armada-valka-dustojnik-znacen-nkvd-233703708.jpeg" }
+    ]
+  }
+}

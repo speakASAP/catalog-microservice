@@ -949,4 +949,8 @@ export const productsApi = {
   async updateCatalogSettings(data: Partial<Pick<CatalogSourceSettings, 'includeAlfaresCatalog' | 'includeCommunityCatalog' | 'sourceApplication'>>) {
     return apiClient.put<CatalogSourceSettings>('/catalog/settings', data);
   },
+
+  async importFromUrl(url: string) {
+    return apiClient.post<Product>('/products/import-from-url', { url });
+  },
 };
