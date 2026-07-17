@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 
 const DEFAULT_REGISTER_URL =
-  'https://auth.alfares.cz/register?return_url=https%3A%2F%2Fcatalog.alfares.cz%2Fauth%2Fcallback&client_id=catalog-microservice&state=catalog-dashboard';
+  'https://auth.alfares.cz/register?return_url=https%3A%2F%2Fcatalog.alfares.cz%2Fauth%2Fcallback&client_id=catalog-microservice&state=catalog-dashboard&lang=cs';
 
 function buildHostedAuthUrl(): string {
   if (typeof window === 'undefined') return DEFAULT_REGISTER_URL;
@@ -15,6 +15,7 @@ function buildHostedAuthUrl(): string {
   url.searchParams.set('return_url', returnUrl);
   url.searchParams.set('client_id', 'catalog-microservice');
   url.searchParams.set('state', 'catalog-dashboard');
+  url.searchParams.set('lang', 'cs');
   return url.toString();
 }
 
