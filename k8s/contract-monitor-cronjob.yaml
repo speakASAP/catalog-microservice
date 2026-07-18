@@ -8,7 +8,9 @@ metadata:
     component: contract-monitor
     managed-by: k8s-migration
 spec:
-  schedule: "*/30 * * * *"
+  # Staggered off the :00/:30 marks shared by cliplot-readiness-monitor and
+  # others. See shared/docs/DEPLOY_STANDARDIZATION_REPORT.md section 12 addendum.
+  schedule: "14,44 * * * *"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 5
