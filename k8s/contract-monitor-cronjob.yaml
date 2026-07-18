@@ -16,7 +16,7 @@ spec:
   failedJobsHistoryLimit: 5
   jobTemplate:
     spec:
-      backoffLimit: 0
+      backoffLimit: 3
       template:
         metadata:
           labels:
@@ -41,12 +41,16 @@ spec:
                   value: "true"
                 - name: CATALOG_MONITOR_INCLUDE_BAZOS_AUTHORIZED
                   value: "false"
+                # catalog-smoke.js already retries transport errors, but 3x1000ms only
+                # spans ~3s -- too short for the ClusterIP blips that failed every
+                # contract with "fetch failed". Widened to ~32s; timeout raised to
+                # keep headroom for the longer retry window across both profiles.
                 - name: CATALOG_MONITOR_TIMEOUT_MS
-                  value: "120000"
+                  value: "300000"
                 - name: CATALOG_SMOKE_RETRIES
-                  value: "3"
+                  value: "4"
                 - name: CATALOG_SMOKE_RETRY_DELAY_MS
-                  value: "1000"
+                  value: "8000"
                 - name: JWT_TOKEN
                   value: ""
                 - name: CATALOG_SMOKE_INTERNAL_SERVICE_TOKEN
