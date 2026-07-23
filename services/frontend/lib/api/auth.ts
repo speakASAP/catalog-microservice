@@ -51,16 +51,15 @@ export interface AdminUsersResponse {
   offset: number;
 }
 
-// Get API base URL - use catalog API which proxies to auth-microservice
+// Get API base URL - use catalog API which proxies to auth-microservice.
+// Callers append the "/api/..." path themselves, so strip a trailing /api
+// from either source - otherwise the server-side branch produced /api/api/...
 const getApiBaseUrl = (): string => {
-  if (typeof window === 'undefined') {
-    // Server-side: use internal Docker network URL
-    return process.env.API_URL || 'http://catalog-microservice:3200/api';
-  }
-  // Client-side: use external URL (already includes /api)
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://catalog.alfares.cz/api';
-  // Remove /api if present since we'll add it in the path
-  return baseUrl.replace(/\/api$/, '');
+  const baseUrl =
+    typeof window === 'undefined'
+      ? process.env.API_URL || 'http://catalog-microservice:3200/api'
+      : process.env.NEXT_PUBLIC_API_URL || 'https://catalog.alfares.cz/api';
+  return baseUrl.replace(/\/api\/?$/, '');
 };
 
 const API_BASE_URL = getApiBaseUrl();
@@ -147,8 +146,12 @@ export const authApi = {
       return { success: false, error: 'No token available' };
     }
 
+    // no-store keeps the browser from revalidating with If-None-Match; a
+    // bodyless 304 would otherwise look like a failed profile fetch and log
+    // the user straight back out.
     const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
       method: 'GET',
+      cache: 'no-store',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
@@ -181,6 +184,7 @@ export const authApi = {
 
     const response = await fetch(`${API_BASE_URL}/api/auth/admin/users?${search.toString()}`, {
       method: 'GET',
+      cache: 'no-store',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,

@@ -74,12 +74,16 @@ class ApiClient {
     }
 
     try {
+      // Authenticated, per-user responses must not be revalidated from cache:
+      // a bodyless 304 is not `response.ok` and would surface as a bogus
+      // "Request failed" on every endpoint the dashboard calls.
       const response = await fetch(url, {
+        cache: 'no-store',
         ...options,
         headers,
       });
 
-      if (response.status === 204) {
+      if (response.status === 204 || response.status === 304) {
         return { success: true } as ApiResponse<T>;
       }
 

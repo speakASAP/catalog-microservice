@@ -4,6 +4,7 @@ import {
   Get,
   Body,
   Headers,
+  Header,
   HttpException,
   HttpCode,
   HttpStatus,
@@ -16,6 +17,11 @@ import { LoggerService } from '../logger/logger.service';
 /**
  * Auth Controller - Proxy endpoints for auth-microservice
  * Avoids CORS issues by proxying through catalog backend
+ *
+ * Responses here are per-user and must never be cached. Without no-store,
+ * Express attaches a weak ETag, the browser revalidates with If-None-Match
+ * and gets a bodyless 304 - which the frontend read as "profile fetch
+ * failed", cleared the token and bounced the user back to /login forever.
  */
 @Controller('auth')
 export class AuthController {
@@ -76,6 +82,7 @@ export class AuthController {
   }
 
   @Get('profile')
+  @Header('Cache-Control', 'no-store')
   async getProfile(@Headers('authorization') authorization: string) {
     this.logger.log('GET /api/auth/profile', 'AuthController');
     if (!authorization || !authorization.startsWith('Bearer ')) {
@@ -104,6 +111,7 @@ export class AuthController {
   }
 
   @Get('admin/users')
+  @Header('Cache-Control', 'no-store')
   async getAdminUsers(
     @Headers('authorization') authorization: string,
     @Query('limit') limit = '100',
