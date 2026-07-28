@@ -8,6 +8,7 @@
 ## Completed
 <!-- AI appends here. Never modifies previous entries. -->
 - [x] 2026-04-05 Documentation standard applied
+- [x] 2026-07-28 Import from URL: Sbazar importer (SSR page parse — no public API), price persistence for all importers, and an "Import from URL" dialog on the products dashboard. Allegro and the remaining marketplaces still to come.
 
 ## Project Completion Marker
 

@@ -45,6 +45,7 @@ Base: `https://catalog.alfares.cz/api` | Internal: `http://catalog-microservice:
 | Attributes | `GET /api/attributes` · `GET /api/attributes/:id` · `POST /api/attributes` · `PUT /api/attributes/:id` |
 | Media | `GET /api/media/product/:productId` · `POST /api/media` · `PUT /api/media/:id` · `PUT /api/media/:id/primary` · `DELETE /api/media/:id` |
 | Pricing | `GET /api/pricing/product/:productId` · `GET /api/pricing/product/:productId/current` · `POST /api/pricing` · `PUT /api/pricing/:id` · `DELETE /api/pricing/:id` |
+| Import | `POST /api/products/import-from-url` — imports a marketplace listing (title, description, price, photos). Supports Aukro and Sbazar; SKU is `<MARKETPLACE>-<listingId>` |
 | Health | `GET /health` |
 
 ## DB Schema (PostgreSQL)
