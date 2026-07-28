@@ -56,6 +56,10 @@ export class Media {
     size?: number;
     mimeType?: string;
     duration?: number; // For videos
+    // Set on import when the source marketplace burns a watermark into its
+    // images: such photos must not be republished to other marketplaces.
+    watermarked?: boolean;
+    watermarkSource?: string;
   };
 
   @CreateDateColumn()

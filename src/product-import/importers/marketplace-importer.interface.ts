@@ -5,6 +5,12 @@ export interface ImportedListing {
   priceCurrency?: string;
   categoryPath?: string[];
   images: string[]; // ordered, best resolution available
+  /**
+   * True when the marketplace serves only watermarked images, so the imported
+   * photos carry a competitor's branding and must be replaced before the product
+   * is published anywhere else.
+   */
+  imagesWatermarked?: boolean;
   sourceUrl: string;
   sourceMarketplace: string; // e.g. 'aukro'
   externalId: string;

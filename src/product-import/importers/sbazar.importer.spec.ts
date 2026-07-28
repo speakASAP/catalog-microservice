@@ -60,6 +60,7 @@ describe('SbazarImporter', () => {
       priceCurrency: 'CZK',
       categoryPath: ['Auto-moto', 'Nákladní a užitkové vozy', 'Do 3,5 t'],
       images: expectedImages,
+      imagesWatermarked: true,
       sourceUrl: `${listingUrl}?utm_source=x`,
       sourceMarketplace: 'sbazar',
       externalId: '232280241',

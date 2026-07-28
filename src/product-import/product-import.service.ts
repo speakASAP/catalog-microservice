@@ -20,6 +20,17 @@ import {
 
 const MAX_IMAGES = 12;
 
+/** Marks a product whose photos carry the source marketplace's watermark. */
+export const WATERMARKED_PHOTOS_TAG = 'photos:watermarked';
+
+export interface ImportResult {
+  product: Product;
+  sourceMarketplace: string;
+  importedImageCount: number;
+  /** The caller must warn the user: these photos are not safe to republish as-is. */
+  imagesWatermarked: boolean;
+}
+
 @Injectable()
 export class ProductImportService {
   constructor(
@@ -54,7 +65,7 @@ export class ProductImportService {
     return `${stem}.${extension}`;
   }
 
-  async importFromUrl(url: string, scope: { actor?: unknown } = {}): Promise<Product> {
+  async importFromUrl(url: string, scope: { actor?: unknown } = {}): Promise<ImportResult> {
     const importer = this.importers.find((candidate) => candidate.canHandle(url));
     if (!importer) {
       throw new BadRequestException('Unsupported marketplace URL');
@@ -85,12 +96,18 @@ export class ProductImportService {
       });
     }
 
+    const watermarked = Boolean(listing.imagesWatermarked);
+
     const dto: CreateProductDto = {
       sku,
       title: listing.title,
       description: listing.descriptionText,
       descriptionRich: descriptionDocumentFromText(listing.descriptionText),
-      tags: [`source:${importer.key}`, `source-id:${listing.externalId}`],
+      tags: [
+        `source:${importer.key}`,
+        `source-id:${listing.externalId}`,
+        ...(watermarked ? [WATERMARKED_PHOTOS_TAG] : []),
+      ],
     };
 
     const product = await this.productsService.create(dto, scope as any);
@@ -156,6 +173,9 @@ export class ProductImportService {
           file: { buffer, originalname, mimetype: contentType, size: buffer.length },
           position: uploadedCount,
           isPrimary: uploadedCount === 0,
+          ...(watermarked
+            ? { metadata: { watermarked: true, watermarkSource: importer.key } }
+            : {}),
         });
         uploadedCount += 1;
       } catch (error: any) {
@@ -166,6 +186,12 @@ export class ProductImportService {
       }
     }
 
-    return product;
+    return {
+      product,
+      sourceMarketplace: importer.key,
+      importedImageCount: uploadedCount,
+      // Only claim a watermark when photos actually landed.
+      imagesWatermarked: watermarked && uploadedCount > 0,
+    };
   }
 }

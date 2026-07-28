@@ -124,6 +124,8 @@ export class SbazarImporter implements MarketplaceImporter {
       priceCurrency: offerNode?.priceCurrency || (priceAmount !== undefined ? 'CZK' : undefined),
       categoryPath: this.categoryPath(webPage, offer),
       images,
+      // Every preset sbazar serves burns in its watermark — there is no clean variant.
+      imagesWatermarked: images.length > 0,
       sourceUrl: url,
       sourceMarketplace: this.key,
       externalId: String(offer?.id ?? itemId),

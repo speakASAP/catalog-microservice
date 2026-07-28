@@ -28,15 +28,24 @@ export class ProductImportController {
     @Req() request: CatalogAuthenticatedRequest,
   ) {
     this.logger.log(`POST /api/products/import-from-url url=${body.url}`, 'ProductImportController');
-    const product = await this.productImportService.importFromUrl(body.url, {
+    const result = await this.productImportService.importFromUrl(body.url, {
       actor: request.catalogActor,
     });
+    const { product } = result;
     this.logger.auditCatalogWrite(request, {
       action: 'import_from_url',
       resourceType: 'product',
       resourceId: product.id,
       metadata: { sku: product.sku },
     });
-    return { success: true, data: product };
+    return {
+      success: true,
+      data: product,
+      meta: {
+        sourceMarketplace: result.sourceMarketplace,
+        importedImageCount: result.importedImageCount,
+        imagesWatermarked: result.imagesWatermarked,
+      },
+    };
   }
 }

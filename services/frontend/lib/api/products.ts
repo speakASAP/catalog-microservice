@@ -5,6 +5,13 @@
 import { apiClient, type ApiResponse } from './client';
 import type { WheelEvent } from 'react';
 
+/** Returned alongside an imported product so the UI can warn about the photos. */
+export interface ImportFromUrlMeta {
+  sourceMarketplace: string;
+  importedImageCount: number;
+  imagesWatermarked: boolean;
+}
+
 export interface ProductMedia {
   id: string;
   productId: string;
@@ -951,6 +958,8 @@ export const productsApi = {
   },
 
   async importFromUrl(url: string) {
-    return apiClient.post<Product>('/products/import-from-url', { url });
+    return apiClient.post<Product>('/products/import-from-url', { url }) as Promise<
+      ApiResponse<Product> & { meta?: ImportFromUrlMeta }
+    >;
   },
 };

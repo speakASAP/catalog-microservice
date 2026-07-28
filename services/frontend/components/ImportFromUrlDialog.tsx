@@ -8,7 +8,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { productsApi, Product } from '@/lib/api/products';
+import { productsApi, Product, ImportFromUrlMeta } from '@/lib/api/products';
 
 /** Adding a marketplace means a new importer in the service plus one line here. */
 const SUPPORTED_MARKETPLACES = [
@@ -28,7 +28,7 @@ interface ImportFromUrlDialogProps {
 type DialogState =
   | { status: 'idle' }
   | { status: 'importing' }
-  | { status: 'imported'; product: Product }
+  | { status: 'imported'; product: Product; meta?: ImportFromUrlMeta }
   | { status: 'duplicate'; message: string; existingProductId?: string }
   | { status: 'error'; message: string };
 
@@ -69,7 +69,7 @@ export default function ImportFromUrlDialog({
     const response = await productsApi.importFromUrl(trimmed);
 
     if (response.success && response.data) {
-      setState({ status: 'imported', product: response.data });
+      setState({ status: 'imported', product: response.data, meta: response.meta });
       onImported?.(response.data);
       return;
     }
@@ -143,15 +143,54 @@ export default function ImportFromUrlDialog({
           )}
 
           {state.status === 'imported' && (
-            <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-sm text-green-800">
-              <p className="font-semibold">Imported “{state.product.title}”</p>
-              <Link
-                href={`/dashboard/products/${state.product.id}`}
-                className="underline font-semibold"
-              >
-                Open the product
-              </Link>
-            </div>
+            <>
+              <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-sm text-green-800">
+                <p className="font-semibold">
+                  Imported “{state.product.title}”
+                  {typeof state.meta?.importedImageCount === 'number' &&
+                    ` — ${state.meta.importedImageCount} photo${
+                      state.meta.importedImageCount === 1 ? '' : 's'
+                    }`}
+                </p>
+                <Link
+                  href={`/dashboard/products/${state.product.id}`}
+                  className="underline font-semibold"
+                >
+                  Open the product
+                </Link>
+              </div>
+
+              {state.meta?.imagesWatermarked && (
+                <div className="rounded-xl border-2 border-amber-400 bg-amber-50 p-4">
+                  <div className="flex gap-3">
+                    <span className="text-3xl leading-none" aria-hidden="true">
+                      ⚠️
+                    </span>
+                    <div className="space-y-2">
+                      <p className="text-base font-extrabold text-amber-900 uppercase tracking-wide">
+                        These photos are watermarked
+                      </p>
+                      <p className="text-sm text-amber-900">
+                        {state.meta.sourceMarketplace} serves its images only with its own
+                        watermark burned in, and at reduced resolution. The imported photos
+                        carry that branding.
+                      </p>
+                      <p className="text-sm font-bold text-amber-900">
+                        Replace them with your original photos before you publish this product
+                        to any other marketplace — several reject listings that show a
+                        competitor’s watermark.
+                      </p>
+                      <Link
+                        href={`/dashboard/products/${state.product.id}`}
+                        className="inline-block text-sm font-bold text-amber-900 underline"
+                      >
+                        Replace the photos now
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {state.status === 'duplicate' && (

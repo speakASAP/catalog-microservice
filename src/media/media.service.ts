@@ -23,6 +23,7 @@ type UploadMediaInput = {
   altText?: string;
   position?: number;
   isPrimary?: boolean;
+  metadata?: Partial<Media['metadata']>;
 };
 
 type S3Request = {
@@ -87,6 +88,7 @@ export class MediaService {
       metadata: {
         size: input.file.size,
         mimeType: input.file.mimetype,
+        ...(input.metadata || {}),
       },
     });
 

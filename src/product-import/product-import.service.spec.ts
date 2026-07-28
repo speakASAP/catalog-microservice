@@ -69,7 +69,7 @@ describe('ProductImportService', () => {
       logger as any,
     );
 
-    const product = await service.importFromUrl('https://aukro.cz/test-123', {});
+    const { product } = await service.importFromUrl('https://aukro.cz/test-123', {});
 
     expect(productsService.findBySku).toHaveBeenCalledWith('AUKRO-123', {});
     expect(productsService.create).toHaveBeenCalledWith(
@@ -162,7 +162,7 @@ describe('ProductImportService', () => {
       logger as any,
     );
 
-    const product = await service.importFromUrl('https://aukro.cz/test-123', {});
+    const { product } = await service.importFromUrl('https://aukro.cz/test-123', {});
 
     expect(mediaService.upload).toHaveBeenCalledTimes(1);
     expect(mediaService.upload).toHaveBeenCalledWith(expect.objectContaining({
@@ -251,7 +251,7 @@ describe('ProductImportService', () => {
       logger as any,
     );
 
-    const product = await service.importFromUrl('https://aukro.cz/test-123', {});
+    const { product } = await service.importFromUrl('https://aukro.cz/test-123', {});
 
     expect(mediaService.upload).toHaveBeenCalledTimes(1);
     expect(mediaService.upload).toHaveBeenCalledWith(expect.objectContaining({
@@ -298,6 +298,109 @@ describe('ProductImportService', () => {
         file: expect.objectContaining({ originalname: '57ba.webp', mimetype: 'image/webp' }),
       }),
     );
+  });
+
+  it('tags the product and its media when the source watermarks its photos', async () => {
+    const importer = makeImporter({
+      listing: {
+        title: 'Peugeot',
+        descriptionText: '',
+        images: ['https://d46-a.sdn.cz/a/57ba.jpeg?fl=exf|webp,75'],
+        imagesWatermarked: true,
+        sourceUrl: 'https://www.sbazar.cz/inzerat/232280241-x',
+        sourceMarketplace: 'sbazar',
+        externalId: '232280241',
+      },
+    });
+    importer.key = 'sbazar';
+    const productsService = makeProductsService();
+    const mediaService = makeMediaService();
+    (axios.get as jest.Mock).mockResolvedValue({
+      data: Buffer.from('fake-image-bytes'),
+      headers: { 'content-type': 'image/webp' },
+    });
+
+    const service = new ProductImportService(
+      [importer as any],
+      productsService as any,
+      mediaService as any,
+      pricingService as any,
+      logger as any,
+    );
+
+    const result = await service.importFromUrl('https://www.sbazar.cz/inzerat/232280241-x', {});
+
+    expect(productsService.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tags: expect.arrayContaining(['source:sbazar', 'photos:watermarked']),
+      }),
+      {},
+    );
+    expect(mediaService.upload).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metadata: { watermarked: true, watermarkSource: 'sbazar' },
+      }),
+    );
+    expect(result.imagesWatermarked).toBe(true);
+    expect(result.importedImageCount).toBe(1);
+    expect(result.sourceMarketplace).toBe('sbazar');
+  });
+
+  it('does not claim a watermark when the source serves clean photos', async () => {
+    const importer = makeImporter();
+    const productsService = makeProductsService();
+    const mediaService = makeMediaService();
+    (axios.get as jest.Mock).mockResolvedValue({
+      data: Buffer.from('fake-image-bytes'),
+      headers: { 'content-type': 'image/jpeg' },
+    });
+
+    const service = new ProductImportService(
+      [importer as any],
+      productsService as any,
+      mediaService as any,
+      pricingService as any,
+      logger as any,
+    );
+
+    const result = await service.importFromUrl('https://aukro.cz/test-123', {});
+
+    expect(productsService.create).toHaveBeenCalledWith(
+      expect.objectContaining({ tags: ['source:aukro', 'source-id:123'] }),
+      {},
+    );
+    expect(mediaService.upload).not.toHaveBeenCalledWith(
+      expect.objectContaining({ metadata: expect.anything() }),
+    );
+    expect(result.imagesWatermarked).toBe(false);
+  });
+
+  it('does not warn about watermarks when no photo actually landed', async () => {
+    const importer = makeImporter({
+      listing: {
+        title: 'Peugeot',
+        descriptionText: '',
+        images: ['https://d46-a.sdn.cz/a/57ba.jpeg'],
+        imagesWatermarked: true,
+        sourceUrl: 'https://www.sbazar.cz/inzerat/232280241-x',
+        sourceMarketplace: 'sbazar',
+        externalId: '232280241',
+      },
+    });
+    (axios.get as jest.Mock).mockRejectedValue(new Error('network error'));
+
+    const service = new ProductImportService(
+      [importer as any],
+      makeProductsService() as any,
+      makeMediaService() as any,
+      pricingService as any,
+      logger as any,
+    );
+
+    const result = await service.importFromUrl('https://www.sbazar.cz/inzerat/232280241-x', {});
+
+    expect(result.importedImageCount).toBe(0);
+    expect(result.imagesWatermarked).toBe(false);
   });
 
   it('persists the listing price when the importer supplies one', async () => {
@@ -400,7 +503,7 @@ describe('ProductImportService', () => {
       logger as any,
     );
 
-    const product = await service.importFromUrl('https://www.sbazar.cz/inzerat/2-x', {});
+    const { product } = await service.importFromUrl('https://www.sbazar.cz/inzerat/2-x', {});
 
     expect(product.id).toBe('product-1');
     expect(logger.warn).toHaveBeenCalled();
