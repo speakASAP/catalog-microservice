@@ -30,6 +30,30 @@ export class ProductImportService {
     private readonly logger: LoggerService,
   ) {}
 
+  /**
+   * Names the stored object after the image's path, not the whole URL: transform
+   * query strings can themselves contain slashes and filenames (sbazar's carries
+   * `/watermark/sbazar.png`), which a naive split would take for the filename. The
+   * extension follows the served content-type, since these CDNs re-encode.
+   */
+  private imageFilename(imageUrl: string, contentType: string): string {
+    let base: string;
+    try {
+      base = new URL(imageUrl).pathname.split('/').filter(Boolean).pop() || 'image';
+    } catch {
+      base = 'image';
+    }
+
+    const subtype = contentType.split(';')[0].trim().split('/')[1]?.toLowerCase();
+    const extension = subtype === 'jpeg' ? 'jpg' : subtype;
+    if (!extension || !/^[a-z0-9]+$/.test(extension)) {
+      return base;
+    }
+
+    const stem = base.replace(/\.[^.]+$/, '') || 'image';
+    return `${stem}.${extension}`;
+  }
+
   async importFromUrl(url: string, scope: { actor?: unknown } = {}): Promise<Product> {
     const importer = this.importers.find((candidate) => candidate.canHandle(url));
     if (!importer) {
@@ -125,7 +149,7 @@ export class ProductImportService {
           continue;
         }
         const buffer = Buffer.from(imageResponse.data);
-        const originalname = imageUrl.split('/').pop() || 'image.jpg';
+        const originalname = this.imageFilename(imageUrl, contentType);
 
         await this.mediaService.upload({
           productId: product.id,

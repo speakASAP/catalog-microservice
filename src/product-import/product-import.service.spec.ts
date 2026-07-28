@@ -262,6 +262,44 @@ describe('ProductImportService', () => {
     expect(product.id).toBe('product-1');
   });
 
+  it('names uploads from the image path, ignoring filenames inside the query string', async () => {
+    // Sbazar's transform query contains `/watermark/sbazar.png` — splitting the whole
+    // URL on "/" would name every object after the watermark.
+    const importer = makeImporter({
+      listing: {
+        title: 'Peugeot',
+        descriptionText: '',
+        images: [
+          'https://d46-a.sdn.cz/d_46/c_img_qD_B/abc/57ba.jpeg?fl=exf|res,1536,1152,1|wrm,/watermark/sbazar.png,10,10|webp,75',
+        ],
+        sourceUrl: 'https://www.sbazar.cz/inzerat/232280241-x',
+        sourceMarketplace: 'sbazar',
+        externalId: '232280241',
+      },
+    });
+    const mediaService = makeMediaService();
+    (axios.get as jest.Mock).mockResolvedValue({
+      data: Buffer.from('fake-image-bytes'),
+      headers: { 'content-type': 'image/webp' },
+    });
+
+    const service = new ProductImportService(
+      [importer as any],
+      makeProductsService() as any,
+      mediaService as any,
+      pricingService as any,
+      logger as any,
+    );
+
+    await service.importFromUrl('https://www.sbazar.cz/inzerat/232280241-x', {});
+
+    expect(mediaService.upload).toHaveBeenCalledWith(
+      expect.objectContaining({
+        file: expect.objectContaining({ originalname: '57ba.webp', mimetype: 'image/webp' }),
+      }),
+    );
+  });
+
   it('persists the listing price when the importer supplies one', async () => {
     const importer = makeImporter({
       listing: {
