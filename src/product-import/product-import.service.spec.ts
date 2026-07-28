@@ -41,8 +41,15 @@ describe('ProductImportService', () => {
     upload: jest.fn().mockResolvedValue({ id: 'media-1' }),
   });
 
+  const makePricingService = () => ({
+    upsert: jest.fn().mockResolvedValue({ id: 'pricing-1' }),
+  });
+
+  let pricingService = makePricingService();
+
   beforeEach(() => {
     jest.clearAllMocks();
+    pricingService = makePricingService();
   });
 
   it('creates a draft product and uploads each image', async () => {
@@ -58,6 +65,7 @@ describe('ProductImportService', () => {
       [importer as any],
       productsService as any,
       mediaService as any,
+      pricingService as any,
       logger as any,
     );
 
@@ -93,6 +101,7 @@ describe('ProductImportService', () => {
       [importer as any],
       makeProductsService() as any,
       makeMediaService() as any,
+      pricingService as any,
       logger as any,
     );
 
@@ -108,6 +117,7 @@ describe('ProductImportService', () => {
       [importer as any],
       makeProductsService() as any,
       makeMediaService() as any,
+      pricingService as any,
       logger as any,
     );
 
@@ -123,6 +133,7 @@ describe('ProductImportService', () => {
       [importer as any],
       productsService as any,
       makeMediaService() as any,
+      pricingService as any,
       logger as any,
     );
 
@@ -147,6 +158,7 @@ describe('ProductImportService', () => {
       [importer as any],
       productsService as any,
       mediaService as any,
+      pricingService as any,
       logger as any,
     );
 
@@ -170,6 +182,7 @@ describe('ProductImportService', () => {
       [importer as any],
       makeProductsService() as any,
       makeMediaService() as any,
+      pricingService as any,
       logger as any,
     );
 
@@ -201,6 +214,7 @@ describe('ProductImportService', () => {
       [importer as any],
       productsService as any,
       mediaService as any,
+      pricingService as any,
       logger as any,
     );
 
@@ -233,6 +247,7 @@ describe('ProductImportService', () => {
       [importer as any],
       productsService as any,
       mediaService as any,
+      pricingService as any,
       logger as any,
     );
 
@@ -245,5 +260,111 @@ describe('ProductImportService', () => {
       isPrimary: true,
     }));
     expect(product.id).toBe('product-1');
+  });
+
+  it('persists the listing price when the importer supplies one', async () => {
+    const importer = makeImporter({
+      listing: {
+        title: 'Prodám peugeot boxer 2003 2.2 hdi',
+        descriptionText: 'pojízdné, horší spojka',
+        priceAmount: 15000,
+        priceCurrency: 'CZK',
+        images: [],
+        sourceUrl: 'https://www.sbazar.cz/inzerat/232280241-x',
+        sourceMarketplace: 'sbazar',
+        externalId: '232280241',
+      },
+    });
+
+    const service = new ProductImportService(
+      [importer as any],
+      makeProductsService() as any,
+      makeMediaService() as any,
+      pricingService as any,
+      logger as any,
+    );
+
+    await service.importFromUrl('https://www.sbazar.cz/inzerat/232280241-x', {});
+
+    expect(pricingService.upsert).toHaveBeenCalledWith({
+      productId: 'product-1',
+      basePrice: 15000,
+      currency: 'CZK',
+      priceType: 'regular',
+      isActive: true,
+    });
+  });
+
+  it('defaults the currency to CZK when the listing omits it', async () => {
+    const importer = makeImporter({
+      listing: {
+        title: 'Bez měny',
+        descriptionText: '',
+        priceAmount: 2500,
+        images: [],
+        sourceUrl: 'https://www.sbazar.cz/inzerat/1-x',
+        sourceMarketplace: 'sbazar',
+        externalId: '1',
+      },
+    });
+
+    const service = new ProductImportService(
+      [importer as any],
+      makeProductsService() as any,
+      makeMediaService() as any,
+      pricingService as any,
+      logger as any,
+    );
+
+    await service.importFromUrl('https://www.sbazar.cz/inzerat/1-x', {});
+
+    expect(pricingService.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ basePrice: 2500, currency: 'CZK' }),
+    );
+  });
+
+  it('does not write pricing when the listing carries no price', async () => {
+    const importer = makeImporter();
+
+    const service = new ProductImportService(
+      [importer as any],
+      makeProductsService() as any,
+      makeMediaService() as any,
+      pricingService as any,
+      logger as any,
+    );
+
+    await service.importFromUrl('https://aukro.cz/test-123', {});
+
+    expect(pricingService.upsert).not.toHaveBeenCalled();
+  });
+
+  it('still returns the product when pricing fails to save', async () => {
+    const importer = makeImporter({
+      listing: {
+        title: 'Pricing selže',
+        descriptionText: '',
+        priceAmount: 999,
+        priceCurrency: 'CZK',
+        images: [],
+        sourceUrl: 'https://www.sbazar.cz/inzerat/2-x',
+        sourceMarketplace: 'sbazar',
+        externalId: '2',
+      },
+    });
+    pricingService.upsert.mockRejectedValue(new Error('db down'));
+
+    const service = new ProductImportService(
+      [importer as any],
+      makeProductsService() as any,
+      makeMediaService() as any,
+      pricingService as any,
+      logger as any,
+    );
+
+    const product = await service.importFromUrl('https://www.sbazar.cz/inzerat/2-x', {});
+
+    expect(product.id).toBe('product-1');
+    expect(logger.warn).toHaveBeenCalled();
   });
 });

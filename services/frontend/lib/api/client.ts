@@ -28,6 +28,7 @@ export interface ApiResponse<T = any> {
     code: string;
     message: string;
     details?: any;
+    status?: number;
   };
 }
 
@@ -91,16 +92,26 @@ class ApiClient {
       const data = text ? JSON.parse(text) : { success: response.ok };
 
       if (!response.ok) {
-        throw new Error(data.error?.message || data.message || 'Request failed');
+        // Carry the parsed body along: some endpoints answer an error with fields
+        // the caller needs (e.g. import-from-url returns existingProductId on 409).
+        const failure = new Error(
+          data.error?.message || data.message || 'Request failed',
+        ) as Error & { status?: number; details?: unknown };
+        failure.status = response.status;
+        failure.details = data;
+        throw failure;
       }
 
       return data;
     } catch (error: unknown) {
+      const failure = error as { status?: number; details?: unknown } | undefined;
       return {
         success: false,
         error: {
           code: 'REQUEST_ERROR',
           message: error instanceof Error ? error.message : 'Network error',
+          details: failure?.details,
+          status: failure?.status,
         },
       };
     }

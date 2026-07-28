@@ -13,6 +13,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardSidebarControls } from '@/contexts/DashboardSidebarContext';
 import { canMutateCatalogProduct } from "@/lib/catalogAccess";
+import ImportFromUrlDialog from '@/components/ImportFromUrlDialog';
 
 type ActiveFilter = 'all' | 'active' | 'inactive';
 type LifecycleFilter = 'all' | 'draft' | 'active' | 'archived' | 'needs_review';
@@ -108,6 +109,7 @@ export default function AdminProductsPage() {
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [catalogSettings, setCatalogSettings] = useState<CatalogSourceSettings | null>(null);
   const [settingsSaving, setSettingsSaving] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   const selectedCatalogSources = useMemo<ProductQuery['catalogSources']>(() => {
     if (!catalogSettings) return undefined;
@@ -508,14 +510,29 @@ export default function AdminProductsPage() {
               Manage products ({total} total)
             </p>
           </div>
-          <Link
-            href="/dashboard/products/new"
-            className="bg-white text-blue-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-50 transition-all shadow-md hover:shadow-lg text-center"
-          >
-            ➕ New Product
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => setImportDialogOpen(true)}
+              className="bg-blue-500/30 border border-white/40 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-500/50 transition-all shadow-md hover:shadow-lg text-center"
+            >
+              🔗 Import from URL
+            </button>
+            <Link
+              href="/dashboard/products/new"
+              className="bg-white text-blue-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-50 transition-all shadow-md hover:shadow-lg text-center"
+            >
+              ➕ New Product
+            </Link>
+          </div>
         </div>
       </div>
+
+      <ImportFromUrlDialog
+        open={importDialogOpen}
+        onClose={() => setImportDialogOpen(false)}
+        onImported={() => loadProducts()}
+      />
 
       {/* Bulk actions */}
       {products.length > 0 && (

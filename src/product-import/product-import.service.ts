@@ -7,6 +7,7 @@ import {
 import axios from 'axios';
 import { ProductsService } from '../products/products.service';
 import { MediaService } from '../media/media.service';
+import { PricingService } from '../pricing/pricing.service';
 import { LoggerService } from '../logger/logger.service';
 import { descriptionDocumentFromText } from '../content-connectors/content-document';
 import { CreateProductDto } from '../products/dto';
@@ -25,6 +26,7 @@ export class ProductImportService {
     private readonly importers: MarketplaceImporter[],
     private readonly productsService: ProductsService,
     private readonly mediaService: MediaService,
+    private readonly pricingService: PricingService,
     private readonly logger: LoggerService,
   ) {}
 
@@ -68,6 +70,24 @@ export class ProductImportService {
     };
 
     const product = await this.productsService.create(dto, scope as any);
+
+    // Priced before photos so a failing image download never costs us the price.
+    if (typeof listing.priceAmount === 'number' && Number.isFinite(listing.priceAmount)) {
+      try {
+        await this.pricingService.upsert({
+          productId: product.id,
+          basePrice: listing.priceAmount,
+          currency: listing.priceCurrency || 'CZK',
+          priceType: 'regular',
+          isActive: true,
+        });
+      } catch (error: any) {
+        this.logger.warn(
+          `Imported product ${product.id} without pricing: ${error?.message}`,
+          'ProductImportService',
+        );
+      }
+    }
 
     let uploadedCount = 0;
     for (const imageUrl of listing.images.slice(0, MAX_IMAGES)) {
