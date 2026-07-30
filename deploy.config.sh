@@ -7,10 +7,12 @@ PORT="3200"
 
 IMAGES=(
   "catalog-microservice|.||"
+  "catalog-frontend|services/frontend||"
 )
 
 DEPLOYMENTS=(
   "catalog-microservice|app|catalog-microservice"
+  "catalog-frontend|app|catalog-frontend"
 )
 
-MANIFESTS=(configmap.yaml external-secret.yaml deployment.yaml contract-monitor-cronjob.yaml service.yaml ingress.yaml)
+MANIFESTS=(configmap.yaml external-secret.yaml deployment.yaml contract-monitor-cronjob.yaml service.yaml frontend-deployment.yaml frontend-service.yaml ingress.yaml)
