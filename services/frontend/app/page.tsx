@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import Footer from '@/components/Footer';
 
 const benefits = [
   {
@@ -40,7 +41,8 @@ const salesSources = [
 ];
 
 export default function LandingPage() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
+  const displayName = user?.firstName || user?.email;
 
   return (
     <main className="min-h-screen bg-white text-slate-950">
@@ -50,15 +52,33 @@ export default function LandingPage() {
             Alfares Catalog
           </Link>
           <nav className="flex items-center gap-3 text-sm font-semibold">
-            <Link href="/register" className="hidden text-slate-600 transition-colors hover:text-slate-950 sm:inline">
-              Register
-            </Link>
-            <Link
-              href={isAuthenticated ? '/dashboard' : '/login'}
-              className="rounded-md bg-slate-950 px-4 py-2 text-white transition-colors hover:bg-slate-800"
-            >
-              {isAuthenticated ? 'Open dashboard' : 'Sign in'}
-            </Link>
+            {loading ? null : isAuthenticated ? (
+              <>
+                {displayName ? (
+                  <span className="hidden text-slate-600 sm:inline">
+                    Signed in as <span className="font-bold text-slate-950">{displayName}</span>
+                  </span>
+                ) : null}
+                <Link
+                  href="/dashboard"
+                  className="rounded-md bg-slate-950 px-4 py-2 text-white transition-colors hover:bg-slate-800"
+                >
+                  Open dashboard
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/register" className="hidden text-slate-600 transition-colors hover:text-slate-950 sm:inline">
+                  Register
+                </Link>
+                <Link
+                  href="/login"
+                  className="rounded-md bg-slate-950 px-4 py-2 text-white transition-colors hover:bg-slate-800"
+                >
+                  Sign in
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       </header>
@@ -73,18 +93,36 @@ export default function LandingPage() {
               Register your account, get approved catalog access, and manage the products you sell from three sources: your own catalog, Alfares supplier offers, and community resale products that other sellers open for distribution.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/register"
-                className="inline-flex items-center justify-center rounded-md bg-blue-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-800"
-              >
-                Create account
-              </Link>
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-950 transition-colors hover:border-slate-950"
-              >
-                Sign in to dashboard
-              </Link>
+              {loading ? null : isAuthenticated ? (
+                <>
+                  {displayName ? (
+                    <p className="inline-flex items-center text-base font-semibold text-slate-700">
+                      Welcome back, <span className="ml-1 font-extrabold text-slate-950">{displayName}</span>
+                    </p>
+                  ) : null}
+                  <Link
+                    href="/dashboard"
+                    className="inline-flex items-center justify-center rounded-md bg-blue-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-800"
+                  >
+                    Open dashboard
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/register"
+                    className="inline-flex items-center justify-center rounded-md bg-blue-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-800"
+                  >
+                    Create account
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-950 transition-colors hover:border-slate-950"
+                  >
+                    Sign in to dashboard
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
@@ -191,6 +229,8 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      <Footer />
     </main>
   );
 }

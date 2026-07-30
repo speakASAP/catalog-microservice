@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardSidebarProvider } from '@/contexts/DashboardSidebarContext';
 import { hasCatalogAdminAccess } from './AdminGuard';
+import Footer from './Footer';
 import { ReactNode, useState } from 'react';
 
 interface AdminLayoutProps {
@@ -199,12 +200,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         )}
 
         {/* Main content */}
-        <main className="flex-1 lg:ml-44 min-h-screen">
-          <div className="p-4 lg:p-5">
+        <main className="flex-1 lg:ml-44 min-h-screen flex flex-col">
+          <div className="flex-1 p-4 lg:p-5">
             <DashboardSidebarProvider setSidebarControls={setSidebarControls}>
               {children}
             </DashboardSidebarProvider>
           </div>
+          <Footer />
         </main>
       </div>
     </div>
