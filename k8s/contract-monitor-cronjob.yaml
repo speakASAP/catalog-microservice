@@ -8,19 +8,6 @@ metadata:
     component: contract-monitor
     managed-by: k8s-migration
 spec:
-  # SUSPENDED 2026-08-03. Every run failed on the authorized-bazos-draft
-  # contract:
-  #   "Set CATALOG_SMOKE_ENABLE_BAZOS_AUTHORIZED=true with approved Bazos
-  #    identity/category inputs to run this side-effect-risk check."
-  # That check posts real Bazos drafts, so it needs approved identity/category
-  # inputs supplied through the ExternalSecret path — a decision with
-  # third-party side effects, not something to enable by default.
-  #
-  # Suspended rather than left red: a job failing every 30 minutes for weeks
-  # trains everyone to ignore red jobs, which costs more than this check gains.
-  # To re-enable: supply CATALOG_SMOKE_ENABLE_BAZOS_AUTHORIZED plus the approved
-  # inputs via secret/prod/catalog-microservice, then set suspend: false.
-  suspend: true
   # Staggered off the :00/:30 marks shared by cliplot-readiness-monitor and
   # others. See shared/docs/DEPLOY_STANDARDIZATION_REPORT.md section 12 addendum.
   schedule: "14,44 * * * *"
