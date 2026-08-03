@@ -8,19 +8,27 @@ metadata:
     component: contract-monitor
     managed-by: k8s-migration
 spec:
-  # SUSPENDED 2026-08-03. Every run failed on the authorized-bazos-draft
-  # contract:
+  # Runs again as of 2026-08-03, with the side-effect check left off.
+  #
+  # History: every run failed on the authorized-bazos-draft contract —
   #   "Set CATALOG_SMOKE_ENABLE_BAZOS_AUTHORIZED=true with approved Bazos
   #    identity/category inputs to run this side-effect-risk check."
-  # That check posts real Bazos drafts, so it needs approved identity/category
-  # inputs supplied through the ExternalSecret path — a decision with
-  # third-party side effects, not something to enable by default.
+  # That check posts real Bazos drafts, so it stays off until someone supplies
+  # approved identity/category inputs through secret/prod/catalog-microservice.
+  # It is a third-party side effect, not a default.
   #
-  # Suspended rather than left red: a job failing every 30 minutes for weeks
-  # trains everyone to ignore red jobs, which costs more than this check gains.
-  # To re-enable: supply CATALOG_SMOKE_ENABLE_BAZOS_AUTHORIZED plus the approved
-  # inputs via secret/prod/catalog-microservice, then set suspend: false.
-  suspend: true
+  # The job was then suspended entirely, which fixed the noise but stopped the
+  # other eleven contract checks with it. With
+  # CATALOG_MONITOR_INCLUDE_BAZOS_AUTHORIZED=false the run is green — measured
+  # 2026-08-03: 11 passed, 0 failed, 4 skipped — so there is no longer a reason
+  # to keep it suspended. A monitor that does not run reports nothing, which
+  # looks exactly like a monitor reporting no problems.
+  #
+  # The other three skips (authorized-channel-status,
+  # authorized-heureka-readiness, authorized-stock-consistency) are read-only by
+  # their own definitions but call live third-party APIs, so enabling them is
+  # the owner's call rather than a default.
+  suspend: false
   # Staggered off the :00/:30 marks shared by cliplot-readiness-monitor and
   # others. See shared/docs/DEPLOY_STANDARDIZATION_REPORT.md section 12 addendum.
   schedule: "14,44 * * * *"
