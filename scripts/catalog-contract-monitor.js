@@ -11,6 +11,61 @@ function isEnabled(value) {
   return value === "1" || value === "true" || value === "yes";
 }
 
+const expiryWarnDays = Number(process.env.CATALOG_MONITOR_TOKEN_WARN_DAYS || 7);
+
+/**
+ * Decodes a JWT payload without verifying the signature. Expiry is a claim, so
+ * reading it locally is enough to report remaining lifetime; the token value is
+ * never logged.
+ */
+function decodeJwtPayload(token) {
+  const parts = String(token).split(".");
+  if (parts.length !== 3) return null;
+  try {
+    return JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Reports remaining lifetime of the service tokens the authorized profile needs.
+ * An expired token is what surfaces downstream as an opaque 503, so it is called
+ * out explicitly rather than left to the contract failures.
+ */
+function checkTokenExpiry() {
+  const tokens = [
+    { name: "WAREHOUSE_SERVICE_TOKEN", value: process.env.WAREHOUSE_SERVICE_TOKEN },
+    { name: "CATALOG_INTERNAL_SERVICE_TOKEN", value: process.env.CATALOG_INTERNAL_SERVICE_TOKEN },
+  ];
+
+  const nowSeconds = Date.now() / 1000;
+  return tokens
+    .filter((token) => token.value)
+    .map(({ name, value }) => {
+      const payload = decodeJwtPayload(value);
+      if (!payload) {
+        return { token: name, status: "unknown", reason: "Token is not a decodable JWT." };
+      }
+      if (typeof payload.exp !== "number") {
+        return { token: name, status: "unknown", reason: "Token has no exp claim." };
+      }
+
+      const daysRemaining = Number(((payload.exp - nowSeconds) / 86400).toFixed(1));
+      const status = daysRemaining <= 0 ? "expired" : daysRemaining <= expiryWarnDays ? "expiring" : "ok";
+      return {
+        token: name,
+        status,
+        daysRemaining,
+        expiresAt: new Date(payload.exp * 1000).toISOString(),
+        message:
+          status === "expired"
+            ? `${name} expired ${Math.abs(daysRemaining)} days ago; authorized contracts will fail with 401/503 until it is reissued.`
+            : `${name} expires in ${daysRemaining} days.`,
+      };
+    });
+}
+
 function runSmokeProfile(name, envPatch) {
   const startedAt = new Date().toISOString();
   const child = spawnSync(process.execPath, [smokeScript], {
@@ -110,12 +165,20 @@ function main() {
     });
   }
 
+  const tokenExpiry = checkTokenExpiry();
+  for (const entry of tokenExpiry) {
+    if (entry.status === "expired" || entry.status === "expiring") {
+      console.error(`[token-expiry] ${entry.message}`);
+    }
+  }
+
   const profileResults = profiles.map((profile) => runSmokeProfile(profile.name, profile.env));
   const failedProfiles = profileResults.filter((profile) => profile.status === "fail");
   const summary = {
     monitor: "catalog-contract-monitor",
     generatedAt: new Date().toISOString(),
     baseUrl: (process.env.CATALOG_SMOKE_BASE_URL || "https://catalog.alfares.cz").replace(/\/+$/, ""),
+    tokenExpiry,
     profileCount: profileResults.length,
     passedProfiles: profileResults.length - failedProfiles.length,
     failedProfiles: failedProfiles.length,
