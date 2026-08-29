@@ -17,19 +17,15 @@ Catalog is a data service, but AI/Codex sessions must follow the catalog impleme
 
 ## Knowledge Retrieval
 
-Before broad repository reads, query docs-rag-microservice when the service and a valid token are available. Use it to reuse indexed ecosystem context, then verify important facts against repository files.
+Use `docs-rag-microservice` for bounded discovery when it is healthy, then
+verify deployment, security, database, integration and public-contract facts
+against the cited Git source. Git remains authoritative.
 
-```bash
-curl -s -X POST http://docs-rag-microservice.statex-apps.svc.cluster.local:3397/retrieval/agent-context \
-  -H "Authorization: Bearer $JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "catalog-microservice YOUR QUESTION HERE", "maxTokens": 3000, "repoName": "catalog-microservice"}'
-```
+Authority and fallback rules:
+`/home/ssf/Documents/Github/shared/docs/DOCUMENTATION_AUTHORITY.md`.
 
-- Internal URL: `http://docs-rag-microservice.statex-apps.svc.cluster.local:3397`
-- Public URL: `https://docs-rag.alfares.cz`
-- Full guide: `docs-rag-microservice/docs/RAG_USAGE.md`
-- If `JWT_TOKEN` is unavailable, continue from repository files and mark the retrieval gap as `[MISSING: docs-rag JWT_TOKEN]`.
+Do not generate tokens in documentation or assume an unconfident/failed RAG
+response means that source documentation does not exist.
 
 ## One-Command Continuation
 

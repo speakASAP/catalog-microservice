@@ -130,7 +130,7 @@ ssh alfares 'kubectl annotate externalsecret catalog-microservice-secret -n stat
 Then roll Catalog if the mounted Secret changed after the pod started:
 
 ```bash
-ssh alfares 'kubectl rollout restart deployment/catalog-microservice -n statex-apps && kubectl rollout status deployment/catalog-microservice -n statex-apps --timeout=180s'
+ssh alfares "/home/ssf/Documents/Github/shared/scripts/with-deploy-lock.sh bash -lc 'kubectl rollout restart deployment/catalog-microservice -n statex-apps && /home/ssf/Documents/Github/shared/scripts/wait-for-rollout.sh -n statex-apps -t 180 catalog-microservice'"
 ```
 
 ## Post-Mount Validation
