@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "repository": "catalog-microservice",
+  "profile": "service",
+  "project_registration": {
+    "runlayer_project_slug": null,
+    "status": "unlinked"
+  },
+  "collectable_paths": [
+    "AGENTS.md",
+    "AGENT_OPERATIONS.md",
+    "BUSINESS.md",
+    "SYSTEM.md",
+    "TASKS.md",
+    "STATE.json",
+    "docs/registry/ARTIFACT_INDEX.json",
+    "docs/orchestrator/GOALS.md",
+    "docs/orchestrator/PLAN.md",
+    "docs/orchestrator/STATUS.md",
+    "docs/orchestrator/VALIDATION_DEBT.md"
+  ],
+  "excluded_path_patterns": [
+    ".env*",
+    "**/secrets/**",
+    "**/*.pem",
+    "**/node_modules/**",
+    "**/coverage/**"
+  ],
+  "owners": {
+    "business_intent": "human",
+    "technical_system": "service-owner",
+    "planning_state": "orchestrator",
+    "integration": "service-owner"
+  }
+}
