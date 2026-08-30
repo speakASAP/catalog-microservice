@@ -1,30 +1,26 @@
-# catalog-microservice
+# Catalog Microservice
 
-Single source of truth for all product data across the e-commerce platform.
 
-**Port**: 3200 | **Domain**: https://catalog.alfares.cz
+## Status
+IPS planning adoption is complete for this documented production repository.
 
-## What it manages
+## Documentation Authority
+BUSINESS.md and SYSTEM.md, supplemented by repository architecture documentation, are authoritative.
 
-Products (SKU, title, description, brand, EAN, dimensions) · Categories (hierarchical tree) · Attributes · Media (MinIO/CDN) · Pricing
+## Capabilities
+Product catalog source of truth for the ecosystem
 
-## Consumers
+## Interfaces
+Repository interfaces and operational boundaries are documented in SYSTEM.md and architecture records.
 
-flipflop-service, allegro-service, aukro-service, bazos-service, heureka-service, suppliers-microservice
+## Development
+Read AGENTS.md and repository-local architecture documentation before changing behavior.
 
-## Quick start (dev)
+## Configuration
+Use documented configuration sources; never copy credentials or secret values into documentation.
 
-```bash
-npm install
-npm run start:dev
-```
+## Deployment
+Follow the repository deployment boundary; this adoption changes documentation only.
 
-Frontend admin (Next.js): `cd services/frontend && npm install && npm run dev`
-
-## Docs
-
-- [BUSINESS.md](BUSINESS.md) — constraints, SLA
-- [SYSTEM.md](SYSTEM.md) — stack, K8s deployment, API endpoints, integrations
-- [AGENTS.md](AGENTS.md) — agent usage
-- [TASKS.md](TASKS.md) — backlog
-- [../shared/ECOSYSTEM_MAP.md](../shared/ECOSYSTEM_MAP.md) — full service map
+## Health and Observability
+Use the documented health, logging, and operational checks for this repository.

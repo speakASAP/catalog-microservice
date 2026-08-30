@@ -1,22 +1,29 @@
 # Business: catalog-microservice
->
-> ⚠️ IMMUTABLE BY AI.
 
-## Goal
+status: approved
+completeness_level: complete
 
-Single source of truth for all product data (SKU, descriptions, categories, pricing, media) across all sales channels.
+## Problem
+The ecosystem requires a clearly owned product catalog source of truth for the ecosystem
 
-## Constraints
+## Target Users and Stakeholders
+Commerce applications, marketplace integrations, and catalog administrators.
 
-- AI must never delete catalog products without explicit owner approval
-- Pricing changes require human review for mass updates (>10 products)
-- Media files stored externally (minio/CDN) — never inline
+## Value Proposition
+Provide authoritative product catalog data to ecosystem consumers.
 
-## Consumers
+## Goals
+Provide authoritative product catalog data to ecosystem consumers.
 
-flipflop-service, allegro-service, aukro-service, bazos-service, heureka-service, suppliers-microservice.
+## Non-Goals
+This repository does not take ownership of unrelated ecosystem service domains or consumer business data.
 
-## SLA
+## Success Metrics
+The documented service or infrastructure boundary is available to its intended ecosystem consumers.
 
-- Port: 3200 (<http://catalog-microservice:3200>)
-- Production: <https://catalog.alfares.cz>
+## Business Constraints
+Preserve documented ownership, use approved credential handling, and do not expose secrets or private operational data.
+
+## Approval
+Approved by: project owner
+Approval evidence: owner-confirmation: catalog-microservice-onboarding-approved

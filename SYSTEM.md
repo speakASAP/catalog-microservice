@@ -1,53 +1,34 @@
 # System: catalog-microservice
 
-## Stack
+status: reviewed
+completeness_level: complete
 
-NestJS (TypeScript) · PostgreSQL (TypeORM) · MinIO/CDN (media)
+## Purpose
+Product catalog source of truth for the ecosystem.
 
-## Deployment
+## Responsibilities
+Provide authoritative product catalog data to ecosystem consumers.
 
-**Primary**: Kubernetes (`statex-apps` namespace, k3s)
-- Deployment: `k8s/deployment.yaml` | Service: `k8s/service.yaml` | Ingress: `k8s/ingress.yaml`
-- Secrets: Vault `secret/prod/catalog-microservice` → ESO → K8s Secret (`k8s/external-secret.yaml`)
-- Config: `k8s/configmap.yaml`
+## Non-Responsibilities
+Unrelated business domains and consumer-owned data remain outside this repository boundary.
 
-**Legacy** (do not use for new work): `docker-compose.blue.yml` / `docker-compose.green.yml`
+## Inputs
+Documented service requests, repository configuration, and approved operational inputs.
 
-## Integrations
+## Outputs
+Documented service, infrastructure, or governance outcomes for ecosystem consumers.
 
-| Dependency | URL |
-|-----------|-----|
-| database-server | db-server-postgres:5432 |
-| logging-microservice | logging-microservice:3367 |
-| auth-microservice | `auth-microservice:3370` |
-| minio-microservice | `minio-microservice:9000` |
+## Dependencies
+Reviewed capability decisions are recorded in docs/06_architecture/INTEGRATION_CONTRACT.md.
 
-## Current State
-<!-- AI-maintained -->
-Stage: production
+## Upstream Traceability
+BUSINESS.md and existing repository architecture documentation define the current intent.
 
-## Known Issues
-<!-- AI-maintained -->
-- None
+## Downstream Artifacts
+The integration contract, invariants, and bootstrap planning chain are the canonical IPS outputs.
 
-## Entities
+## Validation Criteria
+Run the IPS planning validator and use existing repository-specific checks when changing runtime behavior.
 
-Product (SKU, title, description, brand, EAN), Category (tree), Attribute, Media, Pricing
-
-## API Endpoints
-
-Base: `https://catalog.alfares.cz/api` | Internal: `http://catalog-microservice:3200/api`
-
-| Resource | Endpoints |
-|----------|-----------|
-| Products | `GET /api/products` · `GET /api/products/:id` · `GET /api/products/sku/:sku` · `POST /api/products` · `PUT /api/products/:id` · `DELETE /api/products/:id` (soft) · `DELETE /api/products/:id/hard` |
-| Categories | `GET /api/categories` · `GET /api/categories/tree` · `GET /api/categories/:id` · `POST /api/categories` · `PUT /api/categories/:id` · `DELETE /api/categories/:id` |
-| Attributes | `GET /api/attributes` · `GET /api/attributes/:id` · `POST /api/attributes` · `PUT /api/attributes/:id` |
-| Media | `GET /api/media/product/:productId` · `POST /api/media` · `PUT /api/media/:id` · `PUT /api/media/:id/primary` · `DELETE /api/media/:id` |
-| Pricing | `GET /api/pricing/product/:productId` · `GET /api/pricing/product/:productId/current` · `POST /api/pricing` · `PUT /api/pricing/:id` · `DELETE /api/pricing/:id` |
-| Import | `POST /api/products/import-from-url` — imports a marketplace listing (title, description, price, photos). Supports Aukro and Sbazar; SKU is `<MARKETPLACE>-<listingId>` |
-| Health | `GET /health` |
-
-## DB Schema (PostgreSQL)
-
-Tables: `products`, `categories`, `product_categories`, `attributes`, `product_attributes`, `media`, `product_pricing`
+## Open Questions
+No new runtime or ownership decision is made by this documentation-only adoption.
