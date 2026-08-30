@@ -1,15 +1,31 @@
 {
-  "schemaVersion": 1,
-  "project": "catalog-microservice",
-  "lifecycle": "planning-adopted",
-  "health": "documented-current-boundary",
-  "activeTask": "No active IPS bootstrap task",
-  "lastUpdated": "2026-08-30",
-  "deployment": {
-    "status": "documentation-only adoption; runtime unchanged"
+  "schema_version": "1.0",
+  "repository": "catalog-microservice",
+  "service": {
+    "name": "catalog-microservice",
+    "kind": "service",
+    "lifecycle": "planning-adopted",
+    "deployment": "kubernetes"
   },
-  "blockers": [],
-  "followUps": [
-    "Keep capability decisions synchronized with documented architecture changes."
-  ]
+  "planning": {
+    "status": "blocked",
+    "active_goal_ids": [],
+    "next_ready_goal_ids": [],
+    "blocked_goal_ids": [
+      "GOAL-14"
+    ],
+    "active_workstream_ids": [],
+    "last_updated_at": "2026-08-30T00:00:00Z"
+  },
+  "delivery": {
+    "last_validation_id": null,
+    "last_validation_status": null,
+    "validation_debt_count": 1,
+    "last_deployment_commit": null
+  },
+  "collection": {
+    "profile": "service",
+    "artifact_index": "docs/registry/ARTIFACT_INDEX.json",
+    "status_source": "wave-1-contract-remediation"
+  }
 }

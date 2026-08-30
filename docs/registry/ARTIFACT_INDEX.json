@@ -4,6 +4,15 @@
   "generated_at": "2026-08-30T18:52:48Z",
   "artifacts": [
     {
+      "id": "DECISION-PROJECT-COMPLETION-2026-06-21",
+      "type": "decision",
+      "status": "done",
+      "title": "Project completion/frozen marker recorded in TASKS.md",
+      "path": "TASKS.md",
+      "parent_ids": [],
+      "updated_at": "2026-07-28T16:56:00Z"
+    },
+    {
       "id": "GOAL-14",
       "type": "goal",
       "status": "blocked",
@@ -50,21 +59,12 @@
       "path": "docs/orchestrator/VALIDATION_DEBT.md",
       "parent_ids": [],
       "updated_at": "2026-06-15T10:12:30Z"
-    },
-    {
-      "id": "DECISION-PROJECT-COMPLETION-2026-06-21",
-      "type": "decision",
-      "status": "done",
-      "title": "Project completion/frozen marker recorded in TASKS.md",
-      "path": "TASKS.md",
-      "parent_ids": [],
-      "updated_at": "2026-07-28T16:56:00Z"
     }
   ],
   "warnings": [
-    "[UNKNOWN: runlayer_project_slug is not declared in repository documents; project_registration.status remains unlinked.]",
-    "[UNKNOWN: active planning state is inconsistent across tracked docs: TASKS.md has a completion/frozen marker plus non-ID backlog items while docs/orchestrator/GOALS.md records Goal 14 deferred pending approved credentials.]",
     "[MISSING: TASKS.md metadata header (schema_version/repository/updated_at/active_goal_ids) was not added in this pilot because current TASKS.md checklist items are legacy and not stable-ID mapped.]",
+    "[UNKNOWN: active planning state is inconsistent across tracked docs: TASKS.md has a completion/frozen marker plus non-ID backlog items while docs/orchestrator/GOALS.md records Goal 14 deferred pending approved credentials.]",
+    "[UNKNOWN: runlayer_project_slug is not declared in repository documents; project_registration.status remains unlinked.]",
     "[WARNING: docs/orchestrator/STATUS.md is a large append-only legacy log; collectors should apply size limits and metadata-only parsing.]"
   ]
 }
