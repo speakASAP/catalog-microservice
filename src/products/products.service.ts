@@ -2767,12 +2767,13 @@ export class ProductsService {
   }
 
   private getWarehouseServiceToken(): string | null {
+    // JWT_TOKEN deliberately omitted: legacy shared HS256 credential, rejected
+    // by auth-microservice (RS256 required). See warehouse-availability.service.
     const token =
       process.env.WAREHOUSE_SERVICE_TOKEN ||
       process.env.WAREHOUSE_INTERNAL_SERVICE_TOKEN ||
       process.env.CATALOG_INTERNAL_SERVICE_TOKEN ||
-      process.env.INTERNAL_SERVICE_TOKEN ||
-      process.env.JWT_TOKEN;
+      process.env.INTERNAL_SERVICE_TOKEN;
     return token?.trim() || null;
   }
 

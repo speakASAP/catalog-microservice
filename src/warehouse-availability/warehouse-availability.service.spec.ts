@@ -173,9 +173,9 @@ describe('WarehouseAvailabilityService', () => {
       .rejects.toThrow(ServiceUnavailableException);
   });
 
-  it('falls back to the runtime JWT token when the dedicated Warehouse token is rejected', async () => {
+  it('falls back to the catalog internal token when the dedicated Warehouse token is rejected', async () => {
     process.env.WAREHOUSE_SERVICE_TOKEN = 'stale-warehouse-token';
-    process.env.JWT_TOKEN = 'valid-runtime-jwt';
+    process.env.CATALOG_INTERNAL_SERVICE_TOKEN = 'valid-runtime-jwt';
     process.env.WAREHOUSE_SERVICE_URL = 'http://warehouse-microservice:3201';
     mockedAxios.post
       .mockRejectedValueOnce({ response: { status: 401 } })
@@ -190,9 +190,30 @@ describe('WarehouseAvailabilityService', () => {
     expect(mockedAxios.post.mock.calls[1][2]?.headers).toMatchObject({ Authorization: 'Bearer valid-runtime-jwt' });
   });
 
+  it('never falls back to the legacy shared JWT_TOKEN credential', async () => {
+    // JWT_TOKEN holds the legacy shared HS256 value, which auth-microservice
+    // rejects ("Unsupported token algorithm HS256; RS256 required"). Including
+    // it in the chain only produced a guaranteed extra 401 and masked which
+    // credential was actually missing.
+    process.env.WAREHOUSE_SERVICE_TOKEN = 'stale-warehouse-token';
+    process.env.JWT_TOKEN = 'legacy-shared-hs256';
+    process.env.WAREHOUSE_SERVICE_URL = 'http://warehouse-microservice:3201';
+    mockedAxios.post.mockRejectedValueOnce({ response: { status: 401 } });
+    const service = new WarehouseAvailabilityService({ findIdentitiesByIds: jest.fn() } as any, logger as any);
+
+    await expect((service as any).fetchWarehouseAvailability(['product-1'])).rejects.toThrow(
+      ServiceUnavailableException,
+    );
+
+    // Only the dedicated token is tried; JWT_TOKEN is never presented.
+    expect(mockedAxios.post).toHaveBeenCalledTimes(1);
+    const presented = mockedAxios.post.mock.calls.map((call) => call[2]?.headers?.Authorization);
+    expect(presented).not.toContain('Bearer legacy-shared-hs256');
+  });
+
   it('rejects Warehouse availability only after every configured credential is rejected', async () => {
     process.env.WAREHOUSE_SERVICE_TOKEN = 'stale-warehouse-token';
-    process.env.JWT_TOKEN = 'invalid-runtime-jwt';
+    process.env.CATALOG_INTERNAL_SERVICE_TOKEN = 'invalid-runtime-jwt';
     mockedAxios.post
       .mockRejectedValueOnce({ response: { status: 403 } })
       .mockRejectedValueOnce({ response: { status: 401 } });

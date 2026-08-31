@@ -306,10 +306,13 @@ export class WarehouseAvailabilityService {
   }
 
   private getWarehouseServiceTokens(): string[] {
+    // JWT_TOKEN is deliberately excluded: it holds the legacy shared HS256
+    // credential, which auth-microservice now rejects outright ("Unsupported
+    // token algorithm HS256; RS256 required"). Trying it only adds a guaranteed
+    // 401 to every retry loop and masks which credential is actually missing.
     return Array.from(new Set([
       process.env.WAREHOUSE_SERVICE_TOKEN,
       process.env.WAREHOUSE_INTERNAL_SERVICE_TOKEN,
-      process.env.JWT_TOKEN,
       process.env.CATALOG_INTERNAL_SERVICE_TOKEN,
       process.env.INTERNAL_SERVICE_TOKEN,
     ].map((token) => token?.trim()).filter((token): token is string => Boolean(token))));
