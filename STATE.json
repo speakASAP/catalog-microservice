@@ -27,5 +27,20 @@
     "profile": "service",
     "artifact_index": "docs/registry/ARTIFACT_INDEX.json",
     "status_source": "wave-1-contract-remediation"
-  }
+  },
+  "schemaVersion": 1,
+  "project": "catalog-microservice",
+  "lifecycle": "planning-adopted",
+  "health": "blocked",
+  "activeTask": "No task is currently active; goal GOAL-14 remains blocked pending owner input.",
+  "lastUpdated": "2026-08-30T00:00:00Z",
+  "deployment": {
+    "status": "kubernetes"
+  },
+  "blockers": [
+    "Goal GOAL-14 is blocked pending an owner decision (see docs/registry for detail)."
+  ],
+  "followUps": [
+    "Resolve the GOAL-14 blocker once the owner provides direction."
+  ]
 }
