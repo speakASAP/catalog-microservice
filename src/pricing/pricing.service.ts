@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ProductPricing } from './product-pricing.entity';
+import { Product } from '../products/product.entity';
 import { LoggerService } from '../logger/logger.service';
 
 export type PricingWriteInput = Partial<ProductPricing>;
@@ -18,6 +19,8 @@ export class PricingService {
   constructor(
     @InjectRepository(ProductPricing)
     private readonly pricingRepository: Repository<ProductPricing>,
+    @InjectRepository(Product)
+    private readonly productRepository: Repository<Product>,
     private readonly logger: LoggerService,
   ) {}
 
@@ -49,6 +52,12 @@ export class PricingService {
     const normalized = this.validatePricingInput(data);
     this.logger.log(`Upserting pricing for product: ${normalized.productId}`, 'PricingService');
 
+    // Without this check a missing product reaches the database and the
+    // product_pricing_product_id_fkey violation escapes as an unhandled 500.
+    // Callers cannot tell "no such product" from "catalog is broken": orders'
+    // updateCatalogPricing reports both as "upstream request failed".
+    await this.assertProductExists(normalized.productId as string);
+
     // Deactivate other active pricing of same type for this product
     if (normalized.isActive) {
       await this.pricingRepository.update(
@@ -59,6 +68,18 @@ export class PricingService {
 
     const pricing = this.pricingRepository.create(normalized);
     return this.pricingRepository.save(pricing);
+  }
+
+  /**
+   * A 4xx condition must not surface as a 5xx. `product_pricing.product_id` is
+   * a foreign key, so an unknown product is a client error (404), not a server
+   * fault.
+   */
+  private async assertProductExists(productId: string): Promise<void> {
+    const found = await this.productRepository.count({ where: { id: productId } });
+    if (!found) {
+      throw new NotFoundException(`Product with ID ${productId} not found`);
+    }
   }
 
   async bulkUpsert(entries: PricingWriteInput[], humanReviewMarker?: string): Promise<BulkPricingResult> {

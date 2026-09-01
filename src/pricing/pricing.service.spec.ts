@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { PricingService } from './pricing.service';
 import { ProductPricing } from './product-pricing.entity';
 
@@ -25,6 +25,10 @@ const pricingRow = (overrides: Partial<ProductPricing>): ProductPricing => ({
   ...overrides,
 });
 
+// The pricing table's product_id is a foreign key; the service now checks the
+// product exists first, so every construction needs a product repository.
+const productRepo = (found = 1) => ({ count: jest.fn(async () => found) });
+
 describe('PricingService pricing integrity', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -38,7 +42,7 @@ describe('PricingService pricing integrity', () => {
         pricingRow({ id: 'sale-newer', basePrice: 100, salePrice: 75, priceType: 'sale', validFrom: new Date('2026-05-15T00:00:00.000Z') }),
       ]),
     };
-    const service = new PricingService(repository as any, logger as any);
+    const service = new PricingService(repository as any, productRepo() as any, logger as any);
 
     const current = await service.getCurrentPrice('product-1', new Date('2026-06-01T00:00:00.000Z'));
 
@@ -51,7 +55,7 @@ describe('PricingService pricing integrity', () => {
       save: jest.fn(async (data) => ({ id: 'price-created', ...data })),
       update: jest.fn(),
     };
-    const service = new PricingService(repository as any, logger as any);
+    const service = new PricingService(repository as any, productRepo() as any, logger as any);
 
     await expect(service.upsert({ productId: 'product-1', basePrice: 0, currency: 'CZK' }))
       .rejects.toThrow(BadRequestException);
@@ -67,7 +71,7 @@ describe('PricingService pricing integrity', () => {
       save: jest.fn(async (data) => ({ id: 'price-created', ...data })),
       update: jest.fn(),
     };
-    const service = new PricingService(repository as any, logger as any);
+    const service = new PricingService(repository as any, productRepo() as any, logger as any);
 
     await expect(service.upsert({
       productId: 'product-1',
@@ -84,7 +88,7 @@ describe('PricingService pricing integrity', () => {
       save: jest.fn(async (data) => ({ id: `price-${data.productId}`, ...data })),
       update: jest.fn(),
     };
-    const service = new PricingService(repository as any, logger as any);
+    const service = new PricingService(repository as any, productRepo() as any, logger as any);
     const entries = Array.from({ length: 11 }, (_, index) => ({
       productId: `product-${index}`,
       basePrice: 100 + index,
@@ -96,5 +100,62 @@ describe('PricingService pricing integrity', () => {
     const result = await service.bulkUpsert(entries, 'explicit');
     expect(result.count).toBe(11);
     expect(repository.save).toHaveBeenCalledTimes(11);
+  });
+
+  it('returns 404, not a database error, when the product does not exist', async () => {
+    // Regression: product_pricing_product_id_fkey used to surface as an
+    // unhandled 500, so callers could not distinguish "no such product" from
+    // "catalog is broken". orders' updateCatalogPricing reported both as
+    // "upstream request failed".
+    const repository = {
+      create: jest.fn((data) => data),
+      save: jest.fn(async (data) => ({ id: 'price-created', ...data })),
+      update: jest.fn(),
+    };
+    const products = productRepo(0);
+    const service = new PricingService(repository as any, products as any, logger as any);
+
+    await expect(
+      service.upsert({ productId: 'missing-product', basePrice: 100, currency: 'CZK' }),
+    ).rejects.toThrow(NotFoundException);
+
+    // and nothing was written
+    expect(repository.save).not.toHaveBeenCalled();
+    expect(repository.update).not.toHaveBeenCalled();
+    expect(products.count).toHaveBeenCalledWith({ where: { id: 'missing-product' } });
+  });
+
+  it('still writes pricing when the product exists', async () => {
+    const repository = {
+      create: jest.fn((data) => data),
+      save: jest.fn(async (data) => ({ id: 'price-created', ...data })),
+      update: jest.fn(),
+    };
+    const service = new PricingService(repository as any, productRepo(1) as any, logger as any);
+
+    const created = await service.upsert({ productId: 'product-1', basePrice: 100, currency: 'CZK' });
+
+    expect(created.id).toBe('price-created');
+    expect(repository.save).toHaveBeenCalled();
+  });
+
+  it('rejects a bulk entry whose product is missing without writing earlier rows', async () => {
+    const repository = {
+      create: jest.fn((data) => data),
+      save: jest.fn(async (data) => ({ id: 'price-created', ...data })),
+      update: jest.fn(),
+    };
+    // first row's product exists, second does not
+    const products = { count: jest.fn().mockResolvedValueOnce(1).mockResolvedValueOnce(0) };
+    const service = new PricingService(repository as any, products as any, logger as any);
+
+    await expect(
+      service.bulkUpsert([
+        { productId: 'product-1', basePrice: 100, currency: 'CZK' },
+        { productId: 'missing-product', basePrice: 100, currency: 'CZK' },
+      ]),
+    ).rejects.toThrow(NotFoundException);
+
+    expect(repository.save).toHaveBeenCalledTimes(1);
   });
 });
