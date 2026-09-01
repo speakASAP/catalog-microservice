@@ -238,7 +238,7 @@ describe('CatalogAuthGuard', () => {
     const guard = new CatalogAuthGuard(reflector);
     const request = buildRequest({
       'x-internal-service-token': 'machine-token',
-      'x-service-name': 'warehouse-microservice',
+      'x-service-name': 'bazos-service',
     });
     global.fetch = jest.fn();
 
@@ -247,12 +247,94 @@ describe('CatalogAuthGuard', () => {
     expect(global.fetch).not.toHaveBeenCalled();
     expect(request.catalogActor).toEqual({
       type: 'service',
-      sub: 'warehouse-microservice',
+      sub: 'bazos-service',
       roles: ['internal:catalog-microservice:admin', 'catalog:write'],
-      source: 'warehouse-microservice',
-      serviceName: 'warehouse-microservice',
+      source: 'bazos-service',
+      serviceName: 'bazos-service',
       authMethod: 'internal-service-token',
     });
     expect(request.serviceActor).toEqual(request.catalogActor);
+  });
+
+  it('rejects an unknown x-service-name even with the correct shared secret', async () => {
+    // The shared secret is held by eight workloads, so the header is the only
+    // thing distinguishing them -- and it is caller-supplied. Before this guard
+    // check, any holder could authenticate as any name, including one that does
+    // not exist, and that name was persisted as bundle evidence and published
+    // on product events.
+    process.env.CATALOG_INTERNAL_SERVICE_TOKEN = 'machine-token';
+    const reflector = { getAllAndOverride: jest.fn().mockReturnValue(['catalog:write']) } as unknown as Reflector;
+    const guard = new CatalogAuthGuard(reflector);
+    const request = buildRequest({
+      'x-internal-service-token': 'machine-token',
+      'x-service-name': 'totally-made-up-service',
+    });
+    global.fetch = jest.fn();
+
+    await expect(guard.canActivate(buildContext(request))).rejects.toThrow(UnauthorizedException);
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(request.catalogActor).toBeUndefined();
+  });
+
+  it('rejects an empty x-service-name instead of authenticating it as a placeholder', async () => {
+    process.env.CATALOG_INTERNAL_SERVICE_TOKEN = 'machine-token';
+    const reflector = { getAllAndOverride: jest.fn().mockReturnValue(['catalog:write']) } as unknown as Reflector;
+    const guard = new CatalogAuthGuard(reflector);
+    const request = buildRequest({
+      'x-internal-service-token': 'machine-token',
+      'x-service-name': '',
+    });
+    global.fetch = jest.fn();
+
+    await expect(guard.canActivate(buildContext(request))).rejects.toThrow(UnauthorizedException);
+    expect(request.catalogActor).toBeUndefined();
+  });
+
+  it('accepts every real sender of the shared internal-service secret', async () => {
+    // Derived from which workloads hold the credential, then confirmed against
+    // the exact string each sends. flipflop contributes four names; cliplot
+    // sends 'cliplot', not 'cliplot-service'.
+    process.env.CATALOG_INTERNAL_SERVICE_TOKEN = 'machine-token';
+    const senders = [
+      'allegro-service',
+      'bazos-service',
+      'catalog-microservice',
+      'cliplot',
+      'flipflop-api-gateway',
+      'flipflop-cart-service',
+      'flipflop-order-service',
+      'flipflop-product-service',
+      'heureka-service',
+      'marketing-microservice',
+      'orders-microservice',
+    ];
+
+    for (const sender of senders) {
+      const reflector = { getAllAndOverride: jest.fn().mockReturnValue(['catalog:write']) } as unknown as Reflector;
+      const guard = new CatalogAuthGuard(reflector);
+      const request = buildRequest({
+        'x-internal-service-token': 'machine-token',
+        'x-service-name': sender,
+      });
+      global.fetch = jest.fn();
+
+      await expect(guard.canActivate(buildContext(request))).resolves.toBe(true);
+      expect(request.catalogActor?.serviceName).toBe(sender);
+    }
+  });
+
+  it('honours CATALOG_INTERNAL_SERVICE_NAMES when a caller is renamed', async () => {
+    process.env.CATALOG_INTERNAL_SERVICE_TOKEN = 'machine-token';
+    process.env.CATALOG_INTERNAL_SERVICE_NAMES = 'renamed-caller';
+    const reflector = { getAllAndOverride: jest.fn().mockReturnValue(['catalog:write']) } as unknown as Reflector;
+    const guard = new CatalogAuthGuard(reflector);
+    const request = buildRequest({
+      'x-internal-service-token': 'machine-token',
+      'x-service-name': 'renamed-caller',
+    });
+    global.fetch = jest.fn();
+
+    await expect(guard.canActivate(buildContext(request))).resolves.toBe(true);
+    expect(request.catalogActor?.serviceName).toBe('renamed-caller');
   });
 });

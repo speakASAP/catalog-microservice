@@ -108,7 +108,31 @@ export class CatalogAuthGuard implements CanActivate {
       return null;
     }
 
-    const source = request.header('x-service-name') || 'internal-service';
+    // `x-service-name` is caller-supplied and NOT authenticated: every sender
+    // presents the same shared secret, so this header is the only thing that
+    // distinguishes them. It flows into actor.sub/source/serviceName, which are
+    // persisted as bundle evidence and published on product events, so an
+    // arbitrary value corrupts the audit trail as well as the identity.
+    //
+    // A configured value cannot be constrained to one caller here the way 6u
+    // did on orders (one slot, six legitimate senders), but it can be
+    // constrained to the set of KNOWN senders, which stops an arbitrary or
+    // empty name from being recorded as fact. Deny, do not fall back to a
+    // placeholder: silently relabelling an unknown caller 'internal-service'
+    // would write a fiction into the same audit trail.
+    const source = (request.header('x-service-name') || '').trim();
+    if (!source) {
+      throw new UnauthorizedException(
+        'x-service-name is required with x-internal-service-token',
+      );
+    }
+
+    if (!this.allowedInternalServiceNames().includes(source)) {
+      throw new UnauthorizedException(
+        `Unknown internal service name '${source}'; add it to CATALOG_INTERNAL_SERVICE_NAMES if this caller is legitimate`,
+      );
+    }
+
     return {
       type: 'service',
       sub: source,
@@ -117,6 +141,49 @@ export class CatalogAuthGuard implements CanActivate {
       serviceName: source,
       authMethod: 'internal-service-token',
     };
+  }
+
+  /**
+   * Known senders of the shared internal-service secret.
+   *
+   * Derived from which workloads actually HOLD the credential (a fingerprint
+   * scan of every Secret in `statex-apps`), then confirmed against the exact
+   * string each one sends. Enumerating by call site instead would have included
+   * `warehouse-microservice`, which sends `x-service-name` on a call to *orders*
+   * and holds no catalog credential at all — allowlisting it would have widened
+   * the grant while appearing to narrow it.
+   *
+   * flipflop deliberately contributes four names: all four of its containers
+   * mount `flipflop-service-secret` and each derives its own `SERVICE_NAME`.
+   * cliplot sends `cliplot`, not `cliplot-service`.
+   *
+   * Overridable via `CATALOG_INTERNAL_SERVICE_NAMES` because several callers
+   * take their name from an env var (`CATALOG_CALLER_SERVICE_NAME`,
+   * `SERVICE_NAME`), so a deployment can rename one without a catalog release.
+   */
+  private allowedInternalServiceNames(): string[] {
+    const configured = (process.env.CATALOG_INTERNAL_SERVICE_NAMES || '')
+      .split(',')
+      .map((name) => name.trim())
+      .filter(Boolean);
+
+    return configured.length
+      ? configured
+      : [
+          'allegro-service',
+          'bazos-service',
+          // catalog calls its own flipflop-projection batch route with this
+          // credential (products.service.ts, getFlipFlopCatalogProjection).
+          'catalog-microservice',
+          'cliplot',
+          'flipflop-api-gateway',
+          'flipflop-cart-service',
+          'flipflop-order-service',
+          'flipflop-product-service',
+          'heureka-service',
+          'marketing-microservice',
+          'orders-microservice',
+        ];
   }
 
   private async validateBearerToken(token: string): Promise<CatalogActor> {
