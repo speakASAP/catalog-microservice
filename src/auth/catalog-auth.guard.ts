@@ -49,7 +49,17 @@ export class CatalogAuthGuard implements CanActivate {
   private readonly authValidateTimeoutMs = Number(
     process.env.AUTH_VALIDATE_TIMEOUT_MS || 3000,
   );
-  private readonly defaultWriteRoles = [
+  /**
+   * Roles a route must name explicitly to be reachable by a write-capable actor.
+   *
+   * This is NOT a fallback. Every guarded route carries `@RequireCatalogRoles`;
+   * a route that forgets one fails closed (see `canActivate`) rather than
+   * silently inheriting this set. It used to be the implicit default, which
+   * meant 24 routes required admin without saying so — and made the grant
+   * impossible to narrow, because removing a role from a caller 403'd it on
+   * routes whose requirement nobody had ever written down.
+   */
+  static readonly WRITE_ROLES = [
     'global:superadmin',
     'global:platform_admin',
     'app:catalog-microservice:admin',
@@ -61,13 +71,27 @@ export class CatalogAuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<CatalogAuthenticatedRequest>();
-    const requiredRoles =
-      this.reflector.getAllAndOverride<string[]>(CATALOG_ROLES_KEY, [
-        context.getHandler(),
-        context.getClass(),
-      ]) ?? this.defaultWriteRoles;
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>(CATALOG_ROLES_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    // Fail closed. A guarded route with no @RequireCatalogRoles used to inherit
+    // the write/admin set, so forgetting the decorator granted admin silently
+    // and looked identical to a deliberate choice. Deny instead, and name the
+    // handler so the gap is fixed rather than worked around.
+    if (!requiredRoles || requiredRoles.length === 0) {
+      const handlerName = `${context.getClass().name}.${context.getHandler().name}`;
+      this.denyUndecorated(handlerName);
+    }
 
     const actor = await this.resolveActor(request);
+    // `catalog:authenticated` means "any authenticated non-marathon actor",
+    // deliberately not a role an actor has to carry. Per-pair service
+    // principals arrive with roles this service never mints (aukro presents
+    // `internal:catalog-microservice:service`), so matching them by name would
+    // 403 callers that are legitimately authenticated. Read routes therefore
+    // use this rather than enumerating every acceptable role.
     const allowsGenericAuthenticated = requiredRoles.includes('catalog:authenticated');
     const hasRequiredRole =
       (allowsGenericAuthenticated && !actor.isMarathonOnlyAuthUser) ||
@@ -81,6 +105,21 @@ export class CatalogAuthGuard implements CanActivate {
       request.serviceActor = actor;
     }
     return true;
+  }
+
+  /**
+   * A guarded route with no declared roles is a coding defect, not a request
+   * problem. Log at error level with the handler name so it is actionable, then
+   * deny — never authenticate the caller to find out whether it would have
+   * passed, and never fall through to a permissive default.
+   */
+  private denyUndecorated(handlerName: string): never {
+    // eslint-disable-next-line no-console
+    console.error(
+      `[CatalogAuthGuard] ${handlerName} is guarded but declares no @RequireCatalogRoles; ` +
+        'denying the request. Add an explicit role requirement to this handler.',
+    );
+    throw new ForbiddenException('Route has no declared catalog role requirement');
   }
 
   private async resolveActor(request: Request): Promise<CatalogActor> {
@@ -136,11 +175,63 @@ export class CatalogAuthGuard implements CanActivate {
     return {
       type: 'service',
       sub: source,
-      roles: ['internal:catalog-microservice:admin', 'catalog:write'],
+      roles: this.rolesForServiceName(source),
       source,
       serviceName: source,
       authMethod: 'internal-service-token',
     };
+  }
+
+  /**
+   * Roles granted to a caller of the shared internal-service secret.
+   *
+   * Every caller used to receive `internal:catalog-microservice:admin` +
+   * `catalog:write` regardless of what it does, because one shared secret
+   * cannot distinguish them by credential. `x-service-name` is now validated
+   * against `allowedInternalServiceNames()` before it reaches here, so it is
+   * usable as a key: an unknown or empty name is rejected in the caller above
+   * and never lands in this map.
+   *
+   * This narrows authorization, not authentication. The secret is still shared,
+   * so a holder can still claim another holder's name — splitting it into
+   * per-caller credentials is separate provisioning work. What this removes is
+   * the case where a read-only caller could write, or delete, anything in the
+   * catalog by virtue of holding a credential it needs only in order to read.
+   *
+   * Grants are derived from each caller's actual call sites, verified live
+   * against the deployed pods. Default is read-only: a new name added to the
+   * allowlist gets no write access until it is listed here deliberately.
+   */
+  private rolesForServiceName(source: string): string[] {
+    const READ = ['catalog:read'];
+    const WRITE = ['catalog:read', 'catalog:write'];
+
+    const grants: Record<string, string[]> = {
+      // Publishes products, media and pricing to the marketplace lanes.
+      'allegro-service': WRITE,
+      // POST /api/products, POST /api/media/upload, PUT /api/products/:id.
+      'bazos-service': WRITE,
+      // POST /api/products, PUT /api/products/:id, and provisions catalog
+      // access for its own users -- which is an admin surface, not a write.
+      'heureka-service': [...WRITE, 'internal:catalog-microservice:admin'],
+      // POST /api/pricing only (pricing.service.ts).
+      'orders-microservice': WRITE,
+      // The four flipflop containers each send their own SERVICE_NAME. They
+      // POST /api/products and PUT /api/products/:id through the storefront.
+      'flipflop-api-gateway': WRITE,
+      'flipflop-cart-service': WRITE,
+      'flipflop-order-service': WRITE,
+      'flipflop-product-service': WRITE,
+      // Writes only the order-affinity relations under /api/internal/*, which
+      // require PRODUCT_RELATION_ADMIN_ROLES rather than catalog:write.
+      'marketing-microservice': [...READ, 'internal:catalog-microservice:admin'],
+      // Reads products to build clips. No write call site exists.
+      cliplot: READ,
+      // Catalog calling its own flipflop-projection batch route.
+      'catalog-microservice': WRITE,
+    };
+
+    return grants[source] ?? READ;
   }
 
   /**
