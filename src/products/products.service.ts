@@ -2203,6 +2203,17 @@ export class ProductsService {
       if (error?.response?.status === 404) {
         return this.bazosStatusResponse(id, null);
       }
+      // A transport or auth failure here is NOT a marketplace verdict. This lane
+      // ran 401 unnoticed because the credential fault was reported as a
+      // Bazos-owned dependency problem.
+      const httpStatus = error?.response?.status ?? null;
+      if (httpStatus !== 404) {
+        this.logger.error(
+          `bazos listing status check failed for product ${id} (httpStatus=${httpStatus ?? 'none'}): ${error?.response?.data?.message ?? error?.message ?? 'unknown error'}`,
+          error?.stack,
+          'ProductsService',
+        );
+      }
       return {
         ...this.blockedBazosDraft(id, 'bazos_status_request_failed', 'Bazos listing status check failed. Try again after resolving the Bazos-owned dependency.'),
         dependencyStatus: error?.response?.status ?? null,
@@ -2301,6 +2312,17 @@ export class ProductsService {
       const bazosAction = response.data?.data || response.data;
       return this.bazosDraftResponse(id, bazosAction);
     } catch (error: any) {
+      // A transport or auth failure here is NOT a marketplace verdict. This lane
+      // ran 401 unnoticed because the credential fault was reported as a
+      // Bazos-owned dependency problem.
+      const httpStatus = error?.response?.status ?? null;
+      if (httpStatus !== 404) {
+        this.logger.error(
+          `bazos draft request failed for product ${id} (httpStatus=${httpStatus ?? 'none'}): ${error?.response?.data?.message ?? error?.message ?? 'unknown error'}`,
+          error?.stack,
+          'ProductsService',
+        );
+      }
       return {
         ...this.blockedBazosDraft(id, 'bazos_draft_request_failed', 'Bazos draft request failed. Resolve the Bazos-owned action reason before retrying.'),
         dependencyStatus: error?.response?.status ?? null,
@@ -2583,6 +2605,17 @@ export class ProductsService {
       );
       return this.heurekaPublishResponse(id, response.data?.data || response.data);
     } catch (error: any) {
+      // A transport or auth failure here is NOT a readiness verdict. Without this
+      // log an expired or rejected credential is indistinguishable from the
+      // marketplace legitimately refusing the product.
+      const httpStatus = error?.response?.status ?? null;
+      if (httpStatus !== 404) {
+        this.logger.error(
+          `heureka status lookup failed for product ${id} (httpStatus=${httpStatus ?? 'none'}): ${error?.response?.data?.message ?? error?.message ?? 'unknown error'}`,
+          error?.stack,
+          'ProductsService',
+        );
+      }
       return {
         ...this.blockedChannelAction('heureka', id, 'heureka_status_unavailable', 'Heureka product status is unavailable. Check Heureka service routing and readiness.'),
         dependencyStatus: error?.response?.status ?? null,
@@ -2608,6 +2641,17 @@ export class ProductsService {
       );
       return this.heurekaPublishResponse(id, response.data?.data || response.data, snapshot);
     } catch (error: any) {
+      // A transport or auth failure here is NOT a readiness verdict. Without this
+      // log an expired or rejected credential is indistinguishable from the
+      // marketplace legitimately refusing the product.
+      const httpStatus = error?.response?.status ?? null;
+      if (httpStatus !== 404) {
+        this.logger.error(
+          `heureka feed inclusion failed for product ${id} (httpStatus=${httpStatus ?? 'none'}): ${error?.response?.data?.message ?? error?.message ?? 'unknown error'}`,
+          error?.stack,
+          'ProductsService',
+        );
+      }
       return {
         ...this.blockedChannelAction('heureka', id, 'heureka_publish_unavailable', 'Heureka feed inclusion failed. Resolve Heureka readiness blockers before retrying.'),
         dependencyStatus: error?.response?.status ?? null,
@@ -2668,6 +2712,17 @@ export class ProductsService {
       );
       return this.flipFlopPublishResponse(id, response.data?.data || response.data);
     } catch (error: any) {
+      // A transport or auth failure here is NOT a readiness verdict. Without this
+      // log an expired or rejected credential is indistinguishable from the
+      // marketplace legitimately refusing the product.
+      const httpStatus = error?.response?.status ?? null;
+      if (httpStatus !== 404) {
+        this.logger.error(
+          `flipflop status lookup failed for product ${id} (httpStatus=${httpStatus ?? 'none'}): ${error?.response?.data?.message ?? error?.message ?? 'unknown error'}`,
+          error?.stack,
+          'ProductsService',
+        );
+      }
       return {
         ...this.blockedChannelAction('flipflop', id, 'flipflop_status_unavailable', 'FlipFlop publication status is unavailable. Check FlipFlop product-service routing and auth.'),
         listingUrl,
@@ -2702,6 +2757,17 @@ export class ProductsService {
       const item = result?.results?.find((entry: any) => entry?.catalogProductId === id || entry?.productId === id) || result?.results?.[0] || result;
       return this.flipFlopPublishResponse(id, item);
     } catch (error: any) {
+      // A transport or auth failure here is NOT a readiness verdict. Without this
+      // log an expired or rejected credential is indistinguishable from the
+      // marketplace legitimately refusing the product.
+      const httpStatus = error?.response?.status ?? null;
+      if (httpStatus !== 404) {
+        this.logger.error(
+          `flipflop native publish failed for product ${id} (httpStatus=${httpStatus ?? 'none'}): ${error?.response?.data?.message ?? error?.message ?? 'unknown error'}`,
+          error?.stack,
+          'ProductsService',
+        );
+      }
       return {
         ...this.blockedChannelAction('flipflop', id, 'flipflop_publish_unavailable', 'FlipFlop native publish endpoint is unavailable. Check FlipFlop product-service routing and auth.'),
         listingUrl,
