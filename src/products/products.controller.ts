@@ -473,7 +473,25 @@ export class ProductsController {
     return { success: result.success !== false, data: result };
   }
 
+  /**
+   * Heureka feed fields rendered by Catalog for one product.
+   *
+   * Guarded 2026-09-01. The payload is genuinely "public-safe" — it is the feed row
+   * Heureka itself publishes (PRODUCTNAME, PRICE_VAT, IMGURL, EAN, CATEGORYTEXT),
+   * and `warnings[]` is a fixed four-value enum of content-formatting gaps, so a
+   * broken product leaks no more than a healthy one. But the missing guard was an
+   * omission rather than a decision: every one of the 31 other routes on this
+   * controller is guarded, including the two immediately adjacent to it, and the
+   * catalog ingress maps `/api` to this service, so it was served to anonymous
+   * callers from the public internet.
+   *
+   * Both real consumers already authenticate — heureka's `catalog-client.service.ts`
+   * sends service headers, and `verify_heureka_blocked_product_lanes.js` sends the
+   * same — so this closes the exposure without changing any live lane.
+   */
   @Get(":id/heureka-feed-snapshot")
+  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles('catalog:authenticated')
   async getHeurekaFeedSnapshot(
     @Param("id", ParseUUIDPipe) id: string,
     @Query("feedType") feedType = "heureka_cz",
