@@ -77,14 +77,44 @@ The 41 span: `attributes`, `categories`, `pricing`, `media`, `product-relations`
 `product-import`. Enumerate them yourself:
 
 ```bash
-grep -rn "@RequireCatalogRoles" src --include=*.controller.ts | wc -l
-# then find @Get/@Post/@Put/@Patch/@Delete with no decorator between the method
-# and the handler signature -- note the decorator sits AFTER @Post(), not before
+python3 - <<'EOF'
+import re, glob
+tot = dec = 0
+for f in glob.glob('src/**/*.controller.ts', recursive=True):
+    src = open(f).read()
+    if 'CatalogAuthGuard' not in src:
+        continue
+    lines = src.split('\n')
+    for i, l in enumerate(lines):
+        if not re.match(r"\s*@(Get|Post|Put|Patch|Delete)\(", l):
+            continue
+        tot += 1
+        win = []
+        for j in range(i + 1, min(len(lines), i + 8)):
+            if re.match(r"\s*(async\s+)?\w+\s*\(", lines[j]):
+                break
+            win.append(lines[j])
+        if 'RequireCatalogRoles' in '\n'.join(win):
+            dec += 1
+print(f"routes={tot} decorated={dec} undecorated={tot-dec}")
+EOF
 ```
 
+**Do not count with `grep`.** Every easy count is wrong here, and each looks plausible:
+
+| Command | Returns | What it actually counts |
+| --- | --- | --- |
+| `grep -rc RequireCatalogRoles` | 48 | matching *lines*, summed across files |
+| `grep -rhoE '@RequireCatalogRoles\('` | 42 | decorator occurrences, constants included |
+| (quoted in three plan sections) | 37 | neither of the above, and never re-derived |
+| the scanner above | **40 of 81** | decorated *routes* |
+
+None of the grep figures says anything about the 41 routes with **no** decorator, which are
+the whole problem. That wrong number survived three plan sections before being measured.
+
 **A decorator-position trap that already cost one session a wrong answer:** the role
-decorator appears *below* the HTTP-method decorator and *above* the handler. A scan that
-looks backwards from the method line reports 81/81 undecorated, which is wrong.
+decorator appears *below* the HTTP-method decorator and *above* the handler, so scan
+**forward** from each verb line. A scan that looks backwards reports 81/81 undecorated.
 
 ### Phase 1 exit criteria
 
