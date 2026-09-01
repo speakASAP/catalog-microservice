@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CatalogAuthGuard } from '../auth/catalog-auth.guard';
+import { RequireCatalogRoles } from '../auth/catalog-auth.decorator';
 import type { CatalogAuthenticatedRequest } from '../auth/catalog-auth.guard';
 import { LoggerService } from '../logger/logger.service';
 import { MarketplaceFieldsService } from './marketplace-fields.service';
@@ -22,6 +23,7 @@ export class MarketplaceFieldsController {
   ) {}
 
   @Get()
+  @RequireCatalogRoles('catalog:authenticated')
   async supportedMarketplaces() {
     return {
       success: true,
@@ -30,6 +32,7 @@ export class MarketplaceFieldsController {
   }
 
   @Get(':marketplace')
+  @RequireCatalogRoles('catalog:authenticated')
   async getMarketplaceFields(
     @Param('productId', ParseUUIDPipe) productId: string,
     @Param('marketplace') marketplace: string,
@@ -39,6 +42,7 @@ export class MarketplaceFieldsController {
   }
 
   @Put(':marketplace')
+  @RequireCatalogRoles(...CatalogAuthGuard.WRITE_ROLES)
   async updateMarketplaceFields(
     @Param('productId', ParseUUIDPipe) productId: string,
     @Param('marketplace') marketplace: string,

@@ -4,8 +4,10 @@ import { Attribute } from './attribute.entity';
 import { LoggerService } from '../logger/logger.service';
 import { CatalogAuthGuard } from '../auth/catalog-auth.guard';
 import type { CatalogAuthenticatedRequest } from '../auth/catalog-auth.guard';
+import { RequireCatalogRoles } from '../auth/catalog-auth.decorator';
 
 @Controller('attributes')
+@UseGuards(CatalogAuthGuard)
 export class AttributesController {
   constructor(
     private readonly attributesService: AttributesService,
@@ -13,6 +15,7 @@ export class AttributesController {
   ) {}
 
   @Get()
+  @RequireCatalogRoles('catalog:authenticated')
   async findAll() {
     this.logger.log('GET /api/attributes', 'AttributesController');
     const attributes = await this.attributesService.findAll();
@@ -20,6 +23,7 @@ export class AttributesController {
   }
 
   @Get(':id')
+  @RequireCatalogRoles('catalog:authenticated')
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     this.logger.log(`GET /api/attributes/${id}`, 'AttributesController');
     const attribute = await this.attributesService.findOne(id);
@@ -27,7 +31,7 @@ export class AttributesController {
   }
 
   @Post()
-  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles(...CatalogAuthGuard.WRITE_ROLES)
   async create(
     @Body() data: Partial<Attribute>,
     @Req() request: CatalogAuthenticatedRequest,
@@ -44,7 +48,7 @@ export class AttributesController {
   }
 
   @Put(':id')
-  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles(...CatalogAuthGuard.WRITE_ROLES)
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() data: Partial<Attribute>,

@@ -15,8 +15,10 @@ import { Category } from './category.entity';
 import { LoggerService } from '../logger/logger.service';
 import { CatalogAuthGuard } from '../auth/catalog-auth.guard';
 import type { CatalogAuthenticatedRequest } from '../auth/catalog-auth.guard';
+import { RequireCatalogRoles } from '../auth/catalog-auth.decorator';
 
 @Controller('categories')
+@UseGuards(CatalogAuthGuard)
 export class CategoriesController {
   constructor(
     private readonly categoriesService: CategoriesService,
@@ -28,6 +30,7 @@ export class CategoriesController {
    * GET /api/categories/tree
    */
   @Get('tree')
+  @RequireCatalogRoles('catalog:authenticated')
   async getTree() {
     this.logger.log('GET /api/categories/tree', 'CategoriesController');
     const tree = await this.categoriesService.getTree();
@@ -39,6 +42,7 @@ export class CategoriesController {
    * GET /api/categories
    */
   @Get()
+  @RequireCatalogRoles('catalog:authenticated')
   async findAll() {
     this.logger.log('GET /api/categories', 'CategoriesController');
     const categories = await this.categoriesService.findAll();
@@ -50,6 +54,7 @@ export class CategoriesController {
    * GET /api/categories/:id
    */
   @Get(':id')
+  @RequireCatalogRoles('catalog:authenticated')
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     this.logger.log(`GET /api/categories/${id}`, 'CategoriesController');
     const category = await this.categoriesService.findOne(id);
@@ -61,7 +66,7 @@ export class CategoriesController {
    * POST /api/categories
    */
   @Post()
-  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles(...CatalogAuthGuard.WRITE_ROLES)
   async create(
     @Body() data: Partial<Category>,
     @Req() request: CatalogAuthenticatedRequest,
@@ -82,7 +87,7 @@ export class CategoriesController {
    * PUT /api/categories/:id
    */
   @Put(':id')
-  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles(...CatalogAuthGuard.WRITE_ROLES)
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() data: Partial<Category>,
@@ -104,7 +109,7 @@ export class CategoriesController {
    * DELETE /api/categories/:id
    */
   @Delete(':id')
-  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles(...CatalogAuthGuard.WRITE_ROLES)
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @Req() request: CatalogAuthenticatedRequest,

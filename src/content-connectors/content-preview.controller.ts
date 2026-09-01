@@ -1,5 +1,6 @@
 import { Controller, Get, Param, ParseUUIDPipe, UseGuards } from '@nestjs/common';
 import { CatalogAuthGuard } from '../auth/catalog-auth.guard';
+import { RequireCatalogRoles } from '../auth/catalog-auth.decorator';
 import { ContentRendererService } from './content-renderer.service';
 
 @Controller('products/:productId/content-previews')
@@ -8,6 +9,7 @@ export class ContentPreviewController {
   constructor(private readonly contentRendererService: ContentRendererService) {}
 
   @Get()
+  @RequireCatalogRoles('catalog:authenticated')
   async getPreviews(@Param('productId', ParseUUIDPipe) productId: string) {
     const previews = await this.contentRendererService.renderPreviews(productId);
     return {
@@ -21,6 +23,7 @@ export class ContentPreviewController {
   }
 
   @Get(':marketplace')
+  @RequireCatalogRoles('catalog:authenticated')
   async getPreview(
     @Param('productId', ParseUUIDPipe) productId: string,
     @Param('marketplace') marketplace: string,

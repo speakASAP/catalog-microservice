@@ -18,8 +18,10 @@ import { Media } from './media.entity';
 import { LoggerService } from '../logger/logger.service';
 import { CatalogAuthGuard } from '../auth/catalog-auth.guard';
 import type { CatalogAuthenticatedRequest } from '../auth/catalog-auth.guard';
+import { RequireCatalogRoles } from '../auth/catalog-auth.decorator';
 
 @Controller('media')
+@UseGuards(CatalogAuthGuard)
 export class MediaController {
   constructor(
     private readonly mediaService: MediaService,
@@ -27,6 +29,7 @@ export class MediaController {
   ) {}
 
   @Get('product/:productId')
+  @RequireCatalogRoles('catalog:authenticated')
   async findByProduct(@Param('productId', ParseUUIDPipe) productId: string) {
     this.logger.log(`GET /api/media/product/${productId}`, 'MediaController');
     const media = await this.mediaService.findByProduct(productId);
@@ -34,7 +37,7 @@ export class MediaController {
   }
 
   @Post()
-  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles(...CatalogAuthGuard.WRITE_ROLES)
   async create(
     @Body() data: Partial<Media>,
     @Req() request: CatalogAuthenticatedRequest,
@@ -51,7 +54,7 @@ export class MediaController {
   }
 
   @Post('upload')
-  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles(...CatalogAuthGuard.WRITE_ROLES)
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 25 * 1024 * 1024 } }))
   async upload(
     @UploadedFile() file: any,
@@ -81,7 +84,7 @@ export class MediaController {
   }
 
   @Put(':id')
-  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles(...CatalogAuthGuard.WRITE_ROLES)
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() data: Partial<Media>,
@@ -99,7 +102,7 @@ export class MediaController {
   }
 
   @Put(':id/primary')
-  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles(...CatalogAuthGuard.WRITE_ROLES)
   async setPrimary(
     @Param('id', ParseUUIDPipe) id: string,
     @Req() request: CatalogAuthenticatedRequest,
@@ -116,7 +119,7 @@ export class MediaController {
   }
 
   @Delete(':id')
-  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles(...CatalogAuthGuard.WRITE_ROLES)
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @Req() request: CatalogAuthenticatedRequest,

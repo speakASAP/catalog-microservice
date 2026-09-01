@@ -4,8 +4,10 @@ import { ProductPricing } from './product-pricing.entity';
 import { LoggerService } from '../logger/logger.service';
 import { CatalogAuthGuard } from '../auth/catalog-auth.guard';
 import type { CatalogAuthenticatedRequest } from '../auth/catalog-auth.guard';
+import { RequireCatalogRoles } from '../auth/catalog-auth.decorator';
 
 @Controller('pricing')
+@UseGuards(CatalogAuthGuard)
 export class PricingController {
   constructor(
     private readonly pricingService: PricingService,
@@ -13,6 +15,7 @@ export class PricingController {
   ) {}
 
   @Get('product/:productId')
+  @RequireCatalogRoles('catalog:authenticated')
   async findByProduct(@Param('productId', ParseUUIDPipe) productId: string) {
     this.logger.log(`GET /api/pricing/product/${productId}`, 'PricingController');
     const pricing = await this.pricingService.findByProduct(productId);
@@ -20,6 +23,7 @@ export class PricingController {
   }
 
   @Get('product/:productId/current')
+  @RequireCatalogRoles('catalog:authenticated')
   async getCurrentPrice(@Param('productId', ParseUUIDPipe) productId: string) {
     this.logger.log(`GET /api/pricing/product/${productId}/current`, 'PricingController');
     const pricing = await this.pricingService.getCurrentPrice(productId);
@@ -27,7 +31,7 @@ export class PricingController {
   }
 
   @Post()
-  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles(...CatalogAuthGuard.WRITE_ROLES)
   async create(
     @Body() data: PricingWriteInput,
     @Req() request: CatalogAuthenticatedRequest,
@@ -44,7 +48,7 @@ export class PricingController {
   }
 
   @Post('bulk')
-  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles(...CatalogAuthGuard.WRITE_ROLES)
   async bulkCreate(
     @Body() entries: PricingWriteInput[],
     @Headers('x-human-review') humanReviewMarker: string | undefined,
@@ -65,7 +69,7 @@ export class PricingController {
   }
 
   @Put(':id')
-  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles(...CatalogAuthGuard.WRITE_ROLES)
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() data: Partial<ProductPricing>,
@@ -83,7 +87,7 @@ export class PricingController {
   }
 
   @Delete(':id')
-  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles(...CatalogAuthGuard.WRITE_ROLES)
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @Req() request: CatalogAuthenticatedRequest,

@@ -1,11 +1,13 @@
 import { Body, Controller, Post, Req, UseGuards } from "@nestjs/common";
 import { CatalogAuthGuard } from "../auth/catalog-auth.guard";
+import { RequireCatalogRoles } from "../auth/catalog-auth.decorator";
 import type { CatalogAuthenticatedRequest } from "../auth/catalog-auth.guard";
 import { LoggerService } from "../logger/logger.service";
 import { ImportReconciliationService } from "./import-reconciliation.service";
 import { ImportReconciliationRequest } from "./import-reconciliation.types";
 
 @Controller("imports/reconciliation")
+@UseGuards(CatalogAuthGuard)
 export class ImportReconciliationController {
   constructor(
     private readonly reconciliationService: ImportReconciliationService,
@@ -13,7 +15,7 @@ export class ImportReconciliationController {
   ) {}
 
   @Post("dry-run")
-  @UseGuards(CatalogAuthGuard)
+  @RequireCatalogRoles(...CatalogAuthGuard.WRITE_ROLES)
   async dryRun(
     @Body() request: ImportReconciliationRequest,
     @Req() actor: CatalogAuthenticatedRequest,
