@@ -2,6 +2,7 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { LoggerService } from '../logger/logger.service';
+import { CatalogAuthGuard } from './catalog-auth.guard';
 
 /**
  * Auth Service - Proxies requests to auth-microservice
@@ -98,9 +99,21 @@ export class AuthService {
 
   async getAdminUsers(token: string, limit = '100', offset = '0') {
     const profile = await this.getProfile(token);
-    const email = profile?.user?.email || profile?.email;
-    if (String(email || '').trim().toLowerCase() !== 'test@example.com') {
-      throw new ForbiddenException('Catalog admin access is limited to test@example.com');
+    // Authorize on roles, not identity. This used to compare the caller's email
+    // against a single hardcoded address, which meant admin access was tied to
+    // one shared account and could not be granted to anyone else, or revoked
+    // without a redeploy. CatalogAuthGuard.WRITE_ROLES is the same set every
+    // other catalog admin surface uses.
+    const roles: string[] = Array.isArray(profile?.user?.roles)
+      ? profile.user.roles
+      : Array.isArray(profile?.roles)
+        ? profile.roles
+        : [];
+    const hasAdminRole = roles.some((role) =>
+      CatalogAuthGuard.WRITE_ROLES.includes(String(role)),
+    );
+    if (!hasAdminRole) {
+      throw new ForbiddenException('Catalog admin access requires an admin role');
     }
 
     const params = new URLSearchParams({

@@ -102,7 +102,7 @@ export default function InternalAdminPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100 bg-white">
                   {accounts.map((account) => (
-                    <tr key={account.id} className={account.email === 'test@example.com' ? 'bg-blue-50/60' : undefined}>
+                    <tr key={account.id} className={account.email === user?.email ? 'bg-blue-50/60' : undefined}>
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">{account.email}</td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
                         {[account.firstName, account.lastName].filter(Boolean).join(' ') || '-'}

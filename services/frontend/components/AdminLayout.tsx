@@ -9,7 +9,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardSidebarProvider } from '@/contexts/DashboardSidebarContext';
-import { hasCatalogAdminAccess } from './AdminGuard';
+import { hasCatalogAdminAccess, rolesFromAccessToken } from './AdminGuard';
+import { apiClient } from '@/lib/api/client';
 import Footer from './Footer';
 import { ReactNode, useState } from 'react';
 
@@ -23,7 +24,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarControls, setSidebarControls] = useState<ReactNode | null>(null);
-  const canAccessAdminSection = hasCatalogAdminAccess(user?.email);
+  const canAccessAdminSection = hasCatalogAdminAccess(user?.roles?.length ? user.roles : rolesFromAccessToken(apiClient.getToken()));
 
   const handleLogout = () => {
     logout();
