@@ -1,8 +1,10 @@
 ---
-status: review
+status: done
 owner: repository-owner
-last_updated: 2026-08-31
+last_updated: 2026-09-02
 ---
+
+<!-- Verified implemented in c4d4a52 (Aukro importer, service, guarded endpoint, frontend flow), extended by dbc19fa/fa4305e/80e0d99; focused importer/service/controller tests pass (23/23), and the live catalog health endpoint reports production healthy. -->
 
 # Marketplace URL Import Implementation Plan
 
@@ -35,7 +37,7 @@ last_updated: 2026-08-31
 **Interfaces:**
 - Produces: `ImportedListing` type, `MarketplaceFetchError` class, `MarketplaceImporter` interface, `AukroImporter` class (both from `marketplace-importer.interface.ts` and `aukro.importer.ts` respectively) — consumed by Task 2.
 
-- [ ] **Step 1: Create the shared importer interface file**
+- [x] **Step 1: Create the shared importer interface file**
 
 `src/product-import/importers/marketplace-importer.interface.ts`:
 
@@ -69,7 +71,7 @@ export interface MarketplaceImporter {
 }
 ```
 
-- [ ] **Step 2: Save a real API response fixture**
+- [x] **Step 2: Save a real API response fixture**
 
 `src/product-import/importers/__fixtures__/aukro-offer-detail.json` (trimmed real response captured from `https://aukro.cz/backend-web/api/offers/7124914683/offerDetail`, keeping only the fields the importer reads):
 
@@ -94,7 +96,7 @@ export interface MarketplaceImporter {
 }
 ```
 
-- [ ] **Step 3: Write the failing test for `AukroImporter`**
+- [x] **Step 3: Write the failing test for `AukroImporter`**
 
 `src/product-import/importers/aukro.importer.spec.ts`:
 
@@ -164,7 +166,7 @@ describe('AukroImporter', () => {
 Run: `npx jest src/product-import/importers/aukro.importer.spec.ts`
 Expected: FAIL — `Cannot find module './aukro.importer'`
 
-- [ ] **Step 5: Implement `AukroImporter`**
+- [x] **Step 5: Implement `AukroImporter`**
 
 `src/product-import/importers/aukro.importer.ts`:
 
@@ -242,12 +244,12 @@ export class AukroImporter implements MarketplaceImporter {
 }
 ```
 
-- [ ] **Step 6: Run the test to verify it passes**
+- [x] **Step 6: Run the test to verify it passes**
 
 Run: `npx jest src/product-import/importers/aukro.importer.spec.ts`
 Expected: PASS (3 tests)
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/product-import/importers
@@ -432,7 +434,7 @@ describe('ProductImportService', () => {
 Run: `npx jest src/product-import/product-import.service.spec.ts`
 Expected: FAIL — `Cannot find module './product-import.service'`
 
-- [ ] **Step 3: Implement `ProductImportService`**
+- [x] **Step 3: Implement `ProductImportService`**
 
 `src/product-import/product-import.service.ts`:
 
@@ -528,12 +530,12 @@ export class ProductImportService {
 }
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npx jest src/product-import/product-import.service.spec.ts`
 Expected: PASS (5 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/product-import/product-import.service.ts src/product-import/product-import.service.spec.ts
@@ -590,7 +592,7 @@ describe('ProductImportController', () => {
 Run: `npx jest src/product-import/product-import.controller.spec.ts`
 Expected: FAIL — `Cannot find module './product-import.controller'`
 
-- [ ] **Step 3: Implement the controller**
+- [x] **Step 3: Implement the controller**
 
 `src/product-import/product-import.controller.ts`:
 
@@ -639,12 +641,12 @@ export class ProductImportController {
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npx jest src/product-import/product-import.controller.spec.ts`
 Expected: PASS
 
-- [ ] **Step 5: Create the module**
+- [x] **Step 5: Create the module**
 
 `src/product-import/product-import.module.ts`:
 
@@ -689,7 +691,7 @@ providers here because `ProductsModule` exports `ProductsService`
 globally-per-import in the same way every other feature module already
 consumes it.
 
-- [ ] **Step 6: Wire the module into `AppModule`**
+- [x] **Step 6: Wire the module into `AppModule`**
 
 Modify `src/app.module.ts`: add the import alongside the other feature modules
 (after `BusinessHealthModule` at line 22, and in the `imports` array after
@@ -715,7 +717,7 @@ export class AppModule {}
 Run: `npm test`
 Expected: PASS, no regressions.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/product-import/product-import.controller.ts src/product-import/product-import.module.ts src/product-import/product-import.controller.spec.ts src/app.module.ts
@@ -733,7 +735,7 @@ git commit -m "feat: expose POST /api/products/import-from-url endpoint"
 - Consumes: `apiClient.post<T>(endpoint: string, data?: any): Promise<ApiResponse<T>>` (`services/frontend/lib/api/client.ts:109`); `Product` interface (already defined at `services/frontend/lib/api/products.ts:19`).
 - Produces: `productsApi.importFromUrl(url: string): Promise<ApiResponse<Product>>` — consumed by Task 5.
 
-- [ ] **Step 1: Add the API function**
+- [x] **Step 1: Add the API function**
 
 In `services/frontend/lib/api/products.ts`, add inside the `productsApi` object
 (next to `createProduct`, after line 790's closing `},`):
@@ -749,7 +751,7 @@ In `services/frontend/lib/api/products.ts`, add inside the `productsApi` object
 Run: `cd services/frontend && npx tsc --noEmit`
 Expected: no new type errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add services/frontend/lib/api/products.ts
@@ -766,7 +768,7 @@ git commit -m "feat(frontend): add importFromUrl API client function"
 **Interfaces:**
 - Consumes: `productsApi.importFromUrl(url: string)` (Task 4).
 
-- [ ] **Step 1: Add import-from-url state and handler**
+- [x] **Step 1: Add import-from-url state and handler**
 
 In `services/frontend/app/dashboard/products/new/page.tsx`, add state near the
 existing `loading` state (after line 11):
@@ -803,7 +805,7 @@ Add a handler above `handleSubmit` (after line 47's `removePhotoUrlField`):
   };
 ```
 
-- [ ] **Step 2: Add the UI box above the manual form**
+- [x] **Step 2: Add the UI box above the manual form**
 
 In the same file, insert this block right after the header `<div>` (after the
 closing `</div>` at line 121, before `<form onSubmit={handleSubmit} ...>` at
@@ -855,7 +857,7 @@ requires the backend (`npm run start:dev` in the repo root) to be running
 locally and reachable at the frontend's configured `NEXT_PUBLIC_API_URL` /
 `API_URL`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add services/frontend/app/dashboard/products/new/page.tsx
