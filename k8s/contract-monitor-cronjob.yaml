@@ -72,8 +72,15 @@ spec:
                   value: "4"
                 - name: CATALOG_SMOKE_RETRY_DELAY_MS
                   value: "8000"
+                # Empty-string literal here sent the smoke run out with no
+                # credential at all, so every authorized contract 401'd. The
+                # value is already synced from Vault into this secret by
+                # external-secret.yaml, exactly like the token below it.
                 - name: JWT_TOKEN
-                  value: ""
+                  valueFrom:
+                    secretKeyRef:
+                      name: catalog-microservice-secret
+                      key: JWT_TOKEN
                 - name: CATALOG_SMOKE_INTERNAL_SERVICE_TOKEN
                   valueFrom:
                     secretKeyRef:
