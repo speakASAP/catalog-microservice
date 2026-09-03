@@ -28,7 +28,8 @@
     "verify:bpcp-consumer": "node scripts/verify-bpcp-consumer.js",
     "verify:goal24-refund-cancel-rollback-execution-approval": "node scripts/verify-goal24-refund-cancel-rollback-execution-approval.js",
     "verify:business-health-catalog-channel-contract": "node scripts/verify-business-health-catalog-channel-contract.js",
-    "verify:no-unauthenticated-routes": "node scripts/verify-no-unauthenticated-routes.js"
+    "verify:no-unauthenticated-routes": "node scripts/verify-no-unauthenticated-routes.js",
+    "verify:credential-self-report": "node scripts/verify-credential-self-report.js"
   },
   "dependencies": {
     "@nestjs/axios": "^3.0.1",
@@ -36,6 +37,7 @@
     "@nestjs/config": "^3.1.1",
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/schedule": "^4.1.2",
     "@nestjs/typeorm": "^10.0.0",
     "amqplib": "^2.0.1",
     "axios": "^1.6.2",

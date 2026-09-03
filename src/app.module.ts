@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ProductsModule } from './products/products.module';
 import { CategoriesModule } from './categories/categories.module';
 import { AttributesModule } from './attributes/attributes.module';
@@ -33,6 +34,9 @@ import { ProductImportModule } from './product-import/product-import.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+
+    // Cron scheduling (credential self-reporter)
+    ScheduleModule.forRoot(),
 
     // Database connection
     TypeOrmModule.forRoot({
