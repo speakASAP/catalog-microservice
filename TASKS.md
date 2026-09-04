@@ -13,14 +13,12 @@ No active IPS bootstrap task remains; this documentation adoption is complete.
 
 
 Future repository work must begin from its existing planning and architecture records.
-- Resolve the GOAL-14 blocker once the owner provides direction.
 
 
 ## Blocked
 
 
-No blocker was identified for this documentation-only adoption.
-- Goal GOAL-14 is blocked pending an owner decision (see docs/registry for detail).
+No open blockers. GOAL-14 is complete; the owner determined that the optional Bazos authorized draft smoke is not needed.
 
 
 ## Completed

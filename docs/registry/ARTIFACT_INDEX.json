@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "repository": "catalog-microservice",
-  "generated_at": "2026-08-30T18:52:48Z",
+  "generated_at": "2026-09-04T11:30:49Z",
   "artifacts": [
     {
       "id": "DECISION-PROJECT-COMPLETION-2026-06-21",
@@ -15,12 +15,12 @@
     {
       "id": "GOAL-14",
       "type": "goal",
-      "status": "blocked",
+      "status": "done",
       "title": "Authorized Runtime Contract Smoke",
       "path": "docs/orchestrator/GOALS.md",
       "parent_ids": [],
       "runlayer_goal_id": null,
-      "updated_at": "2026-07-02T23:36:12Z"
+      "updated_at": "2026-09-04T11:30:49Z"
     },
     {
       "id": "GOAL-19",
@@ -63,7 +63,6 @@
   ],
   "warnings": [
     "[MISSING: TASKS.md metadata header (schema_version/repository/updated_at/active_goal_ids) was not added in this pilot because current TASKS.md checklist items are legacy and not stable-ID mapped.]",
-    "[UNKNOWN: active planning state is inconsistent across tracked docs: TASKS.md has a completion/frozen marker plus non-ID backlog items while docs/orchestrator/GOALS.md records Goal 14 deferred pending approved credentials.]",
     "[UNKNOWN: runlayer_project_slug is not declared in repository documents; project_registration.status remains unlinked.]",
     "[WARNING: docs/orchestrator/STATUS.md is a large append-only legacy log; collectors should apply size limits and metadata-only parsing.]"
   ]

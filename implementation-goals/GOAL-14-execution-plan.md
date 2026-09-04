@@ -2,11 +2,11 @@
 
 ```yaml
 id: EP-CATALOG-14
-status: active
+status: done
 source_goal: implementation-goals/GOAL-14-authorized-runtime-contract-smoke.md
 owner: orchestrator
 created: 2026-06-13
-last_updated: 2026-06-13
+last_updated: 2026-09-04
 completeness_level: complete
 branch: feature/catalog-goal-14-authorized-runtime-contract-smoke
 ```

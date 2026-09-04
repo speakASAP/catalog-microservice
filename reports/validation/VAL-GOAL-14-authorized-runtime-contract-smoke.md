@@ -44,3 +44,6 @@ Deployment/runtime evidence:
 - Runtime `npm run smoke:e2e:authorized` against `https://catalog.alfares.cz` passed: 11 passed, 1 skipped, 0 failed.
 
 Authorized Bazos draft smoke was not run because it requires a separate explicit opt-in plus Bazos-owned identity/category inputs and can create side-effecting draft work.
+## Owner Decision
+
+On 2026-09-04, the owner determined that the optional authorized Bazos draft smoke is not needed. It remains disabled and is not a GOAL-14 blocker.
