@@ -1,3 +1,5 @@
+Service-to-service authentication follows the [canonical service identity standard](../../../auth-microservice/docs/SERVICE_IDENTITY_CONSUMER_STANDARD.md).
+
 2026-07-04: Goal 24 Catalog consumed current Payments/Orders/FlipFlop/Auth heads source-only. [RESOLVED/NARROWED: Catalog consumed Payments 445c4e7 pre-side-effect packet, Orders 6360baa Payments pre-side-effect consumption, FlipFlop 793f8ef owner-authority sync, and Auth c389c1e actor token provisioning proof as source-governance inputs only; Catalog approval planning remains hard-stopped until a separate current side-effect execution window, exact future payment/order/provider hashes, Orders sideEffectsHandled acknowledgements, exact Warehouse reservation lookup state, channel acknowledgement, provider proof or unpaid acknowledgement, and final redacted evidence exist] Runtime remains blocked by [MISSING: current side-effect execution window owned by a separate newer integration owner thread]; [MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]; [MISSING: Fiobanka provider-side completed-transfer refund/reversal/correction proof hash, or owner-approved unpaid no-provider-cancel acknowledgement]; [MISSING: exact Orders target order hash/state, cancellation actor, approval id, safe reason code, idempotency key, and sideEffectsHandled payment|warehouse|notification|crm|channel acknowledgements for the future smoke]; [MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]; [MISSING: exact selected Warehouse reservation lookup state for cleanup]; [MISSING: owner-approved channel side-effect acknowledgement for the selected central order hash]; [MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]. Catalog must not infer stock effects from Payments refund state, Orders no-go state, authenticated transaction-polling state, Auth token state, or FlipFlop channel readiness. mutation: false; live_checkout_executed: false; checkout_created: false; payment_created: false; provider_call: false; refund_or_reversal: false; orders_route_invocation: false; orders_mutation: false; warehouse_reservation: false; warehouse_mutation: false; warehouse_cleanup: false; channel_cleanup_mutation: false; deployment: false; migration: false; db_write: false; secret_output: false; token_output: false; raw_provider_payload_output: false; raw_customer_or_payment_evidence: false. Report: reports/validation/VAL-GOAL-24-catalog-consume-current-payments-orders-heads-2026-07-04.md.
 2026-07-04: Goal 24 Catalog consumed Orders `d98fb19 docs: add goal24 orders final owner handoff packet` source-only. [RESOLVED/NARROWED: Catalog consumed Orders d98fb19 final owner handoff packet as source-governance evidence; Orders cleanup route invocation remains hard-stopped until named Payments/bank authority, exact future payment/order/provider hashes, Orders actor/reason/idempotency/sideEffectsHandled, exact Warehouse reservation lookup state, channel acknowledgement, and final redacted evidence exist] Runtime remains blocked by [RESOLVED/NARROWED: owner statement names Sergey Stasok / Сергей Сташок as the human Payments/provider rollback owner, bank/refund authority, and bank/refund executor for Goal 24 runtime planning; runtime side effects remain blocked until exact future payment/order/provider hashes, provider proof, Orders/Warehouse/channel packets, idempotency keys, and final redacted evidence exist]; [MISSING: exact destination/source account proof, amount, reference, deadline, and redacted completion evidence for the future linked payment]; [MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]; [MISSING: Fiobanka provider-side completed-transfer refund/reversal/correction proof hash, or owner-approved unpaid no-provider-cancel acknowledgement]; [MISSING: exact Orders target order hash/state, cancellation actor, approval id, safe reason code, idempotency key, and sideEffectsHandled payment|warehouse|notification|crm|channel acknowledgements for the future smoke]; [MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]; [MISSING: exact selected Warehouse reservation lookup state for cleanup]; [MISSING: owner-approved channel side-effect acknowledgement for the selected central order hash]; [MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]. Catalog treats Orders route shape, safe reason codes, idempotency namespace, and sideEffectsHandled gate as source-defined packet requirements only; no Orders route invocation, Warehouse cleanup, provider/refund action, or channel cleanup is authorized until every selected runtime value exists. mutation: false; live_checkout_executed: false; checkout_created: false; payment_created: false; provider_call: false; refund_or_reversal: false; orders_route_invocation: false; orders_mutation: false; warehouse_reservation: false; warehouse_mutation: false; warehouse_cleanup: false; channel_cleanup_mutation: false; deployment: false; migration: false; db_write: false; secret_output: false; token_output: false; raw_provider_payload_output: false; raw_customer_or_payment_evidence: false. Report: reports/validation/VAL-GOAL-24-catalog-consume-orders-final-owner-handoff-d98fb19-2026-07-04.md.
 2026-07-04: Goal 24 Catalog consumed Orders `9287e3f docs: consume goal24 live no-go preflight` and Warehouse `eee2f20 docs: consume goal24 orders no-go preflight` source-only. [RESOLVED/NARROWED: Catalog consumed Orders 9287e3f live no-go consumer sync and Warehouse eee2f20 Orders no-go consumer sync as source-governance inputs only; Catalog approval planning remains hard-stopped until bank/refund authority, exact future smoke identities, Orders sideEffectsHandled acknowledgements, exact Warehouse reservation lookup state, channel acknowledgement, and final redacted evidence exist] Runtime remains blocked by [RESOLVED/NARROWED: owner statement names Sergey Stasok / Сергей Сташок as the human Payments/provider rollback owner, bank/refund authority, and bank/refund executor for Goal 24 runtime planning; runtime side effects remain blocked until exact future payment/order/provider hashes, provider proof, Orders/Warehouse/channel packets, idempotency keys, and final redacted evidence exist]; [MISSING: exact destination/source account proof, amount, reference, deadline, and redacted completion evidence for the future linked payment]; [MISSING: future paymentId/orderId/variableSymbolHash/providerTransactionHash for exact smoke]; [MISSING: exact Orders target order hash/state, cancellation actor, approval id, safe reason code, idempotency key, and sideEffectsHandled payment|warehouse|notification|crm|channel acknowledgements for the future smoke]; [MISSING: exact selected Orders cleanup packet runtime values and sideEffectsHandled acknowledgements]; [MISSING: deterministic Warehouse component reservation state for cleanup]; [MISSING: exact selected Warehouse reservation lookup state for cleanup]; [MISSING: owner-approved channel side-effect acknowledgement for the selected central order hash]; [MISSING: final redacted evidence path for required provider, Orders, Warehouse, and channel cleanup proof]. Catalog must not infer Warehouse stock effects from Payments refund state or Orders no-go state. mutation: false; live_checkout_executed: false; checkout_created: false; payment_created: false; provider_call: false; refund_or_reversal: false; orders_route_invocation: false; orders_mutation: false; warehouse_reservation: false; warehouse_mutation: false; warehouse_cleanup: false; channel_cleanup_mutation: false; deployment: false; migration: false; db_write: false; secret_output: false; token_output: false; raw_provider_payload_output: false; raw_customer_or_payment_evidence: false. Report: reports/validation/VAL-GOAL-24-catalog-consume-orders-warehouse-no-go-9287e3f-eee2f20-2026-07-04.md.
@@ -58,25 +60,6 @@
 2026-07-03: Goal 24 refund/cancel rollback execution approval gate recorded. Catalog updated `docs/orchestrator/2026-07-03-goal24-paid-provider-smoke-approval-packet.md`, `reports/validation/VAL-GOAL-24-paid-provider-approval-packet-final-readiness.md`, and verifier `scripts/verify-goal24-refund-cancel-rollback-execution-approval.js` to make the remaining rollback execution approval fail closed. Future paid/provider rollback can execute only when a source-controlled run packet names the provider refund/cancel/void/reversal operation, Payments/provider owner, Orders cleanup actor/route/reason/sideEffectsHandled acknowledgement, Warehouse operation per component state, FlipFlop channel cleanup, idempotency keys, redaction policy, hard-stop authority, dedicated smoke owner, and runtime validation owner. Current status remains `[MISSING: owner-approved refund/cancel rollback execution approval for future paid/provider smoke beyond the retained 1 CZK Fiobanka evidence payment]`. No live checkout, provider call, webhook replay, refund/cancel/reversal, Orders mutation, Warehouse mutation, channel cleanup, deploy, migration, DB mutation, or secret output occurred.
 2026-07-03: Goal 24 Fiobanka signature hardening reconciled from Payments `4313424` on `main`. Payments source now requires configured HMAC-SHA256 verification for `/webhooks/fiobanka` and no longer accepts arbitrary non-empty `x-fio-signature` values. Catalog narrows the stale placeholder-signature blocker to source-resolved/runtime-gated: `[RESOLVED/NARROWED: Payments 4313424 hardens Fiobanka webhook source so arbitrary non-empty x-fio-signature values are rejected]; [RESOLVED/NARROWED: deployed ready Payments pod has FIO_BANKA_WEBHOOK_SECRET present and healthy without secret output]; [RESOLVED/NARROWED: Payments 27f3f73 retains owner-approved read-only Fiobanka polling run and redacted real CZK transaction match for retained Goal 24 variable-symbol hash d7512419521d2cab without token/raw payload output]; [MISSING: official/native Fio Banka callback signature contract if provider-authentic bank-originated signed callbacks are required]`. Paid/provider bundle progression remains blocked on completed-transfer refund/cancel/reversal plus Orders/Warehouse cleanup execution approval and named live-run executor/runtime validation owner. No live checkout, provider call, webhook replay, refund/cancel, Orders mutation, Warehouse mutation, deploy, migration, DB mutation, marketplace/feed mutation, secret output, or raw bank payload exposure occurred in this Catalog docs reconciliation.
 2026-07-03: Goal 24 consumed FlipFlop source rollout `1b62909` on `main`. FlipFlop now maps durable `catalog.bundle.v1` bundleId into central Orders `bundleEvidence` as bounded audit evidence while keeping item lines, totals, stock identity, provider execution, and live paid/provider smoke blocked. Catalog approval packet now treats the FlipFlop durable bundleId source-rollout blocker as resolved/narrowed. Remaining live blockers are runtime-verified/approved Fiobanka completion evidence, Fiobanka refund/cancel/reversal execution path, provider/Orders/Warehouse rollback execution approval, and named live-run executor/runtime validation owner. No live checkout, provider call, webhook, refund/cancel, Orders mutation, Warehouse mutation, deploy, migration, DB mutation, marketplace/feed mutation, or secret output occurred in this Catalog reconciliation.
-## 2026-07-03 - Goal 24 Bazos Recurring Affinity Batch Publish Evidence Reconciled
-
-Change: reconciled the Bazos/Marketing owner evidence that resolved the non-zero scheduled Bazos affinity batch-publish gate. Bazos source/window alignment moved the bounded synthetic/internal paid multi-product source row into the closed daily window consumed by Marketing, then natural Job `marketing-order-affinity-bazos-daily-29718487` completed through the recurring CronJob.
-
-Validation evidence: protected Bazos replay for `2026-07-02T00:00:00Z..2026-07-03T00:00:00Z` returned `count=1`, `eventCount=1`, `minItemCount=2`, `maxItemCount=2`, `failClosed=false`, and no blockers. Marketing aggregate output returned `inputRecords=1`, `acceptedCreatedEvents=1`, `aggregatePairs=2`, `totalPairEvidence=2`, `publish.status=published`, `candidateCount=2`, `batchCount=1`, and `ledgerRecord.status=recorded`. Ledger readback returned `status=published`, `idempotency_key_count=1`, and `complete_snapshot=false`.
-
-Boundary decision: Catalog accepted this as batch-mode recurring evidence only. No Catalog source change, deploy, migration, replace-window call, raw relation payload recording, secret output, Orders/Warehouse/Payments mutation, or marketplace publication was performed by this reconciliation. Steady schedule was restored in Marketing `a9188b9` to `15 10 * * *` Europe/Prague after same-day verification. Remaining gate: `[MISSING: owner-reviewed future replace-window activation for Bazos]`.
-
-2026-07-03: Goal 24 real Fiobanka 1 CZK completion evidence reconciled. Payments runtime evidence for owner-confirmed variable symbol `0669409053` matched payment `684a18a9-dc85-41ae-ad41-302c67006cd2`, amount `1.00 CZK`, method `fiobanka`, status `completed`, completed `2026-07-03T19:46:44.053Z`, processed Fiobanka webhook suffix `9053:completed`, and transaction `payment/success/1.00`. This resolves/narrows the selected Fiobanka real-transfer completion blocker without manual DB/status bypass. Remaining runtime blockers are Fiobanka runtime secret/deploy verification and provider-native callback authenticity if required, completed-transfer refund/cancel/reversal approval, Orders cleanup, Warehouse cleanup, live-run executor, and runtime validation owner. No live checkout, provider call/refund/cancel, Orders mutation, Warehouse mutation, deploy, migration, production DB mutation, secret output, raw bank payload, marketplace/feed mutation, or Catalog source change occurred. Validation: read-only Payments DB evidence check plus docs-only `git diff --check`.
-2026-07-03: Goal 24 paid/provider owner approval packet self-discovery filled after explicit owner approval in the current Codex thread. Packet approval id `GOAL24-PAID-PROVIDER-SMOKE-20260703-CODEX-OWNER-APPROVED-001` records the bounded approval window, target bundle `919be990-1c76-4f9c-b100-829281c6a709`, component ids/quantities, Warehouse aggregate readback, Fiobanka method/max `300 CZK`, Payments Orders token proof, sanitized evidence policy, rollback mapping, and hard stops. The live smoke remains blocked on Fiobanka runtime secret/deploy verification and provider-native callback authenticity if required, completed-transfer refund/cancel/reversal execution approval, Fiobanka refund/cancel/reversal execution path, and named live-run executor/runtime validation owner. No live checkout, provider redirect/webhook/refund/cancel, Orders mutation, Warehouse mutation, deploy, migration, production DB mutation, marketplace/feed mutation, or secret output was performed.
-2026-07-03: Goal 24 paid/provider final source-policy reconciliation refreshed after Payments `1458ffe` and Warehouse `3043cad` landed on `main`. Catalog consumed Payments refund/cancel rollback plan evidence and Warehouse component-line cleanup operation matrix as dependency-gated source policy only. The live smoke remains fail-closed on provider-specific refund/cancel/reversal execution approval, real/approved provider callback evidence, central Orders UUID runtime propagation for the approved target, Payments Orders token runtime acceptance, Warehouse stock window/max quantity, channel cleanup ownership, hard-stop authority, smoke owner, validation owner, and owner packet completion. No live checkout, provider call/refund/cancel, Orders mutation, Warehouse mutation, channel checkout submission, marketplace/feed mutation, deploy, migration, production DB mutation, or secret output was performed by this Catalog pass. Validation: `git diff --check` plus final marker audit.
-2026-07-03: Goal 24 paid/provider coordinator reconciliation refreshed after upstream owner packets. Consumed evidence: Orders `62f5d62` merged cancel/cleanup rollback gate plus central UUID source proof; Warehouse `ee65ee4` on `origin/main` source-verifies component-line hold/release/fulfill/cancel/return mapping; FlipFlop `23a901d` keeps durable `catalog.bundle.v1` bundleId as evidence-only and runtime checkout submission blocked; Payments `124256f` narrows Fiobanka route-level callback completion through an owner-approved synthetic callback, but still leaves real bank-originated signature evidence and refund/cancel rollback blocked. Catalog updated `reports/validation/VAL-GOAL-24-paid-provider-approval-packet-final-readiness.md`, `docs/orchestrator/2026-07-03-goal24-paid-provider-smoke-approval-packet.md`, and `docs/IMPLEMENTATION_STATE.md` only. No live checkout, provider payment, webhook beyond consumed Payments evidence, refund/cancel, Orders mutation, Warehouse mutation, FlipFlop checkout submission, deploy, migration, production DB mutation, marketplace/feed mutation, or secret output was performed by this Catalog pass. Validation: `git diff --check` plus marker audit before commit. Runtime remains blocked on `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]` and `[MISSING: owner-approved refund/cancel rollback plan proving provider refund or cancellation plus Orders/Warehouse cleanup]`.
-2026-07-03: Goal 24 paid/provider Fiobanka paid-callback continuation reconciled. Payments `main` is now `124256f` with an owner-approved synthetic Fiobanka completed callback through `/webhooks/fiobanka`, proving the deployed route can mark a matched synthetic payment complete without manual payment-state bypass. This remains narrowed evidence only: that evidence was produced before Payments source hardening and does not prove provider-authentic bank-originated callback/signature evidence; no refund/cancel rollback, Orders mutation, Warehouse mutation, deploy, migration, marketplace/feed mutation, or secret output was performed by this Catalog reconciliation. Runtime paid/provider progression remains blocked by `[MISSING: owner-approved refund/cancel rollback plan proving provider refund or cancellation plus Orders/Warehouse cleanup]`.
-2026-07-03: Goal 24 paid/provider continuation head refresh recorded and superseded by the later Payments `124256f` callback evidence entries above. The intermediate pending-payment QR evidence is historical only; current Catalog readiness references pushed Payments `124256f`, Orders `62f5d62`, Warehouse `ee65ee4`, and FlipFlop `23a901d`, and preserves fail-closed blockers for owner approval, real bank callback/signature evidence, provider refund/cancel rollback, Orders cleanup, Warehouse cleanup, deploy, migration, production DB mutation, marketplace/feed mutation, and secret output.
-2026-07-03: Goal 24 downstream paid/provider readiness branches were fast-forward merged and cleaned up after validation. Payments `main` is `f11200b` with provider rollback/event contract verifier evidence; Orders `main` is `47da581` with paid-provider UUID/token blocker verifier evidence; Warehouse `main` is `ee65ee4` with component-line rollback verifier evidence. Catalog validation rollup `reports/validation/VAL-GOAL-24-paid-provider-approval-packet-final-readiness.md` now points at the merged heads. This remains source/dry-run readiness only; no live checkout, provider call, payment/refund, Warehouse mutation, deploy, migration, DB mutation, marketplace/feed mutation, or secret output occurred.
-2026-07-03: Goal 24 paid/provider smoke approval packet updated. Role: Catalog commerce integration owner. Scope stayed inside Catalog docs/orchestrator/status. Updated `docs/orchestrator/2026-07-03-goal24-paid-provider-smoke-approval-packet.md`, `docs/IMPLEMENTATION_STATE.md`, and the existing paid/provider implementation contract reference. The packet is owner-ready but runtime-blocked; it requires explicit approval of test window, non-secret approval id, target active `catalog.bundle.v1` bundle id, checkout/durable bundleId path, provider method/mode/max amount, central Orders UUID proof, Payments Orders service-token proof, sanitized evidence policy, Warehouse component-line stock rollback, Payments/provider refund-cancel rollback, hard stop authority, dedicated smoke owner, and runtime validation owner before any live run. No source behavior, checkout, provider call, webhook, payment creation, refund/cancel, fulfillment, Warehouse mutation, deploy, migration, secret read, production DB mutation, marketplace/feed mutation, or raw private evidence was touched. Validation: `git diff --check`, focused marker audit, and final readiness rollup in `reports/validation/VAL-GOAL-24-paid-provider-approval-packet-final-readiness.md`. Next action: keep paid/provider smoke blocked until the owner fills every approval field in the packet.
-2026-07-03: Goal 24 paid/provider smoke approval packet added. The remaining paid/provider blocker is now an explicit owner-input checklist in `docs/orchestrator/2026-07-03-goal24-paid-provider-smoke-approval-packet.md`; it does not approve live checkout, provider payment/refund/cancel, Orders mutation, Warehouse reservation/fulfillment/release, channel/feed/listing mutation, deploy, migration, secret read, or production data mutation. Parallel source-only lanes started: Orders UUID/token verifier `019f292b-431d-7f80-8956-73a732f750e3`, Payments provider rollback contract `019f292b-6f1a-74f0-9cc1-4dd6246840b1`, and Heureka channel fail-closed envelope `019f292b-a487-7850-946a-9f0533e8e0e2`. Runtime remains blocked on `[MISSING: owner-approved paid/provider checkout smoke with stock and refund/cancel rollback plan]` until every approval-packet field is filled and owner-approved.
-2026-07-03: Goal 24 paid/provider and channel implementation contract approval recorded. Owner approval for the next paid/provider and channel implementation contract is captured in `docs/contracts/catalog-bundle-paid-provider-channel-implementation-contract.md`; this resolves/narrows the broad approval blockers to contract-defined/runtime-gated status only. Live provider charge/refund, Warehouse stock mutation, fulfillment, external marketplace publication, and Heureka feed output remain blocked until exact canary facts and rollback plans are approved: target bundle/product IDs, payment method/provider mode and max amount, Warehouse stock window/max quantity, Orders/Payments provider-success/cancel/refund mapping, central Orders UUID proof, Payments Orders service-token runtime proof, selected first channel, and live listing/feed cleanup plan. Heureka is recorded as the safest first channel for non-mutating verifier/operator work only because its existing policy remains `willPublishFeed=false` and `willMutateExternalMarketplace=false`. No source, migration, deploy, DB mutation, provider call, Warehouse mutation, or marketplace/feed mutation occurred. [RESOLVED/NARROWED: owner-approved paid/provider checkout implementation contract defined in docs/contracts/catalog-bundle-paid-provider-channel-implementation-contract.md] [RESOLVED/NARROWED: owner-approved channel implementation contract defined in docs/contracts/catalog-bundle-paid-provider-channel-implementation-contract.md]
-2026-07-03: Goal 24 Rung 2 live pending-order evidence is recorded. Owner-approved Catalog bundle `919be990-1c76-4f9c-b100-829281c6a709` plus Orders/Payments/Warehouse runtime smoke proved one pending two-line `catalog.bundle.v1` order can reserve both component product lines and then release the Warehouse hold through the Payments-owned cancelled-status cleanup path. Evidence is in `reports/validation/VAL-GOAL-24-rung2-live-pending-order.md`; no provider payment, fulfillment, marketplace publication, deployment, migration, secret value, raw order id, or customer payload was emitted. [RESOLVED: owner-approved Rung 2 live pending-order smoke proved pending Orders create, Warehouse reservation, and payment-status cleanup release for catalog.bundle.v1 bundle 919be990-1c76-4f9c-b100-829281c6a709]
 ## 2026-07-03 - Goal 24 Bundle Integration Reconciliation
 
 Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation -> State Update.
@@ -395,16 +378,6 @@ Boundary decision: this only adds read-only deployment evidence to the acceptanc
 
 Next action: with explicit owner approval, run the Auth service-principal/token provisioning lane, mount the resulting token through approved runtime secret management, roll Catalog, and rerun `npm run verify:stock-acceptance:gates`.
 
-## 2026-06-29 - TASK-STOCK-004 Auth Service Principal Projection Deployed
-
-Change: deployed Auth commit `97ea521` (`feat: prepare catalog warehouse service token provisioning`) so `/auth/validate` can expose service actor fields for approved `userType=service` principals and Auth has an approval-gated helper for Catalog-to-Warehouse service token provisioning.
-
-Validation evidence: Auth deploy ran `npm run test:auth-contract` with 16 passing tests, built and pushed backend image `localhost:5000/auth-microservice:97ea521-20260629180327` and web image `localhost:5000/auth-microservice-web:97ea521-20260629180327`, rolled out both deployments ready `1/1`, public Auth `/health` returned `success=true,status=ok`, and running compiled backend code contains `resolveServiceIdentity`, `serviceIdentity`, and `auth-service-jwt`.
-
-Boundary decision: no Auth helper execution, DB mutation, service-principal creation, role assignment, token issuance, Vault/Kubernetes secret value change, Catalog runtime config change, Warehouse import, stock mutation, reservation, or channel publish was performed. The Catalog acceptance credential preflight will still fail until an owner-approved Catalog service principal/token is provisioned and mounted.
-
-Next action: with explicit owner approval, run Auth `scripts/provision-catalog-warehouse-service-token.ts --apply` using the guarded confirmations, store the token through approved runtime secret management, refresh Catalog runtime config, and rerun `npm run verify:stock-acceptance:gates`.
-
 ## 2026-06-29 - TASK-STOCK-004 Catalog Warehouse Credential Preflight Added
 
 Boundary decision: the preflight does not print token values and does not mutate Warehouse. It does not provision a credential, assign Auth roles, create a service principal, alter Vault/Kubernetes secrets, bypass Warehouse auth, import stock, reserve stock, or publish any channel listing. It makes the existing acceptance blocker machine-readable before the broader Catalog smoke fails.
@@ -442,20 +415,6 @@ Validation evidence: pre-deploy and post-deploy verifier runs against the 9 curr
 Boundary decision: verifier is read-only. No Warehouse import, stock mutation, reservation, order ingestion, channel draft, publish, queue, confirmation, or external marketplace mutation was run. This gives a Warehouse-side authority gate that complements the Allegro Warehouse verifier and Catalog central stock/channel/Heureka smoke. Complete physical stock beyond the 9 current Allegro-authoritative products remains gated on `[MISSING: owner-approved BizBox/current physical stock export]`, `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`, or `[MISSING: correctly authorized additional seller account exposing additional current full offers]`.
 
 Next action: obtain/provide the missing complete physical stock source or additional seller authorization, then rerun Warehouse stock authority verifier, Allegro Warehouse verifier, and the single Catalog central stock/channel/Heureka smoke as final acceptance gates.
-
-## 2026-06-29 - TASK-STOCK-004 Catalog Central Stock Smoke Includes Heureka
-
-Result: deployed Catalog commit `5844e8a` (`test: include Heureka readiness in stock smoke`). The central `scripts/catalog-smoke.js` now has opt-in `CATALOG_SMOKE_ENABLE_HEUREKA_READINESS=true`, reads Heureka feed readiness per configured product, records `stockEvidence.heurekaReadiness`, compares Heureka `availableStock` against Warehouse `totalAvailable`, and fails if Heureka reports `STOCK_UNKNOWN` or `ZERO_STOCK` while Warehouse has positive availability.
-
-Validation evidence before deploy: `git diff --check`, `node --check scripts/catalog-smoke.js`, `npm run build`, and default `npm run smoke:e2e` passed (`9` passed, `2` skipped, `0` failed). A pre-deploy in-pod read-only smoke copied the patched script into the previous Catalog pod and passed with `59` passed, `1` skipped, `0` failed; it checked `9` products, `38` per-product channel statuses, and `9` Heureka readiness rows.
-
-Deployment evidence: `./scripts/deploy.sh` built and pushed image `localhost:5000/catalog-microservice:5844e8a` with digest `sha256:e4f82109d2f277f0bf6b89f21662146c30d78870a867e9c50e772fd8d32443d4`, rolled out successfully, and returned healthy status from the new pod.
-
-Post-deploy smoke evidence: running deployed `scripts/catalog-smoke.js` inside the `5844e8a` pod with `CATALOG_SMOKE_AUTHORIZED=true`, `CATALOG_SMOKE_ASSERT_STOCK=true`, `CATALOG_SMOKE_ENABLE_CHANNEL_STATUS=true`, `CATALOG_SMOKE_ENABLE_HEUREKA_READINESS=true`, internal Catalog service token, internal Heureka base URL, and the 9 current Allegro-authoritative product IDs passed with `59` passed, `1` skipped, `0` failed. It checked product count `9`, channel statuses `38`, Heureka readiness rows `9`, and matched Heureka quantities `124`, `87`, `50`, `25`, `110`, `60`, `10`, `3`, and `27` against Warehouse.
-
-Boundary decision: this was a read-only validation harness deployment and smoke. No Warehouse import, stock mutation, reservation, Heureka feed regeneration, order ingestion, channel draft, publish, queue, confirmation, or external marketplace mutation was run. Complete physical stock beyond the 9 current Allegro-authoritative products remains gated on `[MISSING: owner-approved BizBox/current physical stock export]`, `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`, or `[MISSING: correctly authorized additional seller account exposing additional current full offers]`.
-
-Next action: obtain/provide the missing complete physical stock source or additional seller authorization, then rerun Allegro Warehouse verifier plus the single Catalog central stock/channel/Heureka smoke as final acceptance gates.
 
 ## 2026-06-29 - TASK-STOCK-004 Heureka Stock Readiness Live Verifier Deployed
 
@@ -755,10 +714,6 @@ Intent Preservation chain: Vision: Alfares channels must not oversell fulfillabl
 
 Next action: deploy decision is ready if the integration owner accepts the intended dirty files and runtime token availability for the protected availability endpoint is confirmed.
 
-## 2026-06-27 - Auth-Owned Catalog Service Token Source Applied
-
-Next action: monitor scheduled Catalog contract checks with the Auth-owned service credential.
-
 ## 2026-06-26 - Goal 17 Sub-Agents Driven Development Launch
 
 Change: launched Goal 17 as Sub-Agents Driven Development. Original Catalog thread remains integration owner. Orders read-model implementation is active in thread `019f05b7-b84d-7351-b1dc-9c51cd4ad2ef`. Channel fidelity implementation is active in FlipFlop thread `019f05d9-5ea9-7fe2-8bc7-be7fb2c57396`, Allegro thread `019f05d9-8836-7e22-b4ae-5e8a7fea49c9`, Bazos thread `019f05d9-b313-79c1-8214-6e8eaca05317`, and Aukro thread `019f05d9-df9b-74f0-9715-72e7652824ae`. Heureka remains blocked because audit found no runtime order service path.
@@ -788,14 +743,6 @@ Next action: no immediate action needed; monitor scheduled contract checks and k
 Validation evidence before deploy: `git diff --check` passed; `npm test -- --runInBand src/products/products.service.spec.ts` passed (14 tests); `npm run build` passed; `npm test -- --runInBand` passed (7 suites/56 tests).
 
 Deployment evidence: Catalog deploy from `7abf6c9` built and pushed `localhost:5000/catalog-microservice:7abf6c9` / `latest` with digest `sha256:8501cc3d55b681f7c3ac78c5aeb7ba4033b53794152a3dd6beb5896dbc64485e`, applied manifests, and Kubernetes reported rollout success. The deploy script exited nonzero during its final health phase because it selected a completed `catalog-contract-monitor` pod; direct health against the new running Catalog pod returned HTTP 200.
-
-## 2026-06-26 - Goal 17 Catalog Orders Bridge And Product UI
-
-Change: added protected Catalog bridge endpoint `GET /api/products/:id/sales-statistics` for product marketplace sales statistics. The endpoint validates Catalog product existence, calls Orders `GET /api/orders/statistics/products/:productId` with service credentials when configured, normalizes allowed channels to available/zero states, and returns an explicit unavailable zero aggregate when the Orders token/env contract is missing or Orders is unreachable. Replaced the product admin static `PRODUCT_MARKETPLACE_SALES_STATS` placeholder with typed API-backed loading, zero, unavailable, per-channel, and sanitized bounded recent-history display states.
-
-Validation evidence: `git diff --check` passed; focused `npm test -- --runInBand src/products/products.service.spec.ts` passed (13 tests); root `npm run build` passed; root `npm test -- --runInBand` passed (7 suites/55 tests); frontend `./node_modules/.bin/tsc --noEmit` passed; frontend `npm run build` passed with a Next.js multiple-lockfile workspace-root warning only.
-
-Next action: hand off runtime env/deploy readiness to final integration after owner wires the Catalog-to-Orders service token/env contract.
 
 ## 2026-06-13 - FlipFlop Sellable Quantity From Reservable Routes
 
@@ -936,77 +883,6 @@ Next unfinished step:
 
 - Decide whether to run separately gated Bazos authorized draft smoke only after approved Bazos identity/category inputs are available.
 
-## 2026-06-13 - Goal 9 Merge And Deployment
-
-Current focus: Goal 9 merge, push, deployment, and post-deploy smoke.
-
-Merge evidence:
-
-- Merged `feature/catalog-goal-09-end-to-end-smoke-tests` into `main` with merge commit `89e9f24`.
-- Pushed `main` to `origin/main`.
-
-Deployment evidence:
-
-- Ran `./scripts/deploy.sh` from `main` at `89e9f24`.
-- Built image `localhost:5000/catalog-microservice:89e9f24` and tagged `latest`.
-- Pushed both image tags to the local registry.
-- Applied Kubernetes manifests.
-- Restarted `deployment/catalog-microservice` in namespace `statex-apps`.
-- Rollout completed successfully.
-- In-pod health returned `{"status":"healthy","service":"catalog-microservice","version":"1.0.0","environment":"production"}`.
-
-Post-deploy smoke evidence:
-
-- `npm run smoke:e2e` passed against `https://catalog.alfares.cz`: 9 passed, 0 skipped, 0 failed.
-- Smoke selected product `a2e15cc0-1a94-4faf-a82f-64afea9e9817`.
-- Protected anonymous checks returned `401` for category mutation, Warehouse availability, FlipFlop projection, and Bazos draft.
-
-Boundary decisions:
-
-- No JWTs, service tokens, secrets, authorized mutations, media uploads, pricing writes, product writes, or delete actions were used during post-deploy smoke.
-- Deployment includes the accumulated validated goal line through Goal 9.
-
-Next unfinished step:
-
-- Owner review or production monitoring.
-
-## 2026-06-13 - Goal 9 End-To-End Catalog Smoke Tests
-
-Current focus: Goal 9 source implementation on `feature/catalog-goal-09-end-to-end-smoke-tests`.
-
-Planning evidence:
-
-- Created `implementation-goals/GOAL-09-execution-plan.md`.
-- Created `reports/validation/GOAL-09-pre-coding-gate.md`.
-- Inspected package scripts and Catalog endpoint surfaces for health, products, pricing, media, Warehouse availability, FlipFlop projection, and Bazos draft.
-
-Implementation evidence:
-
-- Added `scripts/catalog-smoke.js`.
-- Added `npm run smoke:e2e`.
-- Smoke output names each contract and returns structured JSON with pass/fail/skip counts.
-- Default smoke uses `https://catalog.alfares.cz`; override is available through `CATALOG_SMOKE_BASE_URL`.
-- Optional product selection is available through `CATALOG_SMOKE_PRODUCT_ID`.
-
-Validation evidence:
-
-- `npm run smoke:e2e` passed against `https://catalog.alfares.cz`: 9 passed, 0 skipped, 0 failed.
-- Smoke selected product `a2e15cc0-1a94-4faf-a82f-64afea9e9817`.
-- `npm test -- --runInBand` passed: 6 suites / 33 tests.
-- `npm run build` passed.
-- `git diff --check` passed.
-
-Boundary decisions:
-
-- Smoke performed no authorized production mutations.
-- Protected mutation/projection checks used anonymous requests and expected `401`.
-- No JWTs, service tokens, secrets, raw response bodies, customer data, or supplier payloads were printed or stored.
-- Production deployment was later completed from merge commit `89e9f24`; see Goal 9 merge and deployment entry above.
-
-Next unfinished step:
-
-- Goal 9 source/docs were committed, merged, pushed, deployed, and post-deploy smoke verified.
-
 ## 2026-06-13 - Goal 8 Data Import And Reconciliation
 
 Current focus: Goal 8 source implementation on `feature/catalog-goal-08-data-import-reconciliation`.
@@ -1070,28 +946,6 @@ Next unfinished step:
 
 - Review/deploy Goal 10/11 only after explicit owner approval.
 
-## 2026-06-13 - Goal 7 Bazos Draft Integration Contract Deployment
-
-Current focus: Goal 7 deployment and bounded production smoke.
-
-Deployment evidence:
-
-- Commit `3503372` deployed from clean detached worktree `/tmp/catalog-goal7-deploy`.
-- Image `localhost:5000/catalog-microservice:3503372` and `latest` were built and pushed.
-- Kubernetes manifests applied, deployment restarted, rollout completed, and deployment health check returned `healthy`.
-- Production `GET /health` returned `200` with status `healthy`.
-- Anonymous `POST /api/products/:id/bazos-draft` returned `401` with `Missing or invalid Authorization header`, confirming the new action endpoint is deployed and protected.
-
-Boundary evidence:
-
-- Deployment used clean commit `3503372`, excluding unrelated dirty Goal 10 worktree changes.
-- Smoke did not use service tokens, runtime secrets, Bazos identity data, cookies, verification codes, production product data, or session material.
-- Authorized Bazos draft runtime smoke was not run because it would require approved runtime credentials and Bazos identity context.
-
-Next unfinished step:
-
-- Continue to the next ready goal only after resolving or isolating the existing unrelated Goal 10 worktree changes.
-
 ## 2026-06-13 - Goal 7 Bazos Draft Integration Contract Source Implementation
 
 Current focus: Goal 7 - Bazos Draft Integration Contract source implementation.
@@ -1122,28 +976,6 @@ Boundary decisions:
 Next unfinished step:
 
 - Commit Goal 7 source/docs when ready, then deploy only with owner approval.
-
-## 2026-06-13 - Goal 6 FlipFlop Catalog Projection Deployment
-
-Current focus: Goal 6 deployment and bounded production smoke.
-
-Deployment evidence:
-
-- Commit `c989883` deployed with `./scripts/deploy.sh`.
-- Image `localhost:5000/catalog-microservice:c989883` and `latest` were built and pushed.
-- Kubernetes manifests applied, deployment restarted, rollout completed, and deployment health check returned `healthy`.
-- Production `GET /health` returned `200` with status `healthy`.
-- Anonymous `POST /api/products/projections/flipflop/batch` returned `401` with `Missing or invalid Authorization header`, confirming the new projection endpoint is deployed and protected.
-
-Boundary evidence:
-
-- Smoke did not use service tokens, runtime secrets, production product lists, or Warehouse-sensitive data.
-- Authorized projection smoke with real availability was not run because it would require approved runtime credentials and product IDs.
-- Existing product read envelopes were not changed by the deployment.
-
-Next unfinished step:
-
-- Start Goal 7 - Bazos Draft Integration Contract.
 
 ## 2026-06-13 - Goal 6 FlipFlop Catalog Projection Source Implementation
 
@@ -1209,112 +1041,6 @@ Boundary decisions:
 Next unfinished step:
 
 - Implement Goal 6 source changes from `implementation-goals/GOAL-06-execution-plan.md`, then run `npm test -- --runInBand`, `npm run build`, and `git diff --check`.
-
-## 2026-06-13 - Goal 5 Catalog/Warehouse Contract Deployment
-
-Current focus: Goal 5 deployment and bounded production smoke.
-
-Closure evidence:
-
-- Commit `874e080` contains Goal 5 source/docs for the Catalog/Warehouse availability contract.
-- `./scripts/deploy.sh` deployed image `localhost:5000/catalog-microservice:874e080` and `latest`.
-- Deployment phases completed successfully: preflight, image build, push, manifest apply, deployment restart, rollout, and health check.
-- Production health returned `healthy` for `catalog-microservice` version `1.0.0`.
-- Safe production smoke verified `GET /health` returned `200` and anonymous `POST /api/products/availability/batch` returned `401` with `Missing or invalid Authorization header`.
-- Full in-pod contract smoke with synthetic product create/delete and service-token Warehouse call was not run because it requires explicit approval for production mutations and runtime secret use.
-
-Boundary evidence:
-
-- The deployed endpoint is protected by `CatalogAuthGuard`.
-- Goal 5 source tests prove unknown product IDs are rejected before Warehouse calls, valid product batches use one Warehouse request, zero-row Warehouse semantics are preserved, and dependency failures do not fabricate stock.
-- Warehouse remains the stock authority; Catalog schema has no stock persistence.
-
-Next unfinished step:
-
-- If required, run the full authorized runtime contract smoke only after explicit approval for production synthetic product mutations and in-pod runtime credential use.
-
-## 2026-06-13 - Goal 5 Catalog/Warehouse Contract Source Implementation
-
-Current focus: Goal 5 - Catalog/Warehouse Contract source implementation.
-
-Implementation evidence:
-
-- Added protected `POST /api/products/availability/batch` through a new `warehouse-availability` module.
-- Added Catalog product identity lookup before Warehouse use through `ProductsService.findIdentitiesByIds`.
-- Unknown Catalog product IDs return `400 Bad Request` before any Warehouse request is made.
-- Valid product IDs are sent to Warehouse `POST /api/stock/availability/batch` in one batch request with optional `warehouseIds`.
-- Availability response items include Catalog `sku`, `source: "warehouse"`, Warehouse totals, and Warehouse per-location rows.
-- Valid products missing Warehouse rows map to zero totals and empty `warehouses`, preserving Warehouse zero-row semantics without Catalog stock ownership.
-- Warehouse service URL/token are read from runtime env only; no credentials are hardcoded, printed, or stored in validation evidence.
-- No Catalog product schema stock fields were added.
-
-Validation evidence:
-
-- `npm test -- --runInBand` passed: 4 suites / 15 tests.
-- `npm run build` passed.
-- `git diff --check` passed.
-- Created `reports/validation/VAL-GOAL-05-catalog-warehouse-contract.md`.
-
-Boundary decisions:
-
-- Catalog proves product identity and enriches SKU metadata only.
-- Warehouse remains the stock authority for total quantity, reserved, available, warehouses, reservations, movements, and locations.
-- Existing product and channel-readiness read envelopes remain unchanged.
-- Runtime Warehouse verification is deferred until deployment and approved service-token handling are available.
-
-Next unfinished step:
-
-- Commit Goal 5 source/docs when ready, then deploy only with owner approval and run a runtime contract smoke without printing token values.
-
-## 2026-06-13 - Goal 5 Catalog/Warehouse Contract Planning
-
-Current focus: Goal 5 - Catalog/Warehouse Contract planning and pre-coding gate.
-
-Planning evidence:
-
-- Created branch `feature/catalog-goal-05-catalog-warehouse-contract` from the clean Goal 4 head.
-- Created `implementation-goals/GOAL-05-execution-plan.md`.
-- Inspected Catalog product, readiness, app module, and existing stock-related code.
-- Inspected Warehouse `POST /api/stock/availability/batch`, availability contract docs, and global JWT roles guard.
-- Confirmed Catalog currently has no warehouse availability integration under `src/`.
-- Confirmed Warehouse batch availability already returns zero totals for known product IDs with no stock rows and remains the stock authority.
-
-Pre-coding gate evidence:
-
-- `git status --short --branch` confirmed the Goal 5 branch and a documented planning-only diff.
-- Missing marker scan found no unresolved IPS missing or unknown markers in the Goal 5 gate target set.
-- `git diff --check` passed.
-
-Boundary decisions:
-
-- Goal 5 source work should be additive and schema-neutral.
-- Catalog may validate requested product IDs and call Warehouse batch availability once.
-- Catalog must not persist stock quantities, reservations, movements, or warehouse locations.
-- Warehouse auth must be preserved through approved service-token configuration; no token values may be printed or committed.
-- FlipFlop consumption remains Goal 6 unless the owner expands scope.
-
-Next unfinished step:
-
-- Implement Goal 5 source changes from `implementation-goals/GOAL-05-execution-plan.md`, then run `npm test`, `npm run build`, and `git diff --check`.
-
-## 2026-06-13 - RBAC-REM-03 Catalog Frontend Admin Guard
-
-Current focus: Auth remediation RBAC-REM-03 for Catalog frontend role-aware admin guard and stale comment cleanup.
-
-Implementation evidence:
-
-- Updated services/frontend/components/AdminGuard.tsx to use Auth user roles before rendering admin pages.
-- Removed stale text that said Auth does not support roles/admin flags.
-- Accepted roles now mirror Catalog backend admin/write roles: global:superadmin, app:catalog-microservice:admin, internal:catalog-microservice:admin, and catalog:write.
-- Non-authorized authenticated users see an access-required state instead of admin content.
-
-Validation evidence:
-
-- services/frontend npm run build passed.
-- git diff --check -- services/frontend/components/AdminGuard.tsx passed.
-- No secrets, JWTs, service tokens, production user data, backend authorization, deployment, or database changes.
-
-Next action: Return to Auth RBAC remediation state; recommended next chunk is RBAC-REM-04 SpeakASAP scoped-role normalization review.
 
 ## 2026-06-12
 
@@ -1583,31 +1309,6 @@ Intent chain:
 - Validation: `bash -n scripts/run-stock-acceptance-gates.sh` passed; `git diff --check` passed; focused `src/warehouse-availability/warehouse-availability.service.spec.ts` passed 16 tests; `npm run build` passed; Catalog deployed successfully as image `localhost:5000/catalog-microservice:67c29f8` with healthy rollout. Live read-only acceptance gate still fails at the Catalog propagation leg: Warehouse authority verifier passes for 9 products with `totalAvailable=496`, Allegro dry-run verifies Warehouse with `warehouseMatches=9` and `warehouseMismatches=0`, but Catalog smoke returns `503` for authorized Warehouse availability because Warehouse rejects all configured Catalog Warehouse credentials.
 
 Boundary decision: this does not solve the remaining physical stock source gap. The configured Allegro accounts still expose only the current 9 stock-authoritative offers totaling 496 pieces; the 1000+ expected physical stock source remains `[MISSING: owner-provided BizBox/current export, additional seller authorization, or explicit authority confirmation]`.
-
-## 2026-06-29 - Stock Goal Continuation: Auth And Source Evidence
-
-Change: continued the cross-repo stock goal from the acceptance-gate blocker without adding a Warehouse static-token bypass. The current deployed state remains:
-- Catalog `localhost:5000/catalog-microservice:67c29f8`, ready `1/1`.
-- Warehouse `localhost:5000/warehouse-microservice:8a66b27`, ready `1/1`.
-- Allegro `localhost:5000/allegro-service:50b5858`, ready `1/1`.
-- Auth `localhost:5000/auth-microservice:9a309b0-20260629000608`, ready `1/1`.
-
-Auth/receiver evidence:
-- Auth `/auth/validate` currently validates user JWTs by verifying the token and loading an active user by `payload.sub`; it does not validate static machine tokens as service actors.
-- Warehouse uses Auth `/auth/validate` through `JwtRolesGuard` for protected routes.
-- Catalog-to-Warehouse candidate credentials are rejected by Warehouse/Auth in runtime; Allegro `JWT_TOKEN` remains accepted for the Allegro Warehouse verifier.
-- A broad Warehouse guard bypass and a route-scoped static-token read guard were not implemented because they change Warehouse's persistent machine-auth model and require explicit owner approval.
-
-Remaining stock-source evidence:
-- Repo search found `suppliers-microservice` has a generic REST/JSON stock candidate contract and validation-first Warehouse reconciliation path with `supplierSku`, `productId`, `warehouseId`, and `stockQuantity`.
-- Suppliers docs still mark real supplier/BizBox payload facts as missing; the generic adapter does not identify a real physical stock source by itself.
-- A read-only Suppliers API metadata probe was attempted through the live pod with its own `JWT_TOKEN`; the service returned `401 Invalid token`, so no supplier/import metadata was read through that route.
-- No production supplier import, Warehouse mutation, stock reservation, DB query, or secret value print was performed.
-
-Current blockers:
-- `[MISSING: owner-approved machine-auth receiver contract or valid Auth-compatible Catalog Warehouse token]` for passing the Catalog propagation leg of the stock acceptance gate.
-- `[MISSING: owner-provided BizBox/current export, real supplier API contract, additional seller authorization, or explicit authority confirmation]` for stock beyond the 9 current Allegro-authoritative offers totaling 496 pieces.
-- `[MISSING: explicit approval for read-only Suppliers DB/API metadata inspection if service JWT remains invalid]`.
 
 ## 2026-07-01 - Heureka Catalog Publication Connector
 
@@ -2136,14 +1837,6 @@ Remaining blockers:
 Goal 24 Auth actor readback retained token hard stops:
 - `[MISSING: fresh Auth actor-bound token generated through the Auth c389c1e no-print/no-decode/no-persist pattern for the exact guarded discount-fixture step]`
 - `[MISSING: sanitized auth/admin evidence path for guarded discount-code generation using the fresh selected actor-bound token]`
-
-## 2026-07-04 Goal 24 Fiobanka Refund Wording Alignment
-
-[RESOLVED/NARROWED: Catalog Fiobanka refund wording now distinguishes runtime validation owner from live-run executor and records that Fiobanka completed-transfer rollback is not an automated provider-side Payments refund endpoint]
-
-Catalog consumes Payments source-governance semantics that owner-approved manual bank/service refund or guarded payment-order upload that remains `PENDING_AUTHORIZATION` until Internetbanking/bank completion evidence exists. A payment-order upload acknowledgement that remains `PENDING_AUTHORIZATION` is not refund/reversal completion evidence, transaction-polling/read-token readiness is not refund/reversal authority, and Catalog must preserve `[RESOLVED/NARROWED: owner statement names Sergey Stasok / Сергей Сташок as the human Payments/provider rollback owner, bank/refund authority, and bank/refund executor for Goal 24 runtime planning; runtime side effects remain blocked until exact future payment/order/provider hashes, provider proof, Orders/Warehouse/channel packets, idempotency keys, and final redacted evidence exist]`, `[MISSING: owner-approved Fiobanka refund/reversal execution path and redacted provider evidence]`, exact Orders/Warehouse packet blockers, and final redacted evidence path before any new paid/provider runtime side effect.
-
-2026-07-04: Goal 24 current blocker reconciliation completed. [RESOLVED/NARROWED: Catalog current blocker reconciliation distinguishes historical live-run executor/runtime validation owner wording from current runtime blockers; Codex owns source-controlled validation/stop authority only, while live execution remains blocked by Auth token source, Payments bank/refund authority, exact provider proof, Orders sideEffectsHandled, exact selected Warehouse reservation lookup state, channel acknowledgement, and final redacted evidence path] Central Orders UUID propagation and Payments Orders service-token proof are source-governance resolved for the current bridge mechanism only. Runtime remains blocked by approved token source/token-to-actor proof, human Payments/provider bank-refund authority, exact future payment/order/provider hashes, Orders sideEffectsHandled packet, channel side-effect acknowledgement, exact selected Warehouse reservation lookup state, and final redacted evidence path. No live checkout, payment creation, provider call, refund/reversal, Orders mutation, Warehouse mutation, channel cleanup, deploy, migration, DB write, secret/token output, raw evidence, or marketplace mutation occurred.
 
 ## 2026-09-04 - Goal 14 Owner Decision
 

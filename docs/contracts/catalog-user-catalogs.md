@@ -1,3 +1,5 @@
+Service-to-service authentication follows the [canonical service identity standard](../../../auth-microservice/docs/SERVICE_IDENTITY_CONSUMER_STANDARD.md).
+
 # Catalog User Catalogs Contract
 
 > 2026-07-02 status note: Goal 23 extends this Goal 22 draft with community resale, while preserving the source-default requirement. Newly provisioned seller settings default to `include_alfares_catalog=false` and `include_community_catalog=false`; existing explicit user settings remain respected. See `docs/contracts/catalog-reseller-community-products.md`.
