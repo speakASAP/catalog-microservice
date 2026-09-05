@@ -1,6 +1,6 @@
 # Execution Plan: TASK-001
 
-status: done
+status: closed
 completeness_level: complete
 
 ## Upstream Traceability
