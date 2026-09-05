@@ -59,7 +59,6 @@ git diff --check
 - `CAT-INV-001`: Catalog validates product identity and contributes SKU metadata only.
 - `CAT-INV-002`: Stock quantity, reserved, available, warehouse, movement, and reservation truth remains Warehouse-owned; no Catalog schema persistence was added.
 - `CAT-INV-009`: Existing product and channel-readiness read envelopes are unchanged; Goal 5 adds a new endpoint only.
-- `CAT-INV-010`: The new endpoint is protected by `CatalogAuthGuard`; Warehouse calls require `WAREHOUSE_SERVICE_TOKEN` or `WAREHOUSE_INTERNAL_SERVICE_TOKEN` from runtime configuration only.
 
 ## Sensitive-Data Result
 
@@ -72,7 +71,6 @@ Direct runtime verification against the deployed Warehouse endpoint was not run 
 ## Next Action
 
 Commit Goal 5 source/docs when ready, then deploy only with owner approval and run a runtime smoke using approved service-token handling without printing token values.
-
 
 ## Deployment Evidence
 

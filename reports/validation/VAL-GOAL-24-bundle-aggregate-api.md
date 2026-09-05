@@ -101,10 +101,6 @@ kubectl -n statex-apps get deploy catalog-microservice
 
 Result: external health HTTP 200; deployment image `localhost:5000/catalog-microservice:44ce06d`, ready=1 updated=1 available=1.
 
-```bash
-# protected in-pod runtime smoke with CATALOG_INTERNAL_SERVICE_TOKEN, token value not printed
-```
-
 Result: PASS. One synthetic internal canary bundle `257a0518-56eb-4dba-9428-4be5a25813df` was created as draft, activated, archived, and read back as archived with `contractVersion=catalog.bundle.v1`, `source=manual`, `itemCount=2`, and `validation.blockers=[bundle_archived]`.
 
 ```bash

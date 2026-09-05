@@ -49,10 +49,6 @@ heureka-api-gateway    1       1         localhost:5000/heureka-api-gateway:da07
 
 Command:
 
-```bash
-ssh alfares 'cd /home/ssf/Documents/Github/catalog-microservice && CATALOG_PRODUCT_QUALITY_API_BASE=https://catalog.alfares.cz/api CATALOG_INTERNAL_SERVICE_TOKEN=$(kubectl get secret catalog-microservice-secret -n statex-apps -o jsonpath="{.data.CATALOG_INTERNAL_SERVICE_TOKEN}" | base64 -d) npm run validate:product-quality -- --format json --max-pages 10 --out /tmp/catalog-goal25-live-quality.json'
-```
-
 Summary result:
 
 ```json
@@ -84,10 +80,6 @@ Source evidence search found no approved image, price, category, or stock source
 
 Command:
 
-```bash
-ssh alfares 'TOKEN=$(kubectl get secret catalog-microservice-secret -n statex-apps -o jsonpath="{.data.CATALOG_INTERNAL_SERVICE_TOKEN}" | base64 -d); curl -sS -X POST "https://catalog.alfares.cz/api/products/review/bulk-update" -H "Content-Type: application/json" -H "x-internal-service-token: $TOKEN" -H "x-service-name: goal-25-data-blocker-cleanup" --data "{\"productIds\":[\"8edc51f2-bed2-433f-8a3c-5738b49a02e1\"],\"expectedMissingField\":\"image\",\"patch\":{\"lifecycle\":\"needs_review\",\"isActive\":false},\"humanReview\":\"explicit\"}"'
-```
-
 Result:
 
 ```json
@@ -113,10 +105,6 @@ No source code, migrations, Kubernetes manifests, deployment scripts, marketplac
 ## Catalog Validation After Cleanup
 
 Command:
-
-```bash
-ssh alfares 'cd /home/ssf/Documents/Github/catalog-microservice && CATALOG_PRODUCT_QUALITY_API_BASE=https://catalog.alfares.cz/api CATALOG_INTERNAL_SERVICE_TOKEN=$(kubectl get secret catalog-microservice-secret -n statex-apps -o jsonpath="{.data.CATALOG_INTERNAL_SERVICE_TOKEN}" | base64 -d) npm run validate:product-quality -- --format json --max-pages 10 --out /tmp/catalog-goal25-after-cleanup-quality.json'
-```
 
 Result:
 
@@ -207,10 +195,6 @@ Result excerpt:
 ```
 
 Read-only lane verifier:
-
-```bash
-ssh alfares 'cd /home/ssf/Documents/Github/heureka && CATALOG_INTERNAL_SERVICE_TOKEN=$(kubectl get secret catalog-microservice-secret -n statex-apps -o jsonpath="{.data.CATALOG_INTERNAL_SERVICE_TOKEN}" | base64 -d) WAREHOUSE_SERVICE_TOKEN=$(kubectl get secret warehouse-microservice-secret -n statex-apps -o jsonpath="{.data.CLIPLOT_WAREHOUSE_SERVICE_TOKEN}" | base64 -d) HEUREKA_VERIFY_BASE_URL=https://heureka.alfares.cz CATALOG_SERVICE_URL=https://catalog.alfares.cz WAREHOUSE_SERVICE_URL=https://warehouse.alfares.cz npm --silent run verify:heureka-blocked-product-lanes >/tmp/heureka-blocked-lanes-after-goal25-cleanup.json'
-```
 
 Summary result:
 

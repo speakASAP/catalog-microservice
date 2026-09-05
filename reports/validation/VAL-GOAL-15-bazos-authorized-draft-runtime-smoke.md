@@ -29,11 +29,9 @@ No token values, Bazos identity contact data, Bazos sessions/cookies, verificati
 
 - Created/stored Bazos smoke runtime inputs in Vault under `secret/prod/catalog-microservice`.
 - Synced `CATALOG_SMOKE_BAZOS_PRODUCT_ID`, `CATALOG_SMOKE_BAZOS_IDENTITY_ID`, `CATALOG_SMOKE_BAZOS_CATEGORY`, and `CATALOG_SMOKE_BAZOS_LOCATION` through Kubernetes.
-- Added `BAZOS_SERVICE_TOKEN` Vault/Kubernetes mapping for Catalog-to-Bazos service calls.
 - Bazos-service deployed commit `c58d8b7`, exposing the shared catalog sell-action controller in the deployed app.
 - Direct route mapping evidence showed `POST /api/bazos/catalog/products/:productId/sell-action` registered.
 - Catalog deployed merge commit `555652c`; the rollout completed successfully and health returned `healthy`.
-- Kubernetes secret sync exposed `BAZOS_SERVICE_TOKEN` before the active Catalog pod started.
 - Linked the dedicated smoke identity to a dedicated runtime Bazos smoke account in the Bazos database. No token values, contact data, or account/identity IDs were committed or printed.
 
 ## Runtime Smoke Evidence

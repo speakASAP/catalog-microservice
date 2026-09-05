@@ -114,24 +114,6 @@ Resolved/narrowed in this pass:
 
 - `[RESOLVED/NARROWED: Heureka-owned catalog.bundle.v1 feed publication policy handoff resolved to fail-closed Heureka policy at Heureka main 1cf0f32]`. Heureka commit `1cf0f32` keeps `catalog.bundle.v1` bundles out of Heureka XML feed output and reports `willPublishFeed=false` / `willMutateExternalMarketplace=false`.
 
-2026-07-03: Goal 24 Bazos budget paid multi-product source evidence resolved the live Bazos replay evidence blocker. After owner request, Bazos created/updated one bounded synthetic/internal paid source projection row only: `status=completed`, `paymentStatus=paid`, total `2` CZK, two itemSnapshots over two Catalog product IDs, `forwarded=false`, and no central Orders id. Protected Bazos endpoint from the Marketing pod returned HTTP 200 with `count=1`, `eventCount=1`, `eventType=marketplace.order_affinity_candidate.v1`, `eventVersion=1`, `minItemCount=2`, `maxItemCount=2`, `skippedRecords=0`, `failClosed=false`, and `blockers=[]`. Marketing dry-run `goal24-bazos-budget-paid-source-20260703-001` returned `inputRecords=1`, `acceptedCreatedEvents=1`, `aggregatePairs=2`, `totalPairEvidence=2`, `candidateCount=2`, `ledgerStatus=recorded`, and `published=false`. `[RESOLVED: live Bazos paid multi-product order replay evidence via budget source dry-run goal24-bazos-budget-paid-source-20260703-001]`; recurring Bazos affinity activation remains blocked by `[MISSING: owner approval to activate recurring Bazos affinity publish after live dry-run evidence]`. No Catalog publish, replace-window call, product relation mutation, Orders create, Warehouse reservation, Payments action, deployment, migration, secret value, raw order id, customer/address/payment/provider payload, raw replay payload, or marketplace publication occurred.
-2026-07-03: Goal 24 Bazos live paid multi-product replay evidence check completed against deployed Bazos image `localhost:5000/bazos-service:27f325d` and Marketing image `localhost:5000/marketing-microservice:9cc549e`. Bazos rollout was healthy. Protected endpoint probe from the Marketing pod using the Marketing runtime header contract returned HTTP 200, `success=true`, `sourceOwner=bazos-service`, `contract=marketplace.order_affinity_candidate.v1`, `channel=bazos`, `count=0`, `eventCount=0`, `skippedRecords=0`, `failClosed=false`, and `blockers=[]`. Fresh Marketing dry-run `goal24-bazos-live-evidence-20260703-002` returned `inputRecords=0`, `acceptedCreatedEvents=0`, `aggregatePairs=0`, `totalPairEvidence=0`, `candidateCount=0`, `ledgerStatus=recorded`, and `published=false`. The source-contract blockers remain resolved/narrowed, and `[RESOLVED: live Bazos paid multi-product order replay evidence via budget source dry-run goal24-bazos-budget-paid-source-20260703-001]`; recurring Bazos affinity activation remains blocked pending owner approval after live dry-run evidence. No Catalog publish, replace-window call, product relation mutation, deployment, migration, secret value, raw order id, customer/address/payment/provider payload, or raw replay payload was emitted.
-2026-07-03: Goal 24 Bazos paid source reconciliation integrated. Bazos `main` advanced through `d4040c8` (merged and pushed `codex/bazos-paid-lifecycle-fixture`, then deleted the local and remote worker branch) and follow-up `27f325d` (Marketing-compatible replay event shape). Bazos now has source-contract coverage for paid replay: local `BazosOrder.paymentStatus`, `paidAt`, bounded `itemSnapshots`, protected paid/processable multi-product replay filtering, forwarding of Bazos `paymentStatus` to central Orders, and replay envelopes using Marketing-compatible `type`, `eventVersion`, and `payload.items[].productId` fields. The broad Catalog Bazos producer-source blockers are resolved/narrowed to source-contract level. Remaining Bazos affinity gates are `[RESOLVED: live Bazos paid multi-product order replay evidence via budget source dry-run goal24-bazos-budget-paid-source-20260703-001]` and `[MISSING: owner approval to activate recurring Bazos affinity publish after live dry-run evidence]`. Validation: Bazos `git diff --check` passed, focused orders spec passed 17/17, `npm --prefix services/aukro-service run build` passed on latest `main`; Catalog reconciliation is docs-only. No Catalog source, production data, product relations, marketplace publish, Kubernetes manifest, deployment script, secret value, customer/address/payment/provider payload, or raw marketplace order id was changed.
-2026-07-03: Goal 24 FlipFlop protected replay runtime smoke and conservative activation policy reconciled. FlipFlop `main` at `60a1090` records the deployed runtime smoke, and Marketing `main` at `f02e5fe` records dry-run `goal24-flipflop-runtime-smoke-20260703-001`. Aggregate-only evidence: direct protected endpoint probe returned HTTP 200 with contract `marketplace.order_affinity_replay_candidates.v1`, `sourceOwner=flipflop-service`, `channel=flipflop`, `count=1`, and `events=1`; Marketing dry-run returned `inputRecords=1`, `acceptedCreatedEvents=1`, `aggregatePairs=2`, `rejectedRecords=0`, `skippedEvents=0`, `ledgerRecord.status=recorded`, `idempotencyKeyCount=1`, and no Catalog publish. The `[RESOLVED: deployed FlipFlop replay endpoint/runtime smoke]` blocker is resolved. The broad FlipFlop marketplace replay activation-policy blocker is resolved as `[RESOLVED: owner-approved conservative FlipFlop marketplace replay activation policy - no recurring marketplace CronJob, publish, or replace-window activation without future explicit source/window approval]`: no FlipFlop marketplace CronJob, publish, replace-window publish, schedule unsuspend, or Catalog relation mutation is approved without future explicit source/window approval. Remaining narrower gate: `[MISSING: owner-approved FlipFlop recurring marketplace publish/replace-window schedule activation]`.
-2026-07-03: Goal 24 B1.1 Catalog bundle aggregate runtime closure completed on `main` at `44ce06d`. Applied additive migration `scripts/migrations/20260703_catalog_bundle_aggregate.sql` to `catalog_db`, creating `catalog_bundles` and `catalog_bundle_items`; verification showed `bundle_rows=0` and `item_rows=0` immediately after migration. `./scripts/deploy.sh` deployed image `localhost:5000/catalog-microservice:44ce06d` with rollout ready=1 updated=1 available=1, in-pod health passed, and external `https://catalog.alfares.cz/health` returned HTTP 200. Protected runtime smoke used `CATALOG_INTERNAL_SERVICE_TOKEN` inside the pod without printing token values: one synthetic internal canary bundle was created as `draft`, activated as `active`, archived, and read back as `archived` with `validation.blockers=[bundle_archived]`, `contractVersion=catalog.bundle.v1`, `source=manual`, and two component item rows. No Orders, Warehouse, Payments, FlipFlop, checkout, payment provider, reservation, stock, marketplace publication, SKU creation, or secret output occurred. The `[RESOLVED: owner-approved Catalog bundle aggregate migration application/deploy/runtime smoke]` blocker is resolved; downstream bundle-selling gates remain Orders bundleEvidence, Warehouse component-line sign-off, Payments metadata allowlist, FlipFlop adoption, and owner-approved non-mutating checkout smoke inputs.
-2026-07-03: Goal 24 B1.1 Catalog `catalog.bundle.v1` additive source implementation completed after owner acceptance. Added protected bundle aggregate API/source in `src/bundles/*`, wired `BundlesModule` into `src/app.module.ts`, and added additive migration `scripts/migrations/20260703_catalog_bundle_aggregate.sql` for `catalog_bundles` and `catalog_bundle_items`. The implementation preserves the no-SKU/no-stock/no-checkout boundary: Catalog stores bundle metadata over existing product IDs only, requires `pricePolicy=checkout_authoritative`, rejects sensitive evidence, enforces idempotency conflicts, and fail-closes activation for storefront/channel visibility with `checkout_contract_missing` until downstream contracts are accepted. No migration application, deployment, runtime DB mutation, Orders/Warehouse/Payments/FlipFlop edit, checkout/payment/reservation, marketplace publication, generated file, or secret output was performed. Validation: docs-rag retrieval HTTP 200 with indexed context, pre-coding scripts missing as recorded, focused `npm test -- --runInBand src/bundles/bundles.service.spec.ts` passed 1 suite/7 tests, `npm run build` passed, and `git diff --check` passed.
-2026-07-03: Goal 24 docs-rag indexed Catalog order-affinity context resolved. After docs-rag JWT access was already proven, the integration owner triggered a non-destructive catalog-only docs-rag ingestion from the live docs-rag pod with its own `JWT_TOKEN` without printing the token. The ingestion job for `catalog-microservice` completed with `chunksProcessed=163` and `chunksTotal=163`. Sanitized retrieval for `Goal 24 stale-affinity retention decay policy marketing_order_affinity replace-window` returned HTTP 200, `contextChars=11464`, `sourceCount=9`, and Goal 24 sources including `docs/contracts/catalog-marketplace-affinity-backfill.md`, `docs/IMPLEMENTATION_STATE.md`, `docs/contracts/catalog-product-relations.md`, `implementation-goals/GOAL-24-product-relations.md`, and `reports/validation/VAL-GOAL-24-affinity-replace-window.md`. The `[RESOLVED: docs-rag indexed Catalog Goal 24 order-affinity context]` blocker is resolved; remaining affinity gates are source-specific producer completeness/data blockers, owner-reviewed source/window approval for future replace-window publish, Aukro/FlipFlop activation/runtime evidence, and Bazos live paid multi-product replay evidence and activation approval. No Catalog source, production data, product relations, marketplace publish, Kubernetes manifest, deployment script, secret value, or destructive index purge was changed.
-2026-07-03: Goal 24 Marketing complete-snapshot ledger runtime gate deployed and smoke-verified after owner approval from W2 worker thread `019f268e-bf2c-7171-a545-bc810c99111d`. Marketing deployed existing `main` image `localhost:5000/marketing-microservice:0aa47ed`; focused order-affinity tests passed 30/30, `npm run build` passed, `git diff --check` passed, and the live `marketing_order_affinity_runs` table contains `complete_snapshot boolean not null default false`. Dry-run-only smoke `goal24-complete-snapshot-smoke-20260703123503` recorded `complete_snapshot=true`, `input_records=0`, `aggregate_pairs=0`, and `idempotency_key_count=0` with no Catalog publish and no customer/address/payment/provider output. Guard smoke `goal24-replace-window-blocked-20260703123529` returned `replace_window_requires_owner_retention_policy`, created no ledger record, and made no Catalog call. The `[RESOLVED: deploy/apply updated Marketing ledger migration containing complete_snapshot]` blocker is resolved; remaining Goal 24 affinity gates are source-specific producer completeness/data blockers, owner-reviewed source/window approval for any future replace-window publish, Aukro/FlipFlop activation/runtime evidence, Bazos live paid multi-product replay evidence and activation approval.
-2026-07-03: Goal 24 Bazos protected replay endpoint compatibility integrated. Bazos `main` at `1ccb93d` recorded the deployed `/internal/bazos/order-affinity/replay-candidates` endpoint, accepted Marketing runtime token alias, and Marketing pod dry-run returning HTTP 200 with zero records/candidates, ledger record with zero idempotency keys, and no Catalog publish. Later Bazos `main` through `d4040c8` and `27f325d` resolved/narrowed the broad paid source blockers at source-contract level with local paid projection fields, bounded itemSnapshots, item-line/ad mapping, paymentStatus forwarding to Orders, and Marketing-compatible replay event envelopes. Bazos recurring publish remains blocked by `[RESOLVED: live Bazos paid multi-product order replay evidence via budget source dry-run goal24-bazos-budget-paid-source-20260703-001]` and `[MISSING: owner approval to activate recurring Bazos affinity publish after live dry-run evidence]`.
-2026-07-03: Goal 24 W2 Marketing parser/token/ledger handoff integrated. Marketing `main` at `0aa47ed` includes marketplace-owned envelope parsing for `marketplace.order_affinity_candidate.v1`, Allegro replay token mapping through `ORDER_AFFINITY_MARKETPLACE_REPLAY_TOKEN`, durable aggregate-only `marketing_order_affinity_runs` and idempotency-key ledger recording, complete-snapshot proof, and ledger-gated scheduled publish policy. Runtime evidence in Marketing reports shows Allegro dry-run/pass, owner-approved one-time Catalog batch publish, ledger recording, active Allegro schedule, central Orders schedule, Aukro dry-run with zero current rows, and Bazos endpoint/token compatibility is resolved but Bazos source contract is implemented; no live paid multi-product replay evidence is recorded. Resolved gates: Marketing parser support, Allegro token mapping, durable Marketing ledger/source-window proof, Allegro scheduled path, and Bazos protected endpoint compatibility. Remaining affinity gates: owner-reviewed future replace-window/publish windows, docs-rag indexed Catalog context, non-empty central Orders/non-Allegro evidence, Aukro activation approval, and Bazos live paid multi-product replay evidence and activation approval.
-2026-07-03: Goal 24 W1 Allegro protected replay producer integrated. Allegro `main` now includes `37a5add docs: finalize goal 24 allegro producer handoff` on top of the hardened producer source. `GET /internal/allegro/order-affinity/replay-candidates` is documented as protected by internal token plus `x-service-name=marketing-microservice`, emits aggregate-safe `marketplace.order_affinity_candidate.v1` snapshots, uses bounded `windowEnd`, deterministic `orderDate/id` ordering, opaque `cursorAfter`, and `completeSnapshot` semantics. Allegro-owned temporary-export replacement is resolved. Remaining affinity gates are owner-reviewed future replace-window/publish windows, non-empty central Orders/non-Allegro evidence, Aukro activation approval, and Bazos live paid multi-product replay evidence and activation approval.
-2026-07-03: Goal 24 integration ownership reconciled after runtime smoke, retention policy, and bundle contract merges. Original Codex thread `019f2683-0cac-7ec0-b4cf-8fe83e07a74e` is the Catalog docs/status integration owner. Marketing ledger/parser/token handoff is integrated from Marketing `main` at `0aa47ed`; marketplace producer ownership remains only for non-Allegro producer completeness. W1 Allegro producer handoff is integrated; unresolved handoffs are narrowed to non-empty central Orders/non-Allegro evidence, Aukro activation approval, Bazos live paid multi-product replay evidence and activation approval, owner-reviewed future publish/replace windows.
-2026-07-03: Goal 24 B1 Catalog standalone bundle aggregate design completed docs-only in isolated worktree. `docs/contracts/catalog-bundle-aggregate-v1.md` now defines owner-ready `catalog.bundle.v1` DTO/API/persistence, lifecycle/status, idempotency/visibility, fail-closed validation, rejected SKU/read-only alternatives, and downstream Orders/Warehouse/Payments/FlipFlop handoff requirements. The broad blocker is narrowed to `[RESOLVED: Catalog standalone bundle aggregate API and persistence contract design owner-ready in docs/contracts/catalog-bundle-aggregate-v1.md]`; remaining gates are owner acceptance, Catalog additive source/migration implementation, Orders bundleEvidence, Warehouse component-line sign-off, Payments evidence-only allowlist, FlipFlop adoption, smoke credentials/plans, and channel publication policies. No source code, migration, deployment, runtime mutation, checkout/payment/warehouse/order change, marketplace publication, generated file, or secret was touched. Validation: `git diff --check` passed; pre-coding scripts remain missing.
-2026-07-03: Goal 24 parallel worker wave launched after retention-policy merge `4c9bdd7`. Integration owner remains this Catalog orchestrator thread; active worker threads are W1 Allegro protected replay producer `019f268e-6e40-7063-80fd-6c81823638fb`, W2 Marketing marketplace-envelope parser/run-ledger `019f268e-bf2c-7171-a545-bc810c99111d`, and W3 docs-rag indexed Goal 24 context `019f268e-fca4-7562-8538-c128284b714c`. File ownership is disjoint by repo: Allegro worker owns `allegro`, Marketing worker owns `marketing`, docs-rag worker owns docs-rag indexing/config only, and Catalog integration owns Catalog status/contract merge updates. Merge order: W1 producer contract/source, W2 Marketing parser/ledger, W3 docs-rag indexing evidence, then Catalog integration validation and status closure. No deploy, production data mutation, marketplace publication, Warehouse/Payments/Orders mutation, or secret output was run by the orchestrator launch.
-2026-07-03: Goal 24 stale-affinity retention/decay policy selected. Catalog adopts the conservative owner-approved policy for `marketing_order_affinity`: exact source/window replacement only through `replace-window`, pruning only omitted rows whose existing `evidence.orderAffinityWindow` exactly matches `sourceOwner`, `channel`, `windowStart`, `windowEnd`, and `runId`; no time-based deletion, score/confidence decay, manual/non-window pruning, standalone prune-window cleanup, or legacy-row archival. Legacy rows without exact matching window evidence are retained additively unless owners later approve archival. The broad retention/decay blocker is resolved; scheduled replacement remains gated by Marketing durable ledger proof, marketplace producer completeness/repeatability, owner-reviewed publish windows.
-2026-07-03: Goal 24 docs-rag JWT access blocker resolved. In the live docs-rag pod, JWT_TOKEN was present and accepted by POST /retrieval/agent-context for query 'catalog-microservice Goal 24 order affinity blockers', returning HTTP 200 with response keys query, context, sources, and estimatedTokens; token value was not printed or copied. The bounded query returned contextChars=0 and /retrieval/search returned results=0, so the remaining gap is indexed Catalog Goal 24 context, not JWT access. That bounded query initially proved JWT access only; the indexed-context gap was later resolved by catalog-only ingestion and retrieval evidence. No code, deployment, migration, runtime Catalog data, Auth user data, or secret value was changed.
-2026-07-03: Goal 24 Catalog source/window replacement API source completed. Added protected internal `POST /api/internal/product-relations/order-affinity/replace-window` that requires `completeSnapshot=true`, forces `relationType=order_affinity` and `source=marketing_order_affinity`, stamps `evidence.orderAffinityWindow`, upserts supplied candidates, and prunes only omitted rows whose existing Marketing window evidence exactly matches `sourceOwner`, `channel`, `windowStart`, `windowEnd`, and `runId`. Validation passed: focused product-relations Jest 1 suite / 9 tests and backend `npm run build`; `git diff --check` is the final commit gate. No deploy, migration, runtime mutation, Marketing/Orders/marketplace source edit, Warehouse/Payments/checkout change, secret read, or production publish was run. Scheduled replacement now requires recorded Marketing ledger proof per exact source/window, producer completeness, owner-reviewed publish window.
-
 2026-07-03: Goal 24 scheduled marketplace affinity backfill contract defined docs-only. IPS chain: Vision -> marketplace purchase history improves related-product surfaces without moving sensitive order/payment/customer ownership into Catalog; Goal Impact -> the one-time Allegro affinity publish now has a repeatable contract path; System -> marketplace services own replay producers, Marketing owns parser/ledger/scheduler/idempotent publish orchestration, Catalog owns upsert-only product relation persistence; Feature -> protected marketplace replay candidates and scheduled dry-run-first backfill; Task -> define Allegro-owned replay endpoint semantics, idempotency, pruning gates, and parallel workstreams; Execution Plan -> document only, preserve blockers, avoid runtime mutation; Coding Prompt -> do not invent backend fields or expose customer/address/payment/provider data; Code -> `docs/contracts/catalog-marketplace-affinity-backfill.md`, `docs/contracts/catalog-product-relations.md`, Goal 24 status/report docs; Validation -> `git diff --check`; State Update -> implementation-gated by Marketing parser support, durable run ledger, Allegro replay endpoint, and Catalog source/window prune or retention decision.
 ## 2026-07-03 - Goal 25 Product Quality Review Admin Closed
 
@@ -177,8 +159,6 @@ Next action: keep Goal 25 accepted unless a live authorized smoke uncovers a run
 
 ## 2026-07-03 - Goal 25 Bazos Product Quality Consumer Lane Closed
 
-Change: accepted the Bazos channel consumer handoff for Catalog Goal 25 and marked that lane complete. Bazos is clean and synced on `main` at `b3576a6`, with Catalog product-quality blockers consumed before prepare, confirm, and publish-adjacent queue paths. Bazos-created Catalog products remain draft/non-active, and the runtime maps `CATALOG_INTERNAL_SERVICE_TOKEN` from the existing Auth secret for protected Catalog readiness calls.
-
 Validation evidence: Bazos durable report `reports/validation/2026-07-02-goal-25-bazos-product-quality-consumer.md` records `git diff --check` pass, Kubernetes ExternalSecret server dry-run pass, focused shared tests pass with 3 suites / 67 tests, shared build pass, `services/aukro-service` build pass from the Bazos monorepo command, pod-to-Catalog review endpoint HTTP 200, exact readiness endpoint HTTP 200 with issues array present, production health `status=ok`, and deployment ready=1 updated=1 available=1 on image `localhost:5000/bazos-service:b583b10`.
 
 Boundary decision: no Catalog deploy, Catalog source mutation outside status/report docs, production DB mutation, Warehouse stock ownership change, product deletion, channel publication, or secret output was run by this orchestrator closure. Existing unrelated dirty `src/product-relations/*` files were left untouched.
@@ -198,8 +178,6 @@ Next action: finish W4 import/channel consumer validation or bounded implementat
 ## 2026-07-02 - Goal 25 Canonical JSON Propagation Runtime Closed
 
 Change: confirmed the canonical JSON/manual marketplace override slice after the k3s recovery. The additive `manual_overrides`/`source_state` migration is applied, Catalog backend and frontend are available `1/1`, and the deployed marketplace-fields route is reachable behind Auth.
-
-Validation evidence: `https://catalog.alfares.cz/health` returned HTTP 200 with `status=healthy` and product event outbox health `up`; `https://catalog.alfares.cz/` returned HTTP 200; anonymous `GET /api/products/00000000-0000-4000-8000-000000000001/marketplace-fields/bazos` returned protected HTTP 401 `Missing or invalid Authorization header`; post-recovery backend logs showed no fresh Goal 25 schema/relation errors; authenticated in-pod read-only smoke used `CATALOG_INTERNAL_SERVICE_TOKEN` without printing token values and returned HTTP 200 `success=true` for product `8edc51f2-bed2-433f-8a3c-5738b49a02e1` on `bazos` with `propagationStatus=current`, `fieldCount=10`, `manualFieldCount=0`, `staleFieldCount=0`, `profileHasManualOverrides=true`, and `profileHasSourceState=true`.
 
 Boundary decision: no product rows, listing rows, Orders, Warehouse, Payments, channel publication, queueing, confirmation, or external marketplace state were mutated. No token values were printed.
 
@@ -270,7 +248,6 @@ Validation evidence: `psql -U dbadmin -d catalog_db -v ON_ERROR_STOP=1` migratio
 Boundary decision: no Catalog deploy, frontend deploy, runtime API smoke, secret print, product data mutation, Warehouse/Orders/Payments mutation, or external marketplace mutation was run.
 
 Next action: deploy Catalog only after source review/staging, then run protected non-mutating relation endpoint smoke with an approved Auth token.
-
 
 ## 2026-07-02 Goal 25 Canonical JSON Propagation Source
 
@@ -370,11 +347,7 @@ Next action: commit isolated Goal 19 candidate, apply the Catalog migration/depl
 
 ## 2026-06-29 - TASK-STOCK-004 Final Stock Acceptance Gate Passed
 
-Change: completed the owner-approved runtime credential lane and fixed the last Catalog channel-stock mismatch. Auth now has service principals for Catalog and Heureka with `internal:warehouse-microservice:admin`; their JWTs were written only to pod temp files, copied into Vault, shape-checked without printing values, synced through ExternalSecrets, and temp token/provisioner files were removed from the Auth pod. Catalog `WAREHOUSE_SERVICE_TOKEN` is sourced from `secret/prod/auth-microservice#CATALOG_WAREHOUSE_SERVICE_TOKEN`; Heureka `WAREHOUSE_SERVICE_TOKEN` was rotated at `secret/prod/heureka-service#WAREHOUSE_SERVICE_TOKEN`.
-
 Code/deploy evidence: Catalog commit `0485f43` (`fix: source flipflop status stock from catalog projection`) makes `GET /api/products/:id/flipflop-status` use Catalog's Warehouse-backed FlipFlop projection instead of legacy public FlipFlop storefront stock. Catalog commit `bc61485` (`fix: avoid redundant catalog runtime npm install`) removes a redundant production-stage `npm install --omit=dev` that repeatedly failed with network `ECONNRESET`/`ETIMEDOUT` and was overwritten by copied builder `node_modules`. Standard Catalog deploy succeeded with image `localhost:5000/catalog-microservice:bc61485`; health returned healthy.
-
-Validation evidence: `npm run verify:stock-credential:wiring` passed with Catalog image `bc61485`, Auth image `97ea521-20260629180327`, Warehouse image `8a66b27`, and expected Warehouse token source `secret/prod/auth-microservice#CATALOG_WAREHOUSE_SERVICE_TOKEN`. Final `npm run verify:stock-acceptance:gates` passed with `status=ok`, command statuses `catalogStockCredentialWiring=0`, `warehouse=0`, `allegro=0`, `catalogWarehouseCredential=0`, and `catalog=0`. Warehouse checked `9` products with `totalQuantity=496`, `totalReserved=0`, `totalAvailable=496`, and `expectedTotalsChecked=9`. Allegro dry-run verifier checked `3` accounts with `uniqueStockAuthoritativeOffers=9`, `stockAuthoritativeTotal=496`, `warehouseMatches=9`, `warehouseMismatches=0`, and `warehouseVerifyFailed=0`. Catalog smoke passed `59`, skipped `1`, failed `0`, checked `9` products, `38` channel statuses, and `9` Heureka readiness rows; `authorized-stock-consistency` passed with Warehouse and FlipFlop quantities matching, including target product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee=60`.
 
 Boundary decision: no token values were printed, no stock quantity mutation was run in this final pass, no Warehouse reservation/order mutation was run, and no channel draft/publish/queue/confirmation was executed. Complete physical stock beyond the 9 currently Allegro-authoritative offers remains source-gated on `[MISSING: owner-approved BizBox/current physical stock export]`, `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`, or `[MISSING: correctly authorized additional seller account exposing additional current full offers]`.
 
@@ -383,8 +356,6 @@ Next action: use `npm run verify:stock-acceptance:gates` as the regression gate 
 ## 2026-06-29 - TASK-STOCK-004 Current Acceptance Snapshot After Allegro c0d4953
 
 Change: reran the central read-only `npm run verify:stock-acceptance:gates` after Allegro advanced to `allegro-service@c0d4953` / image `localhost:5000/allegro-service:c0d4953`.
-
-Validation evidence: the gate failed safely with exit `1` for the same Catalog credential blocker, while current Warehouse and Allegro evidence still passed. Deployment images: Auth `localhost:5000/auth-microservice:97ea521-20260629180327`, Catalog `localhost:5000/catalog-microservice:67c29f8`, Warehouse `localhost:5000/warehouse-microservice:8a66b27`, Allegro `localhost:5000/allegro-service:c0d4953`. Command statuses: `catalogStockCredentialWiring=1`, `warehouse=0`, `allegro=0`, `catalogWarehouseCredential=1`, `catalog=1`. Warehouse checked `9` products with `totalQuantity=496`, `totalReserved=0`, `totalAvailable=496`, and `expectedTotalsChecked=9`. Allegro checked `3` accounts and still reported `warehouseMatches=9`, `warehouseMismatches=0`, `warehouseVerifyFailed=0`. Catalog stock credential wiring still fails only because current `WAREHOUSE_SERVICE_TOKEN` source is `secret/prod/catalog-microservice#WAREHOUSE_SERVICE_TOKEN` while the post-approval target is `secret/prod/auth-microservice#CATALOG_WAREHOUSE_SERVICE_TOKEN`; Catalog Warehouse credential preflight still has `acceptedCandidate=null`.
 
 Boundary decision: read-only validation only. No Auth helper execution, DB mutation, token issuance, Vault/Kubernetes secret mutation, ExternalSecret remap, deploy, stock import, reservation, or channel mutation was performed.
 
@@ -404,17 +375,11 @@ Next action: runtime execution remains owner-approval-gated; use this runbook on
 
 Change: integrated `npm run verify:stock-credential:wiring` into the central `npm run verify:stock-acceptance:gates` runner. The final `stock-acceptance-gates.v1` summary now reports the Catalog ExternalSecret source-path/property readiness for the future Auth-owned Warehouse token before the Warehouse, Allegro, Catalog credential, and channel propagation legs.
 
-Validation evidence: `bash -n scripts/run-stock-acceptance-gates.sh` passed; `git diff --check` passed; `npm run build` passed. Live read-only `npm run verify:stock-acceptance:gates` failed safely with exit `1` and now reports `commandStatuses.catalogStockCredentialWiring=1`, `warehouse=0`, `allegro=0`, `catalogWarehouseCredential=1`, and `catalog=1`. The new `catalogStockCredentialWiring` summary failed only on the expected source checks: current `WAREHOUSE_SERVICE_TOKEN` source is `secret/prod/catalog-microservice#WAREHOUSE_SERVICE_TOKEN`, while the post-approval target is `secret/prod/auth-microservice#CATALOG_WAREHOUSE_SERVICE_TOKEN`. Warehouse still passed for `9` products with `totalQuantity=496`, `totalReserved=0`, `totalAvailable=496`, and `expectedTotalsChecked=9`; Allegro dry-run still reported `warehouseMatches=9`, `warehouseMismatches=0`, and `warehouseVerifyFailed=0`; Catalog Warehouse credential preflight still had `acceptedCandidate=null`.
-
 Boundary decision: read-only gate integration only. It does not run the Auth provisioning helper, read or print secret values, alter Vault/Kubernetes secrets, deploy, import stock, mutate reservations, or publish channel listings.
 
 Next action: after owner-approved Auth token provisioning and Catalog secret remap, rerun this single acceptance gate to prove credential wiring, Warehouse authority, Allegro import evidence, and Catalog/channel propagation together.
 
 ## 2026-06-29 - TASK-STOCK-004 Catalog Stock Credential Wiring Preflight
-
-Change: added a read-only Catalog preflight for the approval-gated Catalog-to-Warehouse credential lane. `npm run verify:stock-credential:wiring` checks the `WAREHOUSE_SERVICE_TOKEN` ExternalSecret source path/property, confirms the existing Auth-owned `CATALOG_INTERNAL_SERVICE_TOKEN` pattern, reports runtime Kubernetes Secret key names only, and records Auth/Catalog/Warehouse deployment images without reading token values.
-
-Validation evidence: `bash -n scripts/check-stock-credential-wiring.sh` passed; `git diff --check` passed; `npm run build` passed. Live read-only `npm run verify:stock-credential:wiring` failed safely with status `failed` only on the expected source checks: `WAREHOUSE_SERVICE_TOKEN` is currently mapped from `secret/prod/catalog-microservice#WAREHOUSE_SERVICE_TOKEN`, while the post-approval target is `secret/prod/auth-microservice#CATALOG_WAREHOUSE_SERVICE_TOKEN`. The same run passed `catalogInternalTokenAlreadyAuthOwned`, `runtimeSecretHasWarehouseServiceTokenKey`, `runtimeSecretHasCatalogInternalServiceTokenKey`, `externalSecretSynced`, and Auth/Catalog/Warehouse deployment readiness checks with images `localhost:5000/auth-microservice:97ea521-20260629180327`, `localhost:5000/catalog-microservice:67c29f8`, and `localhost:5000/warehouse-microservice:8a66b27`.
 
 Boundary decision: this is a verifier only. It does not run the Auth provisioning helper, read or print secret values, alter Vault/Kubernetes secrets, roll deployments, bypass Warehouse auth, import stock, reserve stock, or publish channel listings.
 
@@ -441,10 +406,6 @@ Boundary decision: no Auth helper execution, DB mutation, service-principal crea
 Next action: with explicit owner approval, run Auth `scripts/provision-catalog-warehouse-service-token.ts --apply` using the guarded confirmations, store the token through approved runtime secret management, refresh Catalog runtime config, and rerun `npm run verify:stock-acceptance:gates`.
 
 ## 2026-06-29 - TASK-STOCK-004 Catalog Warehouse Credential Preflight Added
-
-Change: extended `scripts/run-stock-acceptance-gates.sh` with a read-only Catalog Warehouse credential preflight. The gate now checks the deployed Catalog pod's configured Warehouse credential candidates by environment variable name only (`WAREHOUSE_SERVICE_TOKEN`, `WAREHOUSE_INTERNAL_SERVICE_TOKEN`, `JWT_TOKEN`, `CATALOG_INTERNAL_SERVICE_TOKEN`, `INTERNAL_SERVICE_TOKEN`), validates each candidate against Auth `/auth/validate` and Warehouse `POST /api/stock/availability/batch`, and includes a redacted `catalogWarehouseCredential` section in `stock-acceptance-gates.v1`.
-
-Validation evidence: `bash -n scripts/run-stock-acceptance-gates.sh` passed; `git diff --check` passed; `npm run build` passed. Live read-only `npm run verify:stock-acceptance:gates` ran the updated script and failed safely with Warehouse status `0`, Allegro status `0`, Catalog Warehouse credential preflight status `1`, and Catalog smoke status `1`. The preflight reported `WAREHOUSE_SERVICE_TOKEN`, `JWT_TOKEN`, and `CATALOG_INTERNAL_SERVICE_TOKEN` present but rejected by Auth and Warehouse with HTTP `401`; `WAREHOUSE_INTERNAL_SERVICE_TOKEN` and `INTERNAL_SERVICE_TOKEN` were missing; `acceptedCandidate=null`. Warehouse authority still checked 9 products with `totalAvailable=496`, and Allegro dry-run still reported `warehouseMatches=9`, `warehouseMismatches=0`, and `warehouseVerifyFailed=0`.
 
 Boundary decision: the preflight does not print token values and does not mutate Warehouse. It does not provision a credential, assign Auth roles, create a service principal, alter Vault/Kubernetes secrets, bypass Warehouse auth, import stock, reserve stock, or publish any channel listing. It makes the existing acceptance blocker machine-readable before the broader Catalog smoke fails.
 
@@ -530,8 +491,6 @@ Next action: obtain/provide the missing complete physical stock source or additi
 
 Result: extended Catalog smoke to accept comma-separated `CATALOG_SMOKE_PRODUCT_IDS` for read-only batch Warehouse and FlipFlop projection checks. The existing single-product behavior remains compatible; default public smoke still passed. The new batch mode records per-product Warehouse quantity/reserved/available and FlipFlop projected stock, then fails if any product projection differs from Warehouse `totalAvailable`.
 
-Validation evidence before deploy: `node --check scripts/catalog-smoke.js` passed; `git diff --check` passed; `npm run build` passed; default `npm run smoke:e2e` passed with `9` passed, `2` skipped, `0` failed. A pre-deploy in-pod read-only batch smoke using the Catalog internal service token passed for the 9 Allegro-authoritative product IDs with `12` passed, `2` skipped, `0` failed.
-
 Deployment evidence: Catalog commit `9df5df2` (`test: support multi-product stock smoke`) was pushed and deployed. Live deployment image is `localhost:5000/catalog-microservice:9df5df2`; deploy health returned healthy. The new deployed pod `catalog-microservice-7dc7456d96-mgpvf` passed the same read-only 9-product stock smoke with `12` passed, `2` skipped, `0` failed.
 
 Deployed smoke stock evidence: checked product count `9`; all 9 Warehouse totals matched FlipFlop projected stock. Per-product Warehouse/FlipFlop quantities were `124`, `87`, `50`, `25`, `110`, `60`, `10`, `3`, and `27`. Target product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` remained `warehouseAvailable=60`, `warehouseQuantity=60`, `warehouseReserved=0`, and `flipflopStockQuantity=60`.
@@ -586,7 +545,6 @@ Boundary decision: this was verifier/docs-only. No Orders deployment was require
 
 Next action: obtain the owner-approved complete physical stock source or authorize the missing seller account that exposes additional current full offers, then preview/import and rerun final stock consistency plus live reservation validation.
 
-
 ## 2026-06-29 - TASK-STOCK-004 Allegro Current Stock Source Audit Deployed
 
 Result: added and deployed a read-only Allegro current stock source audit at `allegro-service@8614ea9` (`test: add Allegro current stock source audit`). The command `npm run audit:current-stock-source -- --all-accounts --detail-limit 500` lists configured Allegro accounts, reads `/sale/offers` across `ACTIVE`, `INACTIVE`, `ENDED`, and `ACTIVATING`, then checks `/sale/product-offers/{offerId}` details. It does not import offers, activate accounts, refresh tokens, write Warehouse stock, or mutate local rows. Only successful `product-offers.stock.available` is treated as current stock-authoritative evidence.
@@ -601,7 +559,6 @@ Boundary decision: no Allegro import, Catalog write, Warehouse import, reservati
 
 Next action: obtain the owner-approved complete physical stock source or authorize the missing seller account that exposes additional current full offers, then preview/import and rerun the final stock consistency/reservation validation.
 
-
 ## 2026-06-29 - TASK-STOCK-004 Stock Consistency Smoke Added And Validated
 
 Result: strengthened the read-only Catalog smoke with opt-in `CATALOG_SMOKE_ASSERT_STOCK=true` stock consistency assertions. The smoke now records Warehouse `totalQuantity`, `totalReserved`, and `totalAvailable`, records FlipFlop projection `stockQuantity`, records any stock quantity present in read-only channel status envelopes, and fails if FlipFlop or any reported channel stock differs from Warehouse `totalAvailable`.
@@ -614,7 +571,6 @@ Boundary decision: the smoke is read-only. No Bazos draft, Aukro draft, Allegro 
 
 Next action: obtain the owner-approved complete physical stock source, preview it through Allegro Imports, and run the approved Warehouse import plus final over-reservation/channel propagation validation.
 
-
 ## 2026-06-29 - TASK-STOCK-004 Bazos Draft Quantity Cap Validated
 
 Result: closed the Bazos catalog sell-action oversell gap. Bazos catalog-origin draft preparation now reads Warehouse availability through `WarehouseClientService`, stores the local draft `stockQuantity` as `min(requestedQuantity, Warehouse totalAvailable)`, defaults missing requested quantity to Warehouse availability, and records `draftOptions.warehouseStock` with `source=warehouse-microservice`, `totalAvailable`, `requestedQuantity`, `quantity`, and `capped`. Reused local Bazos drafts are capped before returning to the confirmation path, and the sell-action response now includes the stored draft `stockQuantity`.
@@ -626,7 +582,6 @@ Validation evidence: Bazos `npm --prefix shared test -- bazos-catalog-sell-actio
 Boundary decision: no Bazos draft prepare/confirm, publish queue, external Bazos submission, reservation, Warehouse import, or stock mutation was run. This closes another local channel quantity path, but final physical stock remains gated on `[MISSING: owner-approved BizBox/current physical stock export]`, `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`, or `[MISSING: correctly authorized additional seller account exposing current full offers]`.
 
 Next action: obtain the owner-approved complete physical stock source, preview it through Allegro Imports, then run approved Warehouse import and final over-reservation/channel propagation validation.
-
 
 ## 2026-06-29 - TASK-STOCK-004 Product Detail And Allegro Draft Quantity Cap Validated
 
@@ -666,10 +621,6 @@ Next action: obtain the owner-approved complete physical stock source, preview i
 
 ## 2026-06-29 - TASK-STOCK-004 Catalog Channel Status Smoke Added
 
-Result: added an opt-in read-only Catalog channel-status smoke mode at `npm run smoke:e2e:channel-status`. The smoke now records Warehouse availability, FlipFlop projection, FlipFlop status, Allegro status, Bazos status, Aukro status, and Bazos/Aukro account-status envelopes without requesting drafts, publishing, queuing, confirming, or mutating Warehouse stock. The smoke also prefers an explicitly supplied `CATALOG_SMOKE_INTERNAL_SERVICE_TOKEN` over ambient pod `JWT_TOKEN`, so internal machine-auth checks are not accidentally shadowed by stale runtime JWT material.
-
-Validation evidence: `node --check scripts/catalog-smoke.js` passed; `git diff --check` passed; default `npm run smoke:e2e` passed with `9` passed, `2` skipped, `0` failed; focused `npm test -- --runInBand src/products/products.service.spec.ts` passed (`16` tests); `npm run build` passed. A pre-deploy in-pod smoke copied the changed script to `/tmp` and ran against `http://127.0.0.1:3200` with `CATALOG_INTERNAL_SERVICE_TOKEN` only; it passed with `17` passed, `1` skipped, `0` failed. Target product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` returned authorized Warehouse availability item count `1`, authorized FlipFlop projection item count `1`, and authorized FlipFlop status `success=true`, `nextAction=view_flipflop_listing`, `stockQuantity=60`, `warehouseSource=warehouse-microservice`. Allegro, Bazos, and Aukro read-only status envelopes preserved channel authority and returned `auth_required`/`login_to_catalog` under machine-auth, proving the remaining positive-path validation still needs a real hosted-Auth user/operator token.
-
 Boundary decision: this is a validation-harness change only. No channel draft, publish, queue, confirmation, reservation, Warehouse import, or stock mutation was run. Complete physical stock remains gated on `[MISSING: owner-approved BizBox/current physical stock export]`, `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`, or `[MISSING: correctly authorized additional seller account exposing current full offers]`.
 
 Next action: continue with a real hosted-Auth operator token for Allegro/Bazos/Aukro positive status validation plus the owner-approved physical stock source.
@@ -678,11 +629,7 @@ Deploy follow-up: the first deploy built and pushed `localhost:5000/catalog-micr
 
 ## 2026-06-29 - TASK-STOCK-004 Heureka Warehouse Client Auth Fixed
 
-Result: fixed and deployed authenticated Warehouse stock reads for Heureka feed/order gates. Heureka is committed and deployed at `heureka-service@7554c17` (`fix: authenticate warehouse stock client`). The shared Warehouse client now sends a bearer token from `WAREHOUSE_SERVICE_TOKEN`, falling back to `JWT_TOKEN` or `SERVICE_TOKEN`, and the deployment exposes a dedicated `WAREHOUSE_SERVICE_TOKEN` sourced from Vault via ExternalSecret.
-
 Validation evidence: `git diff --check` passed; `npm --prefix shared run build` passed; `npm --prefix services/heureka-service run build` passed; `npm run verify:heureka-order-ingestion` passed; direct `LOGGING_SERVICE_URL=http://logging-microservice:3367 npx ts-node --skip-ignore --compiler-options '{"types":["node"]}' services/heureka-service/src/heureka/orders/orders.service.spec.ts` passed; `bash -n scripts/deploy.sh` passed. Deploy built and pushed `localhost:5000/heureka-service:7554c17` with digest `sha256:d29adb99fc4ed388212cc9b9256243fba9aa4cf4b30ea785ece845d99439ec47`, applied manifests, and rolled out successfully.
-
-Live stock evidence: newest running Heureka pod `heureka-service-9fff88f7c-vj5k9` exposes `WAREHOUSE_SERVICE_TOKEN` without printing token material. Deployed client smoke proved `clientAddsAuthorization=true`. Direct pod-local Warehouse read for product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` returned HTTP `200`, `success=true`, and `totalAvailable=60`.
 
 Boundary decision: no Heureka order ingestion, reservation, stock mutation, or Warehouse stock import was run. This change makes the existing Heureka fail-closed warehouse route/order gate able to read Warehouse availability. Complete physical stock remains gated on `[MISSING: owner-approved BizBox/current physical stock export]`, `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`, or `[MISSING: correctly authorized additional seller account exposing current full offers]`.
 
@@ -690,11 +637,7 @@ Next action: continue authenticated user/operator channel-status validation and 
 
 ## 2026-06-29 - TASK-STOCK-004 Bazos And Aukro Warehouse Client Auth Fixed
 
-Result: fixed and deployed authenticated Warehouse stock reads for Bazos and Aukro channel gates. Bazos is committed and deployed at `bazos-service@8d02855` (`fix: authenticate warehouse stock client`). Aukro is committed and deployed at `aukro-service@b2efe33` for the Warehouse client auth and `aukro-service@bd94bf8` for deploy-script/image rollout repair plus the `WAREHOUSE_SERVICE_TOKEN` pod env mapping. Both services now use `WAREHOUSE_SERVICE_TOKEN`, falling back to `JWT_TOKEN` or `SERVICE_TOKEN`, when calling Warehouse stock read/reservation endpoints.
-
 Validation evidence: Bazos `git diff --check`, `npm --prefix shared run build`, and focused Bazos stock policy/publisher tests passed (`2` suites, `51` tests). Aukro `git diff --check`, `npm --prefix shared run build`, and Aukro service stock/offers test command passed. Bazos deploy built/pushed immutable image `localhost:5000/bazos-service:8d02855` with digest `sha256:f7d6c84642c17b792a70831d7113d8d81d26d666f3ef9f66ec5da6f101fbc2b9` and rolled out. Aukro deploy script was repaired to build/push/set immutable images, then built/pushed `localhost:5000/aukro-service:bd94bf8` with digest `sha256:1e39acee4ea91b681af485d0071244e7aed67b138113f2bb2acecb2ff3097b13` and rolled out.
-
-Live stock evidence: running Bazos pod `bazos-service-7c79d6d5db-vp9wp` and running Aukro pod `aukro-service-668f77fd44-gt8fr` both expose `WAREHOUSE_SERVICE_TOKEN` without printing token material. Deployed client smoke proved `clientAddsAuthorization=true` in both pods. Direct pod-local Warehouse read for product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` returned HTTP `200`, `success=true`, and `totalAvailable=60` from both services.
 
 Boundary decision: no Bazos/Aukro draft, publish, queue, reservation, stock mutation, or Warehouse stock import was run. This change makes the existing fail-closed stock gates able to read Warehouse availability; it does not bypass user-owned channel authentication. Complete physical stock remains gated on `[MISSING: owner-approved BizBox/current physical stock export]`, `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`, or `[MISSING: correctly authorized additional seller account exposing current full offers]`.
 
@@ -706,15 +649,11 @@ Result: fixed and deployed Catalog's Aukro client route construction. The live A
 
 Validation evidence: focused `npm test -- --runInBand src/products/products.service.spec.ts` passed with `16` tests; `npm run build` passed; `git diff --check` passed. Deploy built and pushed `localhost:5000/catalog-microservice:269e844` with digest `sha256:5bafda521b9be658e086843e410e08d90265051a84bdf1e0c2c6d56acf1f69cd`, applied manifests, and Kubernetes rollout completed. The deploy script exited nonzero only in its final health phase because it selected a completed `catalog-contract-monitor` pod; direct running-pod health returned HTTP `200`. From the running Catalog pod, old Aukro paths `/accounts` and `/offers` returned `404`, while new paths `/aukro/accounts` and `/aukro/offers` reached real protected Aukro routes and returned `403` without a valid user token.
 
-Live target status evidence: internal Catalog probe for product `884c1c5e-fe94-46c7-aab1-78bcc424e7ee` returned FlipFlop HTTP `200`, `success=true`, `nextAction=view_flipflop_listing`, and `projectionStockQuantity=60`. The same internal-service probe for Aukro, Bazos, and Allegro returned `auth_required`, which means those user-owned channel status paths still require a valid hosted-Auth user token or channel-specific valid service token before full status validation. Bazos runtime token checks remain invalid against Bazos/Auth (`401 Invalid token`) for both the Bazos pod `JWT_TOKEN` and Catalog `BAZOS_SERVICE_TOKEN`. Catalog has no `AUKRO_SERVICE_TOKEN` configured.
-
 Boundary decision: no channel draft/publish mutation and no Warehouse stock mutation was run. Allegro service has a separate dirty order-line normalization patch from the data-structure lane; this orchestrator did not edit Allegro. Complete physical stock remains gated on `[MISSING: owner-approved BizBox/current physical stock export]`, `[MISSING: owner confirmation that stock:minimumRequiredLevel:* fields are authoritative physical stock for Warehouse]`, or `[MISSING: correctly authorized additional seller account exposing current full offers]`.
 
 Next action: provide or mint a valid hosted-Auth operator/user token for channel status validation, rotate stale Bazos/Catalog channel tokens if service validation is desired, and continue only with owner-approved current physical stock source for Warehouse import.
 
 ## 2026-06-29 - TASK-STOCK-004 FlipFlop Warehouse Stock Projection Fixed
-
-Result: fixed and deployed the FlipFlop Warehouse client authentication path so product projections can read Warehouse availability instead of silently falling back to zero. FlipFlop is committed and pushed at `flipflop-service@94ecd7c` (`fix: authenticate warehouse stock client`). The deployed shared client now sends a bearer token from `WAREHOUSE_SERVICE_TOKEN`, `JWT_TOKEN`, or `SERVICE_TOKEN` for Warehouse stock reads, reservations, and stock writes. FlipFlop Vault/Kubernetes secret material was refreshed with a Warehouse-valid service token without printing token values.
 
 Validation evidence: `npm --prefix shared run build` passed; `npm run verify:orders-hub-integration` passed; `git diff --check` passed before commit. `./scripts/deploy.sh` built and pushed all FlipFlop images and applied manifests, then exited nonzero only because its rollout wait timed out while an old API pod was terminating; direct `kubectl rollout status` immediately after reported successful rollout for `flipflop-service`, `flipflop-product-service`, `flipflop-cart-service`, `flipflop-order-service`, and `flipflop-frontend`. Pod-local FlipFlop product-service Warehouse probe returned HTTP `200` with target `totalAvailable=60`. Public `https://flipflop.alfares.cz/api/products/884c1c5e-fe94-46c7-aab1-78bcc424e7ee?includeWarehouse=true` returned `success=true`, product name `Nafukovací kluzák 83 cm Drive (model KOMFORT). Sáně a sáňky. Snowtubing.`, `stockQuantity=60`, and `warehouse={stockQuantity:60, trackInventory:true, availability:"in_stock", source:"warehouse-microservice"}`.
 
@@ -737,12 +676,6 @@ Blockers and gaps: `[MISSING: BizBox/current physical stock export file or appro
 Parallel execution state: Orders reservation gate is deployed first and remains the contract base. Allegro, Aukro, Bazos, FlipFlop, and Heureka channel gates are deployed. Lane A Allegro Imports UX/API gateway multipart support for BizBox CSV upload, non-mutating preview, and confirmation-guarded mutation is deployed. Lane B read-only discovery found no current BizBox export in obvious remote locations. Dependency-gated lane C is executing an approved BizBox import into Warehouse after source file and mapping are confirmed. Dependency-gated lane D is Suppliers real-source onboarding only if BizBox is not authoritative. Final integration lane is Catalog product-detail and channel propagation validation after Warehouse has the complete physical stock rows.
 
 Next action: obtain the owner-approved BizBox/current stock export file and authority confirmation, preview it, then run the import through Warehouse and revalidate Catalog plus all channel gates.
-
-
-
-
-
-
 
 ## 2026-06-29 - TASK-STOCK-004 Full Active Allegro Stock Backfill
 
@@ -824,10 +757,6 @@ Next action: deploy decision is ready if the integration owner accepts the inten
 
 ## 2026-06-27 - Auth-Owned Catalog Service Token Source Applied
 
-Change: switched Catalog `CATALOG_INTERNAL_SERVICE_TOKEN` ExternalSecret source to Auth-owned Vault property `secret/prod/auth-microservice#CATALOG_INTERNAL_SERVICE_TOKEN`. Bazos-owned `BAZOS_SERVICE_TOKEN` remains only for Bazos integration and is distinct from the Catalog-to-Orders credential.
-
-Validation evidence: Kubernetes server dry-run passed for `k8s/external-secret.yaml`; Catalog and Orders ExternalSecrets were applied and force-reconciled with `SecretSynced=True`; live Kubernetes Secrets expose matching `CATALOG_INTERNAL_SERVICE_TOKEN` material for Catalog and Orders without printing values; Catalog's token is distinct from `BAZOS_SERVICE_TOKEN`. Rollout restart completed for Catalog pod `catalog-microservice-77b79bd855-5xj9t` and Orders pod `orders-microservice-757696f875-8gprf`. Sanitized in-pod Catalog bridge smoke returned health HTTP 200, products HTTP 200, sales statistics HTTP 200, `success=true`, `sourceStatus=available`, five channel rows, zero recent-history rows, and no customer/payment/address/provider markers.
-
 Next action: monitor scheduled Catalog contract checks with the Auth-owned service credential.
 
 ## 2026-06-26 - Goal 17 Sub-Agents Driven Development Launch
@@ -839,7 +768,6 @@ Parallel execution state: Workstream A Orders statistics endpoint is `active`; W
 Validation expectation: each sub-agent must run repo-local `git diff --check` plus the narrowest build/test/verifier, commit only passing bounded changes, and avoid deploy. Integration owner will merge evidence, implement Catalog bridge after Orders contract exists, then run final Catalog validation/deploy.
 
 Next action: poll sub-agent outputs, integrate the Orders stats contract first, then wire Catalog bridge and frontend live statistics.
-
 
 ## 2026-06-26 - Goal 17 Product Marketplace Sales Statistics Planning
 
@@ -853,40 +781,21 @@ Next action: implement the Orders product sales statistics read model, then brid
 
 # Catalog Orchestrator Status
 
-## 2026-06-27 - Dedicated Catalog Internal Service Token
-
-Change: created an Auth-owned Vault property `CATALOG_INTERNAL_SERVICE_TOKEN` under `secret/prod/auth-microservice` without printing the value. Switched Catalog and Orders ExternalSecret mappings for `CATALOG_INTERNAL_SERVICE_TOKEN` away from Bazos-owned credentials and onto the Auth-owned property. Existing `BAZOS_SERVICE_TOKEN` remains present for Bazos-owned integration only.
-
-Boundary decision: no token values, decoded JWTs, passwords, or raw secret material were printed, committed, or copied into docs. Auth `/auth/validate` currently requires an active user `sub`, so an arbitrary Auth-signed service JWT is not a valid replacement without a separate Auth service-identity model; the dedicated credential follows the active service-identity standard of `x-internal-service-token` plus `x-service-name`.
-
-Validation evidence: Kubernetes server dry-run passed for Catalog and Orders ExternalSecret manifests. Both ExternalSecrets were applied and force-reconciled; live Kubernetes Secrets now expose `CATALOG_INTERNAL_SERVICE_TOKEN` from Auth-owned `secret/prod/auth-microservice#CATALOG_INTERNAL_SERVICE_TOKEN`, Catalog and Orders token material matches, and Catalog's `CATALOG_INTERNAL_SERVICE_TOKEN` is distinct from `BAZOS_SERVICE_TOKEN` without printing either value. Catalog and Orders deployments were restarted successfully. New Catalog pod `catalog-microservice-55475f5f58-b5485` and Orders pod `orders-microservice-5d9fb5958b-t57bl` expose `CATALOG_INTERNAL_SERVICE_TOKEN` in env. Sanitized Catalog-to-Orders smoke returned HTTP 200, `success=true`, `sourceStatus=available`, five channel rows, zero recent-history rows, and no customer/payment/address/provider markers.
-
 Next action: no immediate action needed; monitor scheduled contract checks and keep Bazos and Catalog service credentials separate during future rotations.
 
 ## 2026-06-27 - Goal 17 Runtime Token And Orders Bridge Wiring
-
-Change: verified Vault and Kubernetes runtime key wiring without printing secret values. Vault `secret/prod/catalog-microservice` contains `BAZOS_SERVICE_TOKEN` for Bazos-owned integration only; Catalog and Orders ExternalSecrets map `CATALOG_INTERNAL_SERVICE_TOKEN` from Auth-owned Vault path `secret/prod/auth-microservice#CATALOG_INTERNAL_SERVICE_TOKEN`. Both live ExternalSecrets report `SecretSynced=True`, and both live Kubernetes Secrets expose `CATALOG_INTERNAL_SERVICE_TOKEN`. Orders is deployed from `62e1e2d`, which accepts `x-internal-service-token` plus `x-service-name: catalog-microservice` and maps it to `internal:catalog-microservice:service`. Corrected Catalog `ORDERS_SERVICE_URL` to `http://orders-microservice.statex-apps.svc.cluster.local:3203`, matching the live Orders Kubernetes Service.
-
-Boundary decision: no secret values were printed or committed. Runtime uses the Auth-owned Catalog internal service token from `secret/prod/auth-microservice#CATALOG_INTERNAL_SERVICE_TOKEN`; no Bazos-owned token is used for Catalog-to-Orders authentication.
 
 Validation evidence before deploy: `git diff --check` passed; `npm test -- --runInBand src/products/products.service.spec.ts` passed (14 tests); `npm run build` passed; `npm test -- --runInBand` passed (7 suites/56 tests).
 
 Deployment evidence: Catalog deploy from `7abf6c9` built and pushed `localhost:5000/catalog-microservice:7abf6c9` / `latest` with digest `sha256:8501cc3d55b681f7c3ac78c5aeb7ba4033b53794152a3dd6beb5896dbc64485e`, applied manifests, and Kubernetes reported rollout success. The deploy script exited nonzero during its final health phase because it selected a completed `catalog-contract-monitor` pod; direct health against the new running Catalog pod returned HTTP 200.
 
-Runtime smoke evidence: the new Catalog pod has `CATALOG_INTERNAL_SERVICE_TOKEN`, `ORDERS_SERVICE_URL`, and `ORDERS_STATISTICS_TIMEOUT_MS` present without printing values. A sanitized in-pod smoke selected one existing product through public Catalog read, called `GET /api/products/:id/sales-statistics` with `x-internal-service-token` and `x-service-name: catalog-microservice`, and received HTTP 200, `success=true`, `sourceStatus=available`, five channel rows, zero recent-history rows, and no customer/payment/address/provider markers.
-
-Next action: monitor scheduled contract checks with the Auth-owned Catalog service credential now sourced from `secret/prod/auth-microservice#CATALOG_INTERNAL_SERVICE_TOKEN`.
-
 ## 2026-06-26 - Goal 17 Catalog Orders Bridge And Product UI
 
 Change: added protected Catalog bridge endpoint `GET /api/products/:id/sales-statistics` for product marketplace sales statistics. The endpoint validates Catalog product existence, calls Orders `GET /api/orders/statistics/products/:productId` with service credentials when configured, normalizes allowed channels to available/zero states, and returns an explicit unavailable zero aggregate when the Orders token/env contract is missing or Orders is unreachable. Replaced the product admin static `PRODUCT_MARKETPLACE_SALES_STATS` placeholder with typed API-backed loading, zero, unavailable, per-channel, and sanitized bounded recent-history display states.
 
-Boundary decision: Catalog still stores no order/order-item/payment/customer/provider data and does not poll marketplaces. No deployment was run. Runtime wiring uses the existing `CATALOG_INTERNAL_SERVICE_TOKEN` service credential through `x-internal-service-token` / `x-service-name: catalog-microservice`; Auth-owned Catalog service identity is confirmed by Vault source `secret/prod/auth-microservice#CATALOG_INTERNAL_SERVICE_TOKEN` and the canonical machine-auth header contract.
-
 Validation evidence: `git diff --check` passed; focused `npm test -- --runInBand src/products/products.service.spec.ts` passed (13 tests); root `npm run build` passed; root `npm test -- --runInBand` passed (7 suites/55 tests); frontend `./node_modules/.bin/tsc --noEmit` passed; frontend `npm run build` passed with a Next.js multiple-lockfile workspace-root warning only.
 
 Next action: hand off runtime env/deploy readiness to final integration after owner wires the Catalog-to-Orders service token/env contract.
-
 
 ## 2026-06-13 - FlipFlop Sellable Quantity From Reservable Routes
 
@@ -903,7 +812,6 @@ Change: tightened FlipFlop projection sellability so positive supplier replenish
 Validation evidence: npm test -- --runInBand src/flipflop-projection/flipflop-projection.service.spec.ts passed, npm run build passed, and git diff --check passed. Added focused coverage proving supplier stock with a reservable-looking route but missing supplier linkage is hidden by default and only visible with includeUnavailable=true.
 
 Boundary decision: no deployment, runtime token inspection, live fixture creation, production supplier import, Warehouse stock mutation, or cleanup mutation was performed. Current-head runtime completion remains unproven until owner-approved guarded runtime evidence regeneration.
-
 
 ## 2026-06-13 - Goal 16 Production Contract Monitoring And Drift Audit
 
@@ -954,8 +862,6 @@ Implementation evidence:
 - Added `npm run smoke:e2e:bazos-authorized`.
 - Bazos authorized smoke now requires explicit `CATALOG_SMOKE_BAZOS_PRODUCT_ID`.
 - Bazos smoke validates Bazos authority, draft identity, confirmation flags, policy status, human-action state, and next action without printing raw payloads.
-- Added Vault/Kubernetes ExternalSecret mappings for Bazos smoke inputs and `BAZOS_SERVICE_TOKEN`.
-- Catalog now uses `BAZOS_SERVICE_TOKEN` for service-to-service Bazos calls when present, while still requiring Catalog auth at the Catalog endpoint.
 - Bazos-service commit `c58d8b7` was deployed to expose the existing shared catalog sell-action controller in the deployed app.
 - Catalog source was merged to `main` with merge commit `555652c`.
 - Catalog deployment from `555652c` completed successfully with healthy rollout.
@@ -999,12 +905,10 @@ Implementation evidence:
 
 - Added npm alias `smoke:e2e:authorized`.
 - Extended `scripts/catalog-smoke.js` with `CATALOG_SMOKE_AUTHORIZED=true` opt-in.
-- Supports approved `CATALOG_SMOKE_AUTH_TOKEN` or `CATALOG_SMOKE_INTERNAL_SERVICE_TOKEN` without printing token values.
 - Added authorized Warehouse availability envelope check.
 - Added authorized FlipFlop projection envelope check.
 - Added separately gated Bazos authorized draft smoke requiring `CATALOG_SMOKE_ENABLE_BAZOS_AUTHORIZED=true`, Bazos identity, and category inputs because that path can request Bazos-owned draft work.
 - Merged source with merge commit `8b85197`.
-- Added Vault-backed runtime wiring for `WAREHOUSE_SERVICE_TOKEN`, in-cluster `WAREHOUSE_SERVICE_URL`, and smoke env placeholders with commit `3abbe1f`.
 - Added stock-only fallback for optional Warehouse logistics enrichment with commit `1747c87` so live Warehouse logistics `404` does not convert valid stock availability into `503`.
 
 Validation evidence:
@@ -1562,7 +1466,6 @@ Next unfinished step:
 
 - Goal 3 deployment approved, completed, and runtime-smoked. Start Goal 4 planning/pre-coding gate.
 
-
 Goal 3 closure evidence:
 
 - Branch `feature/catalog-goal-03-pricing-integrity` was pushed to `origin` at commit `d222e11`.
@@ -1681,8 +1584,6 @@ Intent chain:
 
 Boundary decision: this does not solve the remaining physical stock source gap. The configured Allegro accounts still expose only the current 9 stock-authoritative offers totaling 496 pieces; the 1000+ expected physical stock source remains `[MISSING: owner-provided BizBox/current export, additional seller authorization, or explicit authority confirmation]`.
 
-Current blocker: Catalog now tries `WAREHOUSE_SERVICE_TOKEN`, `WAREHOUSE_INTERNAL_SERVICE_TOKEN`, `JWT_TOKEN`, `CATALOG_INTERNAL_SERVICE_TOKEN`, and `INTERNAL_SERVICE_TOKEN` for Warehouse calls, but the live Catalog pod's configured candidates are rejected by Warehouse/Auth. Warehouse currently accepts Allegro `JWT_TOKEN` for verification but rejects Catalog `WAREHOUSE_SERVICE_TOKEN`, Catalog `JWT_TOKEN`, and `CATALOG_INTERNAL_SERVICE_TOKEN`. Passing final acceptance requires either a valid Auth-issued Warehouse-compatible Catalog token in runtime config or an owner-approved machine-identity receiver contract in Warehouse; no Warehouse auth bypass was added.
-
 ## 2026-06-29 - Stock Goal Continuation: Auth And Source Evidence
 
 Change: continued the cross-repo stock goal from the acceptance-gate blocker without adding a Warehouse static-token bypass. The current deployed state remains:
@@ -1708,19 +1609,15 @@ Current blockers:
 - `[MISSING: owner-provided BizBox/current export, real supplier API contract, additional seller authorization, or explicit authority confirmation]` for stock beyond the 9 current Allegro-authoritative offers totaling 496 pieces.
 - `[MISSING: explicit approval for read-only Suppliers DB/API metadata inspection if service JWT remains invalid]`.
 
-
 ## 2026-07-01 - Heureka Catalog Publication Connector
 
 Change: added Heureka to Catalog marketplace publication and content conversion. Catalog now exposes protected GET /api/products/:id/heureka-status, protected POST /api/products/:id/sell-on-heureka, public-safe GET /api/products/:id/heureka-feed-snapshot, and bulk POST /api/products/publications/bulk accepts marketplaces=[heureka]. Canonical product JSON stays in Catalog; Heureka-specific feed fields are rendered from the content connector and product_marketplace_profiles overrides: productName, categoryText, deliveryDate, deliveryPrice, feedType, feedProductId.
 
 Runtime evidence: Catalog focused tests passed (src/content-connectors/content-renderer.service.spec.ts, src/products/products.service.spec.ts, 25 tests), Catalog build passed, Catalog deployed image digest sha256:0ce500d55881258f9fded223898fc222df9445c87c5e4bf6346afccdeec918ba. Live snapshot endpoint returned contractVersion=catalog-heureka-feed-snapshot.v1 with CATEGORYTEXT, PRICE_VAT, IMGURL, and canonical description for product aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3.
 
-Heureka integration evidence: Heureka accepts HEUREKA_INTERNAL_SERVICE_TOKEN sourced from Catalog internal token, consumes Catalog Heureka feed snapshots, and filters public XML output to stock-positive products with required public feed fields. Bulk publish from Catalog to Heureka succeeded for six FlipFlop products: requested=6, succeeded=6, blocked=0. Heureka status for aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3 returned included=true, readiness=ready, availableStock=12. Public https://heureka.alfares.cz/heureka/feed?type=heureka_cz returned HTTP 200, x-heureka-feed-status=valid, SHOPITEM=6, CATEGORYTEXT=6, and excluded older blocked product 8bba517b-e5c6-41c4-9bb3-92108f4f84c3. Heureka deployed image digest sha256:c9c367d32c2709dc405aa0d35fbd5f3e652d1953163dd93131b2efbd965e01f8.
-
 Boundary decision: no raw secret values were printed; token verification used length and hash prefixes only. No destructive DB/file operations were performed.
 
 Next action: No action needed.
-
 
 ## 2026-07-02 - Goal 24 Internal Order Affinity Batch Upsert Contract
 
@@ -1742,7 +1639,6 @@ Boundary decision:
 - Runtime deploy completed with image tag `related-products-batch-20260702-1801`; protected in-pod batch smoke returned HTTP 201 with `failed=1` for a self-relation validation case and inserted no valid relation row.
 - No Orders, Marketing runtime caller, Warehouse, Payments, checkout, bundle, or marketplace code was changed from Catalog.
 
-
 ## 2026-07-02 - BPCP Holiday Discount Catalog Consumer
 
 Intent chain:
@@ -1760,7 +1656,6 @@ Intent chain:
 Boundary decision: Catalog consumes BPCP publication state and exposes eligibility facts only. It does not calculate the 10 percent discount, write product prices, call checkout, emit customer notifications, or become the BPCP process registry.
 
 Runtime deployment evidence: current deployed image `localhost:5000/catalog-microservice:4b7cfa0` is rolled out with deployment ready/updated/available `1/1/1`. BPCP `holiday-discount-2026:1` was validated and published through the BPCP API, then `POST /api/events/outbox/dispatch?limit=10` dispatched 3/3 pending process events to RabbitMQ. Catalog `/health` and `/ready` report `bpcpProcessEvents.consumer.connection.status=up`, `missing=[]`, `received=1`, `applied=1`, `rejected=0`, `signatureFailures=0`, `lastAppliedEventId=holiday-discount-2026:1:process.published:3`, and `activeProjectionCount=1`. Remaining blockers are `[MISSING: final holiday eligibility fact schema or configured category/tag allow-list]` and `[MISSING: durable BPCP event dedupe/projection store]`.
-
 
 ## 2026-07-03 - Bundle Candidate Projection From Order Affinity
 
@@ -1804,7 +1699,6 @@ Remaining blockers:
 - `[MISSING: sufficient order_affinity backfill volume]`.
 - `[MISSING: current product price rows for canary/order-affinity products before presenting sellable bundle prices]`.
 
-
 ## 2026-07-03 - Bundle Candidate Canary Pricing Evidence
 
 Current focus: Make the controlled order-affinity canary price-complete for downstream buy-together smoke tests.
@@ -1833,7 +1727,6 @@ Remaining blockers:
 - `[MISSING: approved bundle checkout contract owned by FlipFlop/Orders/Payments]`.
 - `[MISSING: discount/free-shipping presentation policy adoption in storefront/channel UIs]`.
 - `[MISSING: sufficient order_affinity backfill volume]`.
-
 
 ## 2026-07-03 - Active FlipFlop Order-Affinity Backfill Evidence
 
@@ -1869,7 +1762,6 @@ Remaining blockers:
 
 - `[MISSING: automated order-affinity backfill/replay over historical Orders events]`.
 - `[MISSING: approved bundle checkout contract owned by FlipFlop/Orders/Payments]` for future server-authoritative bundle pricing beyond current display/intent flow.
-
 
 ## 2026-07-03 - Goal 24 Bundle/Order-Affinity Contract Refresh
 
@@ -1926,7 +1818,6 @@ Remaining blockers:
 - `[RESOLVED: owner-approved Rung 1 non-mutating real checkout smoke passed against active catalog.bundle.v1 bundle e38ce03c-d18b-40a4-9898-f82a3f77dc0b]`
 - `[UNKNOWN: whether current live Orders history should contain paid multi-product rows or whether upstream order capture is still empty]`.
 
-
 ## 2026-07-03 - Goal 24 Synthetic Non-Production Replay Proof
 
 Current focus: use the owner-approved synthetic/non-production replay fixture path to prove Marketing can produce a non-empty order-affinity candidate batch without mutating live Orders, Catalog, Warehouse, Payments, checkout, or marketplace data.
@@ -1970,7 +1861,6 @@ Remaining blockers:
 - `[RESOLVED: Payments bounded bundle metadata allowlist test covering free-shipping evidence merged in Payments commit aa79fa2]`.
 - `[RESOLVED: owner-approved Rung 1 non-mutating real checkout smoke passed against active catalog.bundle.v1 bundle e38ce03c-d18b-40a4-9898-f82a3f77dc0b]`
 
-
 ## 2026-07-03 - Goal 24 Allegro Affinity Live Catalog Publish
 
 Current focus: execute the owner-approved live Catalog publish from the already-qualified Allegro order-affinity export.
@@ -2010,7 +1900,6 @@ Remaining blockers:
 - `[RESOLVED: conservative exact source/window replacement policy for repeated marketplace-wide runs; remaining gates are recorded per-window Marketing ledger proof, producer completeness, and owner-reviewed publish window]`.
 - `[MISSING: approved ecosystem bundle-selling contract across Catalog/Orders/Warehouse/Payments/FlipFlop]`.
 
-
 ## 2026-07-03 - Goal 25 W5 Channel Runtime Deploy Smoke Closure
 
 Current focus: close the owner-approved runtime deployment/read-smoke gate for the latest Goal 25 channel consumer commits.
@@ -2036,7 +1925,6 @@ Runtime evidence:
 Boundary decision: no Catalog backend/frontend deployment, marketplace publish, draft confirm, queue action, Warehouse stock mutation, product data mutation, destructive command, or secret output was performed. Bazos and Aukro runtime evidence remains the prior accepted deployed evidence.
 
 Remaining blockers: none for Goal 25 channel consumer runtime smoke closure. Protected authenticated draft/publish action smokes remain intentionally out of scope unless a side-effect-safe owner-approved scenario is created.
-
 
 Final sweep addendum:
 
@@ -2183,7 +2071,6 @@ Runtime evidence:
 - Preflight clean on `main` at `70e2464`, synced with `origin/main`; pre-deploy public health returned HTTP 200.
 - `./scripts/deploy.sh` completed successfully in 69.37s and deployed image `localhost:5000/catalog-microservice:70e2464` with digest `sha256:4cb09554511a97d9fc8a995a00657fc845f1c6678e70bcb60d388421de920fc2`.
 - Post-deploy Kubernetes state: ready `1`, updated `1`, available `1`. Public `https://catalog.alfares.cz/health` returned HTTP 200; Catalog event and BPCP consumer connections reported `status=up`.
-- Protected fail-closed smoke used in-pod `CATALOG_INTERNAL_SERVICE_TOKEN` without printing the value. `completeSnapshot=false` returned HTTP 400 with `completeSnapshot must be true for order-affinity window replacement`.
 - Protected isolated positive smoke selected a product pair with no existing Marketing `order_affinity` relation from protected API candidates without printing product ids. Positive replacement returned HTTP 201 with summary `total=1`, `upserted=1`, `updated=0`, `failed=0`, `pruned=0`; cleanup empty replacement returned HTTP 201 with `pruned=1`; follow-up related read found zero matching canary rows.
 
 Boundary decision:
@@ -2245,7 +2132,6 @@ Remaining blockers:
 - `[RESOLVED: Payments bounded bundle metadata allowlist test covering free-shipping evidence merged in Payments commit aa79fa2]`
 - `[RESOLVED: owner-approved Rung 1 non-mutating real checkout smoke passed against active catalog.bundle.v1 bundle e38ce03c-d18b-40a4-9898-f82a3f77dc0b]`
 - `[RESOLVED: owner-approved Rung 2 live pending-order smoke proved pending Orders create, Warehouse reservation, and payment-status cleanup release for catalog.bundle.v1 bundle 919be990-1c76-4f9c-b100-829281c6a709]`
-
 
 Goal 24 Auth actor readback retained token hard stops:
 - `[MISSING: fresh Auth actor-bound token generated through the Auth c389c1e no-print/no-decode/no-persist pattern for the exact guarded discount-fixture step]`

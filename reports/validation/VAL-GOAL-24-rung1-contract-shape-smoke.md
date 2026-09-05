@@ -28,8 +28,6 @@ No product or bundle rows were created or updated.
 
 ## Orders Validator
 
-Command shape: in-pod `POST http://127.0.0.1:3203/api/orders/validate-create` from the Orders pod, using the runtime `FLIPFLOP_INTERNAL_SERVICE_TOKEN` environment variable in the `x-internal-service-token` header and `x-service-name: flipflop-service`. Token value was not printed.
-
 Result: HTTP `201`. Sanitized response:
 
 ```json

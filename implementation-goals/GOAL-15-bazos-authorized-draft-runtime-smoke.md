@@ -42,7 +42,6 @@ Catalog should prove the protected Bazos draft-preparation contract works with a
 - Source merged to `main` with merge commit `555652c`.
 - Catalog deployed `555652c`; rollout and health check passed.
 - Bazos-service deployed commit `c58d8b7` to expose the shared sell-action route in the deployed app.
-- Runtime Bazos smoke inputs and `BAZOS_SERVICE_TOKEN` were stored in Vault/Kubernetes only.
 - Dedicated runtime Bazos smoke account linkage was created outside the codebase.
 - `npm run smoke:e2e:bazos-authorized` passed against production: 12 passed, 0 skipped, 0 failed.
 - The smoke prepared/reused a Bazos draft only; it did not confirm, queue, publish, or bypass Bazos policy.

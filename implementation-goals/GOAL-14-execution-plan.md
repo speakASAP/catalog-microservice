@@ -38,7 +38,6 @@ npm run smoke:e2e:authorized
 ## Implementation Steps
 
 1. Extend `scripts/catalog-smoke.js` with opt-in authorized runtime checks.
-2. Support either `CATALOG_SMOKE_AUTH_TOKEN` or `CATALOG_SMOKE_INTERNAL_SERVICE_TOKEN`.
 3. Add authorized Warehouse and FlipFlop checks when `CATALOG_SMOKE_AUTHORIZED=true`.
 4. Add separately gated Bazos authorized check requiring `CATALOG_SMOKE_ENABLE_BAZOS_AUTHORIZED=true`, identity, and category inputs.
 5. Add Goal 14 docs, validation report, and state updates.

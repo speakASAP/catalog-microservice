@@ -10,8 +10,6 @@ Owner-approved runtime validation for the first non-mutating real-bundle checkou
 
 ## Catalog Target Bundle
 
-Created through in-pod Catalog API `POST /api/internal/bundles` using the runtime `CATALOG_INTERNAL_SERVICE_TOKEN` environment variable. Token value was not printed.
-
 Activated through `POST /api/internal/bundles/:bundleId/activate`.
 
 Sanitized result:
@@ -33,8 +31,6 @@ Sanitized result:
 The bundle uses `visibility.scope=catalog_internal`, no SKU, no stock, no channel publication, and no checkout-capable visibility.
 
 ## Orders Validator
-
-In-pod `POST /api/orders/validate-create` using runtime `FLIPFLOP_INTERNAL_SERVICE_TOKEN` and `x-service-name: flipflop-service`. Token value was not printed.
 
 Result: HTTP `201`. Sanitized response included:
 

@@ -87,17 +87,6 @@ FlipFlop server-side code currently calls Catalog product and pricing endpoints 
 
 Preferred additive endpoint:
 
-```http
-POST /api/products/projections/flipflop/batch
-Authorization: Bearer <catalog-approved caller token> or approved internal service token
-Content-Type: application/json
-
-{
-  "productIds": ["catalog-product-1"],
-  "includeUnavailable": false
-}
-```
-
 Optional list endpoint, if implementation stays simple and bounded:
 
 ```http

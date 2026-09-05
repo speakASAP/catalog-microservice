@@ -93,12 +93,6 @@ Result:
 
 ## Live Product Quality Validation
 
-```bash
-CATALOG_PRODUCT_QUALITY_API_BASE=https://catalog.alfares.cz/api \
-CATALOG_INTERNAL_SERVICE_TOKEN=<from catalog-microservice-secret> \
-npm run validate:product-quality -- --format json --max-pages 3
-```
-
 Result:
 
 - Source: live API, `catalog.alfares.cz/api`
@@ -150,13 +144,6 @@ Runtime status:
 - Public health: `https://heureka.alfares.cz/health` returned `status=ok`
 
 ## Final Cross-Service Smoke
-
-```bash
-CATALOG_SMOKE_INTERNAL_SERVICE_TOKEN=<from catalog-microservice-secret> \
-CATALOG_SMOKE_ENABLE_HEUREKA_READINESS=true \
-CATALOG_SMOKE_ASSERT_STOCK=true \
-npm run smoke:e2e:channel-status
-```
 
 Result:
 

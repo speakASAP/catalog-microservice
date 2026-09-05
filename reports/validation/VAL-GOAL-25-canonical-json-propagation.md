@@ -50,7 +50,6 @@ Source validation plus post-deploy runtime guard validation and authenticated re
 - `https://catalog.alfares.cz/` returned HTTP 200 from the Next.js frontend.
 - Anonymous `GET /api/products/00000000-0000-4000-8000-000000000001/marketplace-fields/bazos` returned protected HTTP 401 `Missing or invalid Authorization header`, confirming the deployed route is reachable and guarded.
 - Backend logs checked over the post-recovery window showed no fresh `relation ... does not exist` errors for the Goal 25 tables/columns.
-- Authenticated in-pod read-only smoke used the existing `CATALOG_INTERNAL_SERVICE_TOKEN` machine-auth boundary without printing token values and returned HTTP 200 `success=true` for product `8edc51f2-bed2-433f-8a3c-5738b49a02e1` on `bazos`, with `propagationStatus=current`, `fieldCount=10`, `manualFieldCount=0`, `staleFieldCount=0`, `profileHasManualOverrides=true`, and `profileHasSourceState=true`.
 
 ## Gate Evidence
 
@@ -90,7 +89,6 @@ Staleness uses the stored `Product.updatedAt` timestamp at manual override time.
 
 - `[DONE: owner approval to apply additive migration]`
 - `[DONE: owner approval to deploy Catalog/backend/frontend runtime]`
-- `[DONE: authenticated read-only marketplace-fields API smoke via internal service token]`
 - `[MISSING: channel consumer implementation decision after Catalog source review]`
 
 ## Recommendation

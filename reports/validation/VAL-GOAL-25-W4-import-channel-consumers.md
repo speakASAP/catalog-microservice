@@ -41,7 +41,6 @@ Repository: `/home/ssf/Documents/Github/bazos`
 
 - `shared/clients/catalog-client.service.ts`
   - Added `getProductReadiness(productId, authorization?)` against Catalog `GET /api/products/:id/readiness`.
-  - Added internal Catalog service headers from `CATALOG_INTERNAL_SERVICE_TOKEN` or `INTERNAL_SERVICE_TOKEN` when no human bearer is supplied.
 - `shared/bazos/ad/bazos-ad.service.ts`
   - Manual `saveToCatalog` draft creation now writes Catalog products as `isActive=false`, `lifecycle='draft'`.
   - Similar-product lookup no longer filters only active products, so existing draft Catalog records can be reused instead of duplicated.
@@ -127,7 +126,6 @@ Final handoff evidence:
 
 Implemented consumer contract:
 
-- `CatalogClientService.getProductReadiness(productId, authorization)` supports bearer propagation and internal service-token headers.
 - Bazos `prepare` fails closed before draft create/update when Catalog blockers remain or readiness is unavailable.
 - Bazos `confirm` re-checks Catalog readiness before queueing a draft.
 - Publish-policy preflight consumes Catalog quality blockers before publish-adjacent queue paths.
@@ -137,7 +135,6 @@ Implemented consumer contract:
 Important boundary:
 
 - The policy gate uses Catalog readiness only; it does not publish, mutate Warehouse, bypass identity/session/challenge controls, or own stock quantity.
-- Runtime `CATALOG_INTERNAL_SERVICE_TOKEN` was mapped from the existing Auth secret; token values were not printed.
 
 ### Aukro
 
@@ -287,7 +284,6 @@ Recommended merge/order:
 3. W5 deploy/runtime smoke has been run for the latest non-deployed channel commits after owner approval; do not publish/confirm/queue marketplace actions unless a new side-effect-safe smoke plan is approved.
 4. Keep Warehouse stock quantity ownership and channel marketplace ownership boundaries intact.
 
-
 ## W5 Owner-Approved Runtime Deploy Smoke
 
 Date: 2026-07-03.
@@ -322,7 +318,6 @@ FlipFlop evidence:
 
 Final W5 state: Bazos, Aukro, Allegro, Heureka, and FlipFlop have complete Goal 25 consumer source validation and runtime evidence. Bazos/Aukro runtime evidence was recorded before this run; Allegro/Heureka/FlipFlop runtime deploy/read smoke was completed in this run.
 
-
 Final sweep addendum:
 
 - `catalog-microservice`: clean `main...origin/main` at `aaedc96 docs: record goal25 channel runtime closure` before this addendum.
@@ -331,7 +326,6 @@ Final sweep addendum:
 - `flipflop`: final live deployments ready=1 updated=1 available=1; repo at `c0d20d7` with unrelated untracked `services/frontend/lib/hooks/useVisiblePolling.ts` left untouched.
 - `bazos`: clean `main...origin/main` at `b3576a6`.
 - `aukro`: `main...origin/main` at `f276a8c` with unrelated dirty `services/aukro-service/src/ui/ui.controller.ts` polling fields left untouched.
-
 
 Final closure refresh:
 

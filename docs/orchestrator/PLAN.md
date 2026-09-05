@@ -51,7 +51,6 @@ All documented Catalog implementation goals are complete, merged, pushed, deploy
 - In-pod runtime smoke returned health `200`, anonymous category `POST` `401`, authorized category `POST` `201`, authorized cleanup `DELETE` `200`.
 - Active pod logs emitted structured `catalog.write` entries for category create/delete with synthetic actor and request id.
 
-
 ### Goal 2 Closure Evidence
 
 - Commit `fcb1919` was deployed to production with `./scripts/deploy.sh` on 2026-06-12.
@@ -61,7 +60,6 @@ All documented Catalog implementation goals are complete, merged, pushed, deploy
 - Runtime in-pod smoke returned health `200`, preserved the `GET /api/products` envelope, created and updated synthetic lifecycle products, verified readiness lifecycle/checks/issues, verified quality audit `missingEan` and duplicate summary shapes, and removed all synthetic products through the hard-delete approval gate.
 - Synthetic JWT was generated inside the pod from runtime secret and was not printed. A post-cleanup database check found zero `CODEX-GOAL2-%` products.
 
-
 ### Goal 3 Closure Evidence
 
 - Commit `d222e11` contains Goal 3 pricing integrity source/docs.
@@ -69,7 +67,6 @@ All documented Catalog implementation goals are complete, merged, pushed, deploy
 - `./scripts/deploy.sh` deployed image `localhost:5000/catalog-microservice:d222e11` on 2026-06-12.
 - Production health check returned `healthy`.
 - Runtime in-pod smoke verified invalid pricing rejection, deterministic sale current-price selection, mass pricing guard rejection without human review, mass pricing acceptance with `x-human-review: explicit`, audit-log metadata, and synthetic cleanup.
-
 
 ### Goal 4 Closure Evidence
 
@@ -103,7 +100,6 @@ Verification:
 - Warehouse source/docs inspection confirmed `POST /api/stock/availability/batch` exists and is protected by the global JWT roles guard.
 - Planned implementation is additive and schema-neutral: validate Catalog product IDs, call Warehouse batch availability once, and return warehouse-sourced availability without storing stock truth in Catalog.
 
-
 ### Goal 5 Source Implementation Evidence
 
 - Added protected `POST /api/products/availability/batch` as an additive Catalog contract.
@@ -128,7 +124,6 @@ Verification:
 - Catalog inspection confirmed available inputs: product reads, deterministic current pricing, channel readiness, and Warehouse-sourced availability.
 - FlipFlop inspection confirmed current consumers expect `name`, `price`, `stockQuantity`, image URLs, categories, SEO/tags, and timestamps, with separate Catalog and Warehouse client calls today.
 - Planned implementation is additive and contract-focused: Catalog may expose a FlipFlop projection surface, but FlipFlop storefront, cart, checkout, and UX stay in FlipFlop.
-
 
 ### Goal 6 Source Implementation Evidence
 
@@ -205,6 +200,5 @@ Continuation lanes:
 - Ready with explicit owner approval: Warehouse machine-auth receiver lane. Objective: accept Catalog as a service actor for Warehouse read-only availability/logistics calls using the approved machine-identity contract, then rerun `npm run verify:stock-acceptance:gates`. Forbidden without approval: broad admin bypass, accepting static tokens for mutations, or treating machine tokens as human Auth users.
 - Ready now: Catalog stock credential wiring preflight. Owner role: orchestrator/integration. Allowed files: `scripts/check-stock-credential-wiring.sh`, `package.json`, `docs/orchestrator/PLAN.md`, `docs/orchestrator/STATUS.md`. Objective: make the post-approval token mount path verifiable by manifest path/property and runtime key names only, without reading token values.
 - Ready now: Catalog Warehouse token mount runbook. Owner role: orchestrator/integration. Allowed files: `docs/orchestrator/TASK-STOCK-004-catalog-warehouse-token-runbook.md`, `docs/orchestrator/PLAN.md`, `docs/orchestrator/STATUS.md`. Objective: make the owner-approved runtime credential lane executable without secret disclosure or contract drift.
-- Ready with explicit owner approval and valid runtime config: Catalog credential lane. Objective: provision a Warehouse/Auth-compatible Catalog token so the existing Catalog fallback can call Warehouse without receiver code changes, then move the runtime `WAREHOUSE_SERVICE_TOKEN` source to `secret/prod/auth-microservice#CATALOG_WAREHOUSE_SERVICE_TOKEN` using `docs/orchestrator/TASK-STOCK-004-catalog-warehouse-token-runbook.md`. Auth commit `212f719` prepared `scripts/assign-role-by-email.ts --dry-run` support for `internal:warehouse-microservice:admin`, but the service principal, role assignment, token issuance/rotation, Vault/Kubernetes secret update, and Catalog runtime rollout remain approval-gated. Forbidden: printing token values, copying arbitrary service tokens into docs, using user JWTs as machine credentials, or mutating Auth/Warehouse/Catalog runtime config without approval.
 - Ready with explicit read approval: Suppliers source audit lane. Objective: read sanitized supplier/import metadata to determine whether a real BizBox/current-stock/supplier source exists. Forbidden: running imports, applying Warehouse stock, reading decoded supplier credentials, or dumping production payloads.
 - Dependency-gated: supplier/BizBox import implementation. Objective: map an owner-approved source payload into Suppliers/Warehouse stock candidates and apply only after validation and explicit mutation approval. Blocker: `[MISSING: real source contract and approval]`.

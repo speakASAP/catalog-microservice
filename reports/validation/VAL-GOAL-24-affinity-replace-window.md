@@ -47,7 +47,6 @@ Deployment evidence:
 
 Protected runtime smoke evidence:
 
-- Auth path: in-pod `CATALOG_INTERNAL_SERVICE_TOKEN` via `x-internal-service-token` and `x-service-name=catalog-goal24-runtime-smoke`; no token value printed.
 - Fail-closed path: `POST /api/internal/product-relations/order-affinity/replace-window` with `completeSnapshot=false` returned HTTP 400 and message `completeSnapshot must be true for order-affinity window replacement`.
 - Positive isolated path: smoke discovered a protected API product pair with no existing Marketing `order_affinity` relation from 20 candidate products; product ids were not printed.
 - Positive isolated request returned HTTP 201 with `completeSnapshot=true`, summary `total=1`, `upserted=1`, `updated=0`, `failed=0`, `pruned=0`; subsequent protected related read found one matching canary row.

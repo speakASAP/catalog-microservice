@@ -46,8 +46,6 @@ dbc51dde-fc66-4511-b178-f929183f4647|quantity=108|reserved=0|available=108
 
 ## Orders Create Evidence
 
-Orders runtime calls were made from the Orders pod with `x-service-name=flipflop-service` and the runtime `FLIPFLOP_INTERNAL_SERVICE_TOKEN`. Token value was not printed.
-
 `POST /api/orders/validate-create` returned HTTP `201` for the exact payload later used by live create.
 
 `POST /api/orders` returned HTTP `201` and the sanitized response evidence was:
@@ -78,8 +76,6 @@ dbc51dde-fc66-4511-b178-f929183f4647|quantity=108|reserved=1|available=107
 ```
 
 ## Cleanup Evidence
-
-Cleanup used Orders `PUT /api/orders/:id/payment-status` with `orders.payment-status.v1`, `status=cancelled`, `x-service-name=payments-microservice`, and runtime `PAYMENTS_INTERNAL_SERVICE_TOKEN`. Token value and raw order id were not printed.
 
 ```json
 {

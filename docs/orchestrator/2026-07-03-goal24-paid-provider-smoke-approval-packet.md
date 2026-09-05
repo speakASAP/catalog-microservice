@@ -59,7 +59,6 @@ Discovered target and evidence:
 
 - Target bundle: `919be990-1c76-4f9c-b100-829281c6a709`, active `catalog.bundle.v1`, `catalog_internal`, validation `valid`, blockers `[]`.
 - Components: `ce4a51aa-2d12-4ab7-a965-7a36609d01fc` qty `1`; `dbc51dde-fc66-4511-b178-f929183f4647` qty `1`.
-- Warehouse read-only aggregate via `CLIPLOT_WAREHOUSE_SERVICE_TOKEN` inside the Warehouse pod, token not printed: both components returned HTTP `200` from `/api/warehouses/logistics/:productId`; warehouse `c0de0000-0000-4000-8000-000000000013`; available/reserved `118/0` and `108/0`; `canReserveFromWarehouse=true` for both.
 - Payment method: Fiobanka bank-transfer QR, `applicationId=flipflop-service`, maximum `300 CZK`, callback route `/webhooks/fiobanka`.
 - Payments success evidence: Payments `9718efd` records synthetic Fiobanka QR creation, owner-approved synthetic completed callback through `/webhooks/fiobanka` without manual payment-state bypass, source/runtime HMAC hardening, official Fio JSON API polling defaults, currency-specific CZK/EUR read-token selection, and a redacted owner-approved CZK transaction-polling match for retained variable-symbol hash `d7512419521d2cab` without token or raw payload output.
 - Payments to Orders token proof: in-pod Payments probe did not print the token; fake UUID status update returned HTTP `404` after auth, so the service role was accepted and no order was mutated.
@@ -114,7 +113,6 @@ Hard-stop conditions before rollback execution:
 
 Owner approval boundary: the current owner approval covers self-discovery, packet fill, and read-only/preflight verification only. It does not approve future money movement, stock movement, order mutation, webhook replay, provider refund/cancel/reversal, or channel cleanup execution.
 
-
 ## 2026-07-04 Exact Linked Paid-Flow Discount Fixture Gate
 
 Retained manual-refund evidence is closed by owner acceptance without exact order linkage. A future exact linked paid/provider smoke is a separate side-effectful lane.
@@ -155,7 +153,6 @@ Parallel execution state:
 
 Intent Preservation Chain: Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation.
 
-
 ## 2026-07-04 FlipFlop Channel Cleanup Owner Supersession Consumption
 
 Catalog consumed FlipFlop `5202c15 merge goal24 channel cleanup owner supersession` and FlipFlop `1a79c6a docs: supersede goal24 channel cleanup owner blockers` as dependency evidence only.
@@ -165,8 +162,6 @@ Catalog consumed FlipFlop `5202c15 merge goal24 channel cleanup owner supersessi
 This supersedes historical missing runtime validation owner / FlipFlop channel cleanup executor wording from earlier packet sections. Codex owns source-controlled coordination and stop authority only; it does not provide Auth token material, bank/refund authority, provider proof, exact Orders/Warehouse cleanup facts, concrete rollback run id/cleanup idempotency keys, Fiobanka payment-order runtime flag/bank-executor completion evidence, or final redacted evidence.
 
 Report: `reports/validation/VAL-GOAL-24-flipflop-channel-supersession-consumption-2026-07-04.md`.
-
-
 
 ## 2026-07-04 Orders/Payments Current Head Sync
 
@@ -178,7 +173,6 @@ This supersedes historical current-gate assertions for Orders `b138458` and Paym
 
 Report: `reports/validation/VAL-GOAL-24-orders-payments-head-sync-2026-07-04.md`.
 
-
 ## Non-Approval Boundaries
 
 This packet does not approve:
@@ -189,7 +183,6 @@ This packet does not approve:
 - FlipFlop/channel checkout submission;
 - external marketplace listing/feed mutation;
 - deployment, migration, secret read, raw provider payload output, customer/address/payment data output, or token printing.
-
 
 ## Sanitized Evidence Policy
 
@@ -255,7 +248,6 @@ Any future smoke must stop before the next side effect when one of these checks 
 | Payments provider rollback contract | `019f292b-6f1a-74f0-9cc1-4dd6246840b1` | started | Prove or keep blocked provider-specific success/cancel/refund rollback contract. |
 | Heureka channel fail-closed envelope | `019f292b-a487-7850-946a-9f0533e8e0e2` | started | Prove fail-closed non-mutating channel policy envelope for `catalog.bundle.v1`. |
 
-
 ## Dependency Map
 
 | Workstream | Status | Owner role | Objective | Allowed files/repos | Forbidden actions | Dependencies | Validation evidence | Handoff notes |
@@ -289,8 +281,6 @@ Catalog consumed the latest upstream evidence as dependency-gated integration in
 Exact next required owner packet before any live paid/provider smoke: a single owner-approved run packet naming `approvalId`, `approvalWindow`, `checkoutOwner`, active `targetBundleId`, component product ids/quantities, Warehouse stock window/max quantity, selected provider/method/environment/max amount, provider completion evidence, provider refund/cancel/reversal operation, Orders cancellation actor/reason/side-effect acknowledgements, Warehouse cleanup operation for reserved/fulfilled/partial states, runtime checkout packet central Orders UUID proof, Payments Orders service-token proof, evidence redaction policy, hard-stop authority, dedicated smoke owner, source-controlled runtime validation owner, and named live-run executor.
 
 ## Current Decision
-
-Runtime paid/provider bundle progression remains blocked after packet fill because FlipFlop source rollout is merged, but Fiobanka runtime polling/token evidence and provider rollback evidence are still unavailable. Resolved/narrowed by this packet: target bundle, component product ids, Warehouse aggregate/max quantity, selected provider/method/max amount, Payments Orders service-token acceptance, source-level Fiobanka HMAC hardening, evidence policy, approval id/window, and hard-stop conditions. Remaining blockers: `[RESOLVED/NARROWED: FlipFlop main 1b62909 maps durable catalog.bundle.v1 bundleId into central Orders bundleEvidence without changing totals, stock identity, or provider state]`, `[RESOLVED/NARROWED: deployed ready Payments pod has FIO_BANKA_WEBHOOK_SECRET present and healthy without secret output]`, `[MISSING: official/native Fio Banka callback signature contract if provider-authentic bank-originated signed callbacks are required]`, `[MISSING: owner-approved refund/cancel rollback execution approval for future paid/provider smoke beyond the retained 1 CZK Fiobanka evidence payment]`, `[MISSING: Fiobanka provider-side refund/reversal or unpaid cancel/void execution path with redacted evidence]`, and `[MISSING: named live-run executor for the exact side-effectful smoke]`; current source-controlled runtime validation owner is the Codex Goal 24 integration thread only.
 
 ## 2026-07-03 Owner-Approved Runtime Attempt Result
 
@@ -352,7 +342,6 @@ Parallel execution update:
 
 State Update: Catalog may now mark the original stop-before-paid smoke and Orders/Warehouse cleanup evidence as resolved/narrowed. Catalog must still keep completed-payment refund/reversal and provider-side cancel/void as `[MISSING: ...]`; no paid transfer, provider callback, provider refund, provider reversal, direct stock edit, direct Orders DB edit, marketplace/feed mutation, migration, or secret output was performed.
 
-
 ## 2026-07-04 Payments Fiobanka Refund Upload Gate Reconciliation
 
 Payments `a8e09a0 docs: require goal24 current heads in verifier` is deployed as `localhost:5000/payments-microservice:038c8e3`; sanitized runtime readback shows `FIO_BANKA_REFUND_UPLOAD_ENABLED=false`, `FIO_BANKA_API_KEY_CZK/EUR` present without values, and `FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK/EUR` present in the current ready Payments pod without value output. Fiobanka completed-transfer refund upload is source-defined only as guarded `PENDING_AUTHORIZATION` after Internetbanking authorization; it is not completed refund evidence and remains gated by [RESOLVED/NARROWED: FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK and FIO_BANKA_PAYMENT_ORDER_TOKEN_EUR are present in the current ready Payments pod without value output; payment-order upload remains gated by FIO_BANKA_REFUND_UPLOAD_ENABLED=true, named bank/refund executor, exact future payment/order/provider hashes, concrete idempotency keys, and bank completion evidence].
@@ -413,13 +402,11 @@ Catalog consumed FlipFlop `490913a docs: clean goal24 owner wording` as source-g
 
 Catalog consumed Payments `a8e09a0 docs: require goal24 current heads in verifier` as source-governance input only. [RESOLVED/NARROWED: Codex Goal 24 integration thread is the runtime validation owner for future source-controlled smoke coordination; runtime side effects remain blocked until bank/refund authority, exact provider proof, Orders/Warehouse packets, FIO_BANKA_REFUND_UPLOAD_ENABLED=true, named bank/refund executor, exact future payment/order/provider hashes, idempotency keys, and redacted evidence path exist] New side-effectful paid/provider runtime execution remains blocked on human Payments/provider bank/refund authority, exact provider proof, Orders side-effect acknowledgements, exact selected Warehouse reservation lookup state, Fiobanka payment-order runtime flag/bank-executor completion evidence, and final redacted runtime evidence.
 
-
 ## 2026-07-04 FlipFlop Auth Actor Readback
 
 [RESOLVED/NARROWED: sanitized Auth readback found one active verified Goal 24 actor hash 4215870ba488de17 with app:flipflop-service:admin and no token/raw email/user id output]
 
 This narrows only actor existence/role evidence. Token source, token-to-actor proof, provider rollback authority, exact provider/order/stock facts, and final redacted evidence path remain blocked. No live checkout, discount-code creation, payment, provider call, refund/cancel/reversal, Orders/Warehouse/channel mutation, deploy, migration, secret/token output, raw email/user id/DB row, or raw evidence capture occurred.
-
 
 Goal 24 Auth actor readback retained token hard stops:
 - `[MISSING: fresh Auth actor-bound token generated through the Auth c389c1e no-print/no-decode/no-persist pattern for the exact guarded discount-fixture step]`
@@ -434,7 +421,6 @@ Sanitized Payments readback on deployed image `localhost:5000/payments-microserv
 Decision: this strengthens the fail-closed boundary for full completed-payment Fiobanka paid/refund smoke. Stop-before-paid evidence remains resolved/narrowed, but completed-payment rollback remains blocked by `[RESOLVED/NARROWED: FIO_BANKA_PAYMENT_ORDER_TOKEN_CZK and FIO_BANKA_PAYMENT_ORDER_TOKEN_EUR are present in the current ready Payments pod without value output; payment-order upload remains gated by FIO_BANKA_REFUND_UPLOAD_ENABLED=true, named bank/refund executor, exact future payment/order/provider hashes, concrete idempotency keys, and bank completion evidence]`, `[MISSING: FIO_BANKA_REFUND_UPLOAD_ENABLED=true for an owner-approved exact future refund upload window]`, `[RESOLVED/NARROWED: owner statement names Sergey Stasok / Сергей Сташок as the human Payments/provider rollback owner, bank/refund authority, and bank/refund executor for Goal 24 runtime planning; runtime side effects remain blocked until exact future payment/order/provider hashes, provider proof, Orders/Warehouse/channel packets, idempotency keys, and final redacted evidence exist]`, and exact future payment/idempotency evidence. Runtime transaction-polling/read-token readiness must not be treated as refund/reversal authority. Catalog also records that Fiobanka completed-transfer rollback is not an automated provider-side Payments refund endpoint; owner-approved manual bank/service refund or guarded payment-order upload stays fail-closed until bank completion evidence exists.
 
 No live checkout, payment, refund upload, provider call, Orders/Warehouse/channel mutation, deploy, migration, DB write, secret output, raw provider payload, or raw order/payment evidence occurred.
-
 
 ## 2026-07-04 Current Source-Governance Head Sync
 
