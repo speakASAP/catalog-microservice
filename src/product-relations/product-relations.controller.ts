@@ -10,6 +10,17 @@ const PRODUCT_RELATION_ADMIN_ROLES = [
   'global:platform_admin',
   'app:catalog-microservice:admin',
   'internal:catalog-microservice:admin',
+  // Least-privilege write role for per-pair service principals that publish
+  // order-affinity relations, seeded by
+  // auth-microservice/scripts/seed-catalog-relations-role.js.
+  //
+  // Without it the only mintable credential for these routes was
+  // `...:admin` -- CatalogAuthGuard.WRITE_ROLES' `:write` role is deliberately
+  // absent from this set, and `catalog:write` cannot be minted at all. Admin is
+  // additionally in allProductAccessRoles (product-relations.service.ts), where
+  // it bypasses per-actor product visibility, which is far more authority than
+  // writing affinity rows needs.
+  'internal:catalog-microservice:relations',
 ];
 
 @Controller('products/:productId/related')
