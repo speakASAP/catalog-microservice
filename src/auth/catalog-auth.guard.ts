@@ -3,6 +3,7 @@ import {
   ExecutionContext,
   ForbiddenException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -79,6 +80,8 @@ export class CatalogAuthGuard implements CanActivate {
     'internal:catalog-microservice:write',
     'catalog:write',
   ];
+
+  private static readonly legacyPathLogger = new Logger('CatalogAuthGuard.legacy');
 
   constructor(private readonly reflector: Reflector) {}
 
@@ -172,6 +175,18 @@ export class CatalogAuthGuard implements CanActivate {
     // empty name from being recorded as fact. Deny, do not fall back to a
     // placeholder: silently relabelling an unknown caller 'internal-service'
     // would write a fiction into the same audit trail.
+    // DEPRECATION PROBE. Every caller of this path has been migrated to an
+    // Auth-issued per-pair principal, but the path itself is silent, so
+    // "nobody uses it" cannot be proven from logs -- only from the absence of
+    // this line. It is logged at WARN so it reaches logging-microservice and
+    // the ErrorLogWatcher, and it names the caller so a straggler is
+    // identifiable rather than merely counted. Delete this method once this
+    // line has stayed absent across a full business cycle.
+    CatalogAuthGuard.legacyPathLogger.warn(
+      `legacy_internal_service_token_used source=${(request.header('x-service-name') || '<unset>').trim()} ` +
+        `path=${request.method} ${request.path}`,
+    );
+
     const source = (request.header('x-service-name') || '').trim();
     if (!source) {
       throw new UnauthorizedException(
