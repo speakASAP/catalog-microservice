@@ -9,8 +9,13 @@ const authorizedBazosSmokeEnabled = isEnabled(process.env.CATALOG_SMOKE_ENABLE_B
 const authorizedChannelStatusSmokeEnabled = isEnabled(process.env.CATALOG_SMOKE_ENABLE_CHANNEL_STATUS);
 const heurekaReadinessSmokeEnabled = isEnabled(process.env.CATALOG_SMOKE_ENABLE_HEUREKA_READINESS);
 const stockConsistencySmokeEnabled = isEnabled(process.env.CATALOG_SMOKE_ASSERT_STOCK);
-const internalServiceToken = process.env.CATALOG_SMOKE_INTERNAL_SERVICE_TOKEN || "";
-const authToken = process.env.CATALOG_SMOKE_AUTH_TOKEN || (internalServiceToken ? "" : process.env.JWT_TOKEN || "");
+// Only the per-pair principal. The former precedence here --
+//   authToken = CATALOG_SMOKE_AUTH_TOKEN || (internalServiceToken ? "" : JWT_TOKEN)
+// -- is the exact line that made catalog-contract-monitor fail silently for five
+// days: with the shared internal token mounted it forced authToken to "", so the
+// bearer was never sent even once a correct principal existed, and JWT_TOKEN was
+// a hand-minted HS256 value that /auth/validate rejects outright.
+const authToken = process.env.CATALOG_SMOKE_AUTH_TOKEN || "";
 const smokeServiceName = process.env.CATALOG_SMOKE_SERVICE_NAME || "catalog-authorized-smoke";
 const heurekaBaseUrl = (process.env.CATALOG_SMOKE_HEUREKA_BASE_URL || "https://heureka.alfares.cz").replace(/\/+$/, "");
 const heurekaFeedType = process.env.CATALOG_SMOKE_HEUREKA_FEED_TYPE || "heureka_cz";
@@ -54,12 +59,12 @@ function getAuthorizedHeaders() {
       authorization: authToken.startsWith("Bearer ") ? authToken : `Bearer ${authToken}`,
     };
   }
-  if (internalServiceToken) {
-    return {
-      "x-internal-service-token": internalServiceToken,
-      "x-service-name": smokeServiceName,
-    };
-  }
+  // The shared-secret branch that used to live here is gone. It sent one static
+  // token held by seven services with a self-asserted x-service-name header --
+  // the shape SERVICE_IDENTITY_CONSUMER_STANDARD.md prohibits -- and it was what
+  // made this monitor fail silently: catalog-smoke.js PREFERRED it over the
+  // bearer, so a correct principal would never have been sent while both were
+  // mounted. The contract-monitor CronJob now mounts only the pair principal.
   return null;
 }
 

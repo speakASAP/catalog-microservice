@@ -354,10 +354,15 @@ function authHeaders(options) {
     process.env.CATALOG_AUTH_TOKEN ||
     process.env.CATALOG_ACCESS_TOKEN ||
     "";
-  const internalToken = process.env.CATALOG_INTERNAL_SERVICE_TOKEN || process.env.INTERNAL_SERVICE_TOKEN || "";
+  // Falls back to the self-pair principal for catalog-microservice -> itself.
+  // The former shared-secret headers are gone: one static token held by seven
+  // services plus a self-asserted x-service-name header is the shape
+  // SERVICE_IDENTITY_CONSUMER_STANDARD.md prohibits. They were also sent
+  // ALONGSIDE the bearer, and catalog prefers the static header when both are
+  // present, so the bearer above was being shadowed on every call.
+  const serviceToken = bearer || process.env.CATALOG_SELF_SERVICE_TOKEN || "";
   return {
-    ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
-    ...(internalToken ? { "x-internal-service-token": internalToken, "x-service-name": "catalog-microservice" } : {}),
+    ...(serviceToken ? { Authorization: `Bearer ${serviceToken}` } : {}),
   };
 }
 
