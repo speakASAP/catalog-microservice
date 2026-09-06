@@ -44,8 +44,14 @@ function catalogBaseUrl() {
   return (process.env.CATALOG_SERVICE_URL || process.env.CATALOG_BASE_URL || "http://127.0.0.1:3200").replace(/\/$/, "");
 }
 
+// Self-pair principal for catalog-microservice -> itself. This script calls
+// catalog's own HTTP API, which is still a (caller -> target) pair and needs a
+// real principal. No fallback to the shared CATALOG_INTERNAL_SERVICE_TOKEN /
+// INTERNAL_SERVICE_TOKEN: that was one static secret held by seven services
+// with a self-asserted x-service-name header, the shape
+// SERVICE_IDENTITY_CONSUMER_STANDARD.md prohibits.
 function catalogToken() {
-  return (process.env.CATALOG_INTERNAL_SERVICE_TOKEN || process.env.INTERNAL_SERVICE_TOKEN || "").trim();
+  return (process.env.CATALOG_SELF_SERVICE_TOKEN || "").trim();
 }
 
 async function fetchAvailability(productIds) {
@@ -54,7 +60,7 @@ async function fetchAvailability(productIds) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { "x-internal-service-token": token, "x-service-name": "catalog-microservice" } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({ productIds }),
   });
