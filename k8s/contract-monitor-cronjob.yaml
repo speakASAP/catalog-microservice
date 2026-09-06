@@ -72,20 +72,32 @@ spec:
                   value: "4"
                 - name: CATALOG_SMOKE_RETRY_DELAY_MS
                   value: "8000"
-                # Empty-string literal here sent the smoke run out with no
-                # credential at all, so every authorized contract 401'd. The
-                # value is already synced from Vault into this secret by
-                # external-secret.yaml, exactly like the token below it.
-                - name: JWT_TOKEN
+                # Canonical service identity, per
+                # auth-microservice/docs/SERVICE_IDENTITY_CONSUMER_STANDARD.md:
+                # one Auth-signed RS256 principal for the
+                # (catalog-contract-monitor -> catalog-microservice) pair,
+                # svc-catalog-contract-monitor--catalog-microservice@internal.alfares.cz,
+                # role internal:catalog-microservice:service.
+                #
+                # There is deliberately NO fallback here. The two credentials
+                # this replaces both failed, and each hid the other:
+                #   JWT_TOKEN                        hand-minted HS256, which
+                #     /auth/validate rejects outright ("Unsupported token
+                #     algorithm HS256; RS256 required") -- it was never valid,
+                #     rather than newly expired.
+                #   CATALOG_SMOKE_INTERNAL_SERVICE_TOKEN  the shared static
+                #     secret plus a self-asserted x-service-name, the shape the
+                #     standard prohibits. catalog-smoke.js:13 PREFERRED it over
+                #     the bearer, so mounting both meant the bearer was never
+                #     sent even once it existed.
+                # Restoring either would re-establish a legacy fallback and
+                # silently mask a broken principal, which is the failure this
+                # monitor exists to detect.
+                - name: CATALOG_SMOKE_AUTH_TOKEN
                   valueFrom:
                     secretKeyRef:
                       name: catalog-microservice-secret
-                      key: JWT_TOKEN
-                - name: CATALOG_SMOKE_INTERNAL_SERVICE_TOKEN
-                  valueFrom:
-                    secretKeyRef:
-                      name: catalog-microservice-secret
-                      key: CATALOG_INTERNAL_SERVICE_TOKEN
+                      key: CATALOG_MONITOR_AUTH_TOKEN
               resources:
                 requests:
                   memory: "64Mi"
