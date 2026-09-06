@@ -76,6 +76,38 @@ describe('CatalogAuthGuard', () => {
     expect(request.serviceActor).toBeUndefined();
   });
 
+  it('classifies Auth-validated service pair JWTs as service actors', async () => {
+    process.env.AUTH_SERVICE_URL = 'http://auth-service.test/';
+    const reflector = { getAllAndOverride: jest.fn().mockReturnValue(['catalog:authenticated']) } as unknown as Reflector;
+    const guard = new CatalogAuthGuard(reflector);
+    const request = buildRequest({ authorization: 'Bearer pair-jwt' });
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        valid: true,
+        user: {
+          id: 'svc-flipflop-product-service--catalog-microservice@internal.alfares.cz',
+          email: 'svc-flipflop-product-service--catalog-microservice@internal.alfares.cz',
+          roles: ['internal:catalog-microservice:read'],
+        },
+      }),
+    } as any);
+
+    await expect(guard.canActivate(buildContext(request))).resolves.toBe(true);
+
+    expect(request.catalogActor).toEqual({
+      type: 'service',
+      sub: 'svc-flipflop-product-service--catalog-microservice@internal.alfares.cz',
+      email: 'svc-flipflop-product-service--catalog-microservice@internal.alfares.cz',
+      roles: ['internal:catalog-microservice:read'],
+      source: undefined,
+      serviceName: 'svc-flipflop-product-service--catalog-microservice@internal.alfares.cz',
+      authMethod: 'auth-validate',
+      isMarathonOnlyAuthUser: false,
+    });
+    expect(request.serviceActor).toEqual(request.catalogActor);
+  });
+
   it('fails closed when Auth validation rejects the bearer token', async () => {
     const reflector = { getAllAndOverride: jest.fn().mockReturnValue(['catalog:write']) } as unknown as Reflector;
     const guard = new CatalogAuthGuard(reflector);

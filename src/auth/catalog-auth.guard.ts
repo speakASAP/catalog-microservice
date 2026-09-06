@@ -328,15 +328,20 @@ export class CatalogAuthGuard implements CanActivate {
     }
 
     const roles = Array.isArray(user.roles) ? user.roles : [];
+    const email = String(user.email || '').toLowerCase();
+    const isServiceIdentity =
+      (email.startsWith('svc-') && email.endsWith('@internal.alfares.cz'))
+      || roles.some((role) => role.startsWith('internal:catalog-microservice:'));
 
     return {
-      type: 'jwt',
+      type: isServiceIdentity ? 'service' : 'jwt',
       sub,
       email: user.email,
       roles,
       source: typeof user.source === 'string' ? user.source : undefined,
+      serviceName: isServiceIdentity ? String(sub) : undefined,
       authMethod: 'auth-validate',
-      isMarathonOnlyAuthUser: this.isMarathonOnlyAuthUser(user, roles),
+      isMarathonOnlyAuthUser: isServiceIdentity ? false : this.isMarathonOnlyAuthUser(user, roles),
     };
   }
 
