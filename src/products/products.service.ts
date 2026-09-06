@@ -2857,9 +2857,9 @@ export class ProductsService {
   }
 
   private async getFlipFlopCatalogProjection(productId: string): Promise<any> {
-    const catalogInternalToken = this.getCatalogInternalServiceToken();
-    if (!catalogInternalToken) {
-      throw new Error('[MISSING: Catalog internal service token; configure CATALOG_INTERNAL_SERVICE_TOKEN or INTERNAL_SERVICE_TOKEN]');
+    const catalogSelfToken = this.getCatalogSelfServiceToken();
+    if (!catalogSelfToken) {
+      throw new Error('[MISSING: Catalog self-pair service credential; configure CATALOG_SELF_SERVICE_TOKEN]');
     }
 
     const response = await axios.post(
@@ -2868,8 +2868,7 @@ export class ProductsService {
       {
         headers: {
           'Content-Type': 'application/json',
-          'x-internal-service-token': catalogInternalToken,
-          'x-service-name': 'catalog-microservice',
+          Authorization: this.asBearerToken(catalogSelfToken),
         },
       },
     );
@@ -2906,8 +2905,17 @@ export class ProductsService {
     return (process.env.CATALOG_SERVICE_URL || process.env.CATALOG_BASE_URL || 'http://catalog-microservice:3200').replace(/\/$/, '');
   }
 
-  private getCatalogInternalServiceToken(): string | null {
-    const token = process.env.CATALOG_INTERNAL_SERVICE_TOKEN || process.env.INTERNAL_SERVICE_TOKEN;
+  /**
+   * Per-pair principal for catalog's HTTP call to its own projection route.
+   *
+   * No fallback to CATALOG_INTERNAL_SERVICE_TOKEN / INTERNAL_SERVICE_TOKEN:
+   * those are the shared static secret that SERVICE_IDENTITY_CONSUMER_STANDARD
+   * prohibits, and falling back to them would silently restore the prohibited
+   * path whenever this credential is missing or rejected. A credential that
+   * fails over to a working legacy path fails invisibly.
+   */
+  private getCatalogSelfServiceToken(): string | null {
+    const token = process.env.CATALOG_SELF_SERVICE_TOKEN;
     return token?.trim() || null;
   }
 
