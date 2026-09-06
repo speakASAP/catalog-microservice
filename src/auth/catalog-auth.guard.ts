@@ -64,6 +64,19 @@ export class CatalogAuthGuard implements CanActivate {
     'global:platform_admin',
     'app:catalog-microservice:admin',
     'internal:catalog-microservice:admin',
+    // The least-privilege write role for per-pair service principals, seeded by
+    // auth-microservice/scripts/seed-catalog-write-role.js.
+    //
+    // Without it a caller migrating off the prohibited shared static token has
+    // no least-privilege option: `catalog:write` below cannot be minted at all
+    // (provision-service-token.js accepts only `internal:<service>:<role>`), and
+    // `internal:catalog-microservice:service` is absent from this set, so the
+    // only mintable write credential was `...:admin`. That made the compliance
+    // fix a privilege escalation — and admin is additionally in
+    // `allProductAccessRoles` (product-relations.service.ts), so it would also
+    // bypass per-actor product visibility. The legacy path granted these callers
+    // catalog:write, never admin; the replacement must not grant more.
+    'internal:catalog-microservice:write',
     'catalog:write',
   ];
 
