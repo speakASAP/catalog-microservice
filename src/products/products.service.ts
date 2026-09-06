@@ -949,8 +949,6 @@ export class ProductsService {
           timeout: this.getOrdersTimeoutMs(),
           headers: {
             Authorization: this.asBearerToken(serviceToken),
-            'x-internal-service-token': serviceToken,
-            'x-service-name': 'catalog-microservice',
             'Content-Type': 'application/json',
           },
         },
@@ -2847,13 +2845,17 @@ export class ProductsService {
     return (process.env.ORDERS_SERVICE_URL || process.env.ORDERS_BASE_URL || 'http://orders-microservice:3203').replace(/\/$/, '');
   }
 
+  /**
+   * Per-pair principal for catalog-microservice -> orders-microservice.
+   *
+   * The former fallback chain ended at CATALOG_INTERNAL_SERVICE_TOKEN /
+   * INTERNAL_SERVICE_TOKEN -- the shared static secret held by seven services,
+   * which SERVICE_IDENTITY_CONSUMER_STANDARD.md prohibits. Orders still accepts
+   * it, so falling back would authenticate successfully and hide the fact that
+   * this lane had no credential of its own.
+   */
   private getOrdersServiceToken(): string | null {
-    const token =
-      process.env.ORDERS_SERVICE_TOKEN ||
-      process.env.ORDERS_INTERNAL_SERVICE_TOKEN ||
-      process.env.CATALOG_INTERNAL_SERVICE_TOKEN ||
-      process.env.INTERNAL_SERVICE_TOKEN;
-    return token?.trim() || null;
+    return process.env.ORDERS_SERVICE_TOKEN?.trim() || null;
   }
 
   private async getFlipFlopCatalogProjection(productId: string): Promise<any> {
@@ -3232,16 +3234,17 @@ export class ProductsService {
   }
 
   private getHeurekaServiceToken(): string | null {
-    const token = process.env.HEUREKA_INTERNAL_SERVICE_TOKEN || process.env.HEUREKA_SERVICE_TOKEN || process.env.INTERNAL_SERVICE_TOKEN || process.env.CATALOG_INTERNAL_SERVICE_TOKEN;
-    return token?.trim() || null;
+    // Per-pair principal for catalog-microservice -> heureka-service. No
+    // fallback to the shared static secret, for the same reason as the orders
+    // lane above.
+    return process.env.HEUREKA_SERVICE_TOKEN?.trim() || null;
   }
 
   private heurekaHeaders(): Record<string, string> {
     const token = this.getHeurekaServiceToken();
     return {
       'Content-Type': 'application/json',
-      ...(token ? { 'x-internal-service-token': token } : {}),
-      'x-service-name': 'catalog-microservice',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
   }
 

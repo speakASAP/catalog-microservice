@@ -1367,8 +1367,8 @@ describe("ProductsService sales statistics bridge", () => {
     expect(result.channels.every((channel) => channel.status === "unavailable")).toBe(true);
   });
 
-  it("uses the Catalog internal service token when no Orders-specific token is configured", async () => {
-    process.env.CATALOG_INTERNAL_SERVICE_TOKEN = "catalog-internal-token";
+  it("uses the per-pair Orders principal and sends no shared-secret headers", async () => {
+    process.env.ORDERS_SERVICE_TOKEN = "catalog-internal-token";
     process.env.ORDERS_SERVICE_URL = "http://orders-service.test";
     const repository = {
       findOne: jest.fn(async () => product),
@@ -1386,8 +1386,6 @@ describe("ProductsService sales statistics bridge", () => {
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: "Bearer catalog-internal-token",
-          "x-internal-service-token": "catalog-internal-token",
-          "x-service-name": "catalog-microservice",
         }),
       }),
     );
@@ -1431,8 +1429,6 @@ describe("ProductsService sales statistics bridge", () => {
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: "Bearer orders-token",
-          "x-internal-service-token": "orders-token",
-          "x-service-name": "catalog-microservice",
         }),
       }),
     );
