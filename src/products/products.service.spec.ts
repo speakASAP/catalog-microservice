@@ -1203,12 +1203,13 @@ describe("ProductsService Allegro stock preflight", () => {
     jest.clearAllMocks();
     delete process.env.CATALOG_SERVICE_URL;
     delete process.env.CATALOG_INTERNAL_SERVICE_TOKEN;
+    delete process.env.CATALOG_SELF_SERVICE_TOKEN;
     delete process.env.ALLEGRO_SERVICE_URL;
   });
 
   it("blocks Allegro preparation when Warehouse availability is missing", async () => {
     process.env.CATALOG_SERVICE_URL = "http://catalog-microservice:3200";
-    process.env.CATALOG_INTERNAL_SERVICE_TOKEN = "catalog-internal-token";
+    process.env.CATALOG_SELF_SERVICE_TOKEN = "catalog-self-token";
     const repository = {
       findOne: jest.fn(async () => product),
       count: jest.fn(async () => 1),
@@ -1236,6 +1237,16 @@ describe("ProductsService Allegro stock preflight", () => {
 
     expect(mockedAxios.post).toHaveBeenCalledTimes(1);
     expect(mockedAxios.post.mock.calls[0][0]).toBe("http://catalog-microservice:3200/api/products/projections/flipflop/batch");
+    // The self-call carries the per-pair principal as a bearer, and carries the
+    // prohibited shared-secret headers nowhere. Asserted explicitly because the
+    // legacy path still exists on the receiver until the last caller is
+    // migrated, so a regression here would authenticate successfully and be
+    // invisible.
+    expect(mockedAxios.post.mock.calls[0][2]?.headers).toMatchObject({
+      Authorization: "Bearer catalog-self-token",
+    });
+    expect(mockedAxios.post.mock.calls[0][2]?.headers).not.toHaveProperty("x-internal-service-token");
+    expect(mockedAxios.post.mock.calls[0][2]?.headers).not.toHaveProperty("x-service-name");
     expect(JSON.stringify(mockedAxios.post.mock.calls)).not.toContain("/allegro/catalog-sell/prepare");
     expect(result).toMatchObject({
       success: false,
@@ -1247,7 +1258,7 @@ describe("ProductsService Allegro stock preflight", () => {
 
   it("caps Allegro requested quantity to Warehouse sellable stock", async () => {
     process.env.CATALOG_SERVICE_URL = "http://catalog-microservice:3200";
-    process.env.CATALOG_INTERNAL_SERVICE_TOKEN = "catalog-internal-token";
+    process.env.CATALOG_SELF_SERVICE_TOKEN = "catalog-self-token";
     process.env.ALLEGRO_SERVICE_URL = "http://allegro-service:3000";
     const repository = {
       findOne: jest.fn(async () => product),
