@@ -264,9 +264,16 @@ describe('CatalogAuthGuard', () => {
     });
   });
 
-  it('preserves the internal service token boundary without calling Auth validation', async () => {
+  // The shared static x-internal-service-token path is DELETED. These tests
+  // replace the eight that used to assert its behaviour (per-caller role
+  // synthesis, the CATALOG_INTERNAL_SERVICE_NAMES allowlist, and the
+  // x-service-name boundary). The contract is now the inverse: presenting that
+  // header authenticates nothing, and a caller that still sends it fails loudly
+  // rather than being quietly granted roles derived from an unauthenticated
+  // header.
+  it('rejects the legacy shared internal-service token instead of authenticating it', async () => {
     process.env.CATALOG_INTERNAL_SERVICE_TOKEN = 'machine-token';
-    const reflector = { getAllAndOverride: jest.fn().mockReturnValue(['catalog:write']) } as unknown as Reflector;
+    const reflector = { getAllAndOverride: jest.fn().mockReturnValue(['catalog:authenticated']) } as unknown as Reflector;
     const guard = new CatalogAuthGuard(reflector);
     const request = buildRequest({
       'x-internal-service-token': 'machine-token',
@@ -274,173 +281,58 @@ describe('CatalogAuthGuard', () => {
     });
     global.fetch = jest.fn();
 
-    await expect(guard.canActivate(buildContext(request))).resolves.toBe(true);
-
+    await expect(guard.canActivate(buildContext(request))).rejects.toBeInstanceOf(UnauthorizedException);
+    // Not merely denied -- not even looked up. The header must not reach Auth.
     expect(global.fetch).not.toHaveBeenCalled();
-    // bazos publishes products and media, so it is a writer -- but it no longer
-    // receives `internal:catalog-microservice:admin` just for holding the
-    // shared secret.
-    expect(request.catalogActor).toEqual({
-      type: 'service',
-      sub: 'bazos-service',
-      roles: ['catalog:read', 'catalog:write'],
-      source: 'bazos-service',
-      serviceName: 'bazos-service',
-      authMethod: 'internal-service-token',
-    });
-    expect(request.serviceActor).toEqual(request.catalogActor);
+    expect(request.catalogActor).toBeUndefined();
+    expect(request.serviceActor).toBeUndefined();
   });
 
-  it('rejects an unknown x-service-name even with the correct shared secret', async () => {
-    // The shared secret is held by eight workloads, so the header is the only
-    // thing distinguishing them -- and it is caller-supplied. Before this guard
-    // check, any holder could authenticate as any name, including one that does
-    // not exist, and that name was persisted as bundle evidence and published
-    // on product events.
+  it('does not grant catalog:write from an unauthenticated x-service-name', async () => {
+    // rolesForServiceName() used to mint catalog:read/catalog:write from this
+    // header alone. Nothing can present catalog:write any more: it was removed
+    // from WRITE_ROLES and provision-service-token.js cannot mint it.
     process.env.CATALOG_INTERNAL_SERVICE_TOKEN = 'machine-token';
     const reflector = { getAllAndOverride: jest.fn().mockReturnValue(['catalog:write']) } as unknown as Reflector;
     const guard = new CatalogAuthGuard(reflector);
     const request = buildRequest({
       'x-internal-service-token': 'machine-token',
-      'x-service-name': 'totally-made-up-service',
+      'x-service-name': 'allegro-service',
     });
     global.fetch = jest.fn();
 
-    await expect(guard.canActivate(buildContext(request))).rejects.toThrow(UnauthorizedException);
+    await expect(guard.canActivate(buildContext(request))).rejects.toBeInstanceOf(UnauthorizedException);
     expect(global.fetch).not.toHaveBeenCalled();
-    expect(request.catalogActor).toBeUndefined();
   });
 
-  it('rejects an empty x-service-name instead of authenticating it as a placeholder', async () => {
+  it('still authenticates a per-pair principal that also sends the legacy header', async () => {
+    // A straggler mid-migration may send both. The bearer must win and the
+    // legacy header must be inert, not a second way in.
     process.env.CATALOG_INTERNAL_SERVICE_TOKEN = 'machine-token';
-    const reflector = { getAllAndOverride: jest.fn().mockReturnValue(['catalog:write']) } as unknown as Reflector;
+    process.env.AUTH_SERVICE_URL = 'http://auth-service.test/';
+    const reflector = { getAllAndOverride: jest.fn().mockReturnValue(['catalog:authenticated']) } as unknown as Reflector;
     const guard = new CatalogAuthGuard(reflector);
     const request = buildRequest({
+      authorization: 'Bearer pair-jwt',
       'x-internal-service-token': 'machine-token',
-      'x-service-name': '',
+      'x-service-name': 'bazos-service',
     });
-    global.fetch = jest.fn();
-
-    await expect(guard.canActivate(buildContext(request))).rejects.toThrow(UnauthorizedException);
-    expect(request.catalogActor).toBeUndefined();
-  });
-
-  it('accepts every real sender of the shared internal-service secret', async () => {
-    // Derived from which workloads hold the credential, then confirmed against
-    // the exact string each sends. flipflop contributes four names; cliplot
-    // sends 'cliplot', not 'cliplot-service'.
-    process.env.CATALOG_INTERNAL_SERVICE_TOKEN = 'machine-token';
-    const senders = [
-      'allegro-service',
-      'bazos-service',
-      'catalog-microservice',
-      'cliplot',
-      'flipflop-api-gateway',
-      'flipflop-cart-service',
-      'flipflop-order-service',
-      'flipflop-product-service',
-      'heureka-service',
-      'marketing-microservice',
-      'orders-microservice',
-    ];
-
-    // Asserted against a read route: every real sender must AUTHENTICATE. What
-    // each may then DO is the per-caller grant, covered separately below --
-    // asserting this against a write route conflated the two and would now fail
-    // for the read-only callers, which is the point of the narrowing.
-    for (const sender of senders) {
-      const reflector = {
-        getAllAndOverride: jest.fn().mockReturnValue(['catalog:authenticated']),
-      } as unknown as Reflector;
-      const guard = new CatalogAuthGuard(reflector);
-      const request = buildRequest({
-        'x-internal-service-token': 'machine-token',
-        'x-service-name': sender,
-      });
-      global.fetch = jest.fn();
-
-      await expect(guard.canActivate(buildContext(request))).resolves.toBe(true);
-      expect(request.catalogActor?.serviceName).toBe(sender);
-    }
-  });
-
-  it('honours CATALOG_INTERNAL_SERVICE_NAMES when a caller is renamed', async () => {
-    process.env.CATALOG_INTERNAL_SERVICE_TOKEN = 'machine-token';
-    process.env.CATALOG_INTERNAL_SERVICE_NAMES = 'renamed-caller';
-    const reflector = {
-      getAllAndOverride: jest.fn().mockReturnValue(['catalog:authenticated']),
-    } as unknown as Reflector;
-    const guard = new CatalogAuthGuard(reflector);
-    const request = buildRequest({
-      'x-internal-service-token': 'machine-token',
-      'x-service-name': 'renamed-caller',
-    });
-    global.fetch = jest.fn();
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        valid: true,
+        user: {
+          id: 'svc-bazos-service--catalog-microservice@internal.alfares.cz',
+          email: 'svc-bazos-service--catalog-microservice@internal.alfares.cz',
+          roles: ['internal:catalog-microservice:write'],
+        },
+      }),
+    } as any);
 
     await expect(guard.canActivate(buildContext(request))).resolves.toBe(true);
-    expect(request.catalogActor?.serviceName).toBe('renamed-caller');
-    // A name allowlisted but not named in the grant map is read-only: adding a
-    // caller must not silently confer write access.
-    expect(request.catalogActor?.roles).toEqual(['catalog:read']);
-  });
-
-  describe('per-caller role grants', () => {
-    beforeEach(() => {
-      process.env.CATALOG_INTERNAL_SERVICE_TOKEN = 'machine-token';
-      global.fetch = jest.fn();
-    });
-
-    const canActivateAs = async (sender: string, requiredRoles: string[]) => {
-      const reflector = {
-        getAllAndOverride: jest.fn().mockReturnValue(requiredRoles),
-      } as unknown as Reflector;
-      const guard = new CatalogAuthGuard(reflector);
-      const request = buildRequest({
-        'x-internal-service-token': 'machine-token',
-        'x-service-name': sender,
-      });
-      return guard.canActivate(buildContext(request));
-    };
-
-    it('denies a read-only caller on a write route', async () => {
-      // cliplot only ever GETs /api/products. Before the per-caller map it held
-      // internal:catalog-microservice:admin + catalog:write and could have
-      // deleted any product in the catalog.
-      await expect(canActivateAs('cliplot', ['catalog:write'])).rejects.toBeInstanceOf(
-        ForbiddenException,
-      );
-      await expect(
-        canActivateAs('cliplot', CatalogAuthGuard.WRITE_ROLES),
-      ).rejects.toBeInstanceOf(ForbiddenException);
-    });
-
-    it('still allows a read-only caller to read', async () => {
-      await expect(canActivateAs('cliplot', ['catalog:authenticated'])).resolves.toBe(true);
-    });
-
-    it('allows a publishing caller to write', async () => {
-      await expect(canActivateAs('bazos-service', ['catalog:write'])).resolves.toBe(true);
-      await expect(canActivateAs('allegro-service', ['catalog:write'])).resolves.toBe(true);
-      await expect(canActivateAs('orders-microservice', ['catalog:write'])).resolves.toBe(true);
-    });
-
-    it('grants catalog admin only to the callers that provision or write relations', async () => {
-      const adminRoute = ['internal:catalog-microservice:admin'];
-      await expect(canActivateAs('heureka-service', adminRoute)).resolves.toBe(true);
-      await expect(canActivateAs('marketing-microservice', adminRoute)).resolves.toBe(true);
-
-      for (const reader of ['cliplot', 'bazos-service', 'allegro-service']) {
-        await expect(canActivateAs(reader, adminRoute)).rejects.toBeInstanceOf(
-          ForbiddenException,
-        );
-      }
-    });
-
-    it('does not grant marketing catalog:write for its admin relation routes', async () => {
-      await expect(canActivateAs('marketing-microservice', ['catalog:write'])).rejects.toBeInstanceOf(
-        ForbiddenException,
-      );
-    });
+    expect(global.fetch).toHaveBeenCalled();
+    expect(request.catalogActor?.authMethod).toBe('auth-validate');
+    expect(request.catalogActor?.type).toBe('service');
   });
 
   it('denies a guarded route that declares no roles instead of inheriting write access', async () => {
