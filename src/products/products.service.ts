@@ -937,7 +937,7 @@ export class ProductsService {
     if (!serviceToken) {
       return this.unavailableSalesStatistics(
         id,
-        '[MISSING: Catalog-to-Orders service credential; configure ORDERS_SERVICE_TOKEN, ORDERS_INTERNAL_SERVICE_TOKEN, CATALOG_INTERNAL_SERVICE_TOKEN, or INTERNAL_SERVICE_TOKEN]',
+        '[MISSING: Catalog-to-Orders service credential; configure ORDERS_SERVICE_TOKEN]',
       );
     }
 
@@ -2831,14 +2831,7 @@ export class ProductsService {
   }
 
   private getWarehouseServiceToken(): string | null {
-    // JWT_TOKEN deliberately omitted: legacy shared HS256 credential, rejected
-    // by auth-microservice (RS256 required). See warehouse-availability.service.
-    const token =
-      process.env.WAREHOUSE_SERVICE_TOKEN ||
-      process.env.WAREHOUSE_INTERNAL_SERVICE_TOKEN ||
-      process.env.CATALOG_INTERNAL_SERVICE_TOKEN ||
-      process.env.INTERNAL_SERVICE_TOKEN;
-    return token?.trim() || null;
+    return process.env.WAREHOUSE_SERVICE_TOKEN?.trim() || null;
   }
 
   private getOrdersBaseUrl(): string {

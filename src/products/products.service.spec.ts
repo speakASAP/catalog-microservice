@@ -1360,7 +1360,7 @@ describe("ProductsService sales statistics bridge", () => {
       productId: product.id,
       source: "orders",
       sourceStatus: "unavailable",
-      unavailableReason: "[MISSING: Catalog-to-Orders service credential; configure ORDERS_SERVICE_TOKEN, ORDERS_INTERNAL_SERVICE_TOKEN, CATALOG_INTERNAL_SERVICE_TOKEN, or INTERNAL_SERVICE_TOKEN]",
+      unavailableReason: "[MISSING: Catalog-to-Orders service credential; configure ORDERS_SERVICE_TOKEN]",
       totals: { orderCount: 0, quantitySold: 0 },
     });
     expect(result.channels).toHaveLength(5);
