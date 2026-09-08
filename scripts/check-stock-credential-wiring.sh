@@ -28,10 +28,6 @@ manifest_warehouse_path="$(printf '%s
 ' "$warehouse_block" | awk '/key:/ {print $2; exit}')"
 manifest_warehouse_property="$(printf '%s
 ' "$warehouse_block" | awk '/property:/ {print $2; exit}')"
-manifest_catalog_internal_path="$(printf '%s
-' "$catalog_internal_block" | awk '/key:/ {print $2; exit}')"
-manifest_catalog_internal_property="$(printf '%s
-' "$catalog_internal_block" | awk '/property:/ {print $2; exit}')"
 
 secret_keys_json="[]"
 external_secret_status="unknown"
@@ -68,7 +64,7 @@ console.log(JSON.stringify(out));
   )"
 fi
 
-MANIFEST_WAREHOUSE_PATH="$manifest_warehouse_path" MANIFEST_WAREHOUSE_PROPERTY="$manifest_warehouse_property" MANIFEST_CATALOG_INTERNAL_PATH="$manifest_catalog_internal_path" MANIFEST_CATALOG_INTERNAL_PROPERTY="$manifest_catalog_internal_property" EXPECTED_WAREHOUSE_SECRET_PATH="$EXPECTED_WAREHOUSE_SECRET_PATH" EXPECTED_WAREHOUSE_SECRET_PROPERTY="$EXPECTED_WAREHOUSE_SECRET_PROPERTY" SECRET_KEYS_JSON="$secret_keys_json" EXTERNAL_SECRET_STATUS="$external_secret_status" DEPLOYMENT_IMAGES_JSON="$deployment_images_json" HAVE_KUBECTL="$have_kubectl" node <<'NODE'
+MANIFEST_WAREHOUSE_PATH="$manifest_warehouse_path" MANIFEST_WAREHOUSE_PROPERTY="$manifest_warehouse_property" MANIFEST_CATALOG_INTERNAL_ABSENT="$([ -z "$catalog_internal_block" ] && echo true || echo false)" EXPECTED_WAREHOUSE_SECRET_PATH="$EXPECTED_WAREHOUSE_SECRET_PATH" EXPECTED_WAREHOUSE_SECRET_PROPERTY="$EXPECTED_WAREHOUSE_SECRET_PROPERTY" SECRET_KEYS_JSON="$secret_keys_json" EXTERNAL_SECRET_STATUS="$external_secret_status" DEPLOYMENT_IMAGES_JSON="$deployment_images_json" HAVE_KUBECTL="$have_kubectl" node <<'NODE'
 const secretKeys = JSON.parse(process.env.SECRET_KEYS_JSON || '[]');
 const deploymentImages = JSON.parse(process.env.DEPLOYMENT_IMAGES_JSON || '{}');
 const checks = [];
@@ -88,17 +84,16 @@ check('warehouseTokenManifestUsesCatalogWarehouseProperty',
     actual: process.env.MANIFEST_WAREHOUSE_PROPERTY || null,
     expected: process.env.EXPECTED_WAREHOUSE_SECRET_PROPERTY,
   });
-check('catalogInternalTokenAlreadyAuthOwned',
-  process.env.MANIFEST_CATALOG_INTERNAL_PATH === 'secret/prod/auth-microservice',
+check('catalogInternalTokenRemovedFromExternalSecret',
+  process.env.MANIFEST_CATALOG_INTERNAL_ABSENT === 'true',
   {
-    path: process.env.MANIFEST_CATALOG_INTERNAL_PATH || null,
-    property: process.env.MANIFEST_CATALOG_INTERNAL_PROPERTY || null,
+    absent: process.env.MANIFEST_CATALOG_INTERNAL_ABSENT === 'true',
   });
 check('runtimeSecretHasWarehouseServiceTokenKey',
   secretKeys.includes('WAREHOUSE_SERVICE_TOKEN'),
   { keyPresent: secretKeys.includes('WAREHOUSE_SERVICE_TOKEN') });
-check('runtimeSecretHasCatalogInternalServiceTokenKey',
-  secretKeys.includes('CATALOG_INTERNAL_SERVICE_TOKEN'),
+check('runtimeSecretOmitsCatalogInternalServiceTokenKey',
+  !secretKeys.includes('CATALOG_INTERNAL_SERVICE_TOKEN'),
   { keyPresent: secretKeys.includes('CATALOG_INTERNAL_SERVICE_TOKEN') });
 check('externalSecretSynced',
   /Ready=True/.test(process.env.EXTERNAL_SECRET_STATUS || ''),

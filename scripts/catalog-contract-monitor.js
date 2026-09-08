@@ -36,7 +36,7 @@ function decodeJwtPayload(token) {
 function checkTokenExpiry() {
   const tokens = [
     { name: "WAREHOUSE_SERVICE_TOKEN", value: process.env.WAREHOUSE_SERVICE_TOKEN },
-    { name: "CATALOG_INTERNAL_SERVICE_TOKEN", value: process.env.CATALOG_INTERNAL_SERVICE_TOKEN },
+    { name: "ORDERS_SERVICE_TOKEN", value: process.env.ORDERS_SERVICE_TOKEN },
   ];
 
   const nowSeconds = Date.now() / 1000;
