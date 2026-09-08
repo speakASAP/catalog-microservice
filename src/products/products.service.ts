@@ -3203,7 +3203,7 @@ export class ProductsService {
   }
 
   private getAukroServiceToken(): string | null {
-    const token = process.env.AUKRO_SERVICE_TOKEN || process.env.AUKRO_INTERNAL_SERVICE_TOKEN;
+    const token = process.env.AUKRO_SERVICE_TOKEN;
     return token?.trim() || null;
   }
 
@@ -3308,7 +3308,7 @@ export class ProductsService {
       return callerAuthorization;
     }
 
-    const token = process.env.BAZOS_SERVICE_TOKEN || process.env.BAZOS_INTERNAL_SERVICE_TOKEN;
+    const token = process.env.BAZOS_SERVICE_TOKEN;
     if (token?.trim()) {
       return token.startsWith('Bearer ') ? token : `Bearer ${token}`;
     }
