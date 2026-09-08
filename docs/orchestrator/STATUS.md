@@ -1095,7 +1095,7 @@ Goal 1.5 validation evidence:
 - Anonymous `POST /api/categories` returned `401` with `Missing or invalid Authorization header`.
 - Synthetic JWT-authorized `POST /api/categories` returned `201`.
 - Authorized cleanup `DELETE /api/categories/:id` returned `200`.
-- The synthetic JWT was generated inside the pod from `JWT_SECRET`; no token or secret was printed.
+- Synthetic JWT mint from `JWT_SECRET` was used in this historical probe; that path is prohibited — machine and human auth now follow Auth RS256 standards (`SERVICE_IDENTITY_CONSUMER_STANDARD.md` / `CONSUMER_JWT_VALIDATION_STANDARD.md`).
 - The deployed pod logged category create/delete controller activity but did not show structured `catalog.write` entries, so audit-log runtime proof should be rerun after deploying the Goal 1.4 source changes.
 
 Next unfinished step:
